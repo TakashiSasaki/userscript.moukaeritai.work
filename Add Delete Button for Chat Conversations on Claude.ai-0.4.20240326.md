@@ -1,22 +1,22 @@
-# Add Delete Button for Chat Conversations on Claude.ai
+# Claude.aiチャット会話に削除ボタンを追加
 
-This UserScript enhances the Claude.ai interface by adding a convenient delete button for chat conversations.
+このUserScriptは、Claude.aiのインターフェースに、チャット会話を削除するための便利なボタンを追加します。
 
-## Purpose
+## 目的
 
-The primary purpose of this script is to provide users with an easy and direct way to remove their chat conversations on Claude.ai. It streamlines the process of deleting conversations that might otherwise require more steps or are not readily available through the native UI.
+このスクリプトの主な目的は、Claude.aiでのチャット会話を簡単かつ直接的に削除する手段をユーザーに提供することです。これにより、ネイティブUIではより多くの手順が必要になったり、すぐに利用できない会話の削除プロセスが効率化されます。
 
-## Functionality
+## 機能
 
-1.  **Button Injection**: The script automatically injects a "delete" button (represented by a 🗑️ emoji) next to each chat conversation listed on the Claude.ai chat page.
-2.  **Delete Action**: When a user clicks this custom delete button, the script intercepts the action.
-3.  **API Call**: It then constructs a DELETE request to the Claude.ai API, using the conversation's unique identifier (UUID) and the active organization ID (retrieved from `localStorage`).
-4.  **Confirmation/Feedback**: Upon successful deletion, an alert "Chat conversation deleted successfully!" is displayed. If an error occurs, an appropriate error message is shown.
+1.  **ボタンの挿入**: このスクリプトは、Claude.aiのチャットページに表示される各チャット会話の隣に、「削除」ボタン（🗑️絵文字で表現）を自動的に挿入します。
+2.  **削除アクション**: ユーザーがこのカスタム削除ボタンをクリックすると、スクリプトはそのアクションを傍受します。
+3.  **API呼び出し**: その後、会話の一意の識別子（UUID）とアクティブな組織ID（`localStorage`から取得）を使用して、Claude.ai APIにDELETEリクエストを構築します。
+4.  **確認/フィードバック**: 削除が成功すると、「Chat conversation deleted successfully!」というアラートが表示されます。エラーが発生した場合は、適切なエラーメッセージが表示されます。
 
-## Target Website
+## 対象ウェブサイト
 
-This UserScript is specifically designed to function on the following URL:
+このUserScriptは、以下のURLで機能するように特別に設計されています。
 
 *   `https://claude.ai/chats`
 
-It listens for the page load event and adds the buttons after a short delay to ensure the page content is fully rendered.
+ページ読み込みイベントをリッスンし、ページコンテンツが完全にレンダリングされるように短い遅延の後にボタンを追加します。
