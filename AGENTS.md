@@ -34,7 +34,8 @@ In the `win32` environment, use the following command equivalents:
 
 ## プロジェクト固有の開発ガイドライン (Project-Specific Development Guidelines)
 
-- このリポジトリでは、TamperMonkeyや GreaseMonekyで実行できるユーザースクリプトを開発するので、commonJSのみが使用可能であり、TypeScriptは使用できないと想定してください。
+- このリポジリでは、TamperMonkeyや GreaseMonekyで実行できるユーザースクリプトを開発するので、commonJSのみが使用可能であり、TypeScriptは使用できないと想定してください。
+- ユーザースクリプトは日本語で記述してください。
 - ユーザースクリプトの拡張子は二重拡張子 `.user.js` です。
 
 ## Workflow for Multiple Files and Documentation
