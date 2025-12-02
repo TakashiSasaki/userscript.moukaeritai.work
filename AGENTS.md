@@ -53,7 +53,7 @@ In the `win32` environment, use the following command equivalents:
 When handling requests involving multiple files or requiring documentation:
 -   Process each file individually.
 -   Generate documentation (e.g., Markdown descriptions) for each relevant script.
--   Commit each script and its corresponding documentation in separate, atomic commits.
+-   When committing a userscript and its corresponding documentation, the user prefers that each file (the `.user.js` file and its `.md` documentation) be committed in separate, atomic commits. The Markdown documentation should be created and committed immediately after the userscript is committed.
 
 ## Todo List Management
 
