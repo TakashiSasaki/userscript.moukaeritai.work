@@ -38,6 +38,15 @@ In the `win32` environment, use the following command equivalents:
 - このリポジリでは、TamperMonkeyや GreaseMonekyで実行できるユーザースクリプトを開発するので、commonJSのみが使用可能であり、TypeScriptは使用できないと想定してください。
 - ユーザースクリプトは日本語で記述してください。
 - ユーザースクリプトの拡張子は二重拡張子 `.user.js` です。
+- ユーザースクリプトのヘッダーには、以下の項目を必ず含めてください。
+    - `@name`: スクリプトの名称
+    - `@version`: バージョン
+    - `@description`: スクリプトの目的、主な機能、動作するサイトなど、詳細な説明
+    - `@author`: 作者名
+    - `@match`: スクリプトが動作するサイトのURLパターン
+    - `@icon`: アイコンのURL (任意)
+    - `@grant`: 使用するAPI (例: `none` for no special grants)
+    - `@run-at`: スクリプトの実行タイミング (例: `document-idle`)
 
 ## Workflow for Multiple Files and Documentation
 
