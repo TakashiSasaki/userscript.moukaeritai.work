@@ -25,12 +25,17 @@ In the `win32` environment, use the following command equivalents:
 
 -   **Japanese Input**: When the user provides input in Japanese, rephrase the request in English, show the rephrased result, and ask for confirmation before proceeding.
 
-## User-Specific Preferences
+## ユーザー固有の好み (User-Specific Preferences)
 
--   **User Name for Commits**: Takashi Sasaki
--   **User Email for Commits**: takashi316@gmail.com
--   **Temporary Directory**: C:\Users\takas\.gemini\tmp\8585a6cbb571264cfbedb883a7013c61109d56c966490b3e093178ca8569ed3b
--   **Current Working Directory**: C:\Users\takas\Desktop\userscript
+-   **コミットユーザー名**: Takashi Sasaki
+-   **コミットユーザーメール**: takashi316@gmail.com
+-   **一時ディレクトリ**: C:\Users\takas\.gemini\tmp\8585a6cbb571264cfbedb883a7013c61109d56c966490b3e093178ca8569ed3b
+-   **現在の作業ディレクトリ**: C:\Users\takas\Desktop\userscript
+
+## プロジェクト固有の開発ガイドライン (Project-Specific Development Guidelines)
+
+- このリポジトリでは、TamperMonkeyや GreaseMonekyで実行できるユーザースクリプトを開発するので、commonJSのみが使用可能であり、TypeScriptは使用できないと想定してください。
+- ユーザースクリプトの拡張子は二重拡張子 `.user.js` です。
 
 ## Workflow for Multiple Files and Documentation
 
