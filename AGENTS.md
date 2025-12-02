@@ -1,6 +1,7 @@
 # Agent Operational Guidelines
 
-This document outlines the preferred operational guidelines for agents interacting with this project. Adherence to these guidelines ensures consistent behavior, proper version control practices, and efficient collaboration.
+このドキュメントは、このプロジェクトと対話するエージェント向けの推奨運用ガイドラインを概説しています。これらのガイドラインを遵守することで、一貫した動作、適切なバージョン管理の実施、および効率的なコラボレーションが保証されます。
+このAGENTS.mdファイルは、エージェントがプロジェクトの構造、ユーザーの好み、および特定の開発ルールを理解するための主要なリファレンスとして機能します。エージェントは、試行錯誤を通じて得られた新しい知見、成功、失敗もここに記録し、将来の参照と学習に役立てる必要があります。
 
 ## Git Commit Practices
 
@@ -50,3 +51,7 @@ When handling requests involving multiple files or requiring documentation:
 -   Utilize the `write_todos` tool for complex queries that require multiple steps.
 -   Update the todo list frequently to reflect the current status of tasks (pending, in_progress, completed, cancelled).
 -   Ensure only one subtask is marked as `in_progress` at a time.
+
+## 知見と教訓の共有 (Sharing Insights and Lessons)
+
+-   エージェントは、タスクの実行中に得られた試行錯誤（成功と失敗の両方）からの知見と教訓を積極的にこのAGENTS.mdファイルに記録する必要があります。これは、将来のエージェントの参照と学習に役立ちます。
