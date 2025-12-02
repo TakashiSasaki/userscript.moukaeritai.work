@@ -110,3 +110,18 @@ they appear in the UI.
 | ----------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------ | ------- |
 | Enable Codebase Investigator        | `experimental.codebaseInvestigatorSettings.enabled`     | Enable the Codebase Investigator agent.                      | `true`  |
 | Codebase Investigator Max Num Turns | `experimental.codebaseInvestigatorSettings.maxNumTurns` | Maximum number of turns for the Codebase Investigator agent. | `10`    |
+
+
+
+
+# 書き方１
+{
+  "context": {
+    "fileName": ["AGENTS.md", "CONTEXT.md", "GEMINI.md"]
+  }
+}
+
+# 書き方２
+{ 
+    "contextFileName": ["AGENTS.md", "GEMINI.md"] 
+}
