@@ -1,29 +1,29 @@
-# Gemini Quick Export to Docs Userscript
+# Gemini Quick Export to Docs ユーザースクリプト
 
-## Overview
+## 概要
 
-This userscript, "Gemini Quick Export to Docs," enhances the Gemini (gemini.google.com/app/) interface by adding a convenient "Quick Export" button directly to all conversation responses. Its primary goal is to streamline and automate the process of exporting Gemini responses directly to Google Docs with a single click.
+この「Gemini Quick Export to Docs」ユーザースクリプトは、Gemini (gemini.google.com/app/) のインターフェースを強化し、すべての会話応答に便利な「クイックエクスポート」ボタンを追加します。主な目的は、Gemini の応答をワンクリックで Google Docs に直接エクスポートするプロセスを合理化し、自動化することです。
 
-## Functionality
+## 機能
 
-The script provides the following key features:
+このスクリプトは、以下の主要な機能を提供します。
 
--   **Seamless Button Injection**: A custom "Quick Export" button is dynamically inserted next to the existing "Share & export" and "Copy" buttons within the interface for each Gemini response.
--   **Advanced DOM Traversal**: It employs sophisticated DOM (Document Object Model) traversal techniques, including `queryDeepAll` and `findParent`, to recursively scan both the Light DOM and Shadow DOM. This ensures that the button is reliably injected even within complex, dynamically rendered web pages, which is characteristic of modern applications like Gemini.
--   **Automated Export Workflow**: Upon clicking the "Quick Export" button, the script automates the export process by:
-    1.  Programmatically triggering a click on the original "Share & export" button.
-    2.  Waiting for the "Export to Docs" menu item to appear within the subsequent menu.
-    3.  Clicking the "Export to Docs" menu item to initiate the export of the response to Google Docs, thereby eliminating the need for further manual interaction.
--   **Intuitive Visual Feedback**: During the export operation, the button provides clear visual cues. Its text changes to "..." (indicating progress), then to "Done" (on successful completion), or "Error" (if an issue occurs), keeping the user informed of the process status.
--   **Dynamic Content Compatibility**: To ensure broad applicability, the script continuously monitors the DOM for changes using `setInterval` and `MutationObserver`. This guarantees that the "Quick Export" button is present on all conversation responses, including those that are loaded dynamically after the initial page load.
+-   **シームレスなボタンの挿入**: カスタムの「クイックエクスポート」ボタンは、各 Gemini 応答のインターフェース内の既存の「共有とエクスポート」ボタンおよび「コピー」ボタンの隣に動的に挿入されます。
+-   **高度な DOM トラバーサル**: `queryDeepAll` や `findParent` などの洗練された DOM (Document Object Model) トラバーサル技術を採用し、Light DOM と Shadow DOM の両方を再帰的にスキャンします。これにより、Gemini のような最新のアプリケーションに特徴的な、複雑で動的にレンダリングされる Web ページでも、ボタンが確実に挿入されます。
+-   **自動エクスポートワークフロー**: 「クイックエクスポート」ボタンをクリックすると、スクリプトは以下のシーケンスでエクスポートプロセスを自動化します。
+    1.  元の「共有とエクスポート」ボタンをプログラムでクリックします。
+    2.  その後のメニューに「Docs にエクスポート」メニュー項目が表示されるのを待ちます。
+    3.  「Docs にエクスポート」メニュー項目をクリックし、それ以上の手動操作なしで応答の Google Docs へのエクスポートを開始します。
+-   **直感的な視覚的フィードバック**: エクスポート操作中、ボタンは明確な視覚的合図を提供します。テキストが「...」（進行中を示す）に変わり、その後「完了」（正常に完了した場合）または「エラー」（問題が発生した場合）に変わり、ユーザーに操作のステータスを通知します。
+-   **動的コンテンツ互換性**: 広範な適用性を確保するため、スクリプトは `setInterval` および `MutationObserver` を使用して DOM の変更を継続的に監視します。これにより、初期ページ読み込み後に動的に読み込まれる応答を含む、すべての会話応答に「クイックエクスポート」ボタンが存在することが保証されます。
 
-## Operating Environment
+## 動作環境
 
--   **Target Website**: The userscript is designed to operate specifically on Google Gemini application pages.
-    -   **URL Pattern**: `https://gemini.google.com/app/*`
--   **Browser Extension**: This script is intended to be used with userscript managers such as Tampermonkey or Greasemonkey, which allow for custom JavaScript to be run on specific web pages.
+-   **ターゲットウェブサイト**: このユーザースクリプトは、特に Google Gemini アプリケーションページで動作するように設計されています。
+    -   **URL パターン**: `https://gemini.google.com/app/*`
+-   **ブラウザ拡張機能**: このスクリプトは、Tampermonkey や Greasemonkey などのユーザースクリプトマネージャーで使用することを意図しており、特定の Web ページでカスタム JavaScript を実行できます。
 
-## Technical Details (Version 1.9 Improvements)
+## 技術詳細 (バージョン 1.9 の改善点)
 
--   **Consistent Styling**: Ensures that the "Quick Export" button maintains a consistent and integrated visual style within the Gemini interface.
--   **Robust Parent Container Detection**: Includes enhanced logic for accurately identifying the correct parent container for button injection. This incorporates fallback mechanisms to effectively handle various permutations and complexities in Gemini's underlying DOM structure, ensuring high reliability.
+-   **一貫したスタイル設定**: 「クイックエクスポート」ボタンが Gemini インターフェース内で一貫した統合された視覚スタイルを維持することを保証します。
+-   **堅牢な親コンテナ検出**: ボタン挿入のための正しい親コンテナを正確に識別するための強化されたロジックを含みます。これにより、Gemini の基盤となる DOM 構造のさまざまな順列と複雑さを処理するためのフォールバックメカニズムが組み込まれ、高い信頼性が確保されます。
