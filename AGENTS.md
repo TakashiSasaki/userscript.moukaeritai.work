@@ -64,3 +64,4 @@ When handling requests involving multiple files or requiring documentation:
 ## 知見と教訓の共有 (Sharing Insights and Lessons)
 
 -   エージェントは、タスクの実行中に得られた試行錯誤（成功と失敗の両方）からの知見と教訓を積極的にこのAGENTS.mdファイルに記録する必要があります。これは、将来のエージェントの参照と学習に役立ちます。
+-   ユーザースクリプトをコミットする際には、そのスクリプトの動作について詳細なコミットメッセージを含める必要があります。
