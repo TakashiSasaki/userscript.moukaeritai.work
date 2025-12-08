@@ -3,12 +3,12 @@
 // @version      1.0.0
 // @description  Grokのウェブサイトで、会話の全内容を簡単にコピーできる機能を追加します。
 // @author       Takashi Sasaki
-// @match        https://grok.com/*
+// @match        https://grok.com/c/*
 // @grant        none
 // @run-at       document-idle
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     // Function to get all conversation text.
