@@ -3,7 +3,7 @@
 // @version      1.0.0
 // @description  Grokのウェブサイトで、会話の全内容を簡単にコピーできる機能を追加します。
 // @author       Takashi Sasaki
-// @match        https://grok.x.ai/*
+// @match        https://grok.com/*
 // @grant        none
 // @run-at       document-idle
 // ==/UserScript==
@@ -37,7 +37,7 @@
         // const messages = document.querySelectorAll('.message');
         // let conversationText = '';
         // messages.forEach(msg => {
-        //     conversationText += msg.textContent + '\\n\\n';
+        //     conversationText += msg.textContent + '\n\n';
         // });
         // return conversationText;
 
@@ -64,7 +64,7 @@
         const responseDivs = document.querySelectorAll('.response'); // Example selector, may need adjustment
         if (responseDivs.length > 0) {
             responseDivs.forEach(div => {
-                conversationText += div.textContent + '\\n\\n';
+                conversationText += div.textContent + '\n\n';
             });
         } else {
             // Fallback if '.response' is not found, try to get text from main content.
@@ -73,7 +73,7 @@
             const elementsToExcludeSelectors = [
                 'nav', 'header', 'footer', 'aside', 'button', 'input', 'textarea', 'select',
                 'style', 'script', 'link', 'meta', '[aria-hidden="true"]', '.sidebar', '.menu',
-                '.action-buttons', '.print\\:hidden' // Based on previous file content.
+                '.action-buttons', '.print\:hidden' // Based on previous file content.
             ].join(', ');
 
             const allElements = mainContentElement.querySelectorAll('*');
@@ -85,7 +85,7 @@
                         // Append text if it looks like part of a conversation
                         // This is a very basic check and can be improved.
                         // For now, we'll append non-empty trimmed text.
-                        conversationText += text + '\\n';
+                        conversationText += text + '\n';
                     }
                 }
             });
