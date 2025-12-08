@@ -12,6 +12,8 @@
 // @icon              https://www.gstatic.com/lamda/images/gemini_favicon_f069958c85030456e93de685481c559f160ea06b.png
 // @grant             GM_registerMenuCommand
 // @run-at            document-idle
+// @downloadURL https://update.greasyfork.org/scripts/533285/Gemini%20Conversation%20Delete%20Shortcut.user.js
+// @updateURL https://update.greasyfork.org/scripts/533285/Gemini%20Conversation%20Delete%20Shortcut.meta.js
 // ==/UserScript==
 
 (function() {
