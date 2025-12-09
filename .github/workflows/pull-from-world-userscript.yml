@@ -24,6 +24,13 @@ jobs:
           git config user.name "Takashi SASAKI"
           git config user.email "takashi316@gmail.com"
 
+      - name: Debug access to world repo
+        env:
+          TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+        run: |
+          set -x
+          git ls-remote https://x-access-token:${TOKEN}@github.com/TakashiSasaki/world.git HEAD
+
       - name: Fetch userscript branch from private world repo
         env:
           TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
