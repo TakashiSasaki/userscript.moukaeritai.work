@@ -24,6 +24,13 @@ jobs:
           git config user.name "Takashi SASAKI"
           git config user.email "takashi316@gmail.com"
 
+      - name: Debug TOKEN owner
+        env:
+          TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+        run: |
+          set -e
+          curl -s -H "Authorization: Bearer $TOKEN" https://api.github.com/user
+
       - name: Debug access to world repo
         env:
           TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
