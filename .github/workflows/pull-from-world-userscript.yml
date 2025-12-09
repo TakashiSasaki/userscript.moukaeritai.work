@@ -38,6 +38,14 @@ jobs:
           set -x
           git ls-remote https://x-access-token:${TOKEN}@github.com/TakashiSasaki/world.git HEAD
 
+      - name: Debug repo access via API
+        env:
+          TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+        run: |
+          set -x
+          curl -s -H "Authorization: Bearer $TOKEN" \
+            https://api.github.com/repos/TakashiSasaki/world
+
       - name: Fetch userscript branch from private world repo
         env:
           TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
