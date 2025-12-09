@@ -1,1 +1,31 @@
-# TODO: new workflow
+name: Sync userscript branch from private world repo
+
+on:
+  schedule:
+    # 毎日 03:00 UTC = 12:00 JST
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write   # gh-pages ブランチへ push するため
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout public repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git user
+        run: |
+          git config user.name "Takashi SASAKI"
+          git config user.email "takashi316@gmail.com"
+
+      - name: Fetch userscript branch from private world repo
+        run: |
+          git remote add world https://x-access-token:${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/TakashiSasaki/world.git
+          git pull world userscript:userscript
+         
