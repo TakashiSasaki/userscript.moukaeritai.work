@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write   # gh-pages ブランチへ push するため
+  contents: write   # この public リポジトリに push するため
 
 jobs:
   sync:
@@ -25,7 +25,18 @@ jobs:
           git config user.email "takashi316@gmail.com"
 
       - name: Fetch userscript branch from private world repo
+        env:
+          TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
-          git remote add world https://x-access-token:${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/TakashiSasaki/world.git
-          git pull world userscript:userscript
-         
+          set -e
+
+          # private repo を remote として追加
+          git remote add world https://x-access-token:${TOKEN}@github.com/TakashiSasaki/world.git
+
+          # パターンA: public 側の userscript ブランチにミラーする場合
+          git fetch world userscript:userscript
+          git push origin userscript --force
+
+          # パターンB（Pages 用）: public 側の gh-pages ブランチにミラーするなら代わりにこちら
+          # git fetch world userscript:gh-pages
+          # git push origin gh-pages --force
