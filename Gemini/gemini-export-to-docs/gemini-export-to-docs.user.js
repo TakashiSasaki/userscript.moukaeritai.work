@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    http://tampermonkey.net/
-// @version      0.1.2
+// @version      0.1.3
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -20,6 +20,7 @@
         turnContainer: 'response-container', // Broad container to watch
         moreMenuButton: 'button[data-test-id="more-menu-button"]', // The trigger "..."
         exportToDocsButton: 'button[data-test-id="export-to-docs-button"]', // The target in the menu
+        exportIntermediateButton: 'button[data-test-id="export-button"]', // Mobile "Export to..." button
 
         // Canvas selectors
         canvasOpenButton: 'button[data-test-id="view-report-button"]', // "Open" button for canvas
@@ -156,7 +157,7 @@
      * Flow: Export a specific turn
      * 1. Click "More" (three dots)
      * 2. Wait for menu
-     * 3. Click "Export to Docs"
+     * 3. Click "Export to Docs" (or "Export to..." -> "Export to Docs" on mobile)
      */
     async function handleTurnExport(triggerBtn) {
         console.log('Starting Turn Export...');
@@ -166,16 +167,39 @@
 
         // 2. Wait for menu
         // The menu usually appears at the end of the body
-        const menu = await waitForElement(SELECTORS.menuPanel);
+        let menu = await waitForElement(SELECTORS.menuPanel);
         if (!menu) throw new Error('Menu did not appear');
 
         // 3. Find Export button
-        const exportBtn = await waitForElement(SELECTORS.exportToDocsButton, 2000, menu);
+        // First try direct "Export to Docs" (Desktop)
+        let exportBtn = await waitForElement(SELECTORS.exportToDocsButton, 1000, menu);
+
+        if (!exportBtn) {
+            // Check for Mobile "Export to..." flow
+            const intermediateBtn = await waitForElement(SELECTORS.exportIntermediateButton, 500, menu);
+            if (intermediateBtn) {
+                console.log('Mobile layout detected: clicking intermediate export button');
+                simulateClick(intermediateBtn);
+
+                // Wait for the SECOND menu/sheet
+                // We pause briefly to let the old one disappear or new one appear.
+                // Since waitForElement checks existence, we might need to be careful if the old menu DOM stays.
+                // Usually Angular Material replaces or adds a new container.
+                await sleep(500);
+
+                // Re-query for the menu panel (it might be a new DOM element)
+                // In some cases we might need to look for a different panel, but usually it's the same class
+                // We'll search document-wide for the 'Export to Docs' button now, assuming it's visible
+                exportBtn = await waitForElement(SELECTORS.exportToDocsButton, 2000, document.body);
+            }
+        }
+
         if (!exportBtn) {
             // It might be inside a submenu or the selector might vary. 
             // Fallback: look for text "Docs" or "Export"
-            const buttons = Array.from(menu.querySelectorAll('button'));
-            const textMatch = buttons.find(b => b.textContent.includes('Docs') || b.textContent.includes('Export'));
+            // We search in the document body just in case the menu ref changed
+            const buttons = Array.from(document.querySelectorAll(`${SELECTORS.menuPanel} button`));
+            const textMatch = buttons.find(b => b.textContent.includes('Export to Docs'));
             if (textMatch) {
                 simulateClick(textMatch);
                 return;
