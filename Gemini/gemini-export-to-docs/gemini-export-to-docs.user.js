@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    http://tampermonkey.net/
-// @version      0.1.3
+// @version      0.1.5
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -27,7 +27,8 @@
         canvasShareButton: 'button[data-test-id="share-button"]', // Share button inside canvas
 
         // General
-        menuPanel: '.mat-mdc-menu-panel, .mat-mdc-bottom-sheet-container', // Panel that appears
+        // Updated to include 'actions-bottom-sheet' for mobile view
+        menuPanel: '.mat-mdc-menu-panel, .mat-mdc-bottom-sheet-container, actions-bottom-sheet', // Panel that appears
 
         // Injection targets
         // We will try to inject next to the trigger button for turns
@@ -87,6 +88,9 @@
                 margin-left: 8px;
                 color: #5f6368;
                 transition: background-color 0.2s;
+                position: relative; /* Fix for stacking context */
+                z-index: 1000;      /* Ensure it sits on top */
+                pointer-events: auto; /* Force events */
             }
             .gemini-quick-export-btn:hover {
                 background-color: rgba(0, 0, 0, 0.05);
