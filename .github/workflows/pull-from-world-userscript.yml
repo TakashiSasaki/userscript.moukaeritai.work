@@ -1,4 +1,4 @@
-name: Sync userscript branch from private world repo
+name: Pull userscript from private world repo into public (correct PAT URL)
 
 on:
   schedule:
@@ -7,23 +7,30 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write   # この public リポジトリに push するため
+  contents: write   # 公開リポジトリ（gh-pages）へ push するため
 
 jobs:
   sync:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. 公開リポジトリを public/ にチェックアウト
       - name: Checkout public repo
         uses: actions/checkout@v4
         with:
+          path: public
           fetch-depth: 0
 
-      - name: Configure git user
+      # 2. private world リポジトリを remote として追加（正しい PAT URL 形式）
+      - name: Add private world repo as remote (correct PAT URL)
+        working-directory: public
+        env:
+          TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
-          git config user.name "Takashi SASAKI"
-          git config user.email "takashi316@gmail.com"
+          set -e
+          git remote add world https://TakashiSasaki:${TOKEN}@github.com/TakashiSasaki/world.git
 
+      # 3. デバッグ: TOKEN の所有者を確認
       - name: Debug TOKEN owner
         env:
           TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
@@ -31,6 +38,7 @@ jobs:
           set -e
           curl -s -H "Authorization: Bearer $TOKEN" https://api.github.com/user
 
+      # 4. デバッグ: API 経由で world リポジトリアクセス確認
       - name: Debug repo access via API
         env:
           TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
@@ -39,27 +47,31 @@ jobs:
           curl -s -H "Authorization: Bearer $TOKEN" \
             https://api.github.com/repos/TakashiSasaki/world
 
-      - name: Debug access to world repo
+      # 5. デバッグ: Git 経由で world リポジトリアクセス確認（正しい PAT URL）
+      - name: Debug access to world repo via Git (correct PAT URL)
+        working-directory: public
         env:
           TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
           set -x
-          git ls-remote https://x-access-token:${TOKEN}@github.com/TakashiSasaki/world.git HEAD
+          git ls-remote https://TakashiSasaki:${TOKEN}@github.com/TakashiSasaki/world.git HEAD
 
-
-      - name: Fetch userscript branch from private world repo
+      # 6. world/userscript を gh-pages に反映
+      - name: Pull userscript and publish to gh-pages
+        working-directory: public
         env:
           TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
           set -e
 
-          # private repo を remote として追加
-          git remote add world https://x-access-token:${TOKEN}@github.com/TakashiSasaki/world.git
+          git config user.name "Takashi SASAKI"
+          git config user.email "takashi316@gmail.com"
 
-          # パターンA: public 側の userscript ブランチにミラーする場合
-          git fetch world userscript:userscript
-          git push origin userscript --force
+          # userscript ブランチを取得して gh-pages へ上書き
+          git fetch world userscript:gh-pages
+          git checkout gh-pages
 
-          # パターンB（Pages 用）: public 側の gh-pages ブランチにミラーするなら代わりにこちら
-          # git fetch world userscript:gh-pages
-          # git push origin gh-pages --force
+          git add -A
+          git commit -m "Pull from world@userscript" || echo "No changes to commit"
+
+          git push origin gh-pages --force
