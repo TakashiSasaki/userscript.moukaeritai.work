@@ -41,3 +41,18 @@ sample1 はPC表示をした際のGeminiのウェブSPAのHTMLである。
 ```
 #mat-menu-panel-38 > div > div > button:nth-child(1)
 ```
+
+
+# 特定のターンの応答をエクスポートするためのボタンを表示するための三点リーダー
+
+## 特定のターンの応答をエクスポートするためのボタンを表示するための三点リーダーのHTML断片
+
+```HTML
+<button _ngcontent-ng-c868837921="" mat-button="" mattooltip="More" aria-label="Show more options" tabindex="0" data-test-id="more-menu-button" class="mdc-button mat-mdc-button-base mat-mdc-menu-trigger mat-mdc-tooltip-trigger icon-button more-menu-button ng-tns-c868837921-267 mat-mdc-button mat-unthemed _mat-animation-noopable" mat-ripple-loader-class-name="mat-mdc-button-ripple" aria-haspopup="menu" aria-expanded="false" aria-describedby="cdk-describedby-message-ng-1-189" cdk-describedby-host="ng-1"><span class="mat-mdc-button-persistent-ripple mdc-button__ripple"></span><mat-icon _ngcontent-ng-c868837921="" role="img" fonticon="more_vert" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true" data-mat-icon-type="font" data-mat-icon-name="more_vert"></mat-icon><span class="mdc-button__label"></span><span class="mat-focus-indicator"></span><span class="mat-mdc-button-touch-target"></span><span class="mat-ripple mat-mdc-button-ripple"></span></button>
+```
+
+## 特定のターンの応答をエクスポートするためのボタンを表示するための三点リーダーのセレクタ
+
+```
+#\38 05eec89927b8e41 > model-response > div > response-container > div > div.response-container-footer.ng-tns-c2587252621-244 > message-actions > div > div > div:nth-child(4) > div > div > button
+```
