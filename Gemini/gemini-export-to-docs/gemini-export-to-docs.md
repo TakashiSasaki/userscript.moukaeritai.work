@@ -58,3 +58,4 @@ Geminiのサイトではセキュリティポリシーにより `innerHTML` へ�
 # リポジトリ
 
 *   **GitHub**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/Gemini/gemini-export-to-docs](https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/Gemini/gemini-export-to-docs)
+*   **Raw Script**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/Gemini/gemini-export-to-docs/gemini-export-to-docs.user.js](https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/Gemini/gemini-export-to-docs/gemini-export-to-docs.user.js)
