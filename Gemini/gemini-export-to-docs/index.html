@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Userscript Design Doc</title>
+    <!-- Github Markdown CSS for styling -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <style>
+        body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+
+        @media (max-width: 767px) {
+            body {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body class="markdown-body">
+    <div id="content">Loading documentation...</div>
+
+    <!-- Marked library for parsing markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Fetch the markdown file located in the same directory
+            fetch('gemini-export-to-docs.md')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    // Parse markdown to HTML using 'marked' library
+                    document.getElementById('content').innerHTML = marked.parse(text);
+                })
+                .catch(err => {
+                    // Display friendly error message (likely CORS if opened directly)
+                    document.getElementById('content').innerHTML = `
+                        <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 1em; border-radius: 4px;">
+                            <h3 style="margin-top: 0;">Error loading document</h3>
+                            <p>${err.message}</p>
+                            <hr>
+                            <p><strong>注意:</strong> このファイルをローカルファイルシステム (file://) から直接開いている場合、ブラウザのセキュリティポリシー(CORS)により外部ファイルの読み込みがブロックされることがあります。</p>
+                            <p>以下のいずれかの方法で閲覧してください：</p>
+                            <ul>
+                                <li>ローカルサーバーを起動してアクセスする (例: <code>python -m http.server</code> や <code>npx http-server</code>)</li>
+                                <li>VSCodeの "Live Server" 拡張機能を使用する</li>
+                            </ul>
+                        </div>
+                    `;
+                    console.error('Error fetching markdown:', err);
+                });
+        });
+    </script>
+</body>
+
+</html>
