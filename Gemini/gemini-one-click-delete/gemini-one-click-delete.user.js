@@ -144,8 +144,8 @@
                 min-width: 32px;
                 height: 32px;
                 border-radius: 16px;
-                border: 1px solid #ccc;
-                background-color: transparent;
+                border: 1px solid #ffcccc; /* Light red border */
+                background-color: #ffe6e6; /* Light red background */
                 cursor: pointer;
                 margin-left: 8px;
                 color: #5f6368;
@@ -155,7 +155,7 @@
                 pointer-events: auto;
             }
             .gemini-quick-delete-btn:hover {
-                background-color: rgba(255, 0, 0, 0.1);
+                background-color: #ffcccc; /* Slightly darker light red on hover */
                 color: #d93025;
                 border-color: #d93025;
             }
@@ -223,6 +223,11 @@
     function processNodes() {
         const targets = document.querySelectorAll(SELECTORS.actionsMenuButton);
         targets.forEach(triggerBtn => {
+            // Check if inside sidebar
+            if (triggerBtn.closest('bard-sidenav') || triggerBtn.closest('side-navigation-content')) {
+                return;
+            }
+
             const container = triggerBtn.parentElement;
             if (!container || container.querySelector('.gemini-quick-delete-btn')) return;
 
