@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.1.8
+// @version      0.1.11
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -14,7 +14,10 @@
     'use strict';
 
     // svg icons
-    const DOCS_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor"><path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z"/></svg>';
+    // svg icons
+    // svg icons
+    const DOCS_ICON_PATH = "M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z";
+    const CHECK_ICON_PATH = "M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z";
 
     // --- Selectors (based on provided samples) ---
     const SELECTORS = {
@@ -87,30 +90,62 @@
                 height: 32px;
                 border-radius: 16px;
                 border: 1px solid #ccc;
-                background-color: transparent;
+                background-color: #e6f4ea; /* Light green */
                 cursor: pointer;
                 margin-left: 8px;
                 color: #5f6368;
-                transition: background-color 0.2s;
-                position: relative; /* Fix for stacking context */
-                z-index: 1000;      /* Ensure it sits on top */
-                pointer-events: auto; /* Force events */
+                transition: all 0.2s;
+                position: relative;
+                z-index: 1000;
             }
             .gemini-quick-export-btn:hover {
-                background-color: rgba(0, 0, 0, 0.05);
+                background-color: #ceead6; /* Slightly darker green */
+            }
+            .gemini-quick-export-btn.exported {
+                background-color: #1e8e3e; /* Google Green */
+                color: white;
+                border-color: #1e8e3e;
             }
             .gemini-quick-export-btn svg {
                 fill: currentColor;
             }
-            .gemini-quick-export-btn.exporting {
-                color: #1a73e8;
-                border-color: #1a73e8;
-                animation: pulse 1s infinite;
+            /* Overlay */
+            #gemini-export-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(255, 255, 255, 0.7);
+                z-index: 99999;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                font-family: inherit;
+                font-size: 16px;
+                color: #333;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s;
             }
-            @keyframes pulse {
-                0% { opacity: 1; }
-                50% { opacity: 0.5; }
-                100% { opacity: 1; }
+            #gemini-export-overlay.visible {
+                opacity: 1;
+                pointer-events: auto;
+            }
+            /* Spinner */
+            .gemini-spinner {
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #1a73e8;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+                margin-bottom: 16px;
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
             }
         `;
         document.head.appendChild(style);
@@ -119,7 +154,13 @@
     /**
      * Create the SVG icon element safely
      */
-    function createSvgIcon() {
+    /**
+     * Create the SVG icon element safely
+     */
+    /**
+     * Create the SVG icon element safely
+     */
+    function createIconElement(pathData) {
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("height", "20");
         svg.setAttribute("viewBox", "0 -960 960 960");
@@ -127,10 +168,37 @@
         svg.setAttribute("fill", "currentColor");
 
         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d", "M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z");
+        path.setAttribute("d", pathData);
 
         svg.appendChild(path);
         return svg;
+    }
+
+    /**
+     * Manage Overlay
+     */
+    function showOverlay() {
+        let overlay = document.getElementById('gemini-export-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'gemini-export-overlay';
+
+            const spinner = document.createElement('div');
+            spinner.className = 'gemini-spinner';
+
+            const text = document.createElement('div');
+            text.textContent = 'Exporting to Docs...';
+
+            overlay.appendChild(spinner);
+            overlay.appendChild(text);
+            document.body.appendChild(overlay);
+        }
+        overlay.classList.add('visible');
+    }
+
+    function hideOverlay() {
+        const overlay = document.getElementById('gemini-export-overlay');
+        if (overlay) overlay.classList.remove('visible');
     }
 
     /**
@@ -140,22 +208,37 @@
         const btn = document.createElement('button');
         btn.className = 'gemini-quick-export-btn';
         btn.title = '1-Click Export to Docs';
-        // Fix: Use DOM creation instead of innerHTML to avoid TrustedHTML violation
-        btn.appendChild(createSvgIcon());
+
+        // Initial Icon
+        const iconContainer = document.createElement('span');
+        iconContainer.style.display = 'flex';
+        iconContainer.appendChild(createIconElement(DOCS_ICON_PATH));
+        btn.appendChild(iconContainer);
 
         btn.onclick = async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (btn.classList.contains('exporting')) return;
+            if (btn.classList.contains('exported')) return; // Already done
 
-            btn.classList.add('exporting');
+            showOverlay();
             try {
                 await onClick();
+
+                // Success State
+                btn.classList.add('exported');
+                btn.title = 'Exported!';
+
+                // Clear existing icon safely
+                while (iconContainer.firstChild) {
+                    iconContainer.removeChild(iconContainer.firstChild);
+                }
+                iconContainer.appendChild(createIconElement(CHECK_ICON_PATH));
+
             } catch (err) {
                 console.error('Export failed:', err);
                 alert('Export failed. See console for details.');
             } finally {
-                btn.classList.remove('exporting');
+                hideOverlay();
             }
         };
         return btn;
