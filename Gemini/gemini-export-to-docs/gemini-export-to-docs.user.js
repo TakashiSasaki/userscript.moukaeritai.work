@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.1.7
+// @version      0.1.8
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -167,58 +167,111 @@
      * 2. Wait for menu
      * 3. Click "Export to Docs" (or "Export to..." -> "Export to Docs" on mobile)
      */
+    /**
+     * Helper: Find the "Export to Docs" button in the document
+     * Searches by ID, class, and text content.
+     */
+    function findExportButton(context = document) {
+        // 1. Try explicit ID (Desktop)
+        let btn = context.querySelector(SELECTORS.exportToDocsButton);
+        if (btn && btn.offsetParent) return btn; // Check visibility
+
+        // 2. Try Mobile "Export to..." button (Intermediate)
+        // This is handled in the main flow, but we can check if we are in the submenu
+
+        // 3. Search for Buttons with specific text or icon
+        const candidates = Array.from(context.querySelectorAll('button[role="menuitem"], .mat-mdc-menu-item'));
+        return candidates.find(b => {
+            const text = b.textContent.toLowerCase();
+            return text.includes('export to docs') && b.offsetParent !== null;
+        });
+    }
+
+    /**
+     * Helper: Wait for Export button with retries
+     */
+    async function waitForExportButton(timeout = 2000) {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            const btn = findExportButton(document.body);
+            if (btn) return btn;
+            await sleep(100);
+        }
+        // Last ditch: sometimes it's in a different container or slow to animate
+        return findExportButton(document.body);
+    }
+
+    /**
+     * Flow: Export a specific turn
+     * 1. Click "More" (three dots)
+     * 2. Wait for ANY menu to appear
+     * 3. Look for "Export to Docs" globally
+     * 4. If mobile, handle intermediate "Export to..." click
+     */
     async function handleTurnExport(triggerBtn) {
         console.log('Starting Turn Export...');
 
         // 1. Click trigger
         simulateClick(triggerBtn);
 
-        // 2. Wait for menu
-        // The menu usually appears at the end of the body
-        let menu = await waitForElement(SELECTORS.menuPanel);
-        if (!menu) throw new Error('Menu did not appear');
+        // 2. Wait slightly for menu animation start
+        await sleep(200);
 
-        // 3. Find Export button
-        // First try direct "Export to Docs" (Desktop)
-        let exportBtn = await waitForElement(SELECTORS.exportToDocsButton, 1000, menu);
+        // 3. Try to find the button directly (Desktop case)
+        let exportBtn = await waitForExportButton(1000);
 
         if (!exportBtn) {
-            // Check for Mobile "Export to..." flow
-            const intermediateBtn = await waitForElement(SELECTORS.exportIntermediateButton, 500, menu);
+            // Check for Mobile "Export to..." intermediate button
+            // We search globally for this intermediate button too
+            const intermediateSelector = SELECTORS.exportIntermediateButton;
+            let intermediateBtn = null;
+
+            // Wait briefly for intermediate
+            const start = Date.now();
+            while (Date.now() - start < 1000) {
+                const el = document.querySelector(intermediateSelector);
+                if (el && el.offsetParent) {
+                    intermediateBtn = el;
+                    break;
+                }
+                const allBtns = Array.from(document.querySelectorAll('button'));
+                const textMatch = allBtns.find(b => b.textContent.trim() === 'Export to...' && b.offsetParent);
+                if (textMatch) {
+                    intermediateBtn = textMatch;
+                    break;
+                }
+                await sleep(100);
+            }
+
             if (intermediateBtn) {
                 console.log('Mobile layout detected: clicking intermediate export button');
                 simulateClick(intermediateBtn);
+                await sleep(500); // Wait for submenu
 
-                // Wait for the SECOND menu/sheet
-                // We pause briefly to let the old one disappear or new one appear.
-                // Since waitForElement checks existence, we might need to be careful if the old menu DOM stays.
-                // Usually Angular Material replaces or adds a new container.
-                await sleep(500);
-
-                // Re-query for the menu panel (it might be a new DOM element)
-                // In some cases we might need to look for a different panel, but usually it's the same class
-                // We'll search document-wide for the 'Export to Docs' button now, assuming it's visible
-                exportBtn = await waitForElement(SELECTORS.exportToDocsButton, 2000, document.body);
+                // Re-try finding the final button
+                exportBtn = await waitForExportButton(2000);
             }
         }
 
         if (!exportBtn) {
-            // It might be inside a submenu or the selector might vary. 
-            // Fallback: look for text "Docs" or "Export"
-            // We search in the document body just in case the menu ref changed
-            const buttons = Array.from(document.querySelectorAll(`${SELECTORS.menuPanel} button`));
-            const textMatch = buttons.find(b => b.textContent.includes('Export to Docs'));
-            if (textMatch) {
-                simulateClick(textMatch);
-                return;
+            // One last broad search for any Docs icon
+            const allIcons = Array.from(document.querySelectorAll('mat-icon[fonticon="docs"], mat-icon[data-mat-icon-name="docs"]'));
+            const icon = allIcons.find(i => i.offsetParent); // Visible icon
+            if (icon) {
+                exportBtn = icon.closest('button');
             }
+        }
+
+        if (!exportBtn) {
+            console.error('Export button not found. Dumping menu state:', document.querySelectorAll('.mat-mdc-menu-panel').length);
             throw new Error('Export button not found in menu');
         }
 
         simulateClick(exportBtn);
         console.log('Turn Export Clicked');
 
-        // Close menu if it persists (usually auto-closes on click)
+        // Close menu if it persists (auto-closes usually)
+        await sleep(100);
         const closeBackdrop = document.querySelector('.cdk-overlay-backdrop');
         if (closeBackdrop) simulateClick(closeBackdrop);
     }
