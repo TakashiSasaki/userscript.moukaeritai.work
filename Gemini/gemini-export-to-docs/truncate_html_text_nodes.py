@@ -26,9 +26,9 @@ class TextTruncator(HTMLParser):
         self.output.append(f"</{tag}>")
 
     def handle_data(self, data):
-        if len(data) > 10000:
-            # Truncate to 9999 characters
-            truncated_data = data[:9999]
+        if len(data) > 999:
+            # Truncate to 999 characters
+            truncated_data = data[:999]
             # Add a marker or just truncate? User asked to truncate to 9999.
             # We will just write the first 9999 chars.
             self.output.append(truncated_data)
