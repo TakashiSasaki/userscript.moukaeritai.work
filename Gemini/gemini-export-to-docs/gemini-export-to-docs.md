@@ -54,3 +54,7 @@ Geminiのサイトではセキュリティポリシーにより `innerHTML` へ�
 2.  **共有メニュー**: キャンバス内の「共有（Share）」ボタンをクリック。
 3.  **メニュー待機**: 共有メニューが表示されるのを待つ。
 4.  **ボタン探索 & クリック**: 「Export to Docs」をクリック。
+
+# リポジトリ
+
+*   **GitHub**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/Gemini/gemini-export-to-docs](https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/Gemini/gemini-export-to-docs)
