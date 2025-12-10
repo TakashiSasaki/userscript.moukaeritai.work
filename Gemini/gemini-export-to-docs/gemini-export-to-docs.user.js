@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.1.11
+// @version      0.1.12
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -204,6 +204,28 @@
     /**
      * Create the export button
      */
+    /**
+     * Helper: Mark a button as exported/success
+     */
+    function markAsExported(btn) {
+        if (btn.classList.contains('exported')) return;
+
+        btn.classList.add('exported');
+        btn.title = 'Exported!';
+
+        // Update Icon
+        const iconContainer = btn.querySelector('span');
+        if (iconContainer) {
+            while (iconContainer.firstChild) {
+                iconContainer.removeChild(iconContainer.firstChild);
+            }
+            iconContainer.appendChild(createIconElement(CHECK_ICON_PATH));
+        }
+    }
+
+    /**
+     * Create the export button
+     */
     function createExportButton(onClick) {
         const btn = document.createElement('button');
         btn.className = 'gemini-quick-export-btn';
@@ -224,15 +246,17 @@
             try {
                 await onClick();
 
-                // Success State
-                btn.classList.add('exported');
-                btn.title = 'Exported!';
-
-                // Clear existing icon safely
-                while (iconContainer.firstChild) {
-                    iconContainer.removeChild(iconContainer.firstChild);
+                // Success State - Sync across same container
+                // 1. Try to find the common turn container
+                const container = btn.closest(SELECTORS.turnContainer);
+                if (container) {
+                    // Turn mode: Find all buttons in this response/turn
+                    const allBtns = container.querySelectorAll('.gemini-quick-export-btn');
+                    allBtns.forEach(b => markAsExported(b));
+                } else {
+                    // Canvas or other mode: just update self
+                    markAsExported(btn);
                 }
-                iconContainer.appendChild(createIconElement(CHECK_ICON_PATH));
 
             } catch (err) {
                 console.error('Export failed:', err);
