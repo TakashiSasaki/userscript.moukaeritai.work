@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.1.6
+// @version      0.1.7
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -19,10 +19,12 @@
     // --- Selectors (based on provided samples) ---
     const SELECTORS = {
         // Turn selectors
-        turnContainer: 'response-container', // Broad container to watch
+        turnContainer: 'response-container, .response-container', // Broad container to watch
         moreMenuButton: 'button[data-test-id="more-menu-button"]', // The trigger "..."
         exportToDocsButton: 'button[data-test-id="export-to-docs-button"]', // The target in the menu
         exportIntermediateButton: 'button[data-test-id="export-button"]', // Mobile "Export to..." button
+
+        responseHeader: '.response-container-header', // Header area for top button
 
         // Canvas selectors
         canvasOpenButton: 'button[data-test-id="view-report-button"]', // "Open" button for canvas
@@ -275,18 +277,26 @@
         // Find all "More" buttons
         const moreButtons = document.querySelectorAll(SELECTORS.moreMenuButton);
         moreButtons.forEach(moreBtn => {
+            // 1. Bottom Injection (Existing)
             // Check if we already injected
             const container = moreBtn.parentElement;
-            if (!container || container.querySelector('.gemini-quick-export-btn')) return;
+            if (container && !container.querySelector('.gemini-quick-export-btn')) {
+                const btn = createExportButton(() => handleTurnExport(moreBtn));
+                container.appendChild(btn);
+            }
 
-            // Create button
-            const btn = createExportButton(() => handleTurnExport(moreBtn));
-
-            // Insert before the "More" button (or after, depending on preference. "Start of line to the right" implies near it)
-            // The user said "upper right of the response start line" or "next to the footer buttons".
-            // The `more-menu-button` is usually in the footer actions row.
-            // We append it to the same container to sit alongside.
-            container.appendChild(btn);
+            // 2. Top Injection (New)
+            // Navigate up to the main container
+            const root = moreBtn.closest(SELECTORS.turnContainer);
+            if (root) {
+                const header = root.querySelector(SELECTORS.responseHeader);
+                // Check if header exists and doesn't have our button
+                if (header && !header.querySelector('.gemini-quick-export-btn')) {
+                    const btn = createExportButton(() => handleTurnExport(moreBtn));
+                    // Usually header has controls. We append to the header.
+                    header.appendChild(btn);
+                }
+            }
         });
 
         // B. Handle Canvas "Open" Buttons
