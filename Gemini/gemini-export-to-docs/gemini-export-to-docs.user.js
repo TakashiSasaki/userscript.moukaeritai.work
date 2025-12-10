@@ -1,10 +1,12 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    http://tampermonkey.net/
-// @version      0.1.5
+// @version      0.1.6
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/Gemini/gemini-export-to-docs/gemini-export-to-docs.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/Gemini/gemini-export-to-docs/gemini-export-to-docs.user.js
 // @grant        none
 // ==/UserScript==
 
