@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.1.2
+// @version      0.1.3
 // @description  Adds a 1-click button to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -115,7 +115,7 @@
             // Usually "One Click" implies the user clicks our button and the item is gone.
             // But safety first: lets automate clicking "Delete" in menu, then automate "Confirm" in dialog.
 
-            if (!confirm('Are you sure you want to delete this conversation?')) return;
+            // if (!confirm('Are you sure you want to delete this conversation?')) return;
 
             btn.classList.add('processing');
             try {
