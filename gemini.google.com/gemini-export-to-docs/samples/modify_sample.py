@@ -1,7 +1,6 @@
 import os
+import argparse
 from bs4 import BeautifulSoup
-
-file_path = 'sample1.html'
 
 def modify_html(file_path):
     if not os.path.exists(file_path):
@@ -37,4 +36,8 @@ def modify_html(file_path):
     print("Done.")
 
 if __name__ == "__main__":
-    modify_html(file_path)
+    parser = argparse.ArgumentParser(description='Optimize HTML sample file.')
+    parser.add_argument('file_path', help='Path to the HTML file to modify')
+    args = parser.parse_args()
+    
+    modify_html(args.file_path)
