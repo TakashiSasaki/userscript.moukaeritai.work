@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Grok Conversation Copy
-// @namespace    http://tampermonkey.net/
-// @version      1.2.0
-// @description  Grokの会話ページで、全てのコピーボタンを順に押して内容を結合し、ユーザーとモデルを区別するインジケーター付きでクリップボードにコピーします。
+// @namespace    https://userscript.moukaeritai.work/
+// @version      1.3.2
+// @description  Grokの会話ページで、全てのコピーボタンを順に押して内容を結合し、ユーザーとモデルを区別するインジケーター付きでクリップボードにコピーします。ボタンにメッセージ数を表示。
 // @author       Takashi Sasaki
-// @match        https://grok.com/*
+// @match        https://grok.com/c/*
 // @grant        GM_setClipboard
 // @grant        GM_registerMenuCommand
 // @run-at       document-idle
@@ -82,6 +82,39 @@
         }
     }
 
+    /**
+     * ページ内のユーザー入力とモデル応答の数をカウントする
+     * @returns {{user: number, model: number, unknown: number}}
+     */
+    function countMessages() {
+        const copyButtons = Array.from(document.querySelectorAll(CONFIG.buttonSelector));
+        const counts = { user: 0, model: 0, unknown: 0 };
+
+        for (const btn of copyButtons) {
+            const source = detectMessageSource(btn);
+            counts[source]++;
+        }
+
+        return counts;
+    }
+
+    /**
+     * ボタンのラベルを更新する（メッセージ数を表示）
+     */
+    function updateButtonLabel() {
+        const btn = document.getElementById('grok-copy-all-btn');
+        if (!btn || btn.disabled) return;
+
+        const counts = countMessages();
+        const total = counts.user + counts.model + counts.unknown;
+
+        if (total === 0) {
+            btn.textContent = 'Copy All (0)';
+        } else {
+            btn.textContent = `Copy All (U:${counts.user} G:${counts.model})`;
+        }
+    }
+
     function addFloatingButton() {
         if (document.getElementById('grok-copy-all-btn')) return;
 
@@ -106,6 +139,9 @@
 
         btn.addEventListener('click', executeCopySequence);
         document.body.appendChild(btn);
+
+        // 初期表示時にメッセージ数を更新
+        updateButtonLabel();
     }
 
     async function executeCopySequence() {
@@ -206,11 +242,29 @@
         btn.textContent = text;
         btn.disabled = false;
         btn.style.backgroundColor = '#f26522';
+        // ボタンリセット時にラベルも更新
+        setTimeout(updateButtonLabel, 100);
+    }
+
+    // デバウンス用タイマー
+    let updateDebounceTimer = null;
+
+    /**
+     * デバウンス付きでボタン更新を行う（パフォーマンス対策）
+     */
+    function scheduleUpdate() {
+        if (updateDebounceTimer) {
+            clearTimeout(updateDebounceTimer);
+        }
+        updateDebounceTimer = setTimeout(() => {
+            addFloatingButton();
+            updateButtonLabel();
+        }, 500); // 500ms待ってから更新
     }
 
     // Monitoring for page changes (SPA)
     const observer = new MutationObserver(() => {
-        addFloatingButton();
+        scheduleUpdate();
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
