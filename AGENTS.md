@@ -99,3 +99,14 @@ When handling requests involving multiple files or requiring documentation:
 - https://greasyfork.org/ja/scripts/472713-chatgpt-auto-prompt-sender
 - https://greasyfork.org/ja/scripts/533295-grok-chat-history-shortcut
   
+## HTML Analysis Guidelines
+
+When analyzing HTML structure, particularly for text node extraction and statistics:
+1.  **Use Python's html.parser**: It provides a robust way to traverse HTML structures.
+2.  **Handle Void Elements**: Be aware of void elements (e.g., br, img, input) that do not have closing tags to correctly maintain the tag stack.
+3.  **Traverse and Track Parent Tags**: Maintain a stack of open tags to correctly identify the parent element of any text node.
+4.  **Ignore Whitespace-Only Nodes**: Often, text nodes containing only whitespace (formatting) should be ignored to get meaningful statistics.
+5.  **Metrics to Collect**:
+    *   **Count**: Number of text nodes belonging to a specific parent tag.
+    *   **Max Length**: The maximum length of a text node for each parent tag type.
+6.  **Example Analysis Script**: A reusable Python script structure should inherit from HTMLParser, overriding handle_starttag, handle_endtag, and handle_data.
