@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.1.6
+// @version      0.1.12
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -14,15 +14,20 @@
     'use strict';
 
     // svg icons
-    const DOCS_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor"><path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z"/></svg>';
+    // svg icons
+    // svg icons
+    const DOCS_ICON_PATH = "M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z";
+    const CHECK_ICON_PATH = "M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z";
 
     // --- Selectors (based on provided samples) ---
     const SELECTORS = {
         // Turn selectors
-        turnContainer: 'response-container', // Broad container to watch
+        turnContainer: 'response-container, .response-container', // Broad container to watch
         moreMenuButton: 'button[data-test-id="more-menu-button"]', // The trigger "..."
         exportToDocsButton: 'button[data-test-id="export-to-docs-button"]', // The target in the menu
         exportIntermediateButton: 'button[data-test-id="export-button"]', // Mobile "Export to..." button
+
+        responseHeader: '.response-container-header', // Header area for top button
 
         // Canvas selectors
         canvasOpenButton: 'button[data-test-id="view-report-button"]', // "Open" button for canvas
@@ -85,30 +90,62 @@
                 height: 32px;
                 border-radius: 16px;
                 border: 1px solid #ccc;
-                background-color: transparent;
+                background-color: #e6f4ea; /* Light green */
                 cursor: pointer;
                 margin-left: 8px;
                 color: #5f6368;
-                transition: background-color 0.2s;
-                position: relative; /* Fix for stacking context */
-                z-index: 1000;      /* Ensure it sits on top */
-                pointer-events: auto; /* Force events */
+                transition: all 0.2s;
+                position: relative;
+                z-index: 1000;
             }
             .gemini-quick-export-btn:hover {
-                background-color: rgba(0, 0, 0, 0.05);
+                background-color: #ceead6; /* Slightly darker green */
+            }
+            .gemini-quick-export-btn.exported {
+                background-color: #1e8e3e; /* Google Green */
+                color: white;
+                border-color: #1e8e3e;
             }
             .gemini-quick-export-btn svg {
                 fill: currentColor;
             }
-            .gemini-quick-export-btn.exporting {
-                color: #1a73e8;
-                border-color: #1a73e8;
-                animation: pulse 1s infinite;
+            /* Overlay */
+            #gemini-export-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(255, 255, 255, 0.7);
+                z-index: 99999;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                font-family: inherit;
+                font-size: 16px;
+                color: #333;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s;
             }
-            @keyframes pulse {
-                0% { opacity: 1; }
-                50% { opacity: 0.5; }
-                100% { opacity: 1; }
+            #gemini-export-overlay.visible {
+                opacity: 1;
+                pointer-events: auto;
+            }
+            /* Spinner */
+            .gemini-spinner {
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #1a73e8;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+                margin-bottom: 16px;
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
             }
         `;
         document.head.appendChild(style);
@@ -117,7 +154,13 @@
     /**
      * Create the SVG icon element safely
      */
-    function createSvgIcon() {
+    /**
+     * Create the SVG icon element safely
+     */
+    /**
+     * Create the SVG icon element safely
+     */
+    function createIconElement(pathData) {
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("height", "20");
         svg.setAttribute("viewBox", "0 -960 960 960");
@@ -125,10 +168,59 @@
         svg.setAttribute("fill", "currentColor");
 
         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d", "M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z");
+        path.setAttribute("d", pathData);
 
         svg.appendChild(path);
         return svg;
+    }
+
+    /**
+     * Manage Overlay
+     */
+    function showOverlay() {
+        let overlay = document.getElementById('gemini-export-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'gemini-export-overlay';
+
+            const spinner = document.createElement('div');
+            spinner.className = 'gemini-spinner';
+
+            const text = document.createElement('div');
+            text.textContent = 'Exporting to Docs...';
+
+            overlay.appendChild(spinner);
+            overlay.appendChild(text);
+            document.body.appendChild(overlay);
+        }
+        overlay.classList.add('visible');
+    }
+
+    function hideOverlay() {
+        const overlay = document.getElementById('gemini-export-overlay');
+        if (overlay) overlay.classList.remove('visible');
+    }
+
+    /**
+     * Create the export button
+     */
+    /**
+     * Helper: Mark a button as exported/success
+     */
+    function markAsExported(btn) {
+        if (btn.classList.contains('exported')) return;
+
+        btn.classList.add('exported');
+        btn.title = 'Exported!';
+
+        // Update Icon
+        const iconContainer = btn.querySelector('span');
+        if (iconContainer) {
+            while (iconContainer.firstChild) {
+                iconContainer.removeChild(iconContainer.firstChild);
+            }
+            iconContainer.appendChild(createIconElement(CHECK_ICON_PATH));
+        }
     }
 
     /**
@@ -138,22 +230,39 @@
         const btn = document.createElement('button');
         btn.className = 'gemini-quick-export-btn';
         btn.title = '1-Click Export to Docs';
-        // Fix: Use DOM creation instead of innerHTML to avoid TrustedHTML violation
-        btn.appendChild(createSvgIcon());
+
+        // Initial Icon
+        const iconContainer = document.createElement('span');
+        iconContainer.style.display = 'flex';
+        iconContainer.appendChild(createIconElement(DOCS_ICON_PATH));
+        btn.appendChild(iconContainer);
 
         btn.onclick = async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (btn.classList.contains('exporting')) return;
+            if (btn.classList.contains('exported')) return; // Already done
 
-            btn.classList.add('exporting');
+            showOverlay();
             try {
                 await onClick();
+
+                // Success State - Sync across same container
+                // 1. Try to find the common turn container
+                const container = btn.closest(SELECTORS.turnContainer);
+                if (container) {
+                    // Turn mode: Find all buttons in this response/turn
+                    const allBtns = container.querySelectorAll('.gemini-quick-export-btn');
+                    allBtns.forEach(b => markAsExported(b));
+                } else {
+                    // Canvas or other mode: just update self
+                    markAsExported(btn);
+                }
+
             } catch (err) {
                 console.error('Export failed:', err);
                 alert('Export failed. See console for details.');
             } finally {
-                btn.classList.remove('exporting');
+                hideOverlay();
             }
         };
         return btn;
@@ -165,58 +274,111 @@
      * 2. Wait for menu
      * 3. Click "Export to Docs" (or "Export to..." -> "Export to Docs" on mobile)
      */
+    /**
+     * Helper: Find the "Export to Docs" button in the document
+     * Searches by ID, class, and text content.
+     */
+    function findExportButton(context = document) {
+        // 1. Try explicit ID (Desktop)
+        let btn = context.querySelector(SELECTORS.exportToDocsButton);
+        if (btn && btn.offsetParent) return btn; // Check visibility
+
+        // 2. Try Mobile "Export to..." button (Intermediate)
+        // This is handled in the main flow, but we can check if we are in the submenu
+
+        // 3. Search for Buttons with specific text or icon
+        const candidates = Array.from(context.querySelectorAll('button[role="menuitem"], .mat-mdc-menu-item'));
+        return candidates.find(b => {
+            const text = b.textContent.toLowerCase();
+            return text.includes('export to docs') && b.offsetParent !== null;
+        });
+    }
+
+    /**
+     * Helper: Wait for Export button with retries
+     */
+    async function waitForExportButton(timeout = 2000) {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            const btn = findExportButton(document.body);
+            if (btn) return btn;
+            await sleep(100);
+        }
+        // Last ditch: sometimes it's in a different container or slow to animate
+        return findExportButton(document.body);
+    }
+
+    /**
+     * Flow: Export a specific turn
+     * 1. Click "More" (three dots)
+     * 2. Wait for ANY menu to appear
+     * 3. Look for "Export to Docs" globally
+     * 4. If mobile, handle intermediate "Export to..." click
+     */
     async function handleTurnExport(triggerBtn) {
         console.log('Starting Turn Export...');
 
         // 1. Click trigger
         simulateClick(triggerBtn);
 
-        // 2. Wait for menu
-        // The menu usually appears at the end of the body
-        let menu = await waitForElement(SELECTORS.menuPanel);
-        if (!menu) throw new Error('Menu did not appear');
+        // 2. Wait slightly for menu animation start
+        await sleep(200);
 
-        // 3. Find Export button
-        // First try direct "Export to Docs" (Desktop)
-        let exportBtn = await waitForElement(SELECTORS.exportToDocsButton, 1000, menu);
+        // 3. Try to find the button directly (Desktop case)
+        let exportBtn = await waitForExportButton(1000);
 
         if (!exportBtn) {
-            // Check for Mobile "Export to..." flow
-            const intermediateBtn = await waitForElement(SELECTORS.exportIntermediateButton, 500, menu);
+            // Check for Mobile "Export to..." intermediate button
+            // We search globally for this intermediate button too
+            const intermediateSelector = SELECTORS.exportIntermediateButton;
+            let intermediateBtn = null;
+
+            // Wait briefly for intermediate
+            const start = Date.now();
+            while (Date.now() - start < 1000) {
+                const el = document.querySelector(intermediateSelector);
+                if (el && el.offsetParent) {
+                    intermediateBtn = el;
+                    break;
+                }
+                const allBtns = Array.from(document.querySelectorAll('button'));
+                const textMatch = allBtns.find(b => b.textContent.trim() === 'Export to...' && b.offsetParent);
+                if (textMatch) {
+                    intermediateBtn = textMatch;
+                    break;
+                }
+                await sleep(100);
+            }
+
             if (intermediateBtn) {
                 console.log('Mobile layout detected: clicking intermediate export button');
                 simulateClick(intermediateBtn);
+                await sleep(500); // Wait for submenu
 
-                // Wait for the SECOND menu/sheet
-                // We pause briefly to let the old one disappear or new one appear.
-                // Since waitForElement checks existence, we might need to be careful if the old menu DOM stays.
-                // Usually Angular Material replaces or adds a new container.
-                await sleep(500);
-
-                // Re-query for the menu panel (it might be a new DOM element)
-                // In some cases we might need to look for a different panel, but usually it's the same class
-                // We'll search document-wide for the 'Export to Docs' button now, assuming it's visible
-                exportBtn = await waitForElement(SELECTORS.exportToDocsButton, 2000, document.body);
+                // Re-try finding the final button
+                exportBtn = await waitForExportButton(2000);
             }
         }
 
         if (!exportBtn) {
-            // It might be inside a submenu or the selector might vary. 
-            // Fallback: look for text "Docs" or "Export"
-            // We search in the document body just in case the menu ref changed
-            const buttons = Array.from(document.querySelectorAll(`${SELECTORS.menuPanel} button`));
-            const textMatch = buttons.find(b => b.textContent.includes('Export to Docs'));
-            if (textMatch) {
-                simulateClick(textMatch);
-                return;
+            // One last broad search for any Docs icon
+            const allIcons = Array.from(document.querySelectorAll('mat-icon[fonticon="docs"], mat-icon[data-mat-icon-name="docs"]'));
+            const icon = allIcons.find(i => i.offsetParent); // Visible icon
+            if (icon) {
+                exportBtn = icon.closest('button');
             }
+        }
+
+        if (!exportBtn) {
+            console.error('Export button not found. Dumping menu state:', document.querySelectorAll('.mat-mdc-menu-panel').length);
             throw new Error('Export button not found in menu');
         }
 
         simulateClick(exportBtn);
         console.log('Turn Export Clicked');
 
-        // Close menu if it persists (usually auto-closes on click)
+        // Close menu if it persists (auto-closes usually)
+        await sleep(100);
         const closeBackdrop = document.querySelector('.cdk-overlay-backdrop');
         if (closeBackdrop) simulateClick(closeBackdrop);
     }
@@ -275,18 +437,26 @@
         // Find all "More" buttons
         const moreButtons = document.querySelectorAll(SELECTORS.moreMenuButton);
         moreButtons.forEach(moreBtn => {
+            // 1. Bottom Injection (Existing)
             // Check if we already injected
             const container = moreBtn.parentElement;
-            if (!container || container.querySelector('.gemini-quick-export-btn')) return;
+            if (container && !container.querySelector('.gemini-quick-export-btn')) {
+                const btn = createExportButton(() => handleTurnExport(moreBtn));
+                container.appendChild(btn);
+            }
 
-            // Create button
-            const btn = createExportButton(() => handleTurnExport(moreBtn));
-
-            // Insert before the "More" button (or after, depending on preference. "Start of line to the right" implies near it)
-            // The user said "upper right of the response start line" or "next to the footer buttons".
-            // The `more-menu-button` is usually in the footer actions row.
-            // We append it to the same container to sit alongside.
-            container.appendChild(btn);
+            // 2. Top Injection (New)
+            // Navigate up to the main container
+            const root = moreBtn.closest(SELECTORS.turnContainer);
+            if (root) {
+                const header = root.querySelector(SELECTORS.responseHeader);
+                // Check if header exists and doesn't have our button
+                if (header && !header.querySelector('.gemini-quick-export-btn')) {
+                    const btn = createExportButton(() => handleTurnExport(moreBtn));
+                    // Usually header has controls. We append to the header.
+                    header.appendChild(btn);
+                }
+            }
         });
 
         // B. Handle Canvas "Open" Buttons

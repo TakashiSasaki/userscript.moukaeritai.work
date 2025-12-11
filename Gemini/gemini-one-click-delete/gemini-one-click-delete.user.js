@@ -1,10 +1,12 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.1.0
+// @version      0.1.4
 // @description  Adds a 1-click button to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/Gemini/gemini-one-click-delete/gemini-one-click-delete.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/Gemini/gemini-one-click-delete/gemini-one-click-delete.user.js
 // @grant        none
 // ==/UserScript==
 
@@ -36,7 +38,16 @@
         dialogContainer: 'mat-dialog-container',
 
         // Confirm Button inside Dialog
-        confirmButton: 'button[data-test-id="confirm-button"]'
+        confirmButton: 'button[data-test-id="confirm-button"]',
+
+        // Sidebar Item
+        sidebarItem: 'div[data-test-id="conversation"]',
+
+        // Chat Container (for floating button injection)
+        chatContainer: 'chat-window',
+
+        // Search Result Indicators
+        messageContent: 'message-content, user-query-content, response-element'
     };
 
     /**
@@ -91,29 +102,20 @@
     /**
      * Create the custom delete button
      */
-    function createDeleteButton(onClick) {
+    function createDeleteButton(onClick, isFloating = false) {
         const btn = document.createElement('button');
-        btn.className = 'gemini-quick-delete-btn';
+        btn.className = isFloating ? 'gemini-quick-delete-btn floating' : 'gemini-quick-delete-btn';
         btn.title = '1-Click Delete Conversation';
+        if (isFloating) {
+            // For floating button, we might want to start disabled until we verify sidebar presence
+            btn.style.display = 'none'; // Initially hidden
+        }
         btn.appendChild(createSvgElement());
 
         btn.addEventListener('click', async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (btn.classList.contains('processing')) return;
-
-            // Optional: Standard window confirm for safety before starting automation
-            // The user requested "1-click", but Gemini has its own confirmation dialog.
-            // We will automate the menu opening -> clicking delete -> confirming in Gemini's dialog.
-            // If we want truly "1-click" we would automate the dialog too.
-            // The request says "1-click delete conversation", implies bypassing menus.
-            // It does not explicitly say "bypass confirmation", but usually "1-click" implies speed.
-            // However, automating the confirmation is risky.
-            // Let's implement the flow to getting TO the confirmation dialog (1) or clicking IT (2).
-            // Usually "One Click" implies the user clicks our button and the item is gone.
-            // But safety first: lets automate clicking "Delete" in menu, then automate "Confirm" in dialog.
-
-            if (!confirm('Are you sure you want to delete this conversation?')) return;
+            if (btn.classList.contains('processing') || btn.disabled) return;
 
             btn.classList.add('processing');
             try {
@@ -142,18 +144,18 @@
                 min-width: 32px;
                 height: 32px;
                 border-radius: 16px;
-                border: 1px solid #ccc;
-                background-color: transparent;
+                border: 1px solid #ffcccc; /* Light red border */
+                background-color: #ffe6e6; /* Light red background */
                 cursor: pointer;
                 margin-left: 8px;
                 color: #5f6368;
-                transition: background-color 0.2s;
+                transition: background-color 0.2s, opacity 0.2s;
                 position: relative;
                 z-index: 1000;
                 pointer-events: auto;
             }
             .gemini-quick-delete-btn:hover {
-                background-color: rgba(255, 0, 0, 0.1);
+                background-color: #ffcccc; /* Slightly darker light red on hover */
                 color: #d93025;
                 border-color: #d93025;
             }
@@ -161,6 +163,18 @@
                 opacity: 0.5;
                 cursor: not-allowed;
                 animation: pulse-red 1s infinite;
+            }
+            .gemini-quick-delete-btn.floating {
+                position: absolute;
+                top: 10px;
+                right: 20px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            }
+            .gemini-quick-delete-btn:disabled {
+                background-color: #f0f0f0;
+                border-color: #ccc;
+                color: #aaa;
+                cursor: help; /* Show help cursor to indicate tooltip */
             }
             @keyframes pulse-red {
                 0% { opacity: 1; }
@@ -216,22 +230,122 @@
     }
 
     /**
+     * Helper to get Conversation ID from Main View
+     */
+    function getConversationIdFromMainView() {
+        // Try to find it in jslog of message content
+        const elements = document.querySelectorAll(SELECTORS.messageContent);
+        for (const el of elements) {
+            const jslog = el.getAttribute('jslog');
+            if (jslog) {
+                // Regex to find c_<hex>
+                const match = jslog.match(/\"(c_[a-f0-9]{16})\"/);
+                if (match && match[1]) {
+                    return match[1];
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Helper to find Sidebar Item by ID
+     */
+    function findSidebarItem(conversationId) {
+        if (!conversationId) return null;
+        // Search all specific conversation items in sidebar
+        // This relies on them having the ID in their jslog too, or checking href/data attributes
+        // The sample analysis showed jslog contains the ID.
+        // We can search for any element containing the ID in its attributes if we wanna be broad
+        // But let's try to be specific to 'div[data-test-id="conversation"]'
+        const items = document.querySelectorAll(SELECTORS.sidebarItem);
+        for (const item of items) {
+            const jslog = item.getAttribute('jslog') || '';
+            // Also check inner elements if the attribute is not on the container
+            if (jslog.includes(conversationId)) return item;
+            if (item.innerHTML.includes(conversationId)) return item;
+        }
+        return null;
+    }
+
+    /**
+     * Update Floating Button State
+     */
+    function updateFloatingButton(btn, conversationId) {
+        if (!conversationId) {
+            btn.style.display = 'none';
+            return;
+        }
+        btn.style.display = 'inline-flex';
+
+        const sidebarItem = findSidebarItem(conversationId);
+        if (sidebarItem) {
+            btn.disabled = false;
+            btn.title = '1-Click Delete Conversation';
+            // We need to find the specific menu trigger WITHIN the sidebar item
+            const trigger = sidebarItem.querySelector(SELECTORS.actionsMenuButton);
+            if (trigger) {
+                btn._targetTrigger = trigger;
+            } else {
+                btn.disabled = true;
+                btn.title = 'Menu button not found in sidebar item';
+            }
+        } else {
+            btn.disabled = true;
+            btn.title = 'Scroll sidebar to load this conversation for deletion';
+        }
+    }
+
+    /**
      * Inject buttons into DOM
      */
     function processNodes() {
+        // 1. Standard Header processing (existing logic)
         const targets = document.querySelectorAll(SELECTORS.actionsMenuButton);
         targets.forEach(triggerBtn => {
+            // Check if inside sidebar
+            if (triggerBtn.closest('bard-sidenav') || triggerBtn.closest('side-navigation-content')) {
+                return;
+            }
+
             const container = triggerBtn.parentElement;
             if (!container || container.querySelector('.gemini-quick-delete-btn')) return;
 
             // Create and inject
             const deleteBtn = createDeleteButton(() => handleDelete(triggerBtn));
-
-            // Insert next to the trigger button
-            // The trigger button is usually the last one in the title row, 
-            // or we can append to container to put it to the right.
             container.appendChild(deleteBtn);
         });
+
+        // 2. Search View Processing (Floating Button)
+        const chatWindow = document.querySelector(SELECTORS.chatContainer);
+        if (chatWindow) {
+            // Check if we have a standard header button already.
+            const hasStandardHeader = Array.from(targets).some(t =>
+                !t.closest('bard-sidenav') && !t.closest('side-navigation-content')
+            );
+
+            // Only add floating button if standard header button is missing
+            if (!hasStandardHeader) {
+                let floatingBtn = document.querySelector('.gemini-quick-delete-btn.floating');
+                if (!floatingBtn) {
+                    floatingBtn = createDeleteButton(async () => {
+                        if (floatingBtn._targetTrigger) {
+                            await handleDelete(floatingBtn._targetTrigger);
+                        }
+                    }, true); // true = isFloating
+
+                    // Ensure relative positioning for absolute child
+                    if (getComputedStyle(chatWindow).position === 'static') {
+                        chatWindow.style.position = 'relative';
+                    }
+                    chatWindow.appendChild(floatingBtn);
+                }
+
+                // Update state
+                const conversationId = getConversationIdFromMainView();
+                updateFloatingButton(floatingBtn, conversationId);
+            }
+        }
     }
 
     /**
