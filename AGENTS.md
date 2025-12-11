@@ -87,3 +87,15 @@ When handling requests involving multiple files or requiring documentation:
 - GITHUB_TOKEN に入っている認可トークンはそのアクセス範囲が限定されている場合がある。
 - だから GITHUB_TOKEN があってもどんなリポジトリに対してもアクセスできるとは限らない。
 - GITHUB_TOKEN を unset して gh auth login しなおす必要がある。
+
+# GreasyForkでの公開状況
+
+一部のユーザースクリプトはGreasyForkで公開している。
+
+- https://greasyfork.org/ja/scripts/472814-chatgpt-conversation-lister
+- https://greasyfork.org/ja/scripts/533285-gemini-conversation-delete-shortcut
+- https://greasyfork.org/ja/scripts/533686-gemini-export-button
+- https://greasyfork.org/ja/scripts/535471-save-a-gemini-message-to-google-docs
+- https://greasyfork.org/ja/scripts/472713-chatgpt-auto-prompt-sender
+- https://greasyfork.org/ja/scripts/533295-grok-chat-history-shortcut
+  
