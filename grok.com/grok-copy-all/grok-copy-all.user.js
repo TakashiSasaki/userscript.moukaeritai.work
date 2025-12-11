@@ -8,6 +8,8 @@
 // @grant        GM_setClipboard
 // @grant        GM_registerMenuCommand
 // @run-at       document-idle
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/grok.com/grok-copy-all/grok-copy-all.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/grok.com/grok-copy-all/grok-copy-all.user.js
 // ==/UserScript==
 
 (function () {
