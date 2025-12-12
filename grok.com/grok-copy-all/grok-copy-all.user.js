@@ -1,13 +1,15 @@
 // ==UserScript==
 // @name         Grok Conversation Copy
-// @namespace    http://tampermonkey.net/
-// @version      1.1.0
-// @description  Grokの会話ページで、全てのコピーボタンを順に押して内容を結合し、クリップボードにコピーします。
+// @namespace    https://userscript.moukaeritai.work/
+// @version      1.3.2
+// @description  Grokの会話ページで、全てのコピーボタンを順に押して内容を結合し、ユーザーとモデルを区別するインジケーター付きでクリップボードにコピーします。ボタンにメッセージ数を表示。
 // @author       Takashi Sasaki
-// @match        https://grok.com/*
+// @match        https://grok.com/c/*
 // @grant        GM_setClipboard
 // @grant        GM_registerMenuCommand
 // @run-at       document-idle
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/grok.com/grok-copy-all/grok-copy-all.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/grok.com/grok-copy-all/grok-copy-all.user.js
 // ==/UserScript==
 
 (function () {
@@ -16,7 +18,102 @@
     const CONFIG = {
         buttonSelector: 'button[aria-label="コピー"], button[aria-label="Copy"]',
         interClickDelay: 100, // ms
+        userIndicator: '[USER]',
+        modelIndicator: '[GROK]',
     };
+
+    /**
+     * メッセージコンテナのクラスを解析して、ユーザーメッセージかモデル応答かを判定する
+     * @param {HTMLElement} copyButton - コピーボタン要素
+     * @returns {string} 'user' | 'model' | 'unknown'
+     */
+    function detectMessageSource(copyButton) {
+        let element = copyButton;
+
+        // DOMを上方向に最大20階層まで探索
+        for (let i = 0; i < 20; i++) {
+            element = element.parentElement;
+            if (!element) break;
+
+            const classList = element.classList;
+            if (!classList) continue;
+
+            // items-end = ユーザーメッセージ（右寄せ）
+            // items-start = モデル応答（左寄せ）
+            if (classList.contains('items-end')) {
+                return 'user';
+            }
+            if (classList.contains('items-start')) {
+                return 'model';
+            }
+
+            // 代替検出: message-bubble のスタイルで判定
+            const classString = Array.from(classList).join(' ');
+
+            // ユーザーメッセージ: 背景色あり、幅制限あり、右下角丸
+            if (classString.includes('bg-surface-l1') &&
+                classString.includes('rounded-br-lg')) {
+                return 'user';
+            }
+
+            // モデル応答: 全幅、最大幅制限なし
+            if (classString.includes('max-w-none') &&
+                classString.includes('w-full')) {
+                return 'model';
+            }
+        }
+
+        return 'unknown';
+    }
+
+    /**
+     * メッセージソースに応じたインジケーターを取得
+     * @param {string} source - 'user' | 'model' | 'unknown'
+     * @returns {string} インジケーター文字列
+     */
+    function getIndicator(source) {
+        switch (source) {
+            case 'user':
+                return CONFIG.userIndicator;
+            case 'model':
+                return CONFIG.modelIndicator;
+            default:
+                return '[???]';
+        }
+    }
+
+    /**
+     * ページ内のユーザー入力とモデル応答の数をカウントする
+     * @returns {{user: number, model: number, unknown: number}}
+     */
+    function countMessages() {
+        const copyButtons = Array.from(document.querySelectorAll(CONFIG.buttonSelector));
+        const counts = { user: 0, model: 0, unknown: 0 };
+
+        for (const btn of copyButtons) {
+            const source = detectMessageSource(btn);
+            counts[source]++;
+        }
+
+        return counts;
+    }
+
+    /**
+     * ボタンのラベルを更新する（メッセージ数を表示）
+     */
+    function updateButtonLabel() {
+        const btn = document.getElementById('grok-copy-all-btn');
+        if (!btn || btn.disabled) return;
+
+        const counts = countMessages();
+        const total = counts.user + counts.model + counts.unknown;
+
+        if (total === 0) {
+            btn.textContent = 'Copy All (0)';
+        } else {
+            btn.textContent = `Copy All (U:${counts.user} G:${counts.model})`;
+        }
+    }
 
     function addFloatingButton() {
         if (document.getElementById('grok-copy-all-btn')) return;
@@ -42,6 +139,9 @@
 
         btn.addEventListener('click', executeCopySequence);
         document.body.appendChild(btn);
+
+        // 初期表示時にメッセージ数を更新
+        updateButtonLabel();
     }
 
     async function executeCopySequence() {
@@ -58,6 +158,9 @@
             resetButton(btn, originalText);
             return;
         }
+
+        // --- 各ボタンのメッセージソースを事前に判定 ---
+        const messageSources = copyButtons.map(btn => detectMessageSource(btn));
 
         // --- Clipboard Hijacking Logic ---
         let collectedText = [];
@@ -106,7 +209,13 @@
         }
 
         if (collectedText.length > 0) {
-            const finalText = collectedText.join('\n\n' + '-'.repeat(20) + '\n\n');
+            // インジケーター付きでテキストを結合
+            const formattedTexts = collectedText.map((text, index) => {
+                const indicator = getIndicator(messageSources[index]);
+                return `${indicator}\n${text}`;
+            });
+
+            const finalText = formattedTexts.join('\n\n' + '-'.repeat(20) + '\n\n');
 
             try {
                 // Use GM_setClipboard if available (more reliable in userscripts), fallback to navigator
@@ -133,11 +242,29 @@
         btn.textContent = text;
         btn.disabled = false;
         btn.style.backgroundColor = '#f26522';
+        // ボタンリセット時にラベルも更新
+        setTimeout(updateButtonLabel, 100);
+    }
+
+    // デバウンス用タイマー
+    let updateDebounceTimer = null;
+
+    /**
+     * デバウンス付きでボタン更新を行う（パフォーマンス対策）
+     */
+    function scheduleUpdate() {
+        if (updateDebounceTimer) {
+            clearTimeout(updateDebounceTimer);
+        }
+        updateDebounceTimer = setTimeout(() => {
+            addFloatingButton();
+            updateButtonLabel();
+        }, 500); // 500ms待ってから更新
     }
 
     // Monitoring for page changes (SPA)
     const observer = new MutationObserver(() => {
-        addFloatingButton();
+        scheduleUpdate();
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
