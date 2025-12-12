@@ -105,10 +105,9 @@ When analyzing HTML structure, particularly for text node extraction and statist
 1.  **Use Python's html.parser**: It provides a robust way to traverse HTML structures.
 2.  **Handle Void Elements**: Be aware of void elements (e.g., br, img, input) that do not have closing tags to correctly maintain the tag stack.
 3.  **Traverse and Track Parent Tags**: Maintain a stack of open tags to correctly identify the parent element of any text node.
-4.  **Ignore Whitespace-Only Nodes**: Often, text nodes containing only whitespace (formatting) should be ignored to get meaningful statistics.
 5.  **Metrics to Collect**:
     *   **Count**: Number of text nodes belonging to a specific parent tag.
     *   **Max Length**: The maximum length of a text node for each parent tag type.
 6.  **Example Analysis Script**: A reusable Python script structure should inherit from HTMLParser, overriding handle_starttag, handle_endtag, and handle_data.
-7.  **Count HTML Comments**: When analyzing HTML files, also count the number of HTML comment blocks (<!-- -->) present in the document.
-8.  **Count Whitespace-Only Nodes**: Display the total number of text nodes that contain only whitespace characters in the analysis results.
+7.  **Count HTML Comments**: When analyzing HTML files, count the number of HTML comment blocks (<!-- -->) and display this count in the analysis results table.
+8.  **Count Whitespace-Only Nodes**: Count the total number of text nodes that contain only whitespace characters and display this count in the analysis results table.
