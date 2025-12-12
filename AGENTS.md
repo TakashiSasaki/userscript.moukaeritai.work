@@ -119,6 +119,7 @@ In this repository, HTML cleanup refers to a specific set of operations to clean
 2.  **Remove <script> tags**: Remove all script tags and their contents.
 3.  **Remove HTML comments**: Remove all HTML comment blocks (<!-- -->).
 4.  **Remove empty/whitespace-only text nodes**: Remove text nodes that contain only whitespace characters (spaces, tabs, newlines).
+5.  **Remove empty `style=""` attributes**: Remove any `style` attributes that have an empty value (e.g., `style=""`).
 
 **Before and After Analysis**: Always perform HTML analysis both before and after cleanup operations. This allows tracking what was removed during the cleanup process and provides metrics on the cleanup effectiveness.
 
