@@ -12,6 +12,80 @@ sample2.html は Gemini のWeb SPAで
 - [詳細（キャンバス）を開く 'Open' ボタン](#詳細キャンバスを開く-open-ボタン)
 - [キャンバス（詳細ビュー）内の共有ボタン](#キャンバス詳細ビュー内の共有ボタン)
 
+### Text Node Statistics by Parent Tag
+
+| Parent Tag | Count | Max Length | Median Length |
+| :--- | :--- | :--- | :--- |
+| p | 339 | 931 | 218 |
+| div | 1911 | 618 | 1 |
+| span | 204 | 375 | 4.0 |
+| b | 34 | 369 | 13.5 |
+| code | 143 | 253 | 10 |
+| h4 | 3 | 219 | 213 |
+| h3 | 25 | 212 | 108 |
+| h2 | 2 | 102 | 98.5 |
+| h1 | 2 | 74 | 40.5 |
+| title | 1 | 13 | 13 |
+| html | 3 | 1 | 1 |
+| head | 36 | 1 | 1.0 |
+| body | 13 | 1 | 1 |
+| a | 3 | 1 | 1 |
+| svg | 84 | 1 | 1.0 |
+| chat-app | 2 | 1 | 1.0 |
+| main | 2 | 1 | 1.0 |
+| bard-logo | 2 | 1 | 1.0 |
+| top-bar-actions | 2 | 1 | 1.0 |
+| mat-sidenav-container | 5 | 1 | 1 |
+| mat-sidenav | 2 | 1 | 1.0 |
+| side-navigation-content | 2 | 1 | 1.0 |
+| search-nav-bar | 2 | 1 | 1.0 |
+| button | 4 | 1 | 1.0 |
+| infinite-scroller | 18 | 1 | 1.0 |
+| mat-progress-spinner | 6 | 1 | 1.0 |
+| circle | 8 | 1 | 1.0 |
+| side-nav-entry-button | 4 | 1 | 1.0 |
+| my-stuff-recents-preview | 2 | 1 | 1.0 |
+| library-item-card | 6 | 1 | 1.0 |
+| bot-list | 3 | 1 | 1 |
+| bot-list-item | 4 | 1 | 1.0 |
+| conversations-list | 3 | 1 | 1 |
+| mat-sidenav-content | 2 | 1 | 1.0 |
+| chat-window | 3 | 1 | 1 |
+| chat-window-content | 4 | 1 | 1.0 |
+| user-query-content | 20 | 1 | 1.0 |
+| model-response | 20 | 1 | 1.0 |
+| response-container | 20 | 1 | 1.0 |
+| tts-control | 30 | 1 | 1.0 |
+| bard-avatar | 20 | 1 | 1.0 |
+| defs | 150 | 1 | 1.0 |
+| clippath | 40 | 1 | 1.0 |
+| rect | 20 | 1 | 1.0 |
+| g | 500 | 1 | 1.0 |
+| path | 100 | 1 | 1.0 |
+| lineargradient | 420 | 1 | 1.0 |
+| stop | 150 | 1 | 1.0 |
+| mask | 20 | 1 | 1.0 |
+| use | 10 | 1 | 1.0 |
+| message-content | 20 | 1 | 1.0 |
+| code-block | 18 | 1 | 1.0 |
+| ol | 14 | 1 | 1.0 |
+| li | 52 | 1 | 1.0 |
+| immersive-entry-chip | 7 | 1 | 1 |
+| message-actions | 20 | 1 | 1.0 |
+| model-thoughts | 18 | 1 | 1.0 |
+| ul | 24 | 1 | 1.0 |
+| input-container | 2 | 1 | 1.0 |
+| input-area-v2 | 2 | 1 | 1.0 |
+| rich-textarea | 3 | 1 | 1 |
+| uploader | 2 | 1 | 1.0 |
+| toolbox-drawer | 2 | 1 | 1.0 |
+| bard-mode-switcher | 2 | 1 | 1.0 |
+| hallucination-disclaimer | 2 | 1 | 1.0 |
+| code-immersive-panel | 3 | 1 | 1 |
+| toolbar | 2 | 1 | 1.0 |
+| versioning-buttons | 2 | 1 | 1.0 |
+| xap-code-editor | 2 | 1 | 1.0 |
+
 # 共有ダイアログ内の 'Export to Docs' ボタン
 
 ## 共有ダイアログ内の 'Export to Docs' ボタンのHTML断片
