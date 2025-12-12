@@ -121,3 +121,11 @@ In this repository, HTML cleanup refers to a specific set of operations to clean
 4.  **Remove empty/whitespace-only text nodes**: Remove text nodes that contain only whitespace characters (spaces, tabs, newlines).
 
 **Before and After Analysis**: Always perform HTML analysis both before and after cleanup operations. This allows tracking what was removed during the cleanup process and provides metrics on the cleanup effectiveness.
+
+## Python Scripts for HTML Processing
+
+When performing HTML analysis or manipulation tasks:
+1.  **Python scripts are allowed**: Use Python scripts for HTML parsing, analysis, and modification tasks.
+2.  **pip packages**: Install necessary packages via pip as needed (e.g., `beautifulsoup4`, `lxml`).
+3.  **Keep created scripts**: Do not delete analysis or processing scripts after use. Keep them in the same directory as the HTML files being processed for future reference and reuse.
+4.  **Script naming**: Use descriptive names like `analyze_sample1.py`, `truncate_longest_div.py`, etc.
