@@ -111,3 +111,13 @@ When analyzing HTML structure, particularly for text node extraction and statist
 6.  **Example Analysis Script**: A reusable Python script structure should inherit from HTMLParser, overriding handle_starttag, handle_endtag, and handle_data.
 7.  **Count HTML Comments**: When analyzing HTML files, count the number of HTML comment blocks (<!-- -->) and display this count in the analysis results table.
 8.  **Count Whitespace-Only Nodes**: Count the total number of text nodes that contain only whitespace characters and display this count in the analysis results table.
+
+## HTML Cleanup Process
+
+In this repository, HTML cleanup refers to a specific set of operations to clean HTML sample files:
+1.  **Remove <style> tags**: Remove all style tags and their contents.
+2.  **Remove <script> tags**: Remove all script tags and their contents.
+3.  **Remove HTML comments**: Remove all HTML comment blocks (<!-- -->).
+4.  **Remove empty/whitespace-only text nodes**: Remove text nodes that contain only whitespace characters (spaces, tabs, newlines).
+
+**Before and After Analysis**: Always perform HTML analysis both before and after cleanup operations. This allows tracking what was removed during the cleanup process and provides metrics on the cleanup effectiveness.
