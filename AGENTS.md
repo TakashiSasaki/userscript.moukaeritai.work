@@ -111,3 +111,4 @@ When analyzing HTML structure, particularly for text node extraction and statist
     *   **Max Length**: The maximum length of a text node for each parent tag type.
 6.  **Example Analysis Script**: A reusable Python script structure should inherit from HTMLParser, overriding handle_starttag, handle_endtag, and handle_data.
 7.  **Count HTML Comments**: When analyzing HTML files, also count the number of HTML comment blocks (<!-- -->) present in the document.
+8.  **Count Whitespace-Only Nodes**: Display the total number of text nodes that contain only whitespace characters in the analysis results.
