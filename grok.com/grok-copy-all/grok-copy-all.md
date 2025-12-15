@@ -43,3 +43,8 @@ Grokの会話ページでは、各ターンごとに「コピー」ボタンが�
 
 ### 技術的な仕組み
 `navigator.clipboard.writeText` を一時的にフック（ジャック）し、各ボタンがこの関数を呼び出した際に渡されるテキストを配列に保存します。これにより、DOM構造が変化しても「ボタンがコピーしようとした内容」を正確に取得できます。
+
+# リポジトリ
+
+*   **GitHub**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/grok.com/grok-copy-all](https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/grok.com/grok-copy-all)
+*   **Raw Script**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/grok.com/grok-copy-all/grok-copy-all.user.js](https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/grok.com/grok-copy-all/grok-copy-all.user.js)
