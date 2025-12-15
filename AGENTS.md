@@ -87,3 +87,46 @@ When handling requests involving multiple files or requiring documentation:
 - GITHUB_TOKEN に入っている認可トークンはそのアクセス範囲が限定されている場合がある。
 - だから GITHUB_TOKEN があってもどんなリポジトリに対してもアクセスできるとは限らない。
 - GITHUB_TOKEN を unset して gh auth login しなおす必要がある。
+
+# GreasyForkでの公開状況
+
+一部のユーザースクリプトはGreasyForkで公開している。
+
+- https://greasyfork.org/ja/scripts/472814-chatgpt-conversation-lister
+- https://greasyfork.org/ja/scripts/533285-gemini-conversation-delete-shortcut
+- https://greasyfork.org/ja/scripts/533686-gemini-export-button
+- https://greasyfork.org/ja/scripts/535471-save-a-gemini-message-to-google-docs
+- https://greasyfork.org/ja/scripts/472713-chatgpt-auto-prompt-sender
+- https://greasyfork.org/ja/scripts/533295-grok-chat-history-shortcut
+  
+## HTML Analysis Guidelines
+
+When analyzing HTML structure, particularly for text node extraction and statistics:
+1.  **Use Python's html.parser**: It provides a robust way to traverse HTML structures.
+2.  **Handle Void Elements**: Be aware of void elements (e.g., br, img, input) that do not have closing tags to correctly maintain the tag stack.
+3.  **Traverse and Track Parent Tags**: Maintain a stack of open tags to correctly identify the parent element of any text node.
+5.  **Metrics to Collect**:
+    *   **Count**: Number of text nodes belonging to a specific parent tag.
+    *   **Max Length**: The maximum length of a text node for each parent tag type.
+6.  **Example Analysis Script**: A reusable Python script structure should inherit from HTMLParser, overriding handle_starttag, handle_endtag, and handle_data.
+7.  **Count HTML Comments**: When analyzing HTML files, count the number of HTML comment blocks (<!-- -->) and display this count in the analysis results table.
+8.  **Count Whitespace-Only Nodes**: Count the total number of text nodes that contain only whitespace characters and display this count in the analysis results table.
+
+## HTML Cleanup Process
+
+In this repository, HTML cleanup refers to a specific set of operations to clean HTML sample files:
+1.  **Remove <style> tags**: Remove all style tags and their contents.
+2.  **Remove <script> tags**: Remove all script tags and their contents.
+3.  **Remove HTML comments**: Remove all HTML comment blocks (<!-- -->).
+4.  **Remove empty/whitespace-only text nodes**: Remove text nodes that contain only whitespace characters (spaces, tabs, newlines).
+5.  **Remove empty `style=""` attributes**: Remove any `style` attributes that have an empty value (e.g., `style=""`).
+
+**Before and After Analysis**: Always perform HTML analysis both before and after cleanup operations. This allows tracking what was removed during the cleanup process and provides metrics on the cleanup effectiveness.
+
+## Python Scripts for HTML Processing
+
+When performing HTML analysis or manipulation tasks:
+1.  **Python scripts are allowed**: Use Python scripts for HTML parsing, analysis, and modification tasks.
+2.  **pip packages**: Install necessary packages via pip as needed (e.g., `beautifulsoup4`, `lxml`).
+3.  **Keep created scripts**: Do not delete analysis or processing scripts after use. Keep them in the same directory as the HTML files being processed for future reference and reuse.
+4.  **Script naming**: Use descriptive names like `analyze_sample1.py`, `truncate_longest_div.py`, etc.

@@ -1,0 +1,38 @@
+# gemini-one-click-delete.user.js
+
+## このユーザースクリプトの目的
+
+GeminiのWeb SPAページでは、会話を削除するために複数回のクリックが必要です。
+明らかに削除したいときもあるので、会話を1クリックで削除できるようにするユーザースクリプトを作成します。
+このユーザースクリプトは Tampermonkey で動作させます。
+
+## ユーザースクリプトに関する追加情報
+
+ユーザースクリプトのメタデータの namespaceは https://userscript.moukaeritai.work/ です。
+ユーザースクリプトは  https://gemini.google.com/app/* でマッチするURLで動作します。
+
+# DOMのサンプル
+
+sample1.html はデスクトップ表示のDOMのサンプルです。
+sample2.html はモバイル表示のDOMのサンプルです。
+
+sample1.md とsample2.md には操作の対象となる候補のHTML断片とセレクタを提供します。
+
+セレクタはChromeの開発者モードで取得できるDOMツリーから得たものです。
+同じ要素を指定するセレクタには複数の表現方法がありますから、
+私が提供したセレクタよりも安定性を重視してDOMツリーを分析してセレクタを作成してください。
+
+# 注入するボタンの表示箇所
+
+## デスクトップ表示の場合
+
+GeminiのWeb SPAの会話の上部に最初から表示されているメニュー表示ボタンの隣。
+
+## モバイル表示の場合
+
+GeminiのWeb SPAの会話の上部に最初から表示されているメニュー表示ボタンの隣。
+
+# リポジトリ
+
+*   **GitHub**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/gemini.google.com/gemini-one-click-delete](https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/gemini.google.com/gemini-one-click-delete)
+*   **Raw Script**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js](https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js)
