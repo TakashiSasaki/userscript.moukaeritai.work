@@ -31,3 +31,8 @@ GeminiのWeb SPAの会話の上部に最初から表示されているメニュ�
 ## モバイル表示の場合
 
 GeminiのWeb SPAの会話の上部に最初から表示されているメニュー表示ボタンの隣。
+
+# リポジトリ
+
+*   **GitHub**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/gemini.google.com/gemini-one-click-delete](https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/gemini.google.com/gemini-one-click-delete)
+*   **Raw Script**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js](https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js)

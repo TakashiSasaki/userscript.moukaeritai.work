@@ -1,0 +1,75 @@
+name: Merge private world/userscript into public userscript via checkout
+
+on:
+  schedule:
+    # 毎日 03:00 UTC = 12:00 JST
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write   # 公開リポジトリ（userscript ブランチ）へ push するため
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 公開用（ローカル）リポジトリの userscript ブランチを public/ にチェックアウト
+      - name: Checkout public repo (userscript)
+        uses: actions/checkout@v4
+        with:
+          ref: userscript
+          path: public
+          fetch-depth: 0
+
+      # 2. private world リポジトリの userscript ブランチを private/ にチェックアウト
+      - name: Checkout private world repo (userscript)
+        uses: actions/checkout@v4
+        with:
+          repository: TakashiSasaki/world
+          ref: userscript
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          path: private
+          fetch-depth: 0
+
+      # 3. デバッグ: TOKEN の所有者を確認
+      - name: Debug TOKEN owner
+        env:
+          TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+        run: |
+          set -e
+          curl -s -H "Authorization: Bearer $TOKEN" https://api.github.com/user
+
+      # 4. デバッグ: API 経由で world リポジトリアクセス確認
+      - name: Debug repo access via API
+        env:
+          TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+        run: |
+          set -x
+          curl -s -H "Authorization: Bearer $TOKEN" \
+            https://api.github.com/repos/TakashiSasaki/world
+
+      # 5. public/ をカレントにして private/ をマージ
+      - name: Merge private/userscript into public/userscript
+        working-directory: public
+        run: |
+          set -e
+
+          git config user.name "Takashi SASAKI"
+          git config user.email "takashi316@gmail.com"
+
+          # private リポジトリを一時的なリモートとして追加
+          git remote add private ../private
+
+          # private/userscript を fetch
+          git fetch private userscript
+
+          # マージ（失敗したらそのままエラーで停止）
+          git merge --no-ff --no-edit private/userscript
+
+      # 6. マージ結果を public リポジトリの userscript ブランチに push
+      - name: Push merged userscript to public repo
+        working-directory: public
+        run: |
+          set -e
+          git push origin userscript
