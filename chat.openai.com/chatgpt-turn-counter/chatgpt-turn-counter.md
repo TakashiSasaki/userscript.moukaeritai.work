@@ -57,5 +57,5 @@ URLの末尾にはUUIDのような16進数文字とハイフンからなる文�
 
 # ユーザースクリプトの namespace
 
-このユーザースクリプトは moukaeritai.work ドメインの成果物として開発されているため
-名前空間も moukaeritai.work としておく。
+このユーザースクリプトは userscript.moukaeritai.work ドメインの成果物として開発されているため   
+名前空間も userscript.moukaeritai.work としておく。
