@@ -108,7 +108,10 @@ When analyzing HTML structure, particularly for text node extraction and statist
 5.  **Metrics to Collect**:
     *   **Count**: Number of text nodes belonging to a specific parent tag.
     *   **Max Length**: The maximum length of a text node for each parent tag type.
-6.  **Example Analysis Script**: A reusable Python script structure should inherit from HTMLParser, overriding handle_starttag, handle_endtag, and handle_data.
+    *   **Median Length**: The median length of text nodes for each parent tag type.
+6.  **Formatting**:
+    *   Sort the results table by **Max Length** in descending order.
+7.  **Example Analysis Script**: A reusable Python script structure should inherit from HTMLParser, overriding handle_starttag, handle_endtag, and handle_data.
 7.  **Count HTML Comments**: When analyzing HTML files, count the number of HTML comment blocks (<!-- -->) and display this count in the analysis results table.
 8.  **Count Whitespace-Only Nodes**: Count the total number of text nodes that contain only whitespace characters and display this count in the analysis results table.
 
