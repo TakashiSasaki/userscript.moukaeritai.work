@@ -359,6 +359,54 @@
                     copyAllBtn.disabled = false;
                 }, 2000);
             });
+
+            // Copy All Hover Logic (Calculate Size)
+            copyAllBtn.addEventListener('mouseover', (e) => {
+                hoverTimeout = setTimeout(async () => {
+                    showTooltip('Calculating...', e.clientX, e.clientY);
+
+                    const thumbnails = Array.from(contentDiv.querySelectorAll('.ctc-thumbnail'));
+                    if (thumbnails.length === 0) {
+                        showTooltip('No images', e.clientX, e.clientY);
+                        return;
+                    }
+
+                    try {
+                        const imgTags = await Promise.all(thumbnails.map(async (img) => {
+                            const dataUri = await fetchImageData(img.src);
+                            return dataUri ? `<img src="${dataUri}" />` : '';
+                        }));
+
+                        const validTags = imgTags.filter(tag => tag).join('');
+                        const totalSize = validTags.length;
+
+                        // Update existing tooltip if still visible
+                        if (tooltip.style.display === 'block') {
+                            showTooltip(`Total Size: ${totalSize.toLocaleString()} bytes`, e.clientX, e.clientY);
+                        }
+
+                    } catch (err) {
+                        console.error('Size calculation failed:', err);
+                        if (tooltip.style.display === 'block') {
+                            showTooltip('Error calculating size', e.clientX, e.clientY);
+                        }
+                    }
+                }, 500); // Debounce
+            });
+
+            copyAllBtn.addEventListener('mouseout', () => {
+                hideTooltip();
+            });
+
+            // Allow tooltip to move with mouse on button too? 
+            // Reuse the main container mousemove, but we need to ensure it updates for the button as well.
+            // The container mousemove only checked .ctc-thumbnail. Let's make it generic or add specific one.
+            copyAllBtn.addEventListener('mousemove', (e) => {
+                if (tooltip.style.display === 'block') {
+                    tooltip.style.left = e.clientX + 10 + 'px';
+                    tooltip.style.top = e.clientY + 10 + 'px';
+                }
+            });
         }
     };
 
