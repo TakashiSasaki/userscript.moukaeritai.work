@@ -49,3 +49,13 @@ sample1-image1.html, sample1-image2.html,
 sample1-image3.html, sample1-image4.html 
 はユーザーがアップロードした画像のDOM断片である。
 
+# ユーザースクリプトが動作するURL
+
+ユーザースクリプトのURLの例は以下の通り。
+https://chatgpt.com/c/6947a5eb-7f3c-8320-bed5-7c8199b5722c
+URLの末尾にはUUIDのような16進数文字とハイフンからなる文字列が含まれている。
+
+# ユーザースクリプトの namespace
+
+このユーザースクリプトは moukaeritai.work ドメインの成果物として開発されているため
+名前空間も moukaeritai.work としておく。
