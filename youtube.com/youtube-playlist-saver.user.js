@@ -68,27 +68,194 @@
         return null;
     }
 
+    // --- UI Helpers ---
+
+    function createIcon(pathData, color = 'grey') {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('width', '24');
+        svg.setAttribute('height', '24');
+        svg.style.fill = color;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', pathData);
+
+        svg.appendChild(path);
+        return svg;
+    }
+
+    /**
+     * Render the status indicator and Remove button
+     */
     function renderIndicator(element, isNew) {
         const bar = element.querySelector('#engagement-bar');
         if (!bar) return;
 
+        // 1. Status Indicator
         const oldIndicator = bar.querySelector('.yt-saver-indicator');
         if (oldIndicator) oldIndicator.remove();
 
         const indicator = document.createElement('span');
         indicator.className = 'yt-saver-indicator';
         indicator.textContent = isNew ? ' [NEW] ' : ' [SAVED] ';
-
         Object.assign(indicator.style, {
             fontSize: '11px',
             fontWeight: 'bold',
             marginRight: '8px',
-            color: isNew ? '#3ea6ff' : '#2ba640'
+            color: isNew ? '#3ea6ff' : '#2ba640',
+            verticalAlign: 'middle'
         });
 
+        // 2. Remove Button
+        const oldRemoveBtn = bar.querySelector('.yt-saver-remove-btn');
+        if (oldRemoveBtn) oldRemoveBtn.remove();
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'yt-saver-remove-btn';
+        removeBtn.title = 'Remove from playlist';
+        Object.assign(removeBtn.style, {
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '0',
+            marginLeft: '8px',
+            verticalAlign: 'middle',
+            opacity: '0.7'
+        });
+
+        // Trash Icon Path
+        const trashIconPath = 'M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z';
+        removeBtn.appendChild(createIcon(trashIconPath, '#606060'));
+
+        removeBtn.addEventListener('click', async (e) => {
+            e.stopPropagation(); // Prevent navigation
+            // Visual feedback
+            const originalColor = removeBtn.querySelector('path').style.fill;
+            removeBtn.querySelector('path').style.fill = 'red';
+
+            const success = await attemptRemoveVideo(element);
+            if (!success) {
+                // Revert on failure
+                removeBtn.querySelector('path').style.fill = originalColor;
+                alert('Failed to remove video. The menu structure might have changed.');
+            } else {
+                // Dim the row on success
+                element.style.opacity = '0.3';
+                element.style.pointerEvents = 'none';
+            }
+        });
+
+        removeBtn.addEventListener('mouseenter', () => removeBtn.style.opacity = '1');
+        removeBtn.addEventListener('mouseleave', () => removeBtn.style.opacity = '0.7');
+
+        // Append order
+        bar.prepend(removeBtn);
         bar.prepend(indicator);
     }
 
+    /**
+     * DOM Interaction to remove video
+     */
+    async function attemptRemoveVideo(videoContainer) {
+        // 1. Find Action Menu Button (Three dots)
+        const menuBtn = videoContainer.querySelector('#menu button') ||
+            videoContainer.querySelector('button.dropdown-trigger'); // Fallback logic
+
+        if (!menuBtn) {
+            console.error('[YouTube Playlist Saver] Menu button not found.');
+            return false;
+        }
+
+        menuBtn.click();
+
+        // 2. Wait for Menu Popup
+        const menuPopup = await waitForElement('ytd-menu-popup-renderer');
+        if (!menuPopup) {
+            console.error('[YouTube Playlist Saver] Popup not found.');
+            return false;
+        }
+
+        // 3. Find "Remove from [Playlist]" option
+        // Strategy: Look for the trash icon path or specific keywords if icons fail
+        // Note: YouTube menu items are typically `ytd-menu-service-item-renderer`
+        const items = Array.from(menuPopup.querySelectorAll('ytd-menu-service-item-renderer'));
+
+        let targetItem = null;
+
+        for (const item of items) {
+            // Check text content
+            const text = item.textContent || "";
+            // Common languages: English, Japanese
+            if (text.includes('Remove from') || text.includes('から削除')) {
+                targetItem = item;
+                break;
+            }
+            // Check icon path (Trash icon)
+            const path = item.querySelector('path');
+            if (path && path.getAttribute('d')?.startsWith('M11 17H9V8h2v9zm4-9h-2v9h2V8zm4-4v1h-1v16H6V5H5V4h4V3h6v1h4zm-2 1H8v15h10V5z')) {
+                // Note: YouTube's trash icon path might vary. Text search is safer for "Remove from" context
+                // Keeping logic simple: text search is usually sufficient for standard playlists
+            }
+        }
+
+        // Strategy 2: If finding by text is ambiguous, usually the "Remove from..." is the trash icon item.
+        // Let's refine text search to be safer.
+        if (!targetItem) {
+            // Fallback: specifically look for the Trash icon used in menus
+            // Path often used by YouTube for delete/remove:
+            const trashPaths = [
+                "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z", // Standard material trash
+                "M11 17H9V8h2v9zm4-9h-2v9h2V8zm4-4v1h-1v16H6V5H5V4h4V3h6v1h4zm-2 1H8v15h10V5z" // Another common one
+            ];
+            targetItem = items.find(item => {
+                const d = item.querySelector('path')?.getAttribute('d');
+                return d && trashPaths.includes(d);
+            });
+        }
+
+        if (targetItem) {
+            targetItem.click();
+            return true;
+        } else {
+            console.warn('[YouTube Playlist Saver] Remove option not found in menu.');
+            // Close menu
+            createIcon("").click(); // click anywhere else? actually clicking body might close it
+            document.body.click(); // Attempt to close menu
+            return false;
+        }
+    }
+
+    /**
+     * Utility: Wait for an element to appear
+     */
+    function waitForElement(selector, timeout = 1000) {
+        return new Promise(resolve => {
+            if (document.querySelector(selector)) {
+                return resolve(document.querySelector(selector));
+            }
+
+            const observer = new MutationObserver((mutations, obs) => {
+                if (document.querySelector(selector)) {
+                    resolve(document.querySelector(selector));
+                    obs.disconnect();
+                }
+            });
+
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+
+            setTimeout(() => {
+                observer.disconnect();
+                resolve(null);
+            }, timeout);
+        });
+    }
+
+    /**
+     * Core processing logic for a single video renderer
+     */
     function processItem(item, playlistId, currentSessionSet) {
         if (item.dataset.saverProcessed === playlistId) return;
 
