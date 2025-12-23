@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.1
+// @version      0.2.2
 // @description  Count user/assistant turns, images, and code blocks in ChatGPT
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
