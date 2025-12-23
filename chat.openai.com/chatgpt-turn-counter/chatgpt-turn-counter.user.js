@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.6
+// @version      0.1.7
 // @description  Count user/assistant turns, images, and code blocks in ChatGPT
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -83,6 +83,24 @@
             object-fit: cover;
             border-radius: 2px;
             border: 1px solid #565869;
+            cursor: copy;
+            transition: all 0.2s ease;
+        }
+        .ctc-thumbnail.copied {
+            border: 2px solid red;
+        }
+        #ctc-tooltip {
+            position: fixed;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 10000;
+            white-space: nowrap;
+            display: none;
+            border: 1px solid #565869;
         }
     `;
     document.head.appendChild(style);
@@ -90,6 +108,11 @@
     // Create UI container
     const container = document.createElement('div');
     container.id = 'chatgpt-turn-counter-ui';
+
+    // Create Tooltip container
+    const tooltip = document.createElement('div');
+    tooltip.id = 'ctc-tooltip';
+    document.body.appendChild(tooltip);
 
     // Icon SVG (Chat bubble with lines)
     const iconSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -106,14 +129,110 @@
     document.body.appendChild(container);
     const contentDiv = container.querySelector('.ctc-content');
 
-    // Event Listeners
-    container.addEventListener('click', () => {
+    // Event Listeners for main container
+    container.addEventListener('click', (e) => {
+        // Prevent collapsing when interacting with inner elements if necessary
+        // But for this current design, click expands it.
         container.classList.add('expanded');
     });
 
     container.addEventListener('mouseleave', () => {
         container.classList.remove('expanded');
+        hideTooltip(); // Hide tooltip if we leave the container
     });
+
+    // Thumbnail Hover & Click Logic
+    let hoverTimeout = null;
+
+    const showTooltip = (text, x, y) => {
+        tooltip.textContent = text;
+        tooltip.style.display = 'block';
+        tooltip.style.left = x + 10 + 'px';
+        tooltip.style.top = y + 10 + 'px';
+    };
+
+    const hideTooltip = () => {
+        tooltip.style.display = 'none';
+        clearTimeout(hoverTimeout);
+    };
+
+    const fetchImageData = async (src) => {
+        try {
+            const response = await fetch(src);
+            const blob = await response.blob();
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
+            });
+        } catch (e) {
+            console.error('Failed to fetch image data:', e);
+            return null;
+        }
+    };
+
+    const copyToClipboard = (htmlStr) => {
+        const type = "text/html";
+        const blob = new Blob([htmlStr], { type });
+        const data = [new ClipboardItem({ [type]: blob })];
+        navigator.clipboard.write(data).catch(console.error);
+    };
+
+    // Event Delegation for Thumbnails
+    container.addEventListener('mouseover', (e) => {
+        if (e.target.classList.contains('ctc-thumbnail')) {
+            const img = e.target;
+
+            // Debounce the tooltip showing
+            hoverTimeout = setTimeout(async () => {
+                const dataUri = await fetchImageData(img.src);
+                if (dataUri) {
+                    const sizeBytes = dataUri.length;
+                    showTooltip(`DataURI: ${sizeBytes.toLocaleString()} bytes`, e.clientX, e.clientY);
+                } else {
+                    showTooltip('Failed to load data', e.clientX, e.clientY);
+                }
+            }, 500); // 500ms delay
+        }
+    });
+
+    container.addEventListener('mouseout', (e) => {
+        if (e.target.classList.contains('ctc-thumbnail')) {
+            hideTooltip();
+        }
+    });
+
+    container.addEventListener('mousemove', (e) => {
+        if (e.target.classList.contains('ctc-thumbnail') && tooltip.style.display === 'block') {
+            // Optional: make tooltip follow cursor?
+            // For now, let's keep it simple fixed position from entry or update it.
+            // Updating it might be better UX
+            tooltip.style.left = e.clientX + 10 + 'px';
+            tooltip.style.top = e.clientY + 10 + 'px';
+        }
+    });
+
+    container.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('ctc-thumbnail')) {
+            e.stopPropagation(); // Prevent container click event if needed (though bubbling usually fine here for 'expand')
+
+            const img = e.target;
+            const dataUri = await fetchImageData(img.src);
+
+            if (dataUri) {
+                const imgTag = `<img src="${dataUri}" />`;
+                copyToClipboard(imgTag);
+
+                // Visual feedback
+                img.classList.add('copied');
+                // Remove feedback after a delay if desired, or keep it per requirements?
+                // Requirement said "enclose with red line", relying on class.
+                // Assuming permanent until refreshed or clicked another? 
+                // Let's keep it.
+            }
+        }
+    });
+
 
     // Helper to calculate text length from text nodes only
     const getTextContentLength = (element) => {
@@ -140,8 +259,24 @@
 
         userTurns.forEach(turn => {
             const imgs = turn.querySelectorAll('img');
-            imageCount += imgs.length;
-            imgs.forEach(img => imageUrls.push(img.src));
+            // Filter out user profile pictures if necessary (usually they have alt or specific classes, but simplicity first)
+            // In ChatGPT, user uploaded images are usually in specific containers.
+            // But 'img' selector is broad. Note: User avatar is also an img.
+            // Let's rely on standard structure. Usually user images are large or in attachments.
+            // For now, simplistic approach from previous version is maintained.
+
+            imgs.forEach(img => {
+                // simple heuristic to avoid 20px avatars if possible, or just include all
+                if (img.width > 50 || img.naturalWidth > 50) {
+                    // This might be risky if images aren't loaded yet.
+                    // Let's just collect them all for now as per previous logic
+                    // Previous logic: count += imgs.length
+                }
+                if (img.alt !== "User") { // Skip user avatar if it has alt="User" (common in some versions)
+                    imageUrls.push(img.src);
+                }
+            });
+            imageCount = imageUrls.length;
 
             const contentNode = turn.querySelector('.whitespace-pre-wrap') || turn;
             userCharCount += getTextContentLength(contentNode);
