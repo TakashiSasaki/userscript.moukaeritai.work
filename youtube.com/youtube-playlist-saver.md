@@ -1,61 +1,46 @@
-# このディレクトリの目的
+# YouTube Playlist Saver 設計書
 
-このディレクトリではyoutube-playlist-saver.user.js という
-ユーザースクリプトを作成している。
-ユーザースクリプトはブラウザのTampermonkey拡張機能で実行されることを
-想定している。
+このドキュメントは、YouTube のプレイリストに含まれる動画 ID を記録・管理するユーザースクリプトの設計を定義します。
 
-samples サブディレクトリの下には、YouTubeのウェブサイトで
-プレイリストにアクセスした際のページ全体のDOMや
-動画単体のDOM断片が保存されている。
+## 1. プロジェクトの目的
 
-# スクリプトの動作対象ページURL
+`youtube-playlist-saver.user.js` を作成し、YouTube プレイリスト内の動画情報を効率的に収集・可視化することを目的とします。
 
-プレイレイスとのURLは list パラメータにIDが入っている。
+### 開発リソース
+*   **サンプル DOM**: `samples/` ディレクトリに、プレイリスト全体の DOM や動画アイテムの断片を保存し、分析に使用します。
+*   **実行環境**: ブラウザの Tampermonkey 拡張機能での動作を想定しています。
 
-- https://www.youtube.com/playlist?list=WL
-- https://www.youtube.com/playlist?list=LL
-- https://www.youtube.com/playlist?list=PLnCtz2wEFH0YJgVAEvnkbHKjtVes-kXir
+## 2. 動作対象ページ
 
+URL の `list` パラメータにプレイリスト ID が含まれるページを対象とします。
 
-# ユーザースクリプトの動作
+*   **後で見る (Watch Later)**: `https://www.youtube.com/playlist?list=WL`
+*   **高く評価した動画 (Liked Videos)**: `https://www.youtube.com/playlist?list=LL`
+*   **一般のプレイリスト**: `https://www.youtube.com/playlist?list=[PLAYLIST_ID]`
 
-ユーザースクリプトでは、開いているプレイリストの
-中に含まれている動画アイテムの動画IDを記録する。
-その際にはどのプレイリストの中の動画なのかが分かるように
-プレイリストID（FLやLLも含む）とともに記録する。
-この記録はユーザースクリプトからアクセスできる永続的なデータストアに保存する。
-そのために必要なパーミッションがあるなら
-ユーザースクリプトのメタデータ項目の @grant に設定する。
+## 3. ユーザースクリプトの機能
 
-# ユーザースクリプトのバージョン管理
+### 3.1 動画 ID の収集
+*   **自動記録**: ユーザーがプレイリストをスクロールして表示された動画アイテムの ID を抽出します。
+*   **プレイリスト管理**: 動画 ID は、対応するプレイリスト ID（`WL` や `LL` を含む）と紐付けて記録します。
+*   **重複除外**: すでに保存済みの動画については、新規に記録しません。
 
-バージョンは major.minor.patch の形式で管理する。
-少しでも youtube-playlist-saver.user.js が変更された場合は
-パッチレベルを更新する。
+### 3.2 永続データストレージ
+*   収集したデータは、ユーザースクリプトからアクセス可能な永続的データストア（`GM_setValue` 等）に保存します。
+*   メタデータ項目の `@grant` に必要な権限を設定します。
 
-# ユーザースクリプトのメタデータ
+### 3.3 既知動画のインジケーター表示
+*   **表示場所**: 各動画アイテム内の `id="engagement-bar"` 要素。
+*   **表示内容**: その動画が「収集済み」か「新規収集」かが一目でわかるインジケーターを表示します。
 
-作者 Takashi Sasaki
-作者のホームページは x.com/TakashiSasaki
-namespace は userscript.moukaeritai.work
+## 4. プロジェクト管理
 
-このユーザースクリプトは
-https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/youtube.com/youtube-playlist-saver.user.js で公開される予定なので、
-Tampermonkeyでの自動更新のためのメタデータをそのように記述する。
+### 4.1 バージョン管理
+*   形式: `major.minor.patch` (Semantic Versioning)
+*   更新ルール: スクリプトファイルが少しでも変更された場合は、`patch` レベルを更新します。
 
-# ユーザースクリプトの動作
-
-## 動画IDの収集
-ユーザーはプレイリストをスクロールしてたくさんの動画アイテムを一覧する。
-その一覧表の中に出てきた動画アイテムを、プレイリストIDごとに
-永続的データストアに保存する。
-すでに保存されていた動画もあるだろうがそれは新規には記録しなくてよい。
-
-## 既知の動画であることのインジケータの表示
-
-各動画アイテムには id="engagement-bar" という要素があるので、
-すでに収集済みであった動画であるか、
-新しく収集した動画であるか、
-が分かるようなインジケーターを表示する。
+### 4.2 メタデータ定義
+*   **作者**: Takashi Sasaki (x.com/TakashiSasaki)
+*   **Namespace**: `userscript.moukaeritai.work`
+*   **公開・更新**: GitHub (`TakashiSasaki/userscript.moukaeritai.work`) 上で公開し、Tampermonkey の自動更新機能に対応させます。
 
