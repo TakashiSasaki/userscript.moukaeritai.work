@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.5
+// @version      0.1.6
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -253,10 +253,128 @@
         });
     }
 
+    // --- Filter Feature ---
+
+    let filterState = {
+        title: '',
+        channel: ''
+    };
+
+    function createFilterPanel() {
+        if (document.getElementById('yt-saver-filter-panel')) return;
+
+        const panel = document.createElement('div');
+        panel.id = 'yt-saver-filter-panel';
+        Object.assign(panel.style, {
+            position: 'fixed',
+            bottom: '70px',
+            right: '20px',
+            zIndex: 9999,
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            padding: '12px',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            width: '200px',
+            color: '#333',
+            fontFamily: 'Roboto, Arial, sans-serif'
+        });
+
+        // Title
+        const titleLabel = document.createElement('div');
+        titleLabel.textContent = 'Filter by Title:';
+        titleLabel.style.fontSize = '12px';
+        titleLabel.style.fontWeight = 'bold';
+
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.placeholder = 'e.g. Minecraft';
+        Object.assign(titleInput.style, {
+            padding: '4px',
+            fontSize: '12px',
+            border: '1px solid #ccc',
+            borderRadius: '4px'
+        });
+        titleInput.addEventListener('input', (e) => {
+            filterState.title = e.target.value.toLowerCase();
+            applyFilters();
+        });
+
+        // Channel
+        const channelLabel = document.createElement('div');
+        channelLabel.textContent = 'Filter by Channel:';
+        channelLabel.style.fontSize = '12px';
+        channelLabel.style.fontWeight = 'bold';
+
+        const channelInput = document.createElement('input');
+        channelInput.type = 'text';
+        channelInput.placeholder = 'e.g. Official';
+        Object.assign(channelInput.style, {
+            padding: '4px',
+            fontSize: '12px',
+            border: '1px solid #ccc',
+            borderRadius: '4px'
+        });
+        channelInput.addEventListener('input', (e) => {
+            filterState.channel = e.target.value.toLowerCase();
+            applyFilters();
+        });
+
+        panel.appendChild(titleLabel);
+        panel.appendChild(titleInput);
+        panel.appendChild(channelLabel);
+        panel.appendChild(channelInput);
+
+        document.body.appendChild(panel);
+    }
+
+    function applyFilters() {
+        const items = document.querySelectorAll('ytd-playlist-video-renderer');
+        items.forEach(item => {
+            // 1. Get Title
+            const titleEl = item.querySelector('#video-title');
+            const titleText = titleEl ? titleEl.textContent.trim().toLowerCase() : '';
+
+            // 2. Get Channel Name
+            // Usually found in #channel-name or a.yt-simple-endpoint.yt-formatted-string
+            const channelEl = item.querySelector('.ytd-channel-name a') ||
+                item.querySelector('#channel-name #text');
+            const channelText = channelEl ? channelEl.textContent.trim().toLowerCase() : '';
+
+            // 3. Check Matches
+            const matchTitle = !filterState.title || titleText.includes(filterState.title);
+            const matchChannel = !filterState.channel || channelText.includes(filterState.channel);
+
+            if (matchTitle && matchChannel) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
     /**
      * Core processing logic for a single video renderer
      */
     function processItem(item, playlistId, currentSessionSet) {
+        // Apply filter immediately for new items
+        const titleEl = item.querySelector('#video-title');
+        const titleText = titleEl ? titleEl.textContent.trim().toLowerCase() : '';
+        const channelEl = item.querySelector('.ytd-channel-name a') || item.querySelector('#channel-name #text');
+        const channelText = channelEl ? channelEl.textContent.trim().toLowerCase() : '';
+
+        const matchTitle = !filterState.title || titleText.includes(filterState.title);
+        const matchChannel = !filterState.channel || channelText.includes(filterState.channel);
+
+        if (!(matchTitle && matchChannel)) {
+            item.style.display = 'none';
+        } else {
+            item.style.display = '';
+        }
+
         if (item.dataset.saverProcessed === playlistId) return;
 
         const videoId = extractVideoId(item);
@@ -329,6 +447,7 @@
 
         console.log(`[YouTube Playlist Saver] Processing playlist: ${playlistId}`);
         addAutoScrollButton();
+        createFilterPanel();
 
         // Use local Cache
         const currentSessionSet = getSavedVideos(playlistId);
@@ -377,8 +496,11 @@
             clearInterval(scrollInterval);
             scrollInterval = null;
             const btn = document.getElementById('yt-saver-scroll-btn');
-            if (btn) btn.remove();
+            if (btn) btn.remove(); // Re-add in run()
         }
+
+        const filterPanel = document.getElementById('yt-saver-filter-panel');
+        if (filterPanel) filterPanel.remove();
 
         if (window._ytSaverObserver) window._ytSaverObserver.disconnect();
         run();
