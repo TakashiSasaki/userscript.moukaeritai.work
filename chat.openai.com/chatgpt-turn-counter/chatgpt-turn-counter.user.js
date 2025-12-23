@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         ChatGPT Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1
+// @version      0.1.2
 // @description  Count user/assistant turns, images, and code blocks in ChatGPT
-// @author       You
+// @author       Takashi Sasaki
+// @homepageURL  https://x.com/TakashiSasaki
 // @match        https://chatgpt.com/*
 // @grant        none
 // ==/UserScript==
@@ -39,23 +40,20 @@
     document.body.appendChild(container);
 
     const updateStats = () => {
-        // Correct selectors based on sample1-whole.html analysis
-        const userTurns = document.querySelectorAll('[data-message-author-role="user"]');
-        const assistantTurns = document.querySelectorAll('[data-message-author-role="assistant"]');
+        // Disconnect observer to prevent infinite loop where updating UI triggers observer
+        observer.disconnect();
+
+        const userTurns = document.querySelectorAll('article[data-turn="user"]');
+        const assistantTurns = document.querySelectorAll('article[data-turn="assistant"]');
 
         let imageCount = 0;
         userTurns.forEach(turn => {
-            // Count images inside user turns. 
-            // In the sample, uploaded images are directly inside.
-            // We exclude potential small icons (though typically svgs) by checking size if possible, 
-            // but just 'img' is a good starting point as avatars are usually not inside this specific data attribute container in this layout version.
             const imgs = turn.querySelectorAll('img');
             imageCount += imgs.length;
         });
 
         let codeBlockCount = 0;
         assistantTurns.forEach(turn => {
-            // Count pre tags for code blocks
             const pres = turn.querySelectorAll('pre');
             codeBlockCount += pres.length;
         });
@@ -67,13 +65,13 @@
             <div style="display: flex; justify-content: space-between; gap: 10px;"><span>Images:</span> <span>${imageCount}</span></div>
             <div style="display: flex; justify-content: space-between; gap: 10px;"><span>Code Blocks:</span> <span>${codeBlockCount}</span></div>
         `;
+
+        // Reconnect observer
+        observer.observe(document.body, { childList: true, subtree: true });
     };
 
     // Use MutationObserver to detect changes in the DOM (new messages)
     const observer = new MutationObserver((mutations) => {
-        // Debounce logic could be added if performance is an issue, 
-        // but for a simple counter, running on mutation is usually fine 
-        // as long as we select efficiently.
         updateStats();
     });
 
