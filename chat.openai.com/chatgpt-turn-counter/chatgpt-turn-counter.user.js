@@ -304,12 +304,62 @@
             <div class="ctc-row"><span>User:</span> <span class="ctc-val">${userTurns.length} (${userCharCount.toLocaleString()} chars)</span></div>
             <div class="ctc-row"><span>Assistant:</span> <span class="ctc-val">${assistantTurns.length} (${assistantCharCount.toLocaleString()} chars)</span></div>
             <div class="ctc-row"><span>Code Blocks:</span> <span class="ctc-val">${codeBlockCount}</span></div>
-            <div class="ctc-row"><span>Images:</span> <span class="ctc-val">${imageCount}</span></div>
+            <div class="ctc-row">
+                <span>Images:</span> 
+                <span>
+                    <span class="ctc-val">${imageCount}</span>
+                    <button id="ctc-copy-all" style="margin-left: 8px; padding: 2px 6px; font-size: 11px; background: #444654; border: 1px solid #565869; color: #ececf1; border-radius: 4px; cursor: pointer;">Copy All</button>
+                </span>
+            </div>
             ${thumbnailsHtml}
         `;
 
         // Reconnect observer
         observer.observe(document.body, { childList: true, subtree: true });
+
+        // Add Copy All listener (needs to be re-added since innerHTML replaced)
+        const copyAllBtn = contentDiv.querySelector('#ctc-copy-all');
+        if (copyAllBtn) {
+            copyAllBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                copyAllBtn.disabled = true;
+                const originalText = copyAllBtn.textContent;
+                copyAllBtn.textContent = '...';
+
+                const thumbnails = Array.from(contentDiv.querySelectorAll('.ctc-thumbnail'));
+                if (thumbnails.length === 0) {
+                    copyAllBtn.textContent = 'No images';
+                    setTimeout(() => {
+                        copyAllBtn.textContent = originalText;
+                        copyAllBtn.disabled = false;
+                    }, 2000);
+                    return;
+                }
+
+                try {
+                    const imgTags = await Promise.all(thumbnails.map(async (img) => {
+                        const dataUri = await fetchImageData(img.src);
+                        return dataUri ? `<img src="${dataUri}" />` : '';
+                    }));
+
+                    const validTags = imgTags.filter(tag => tag).join('');
+                    if (validTags) {
+                        copyToClipboard(validTags);
+                        copyAllBtn.textContent = 'Copied!';
+                    } else {
+                        copyAllBtn.textContent = 'Failed';
+                    }
+                } catch (err) {
+                    console.error('Copy all failed:', err);
+                    copyAllBtn.textContent = 'Error';
+                }
+
+                setTimeout(() => {
+                    copyAllBtn.textContent = originalText;
+                    copyAllBtn.disabled = false;
+                }, 2000);
+            });
+        }
     };
 
     // Use MutationObserver to detect changes in the DOM (new messages)
