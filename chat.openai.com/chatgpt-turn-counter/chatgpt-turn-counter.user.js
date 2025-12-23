@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.5
+// @version      0.1.6
 // @description  Count user/assistant turns, images, and code blocks in ChatGPT
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -69,6 +69,21 @@
             text-align: right;
             font-variant-numeric: tabular-nums;
         }
+        .ctc-thumbnails {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #565869;
+        }
+        .ctc-thumbnail {
+            width: 20px;
+            height: 20px;
+            object-fit: cover;
+            border-radius: 2px;
+            border: 1px solid #565869;
+        }
     `;
     document.head.appendChild(style);
 
@@ -121,9 +136,12 @@
 
         let userCharCount = 0;
         let imageCount = 0;
+        const imageUrls = [];
+
         userTurns.forEach(turn => {
             const imgs = turn.querySelectorAll('img');
             imageCount += imgs.length;
+            imgs.forEach(img => imageUrls.push(img.src));
 
             const contentNode = turn.querySelector('.whitespace-pre-wrap') || turn;
             userCharCount += getTextContentLength(contentNode);
@@ -140,12 +158,19 @@
             assistantCharCount += getTextContentLength(contentNode);
         });
 
+        const thumbnailsHtml = imageUrls.length > 0
+            ? `<div class="ctc-thumbnails">
+                ${imageUrls.map(url => `<img src="${url}" class="ctc-thumbnail" />`).join('')}
+               </div>`
+            : '';
+
         contentDiv.innerHTML = `
             <div style="margin-bottom: 4px; font-weight: bold;">Turn Counter</div>
             <div class="ctc-row"><span>User:</span> <span class="ctc-val">${userTurns.length} (${userCharCount.toLocaleString()} chars)</span></div>
             <div class="ctc-row"><span>Assistant:</span> <span class="ctc-val">${assistantTurns.length} (${assistantCharCount.toLocaleString()} chars)</span></div>
             <div class="ctc-row"><span>Code Blocks:</span> <span class="ctc-val">${codeBlockCount}</span></div>
             <div class="ctc-row"><span>Images:</span> <span class="ctc-val">${imageCount}</span></div>
+            ${thumbnailsHtml}
         `;
 
         // Reconnect observer
