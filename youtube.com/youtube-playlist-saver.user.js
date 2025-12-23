@@ -113,6 +113,58 @@
         item.dataset.saverProcessed = playlistId;
     }
 
+    // --- Auto Scroll Feature ---
+
+    let scrollInterval = null;
+    const SCROLL_STEP = 300; // pixels
+    const SCROLL_DELAY = 500; // ms
+
+    function toggleAutoScroll(btn) {
+        if (scrollInterval) {
+            // Stop
+            clearInterval(scrollInterval);
+            scrollInterval = null;
+            btn.textContent = 'Auto Scroll: OFF';
+            btn.style.backgroundColor = '#ccc';
+            btn.style.color = '#000';
+        } else {
+            // Start
+            btn.textContent = 'Auto Scroll: ON';
+            btn.style.backgroundColor = '#f00'; // YouTube Red
+            btn.style.color = '#fff';
+            scrollInterval = setInterval(() => {
+                window.scrollBy(0, SCROLL_STEP);
+                // Also check if we hit bottom and need to wait for loading? 
+                // YouTube infinite scroll handles loading, we just keep nudging down.
+            }, SCROLL_DELAY);
+        }
+    }
+
+    function addAutoScrollButton() {
+        if (document.getElementById('yt-saver-scroll-btn')) return;
+
+        const btn = document.createElement('button');
+        btn.id = 'yt-saver-scroll-btn';
+        btn.textContent = 'Auto Scroll: OFF';
+        Object.assign(btn.style, {
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            zIndex: 9999,
+            padding: '10px 15px',
+            backgroundColor: '#ccc',
+            color: '#000',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
+        });
+
+        btn.addEventListener('click', () => toggleAutoScroll(btn));
+        document.body.appendChild(btn);
+    }
+
     /**
      * Main execution function
      */
@@ -121,6 +173,10 @@
         if (!playlistId) return;
 
         console.log(`[YouTube Playlist Saver] Running for playlist: ${playlistId}`);
+
+        // Inject UI
+        addAutoScrollButton();
+
         const savedVideos = getSavedVideos(playlistId);
 
         // Function to process all currently visible items
@@ -133,9 +189,8 @@
         processAll();
 
         // 2. Set up MutationObserver for infinite scroll & dynamic loading
-        // Observing `ytd-playlist-video-list-renderer` or a high-level container is best.
-        // We observe document.body to be safe as containers are dynamic.
-        // Optimizing by targeting specific tag names in the callback.
+        if (window._ytSaverObserver) window._ytSaverObserver.disconnect();
+
         const observer = new MutationObserver((mutations) => {
             let shouldProcess = false;
             for (const mutation of mutations) {
@@ -167,6 +222,13 @@
 
     // YouTube uses a custom event `yt-navigate-finish` for SPA navigation
     window.addEventListener('yt-navigate-finish', () => {
+        // Reset auto scroll on navigation
+        if (scrollInterval) {
+            clearInterval(scrollInterval);
+            scrollInterval = null;
+            const btn = document.getElementById('yt-saver-scroll-btn');
+            if (btn) btn.remove(); // Re-add in run()
+        }
         if (window._ytSaverObserver) {
             window._ytSaverObserver.disconnect();
         }
