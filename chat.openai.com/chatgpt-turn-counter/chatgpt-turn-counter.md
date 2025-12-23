@@ -69,6 +69,14 @@ DOM構造の変化に強いセレクタを設計するため、各要素の断�
 *   **Minor Version**: ユーザーからの明示的な指示があった場合にバンプアップし、Patch Levelを `0` にリセットする。
 *   **Major Version**: ユーザーが手動で変更するまで維持する。
 
+### 5.3 自動アップデート (Automatic Updates)
+本スクリプトは、Tampermonkey等の自動アップデート機能に対応しています。以下のURLにて最新版が公開されることを想定しています。
+
+*   **Update URL**: [`https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/chat.openai.com/chatgpt-turn-counter/chatgpt-turn-counter.user.js`](https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/chat.openai.com/chatgpt-turn-counter/chatgpt-turn-counter.user.js)
+
+`@updateURL` および `@downloadURL` メタデータにより、スクリプトマネージャーは定期的にこのURLをチェックし、新しいバージョンが公開されている場合に自動的に更新を行います。
+
+
 
 ## 2.3 サムネイル操作 (Thumbnail Interaction)
 *   **ホバーツールチップ (Hover)**:
