@@ -59,3 +59,16 @@ URLの末尾にはUUIDのような16進数文字とハイフンからなる文�
 
 このユーザースクリプトは userscript.moukaeritai.work ドメインの成果物として開発されているため   
 名前空間も userscript.moukaeritai.work としておく。
+
+## 2. ユーザースクリプトのメタデータ
+
+### 2.1 作者
+*   **Name**: Takashi Sasaki
+*   **URL**: [x.com/TakashiSasaki](https://x.com/TakashiSasaki)
+
+### 2.2 バージョン管理運用
+バージョン番号は `chatgpt-turn-counter.user.js` 内の `@version` メタデータにて管理します（形式: `major.minor.patch`）。
+
+*   **Patch Level**: コードへの何らかの変更を行った際に自動的にバンプアップする。
+*   **Minor Version**: ユーザーからの明示的な指示があった場合にバンプアップし、Patch Levelを `0` にリセットする。
+*   **Major Version**: ユーザーが手動で変更するまで維持する。
