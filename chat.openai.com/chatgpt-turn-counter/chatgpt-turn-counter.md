@@ -1,72 +1,47 @@
-# このディレクトリの説明
+# ChatGPT Turn Counter 開発ドキュメント
 
-このディレクトリでは、TamperMonekey などで実行可能な
-ユーザースクリプトを開発している。
+このドキュメントは、TamperMonkey等で動作するユーザースクリプト `chatgpt-turn-counter.user.js` の仕様と開発リソースについて記述します。
 
+## 1. 概要と目的
 
-# このユーザースクリプトの目的
-このユーザースクリプト chatgpt-turn-counter.user.js は
-ChatGPTのウェブページにおいて、
-会話のなかでユーザーが何回メッセージを送信したか、
-アシスタントが何回レスポンスを返したか、
-ユーザーが何個の画像を送信したか、
-アシスタントからの応答にいくつのコード断片が含まれているか、
-をリアルタイムで表示するユーザーインターフェースを
-提供するユーザースクリプトです。
+本スクリプトは、ChatGPT上の会話において以下の要素をリアルタイムにカウントし、画面上に表示することを目的としています。
 
-# samples ディレクトリの内容
+*   **ユーザー送信数**: ユーザーがメッセージを送信した回数
+*   **アシスタント応答数**: アシスタントがレスポンスを返した回数
+*   **画像送信数**: ユーザーが送信した画像の枚数
+*   **コード断片数**: アシスタントの応答に含まれるコードブロックの数
 
-# 会話全体のDOM
+## 2. 技術仕様
 
-sample1-whole.htmlはある会話セッションにおいて
-表示されているDOMの全体のサンプルである。
+### 2.1 動作環境
+*   **実行環境**: TamperMonkey などのユーザースクリプトマネージャー
+*   **対象URLパターン**: `https://chatgpt.com/c/*`
+    *   例: `https://chatgpt.com/c/6947a5eb-7f3c-8320-bed5-7c8199b5722c`
+    *   URLの末尾はUUID形式の文字列で構成されます。
+*   **名前空間**: `userscript.moukaeritai.work`
 
-# アシスタントからの応答のDOM断片
+## 3. 開発リソース (DOM解析用サンプル)
 
-sample1-assistant1.html, sample1-assistant2.html
-はアシスタントからの応答に該当する部分のDOM断片である。
-安定したセレクタについては会話全体のDOMを分析して決定する必要がある。
+`samples` ディレクトリには、安定したDOMセレクタを特定するためのHTMLサンプルが保存されています。開発時にはこれらのファイルを参照してください。
 
-# ユーザーの送ったメッセージのDOM断片
+### 3.1 会話全体
+*   **sample1-whole.html**: 会話セッション全体のDOM構造を示すサンプル。
 
-sample1-user1.html, sample1-user2.html, sample1-user3.html
-はユーザーの送ったメッセージに該当する部分のDOM断片である。
-安定したセレクタについては会話全体のDOMを分析して決定する必要がある。
+### 3.2 コンポーネント別DOM断片
+DOM構造の変化に強いセレクタを設計するため、各要素の断片を収集しています。
 
-# コードフェンスのDOM断片
+*   **アシスタントの応答**: `sample1-assistant1.html`, `sample1-assistant2.html`
+*   **ユーザーのメッセージ**: `sample1-user1.html`, `sample1-user2.html`, `sample1-user3.html`
+*   **コードブロック**: `sample1-codefence1.html` (コードフェンス部分のDOM)
+*   **ユーザー画像**: `sample1-image1.html` 〜 `sample1-image4.html` (インライン表示される`<img>`タグ)
 
-アシスタントからの応答にはプログラムのコードやコード断片などが
-コードフェンス内に表示される。
-この部分のDOM断片を sample1-codefence1.html
-に保存している。
+## 4. プロジェクト管理情報
 
-# ユーザーのアップロードした画像のDOM断片
-
-ユーザーは画像をアップロードすることがある。
-ユーザーがアップロードした画像は会話中にインライン表示される。
-この画像はIMGタグで表示されている。
-sample1-image1.html, sample1-image2.html,
-sample1-image3.html, sample1-image4.html 
-はユーザーがアップロードした画像のDOM断片である。
-
-# ユーザースクリプトが動作するURL
-
-ユーザースクリプトのURLの例は以下の通り。
-https://chatgpt.com/c/6947a5eb-7f3c-8320-bed5-7c8199b5722c
-URLの末尾にはUUIDのような16進数文字とハイフンからなる文字列が含まれている。
-
-# ユーザースクリプトの namespace
-
-このユーザースクリプトは userscript.moukaeritai.work ドメインの成果物として開発されているため   
-名前空間も userscript.moukaeritai.work としておく。
-
-## 2. ユーザースクリプトのメタデータ
-
-### 2.1 作者
+### 4.1 作者
 *   **Name**: Takashi Sasaki
 *   **URL**: [x.com/TakashiSasaki](https://x.com/TakashiSasaki)
 
-### 2.2 バージョン管理運用
+### 4.2 バージョン管理運用
 バージョン番号は `chatgpt-turn-counter.user.js` 内の `@version` メタデータにて管理します（形式: `major.minor.patch`）。
 
 *   **Patch Level**: コードへの何らかの変更を行った際に自動的にバンプアップする。
