@@ -43,3 +43,19 @@ namespace は userscript.moukaeritai.work
 このユーザースクリプトは
 https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/youtube.com/youtube-playlist-saver.user.js で公開される予定なので、
 Tampermonkeyでの自動更新のためのメタデータをそのように記述する。
+
+# ユーザースクリプトの動作
+
+## 動画IDの収集
+ユーザーはプレイリストをスクロールしてたくさんの動画アイテムを一覧する。
+その一覧表の中に出てきた動画アイテムを、プレイリストIDごとに
+永続的データストアに保存する。
+すでに保存されていた動画もあるだろうがそれは新規には記録しなくてよい。
+
+## 既知の動画であることのインジケータの表示
+
+各動画アイテムには id="engagement-bar" という要素があるので、
+すでに収集済みであった動画であるか、
+新しく収集した動画であるか、
+が分かるようなインジケーターを表示する。
+
