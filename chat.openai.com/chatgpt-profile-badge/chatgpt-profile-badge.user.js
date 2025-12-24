@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         chatgpt-profile-badge
+// @name         ChatGPT Profile Badge
 // @namespace    userscript.moukaeritai.work
 // @version      0.1.1
 // @description  Add a custom string to the user profile section on ChatGPT.
