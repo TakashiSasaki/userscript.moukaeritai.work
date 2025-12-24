@@ -7,6 +7,7 @@ ChatGPTのウェブページにおいて、ユーザー情報が表示される�
 ## 導入方法
 
 本スクリプトの実行には、[Tampermonkey](https://www.tampermonkey.net/) などのユーザースクリプトマネージャーが必要です。
+最新版はGitHub上で公開されており、RAW URLにアクセスすることでTampermonkeyがインストールを検知します。
 
 ## 設定方法
 
@@ -24,7 +25,13 @@ ChatGPTのウェブページにおいて、ユーザー情報が表示される�
 -   **バージョン**: `major.minor.patch` 形式で管理し、スクリプトに変更を加えた場合は `patch` 番号を必ずインクリメントします。
 -   **作成日時**: メタデータに作成日時を記載します。
 -   **@grant**: データの永続化に必要な権限を要求します。
+-   **@updateURL**: GitHubのRAW URLを記載します。
+-   **@downloadURL**: GitHubのRAW URLを記載します。
 
 ### `samples` ディレクトリ
 
 開発時の参考資料として、ChatGPTのウェブページのDOMや、ユーザー情報UIのDOM断片をHTMLファイルとして保存しています。
+
+### 配布と更新
+
+このユーザースクリプトはGitHubで最新版を公開します。ユーザースクリプトのメタデータに更新用URL (`@updateURL`, `@downloadURL`) としてGitHubのRAW URLを記載することで、Tampermonkeyが自動的に更新を検知できるようになります。
