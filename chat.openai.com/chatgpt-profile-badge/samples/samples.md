@@ -1,6 +1,6 @@
-# Samples for chatgpt-overlay-profile
+# Samples for chatgpt-profile-badge
 
-このディレクトリには、ユーザースクリプト「chatgpt-overlay-profile」の開発およびテストに使用するHTMLサンプルファイルが含まれています。
+このディレクトリには、ユーザースクリプト「chatgpt-profile-badge」の開発およびテストに使用するHTMLサンプルファイルが含まれています。
 
 ## サンプルファイル一覧
 

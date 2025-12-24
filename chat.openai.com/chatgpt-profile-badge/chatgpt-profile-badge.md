@@ -1,4 +1,4 @@
-# ユーザースクリプト「ChatGPT Overlay Profile」
+# ユーザースクリプト「ChatGPT Profile Badge」
 
 ## 概要
 
