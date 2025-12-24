@@ -6,6 +6,7 @@
 // @author       TakashiSasaki
 // @homepage     https://x.com/TakashiSasaki
 // @match        https://chat.openai.com/*
+// @match        https://chatgpt.com/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @updateURL    https://github.com/TakashiSasaki/world/raw/main/chat.openai.com/chatgpt-profile-badge/chatgpt-profile-badge.user.js
