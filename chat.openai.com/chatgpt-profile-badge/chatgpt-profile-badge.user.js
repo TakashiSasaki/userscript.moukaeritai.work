@@ -3,7 +3,7 @@
 // @namespace    userscript.moukaeritai.work
 // @version      0.1.0
 // @description  Add a custom string to the user profile section on ChatGPT.
-// @author       TakashiSasaki
+// @author       Takashi Sasaki
 // @homepage     https://x.com/TakashiSasaki
 // @match        https://chat.openai.com/*
 // @match        https://chatgpt.com/*
