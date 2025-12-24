@@ -1,37 +1,71 @@
 # ユーザースクリプト「ChatGPT Profile Badge」
 
-## 概要
+## 概要 (Overview)
 
-ChatGPTのウェブページにおいて、ユーザー情報が表示される箇所に任意の文字列（数文字程度のテキストや絵文字）を追加表示するためのユーザースクリプトです。
+ChatGPTのウェブページにおいて、ユーザー情報が表示される箇所に任意の文字列（数文字程度のテキストや絵文字）を「バッジ」として追加表示するユーザースクリプトです。
 
-## 導入方法
+## 導入 (Installation)
 
-本スクリプトの実行には、[Tampermonkey](https://www.tampermonkey.net/) などのユーザースクリプトマネージャーが必要です。
-最新版はGitHub上で公開されており、RAW URLにアクセスすることでTampermonkeyがインストールを検知します。
+1.  [Tampermonkey](https://www.tampermonkey.net/) などのユーザースクリプトマネージャーをブラウザにインストールします。
+2.  このリポジトリのGitHub RAW URLにアクセスすると、スクリプトのインストールが開始されます。
 
-## 設定方法
+## 設定 (Configuration)
 
-追加する文字列は、ユーザースクリプトからアクセス可能な永続化データストアに保存されます。具体的な設定方法はスクリプトのソースコードを参照してください。
+表示するバッジの文字列は、Tampermonkeyが提供するストレージにキー `badge_text` として保存されます。
 
-## 開発者情報
+開発中に手動で値を設定・確認するには、ブラウザの開発者コンソールで以下の `GM_setValue` / `GM_getValue` 関数（要Tampermonkey）を実行します。
 
-### メタデータ規約
+```javascript
+// バッジのテキストを設定
+GM_setValue('badge_text', '✨ On Vacation');
 
-ユーザースクリプトのメタデータは、以下の規則に従って記述します。
+// 現在のテキストを取得
+GM_getValue('badge_text').then(value => console.log(value));
+```
+
+## 開発 (Development)
+
+### プロジェクト構造 (Project Structure)
+
+```
+.
+├── chatgpt-profile-badge.md      # この仕様書 (This document)
+├── chatgpt-profile-badge.user.js # ユーザースクリプト本体 (The userscript source)
+└── samples/                      # テスト用のサンプルファイル (Sample files for testing)
+    ├── profile.html
+    ├── whole-dom.html
+    ├── samples.md
+    └── preprocess.py
+```
+
+### テスト (Testing)
+
+UIの変更やデバッグは、`samples/` ディレクトリ内のHTMLファイルを用いて行います。これらのファイルは、開発効率向上のために前処理（不要な要素の削除など）が可能です。
+
+前処理を行うには、`samples/` ディレクトリで以下のコマンドを実行します。
+```shell
+pip install beautifulsoup4
+python preprocess.py <target_html_file>
+```
+詳細は `samples/samples.md` を参照してください。
+
+### 貢献ガイドライン (Contribution Guidelines)
+
+#### メタデータ規約 (Metadata Conventions)
 
 -   **@namespace**: `userscript.moukaeritai.work`
 -   **@author**: `TakashiSasaki`
--   **ホームページ**: `x.com/TakashiSasaki`
--   **バージョン**: `major.minor.patch` 形式で管理し、スクリプトに変更を加えた場合は `patch` 番号を必ずインクリメントします。
--   **作成日時**: メタデータに作成日時を記載します。
--   **@grant**: データの永続化に必要な権限を要求します。
--   **@updateURL**: GitHubのRAW URLを記載します。
--   **@downloadURL**: GitHubのRAW URLを記載します。
+-   **@homepage**: `x.com/TakashiSasaki`
+-   **@grant**: `GM_setValue`, `GM_getValue` など、スクリプトが必要とする権限。
+-   **@updateURL**: GitHubのRAW URL。
+-   **@downloadURL**: GitHubのRAW URL。
 
-### `samples` ディレクトリ
+#### バージョン管理 (Versioning)
 
-開発時の参考資料として、ChatGPTのウェブページのDOMや、ユーザー情報UIのDOM断片をHTMLファイルとして保存しています。
+-   バージョンは `major.minor.patch` 形式（セマンティックバージョニング）で管理します。
+-   スクリプトに少しでも変更を加えた場合は、`patch` 番号を必ずインクリメントしてください。
 
-### 配布と更新
+#### 配布 (Distribution)
 
-このユーザースクリプトはGitHubで最新版を公開します。ユーザースクリプトのメタデータに更新用URL (`@updateURL`, `@downloadURL`) としてGitHubのRAW URLを記載することで、Tampermonkeyが自動的に更新を検知できるようになります。
+-   スクリプトの最新版はGitHubで公開します。
+-   メタデータの `@updateURL`, `@downloadURL` には、Tampermonkeyが更新を検知できるよう、GitHub上の `user.js` ファイルへのRAW URLを記載します。
