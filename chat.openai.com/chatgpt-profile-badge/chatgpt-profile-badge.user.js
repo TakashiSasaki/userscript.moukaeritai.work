@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Profile Badge
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.3
+// @version      0.2.2
 // @description  Add a custom string to the user profile section on ChatGPT.
 // @author       Takashi Sasaki
 // @homepage     https://x.com/TakashiSasaki
@@ -70,16 +70,26 @@
      * This function is designed to be called repeatedly by the MutationObserver.
      */
     function findTargetAndInject() {
-        // Use a stable selector targeting the profile button first.
-        const profileButton = document.querySelector('[data-testid="accounts-profile-button"]');
-        if (!profileButton) {
+        // There can be multiple elements with data-testid="accounts-profile-button".
+        // We need to find the one that contains the user's name and plan information.
+        const profileButtons = document.querySelectorAll('[data-testid="accounts-profile-button"]');
+        let targetProfileButton = null;
+
+        for (const button of profileButtons) {
+            // The correct profile button contains a child with class 'min-w-0' which holds the name and plan.
+            if (button.querySelector('.min-w-0')) {
+                targetProfileButton = button;
+                break;
+            }
+        }
+
+        if (!targetProfileButton) {
             return;
         }
 
-        // Refined structural selector:
-        // Navigate from profileButton -> the div with min-w-0 -> the flex div inside it.
-        // This targets the container that directly holds the user's name element.
-        const nameContainer = profileButton.querySelector('div.min-w-0 > div.flex');
+        // Now that we have the correct profile button, find the name container within it.
+        // Navigate: targetProfileButton -> div.min-w-0 -> div.flex
+        const nameContainer = targetProfileButton.querySelector('div.min-w-0 > div.flex');
         
         if (nameContainer) {
             createAndInjectBadge(nameContainer);
@@ -102,30 +112,6 @@
     const observer = new MutationObserver(() => {
         // The callback just re-runs the check. It's simple and robust.
         findTargetAndInject();
-    });
-
-    // Start observing the document body for changes that might add our target element.
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-
-    // Initial check in case the element is already present when the script runs.
-    findTargetAndInject();
-
-})();
-    });
-
-    // Start observing the document body for changes that might add our target element.
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-
-    // Initial check in case the element is already present when the script runs.
-    findTargetAndInject();
-
-})();
     });
 
     // Start observing the document body for changes that might add our target element.
