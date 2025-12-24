@@ -35,6 +35,7 @@
         }
 
         .project-item {
+            position: relative;
             border: 1px solid #e1e4e8;
             border-radius: 6px;
             padding: 16px;
@@ -72,9 +73,13 @@
         .project-desc {
             margin: 0 0 16px 0;
             color: #586069;
+            padding-right: 110px;
         }
 
         .install-button {
+            position: absolute;
+            top: 16px;
+            right: 16px;
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -96,6 +101,17 @@
 
         .install-button svg {
             fill: currentColor;
+        }
+
+        @media (max-width: 600px) {
+            .project-desc {
+                padding-right: 0;
+            }
+
+            .install-button {
+                position: static;
+                margin-top: 8px;
+            }
         }
     </style>
 </head>
