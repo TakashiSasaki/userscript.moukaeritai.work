@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Profile Badge
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.3
+// @version      0.2.0
 // @description  Add a custom string to the user profile section on ChatGPT.
 // @author       Takashi Sasaki
 // @homepage     https://x.com/TakashiSasaki
@@ -9,6 +9,7 @@
 // @match        https://chatgpt.com/*
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_registerMenuCommand
 // @updateURL    https://github.com/TakashiSasaki/world/raw/main/chat.openai.com/chatgpt-profile-badge/chatgpt-profile-badge.user.js
 // @downloadURL  https://github.com/TakashiSasaki/world/raw/main/chat.openai.com/chatgpt-profile-badge/chatgpt-profile-badge.user.js
 // ==/UserScript==
@@ -18,6 +19,20 @@
 
     const BADGE_ID = 'chatgpt-profile-badge-container';
     const STORAGE_KEY = 'badge_text';
+
+    /**
+     * Removes the currently displayed badge.
+     */
+    function removeBadge() {
+        const badge = document.getElementById(BADGE_ID);
+        if (badge) {
+            const parent = badge.parentElement;
+            if (parent) {
+                delete parent.dataset.badgeInjected;
+            }
+            badge.remove();
+        }
+    }
 
     /**
      * Creates and injects the badge element into the target container.
@@ -70,6 +85,18 @@
             createAndInjectBadge(nameContainer);
         }
     }
+
+    // Register a menu command to allow the user to set the badge text.
+    GM_registerMenuCommand('Set Badge Text', async () => {
+        const currentText = await GM_getValue(STORAGE_KEY, '');
+        const newText = prompt('Enter the text for your profile badge. Leave empty to remove it.', currentText);
+
+        if (newText !== null) { // prompt returns null if the user clicks "Cancel"
+            await GM_setValue(STORAGE_KEY, newText.trim());
+            removeBadge(); // Remove the old badge to allow for re-injection
+            findTargetAndInject(); // Immediately attempt to update the badge
+        }
+    });
 
     // Use MutationObserver to non-blockingly wait for the profile element to appear.
     const observer = new MutationObserver(() => {
