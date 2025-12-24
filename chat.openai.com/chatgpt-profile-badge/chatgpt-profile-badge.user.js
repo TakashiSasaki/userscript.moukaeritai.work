@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Profile Badge
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.0
+// @version      0.2.1
 // @description  Add a custom string to the user profile section on ChatGPT.
 // @author       Takashi Sasaki
 // @homepage     https://x.com/TakashiSasaki
@@ -77,9 +77,9 @@
         }
 
         // Within the profile button, find the element that contains the user's name.
-        // Based on `samples/profile.html`, the name is in a `.truncate` div,
-        // which is inside a flex container. We target this flex container.
-        const nameContainer = profileButton.querySelector('.truncate')?.parentElement;
+        // The '.truncate' class can be ambiguous, so we specify 'div.truncate' to target the username
+        // element more reliably, as the subscription tier is in a 'span'.
+        const nameContainer = profileButton.querySelector('div.truncate')?.parentElement;
         
         if (nameContainer) {
             createAndInjectBadge(nameContainer);
