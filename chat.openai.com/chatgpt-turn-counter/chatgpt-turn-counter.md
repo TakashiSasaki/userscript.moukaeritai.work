@@ -69,6 +69,14 @@ DOM構造の変化に強いセレクタを設計するため、各要素の断�
 *   **Minor Version**: ユーザーからの明示的な指示があった場合にバンプアップし、Patch Levelを `0` にリセットする。
 *   **Major Version**: ユーザーが手動で変更するまで維持する。
 
+### 5.3 自動アップデート (Automatic Updates)
+本スクリプトは、Tampermonkey等の自動アップデート機能に対応しています。以下のURLにて最新版が公開されることを想定しています。
+
+*   **Update URL**: [`https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/chat.openai.com/chatgpt-turn-counter/chatgpt-turn-counter.user.js`](https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/chat.openai.com/chatgpt-turn-counter/chatgpt-turn-counter.user.js)
+
+`@updateURL` および `@downloadURL` メタデータにより、スクリプトマネージャーは定期的にこのURLをチェックし、新しいバージョンが公開されている場合に自動的に更新を行います。
+
+
 
 ## 2.3 サムネイル操作 (Thumbnail Interaction)
 *   **ホバーツールチップ (Hover)**:
@@ -81,9 +89,6 @@ DOM構造の変化に強いセレクタを設計するため、各要素の断�
 
 ## 2.4 画像一括コピー機能 (Batch Copy)
 *   **"Copy All" ボタン**: UIパネルの "Images" 行に配置。
-*   **ホバー機能**:
-    *   ボタンにマウスオーバーすると、表示されている全画像を結合した場合の合計サイズを計算し、ツールチップで表示する (例: `Total Size: 5,678,900 bytes`)。
-    *   計算中は "Calculating..." と表示する。
 *   **クリック操作 (Preview & Copy)**:
     *   ボタンをクリックすると、**プレビューモーダル (Modal)** を画面中央に表示する。
     *   モーダルには、生成されたHTMLソース（複数の `<img>` タグの羅列）が表示され、コピー前に内容を確認できる。
