@@ -35,11 +35,13 @@ v0.2.0から、ユーザースクリプトのメニューコマンドを通じ�
 
 ChatGPTのUIはクラス名が動的に変更される可能性があるため、セレクタは安定性を重視して選択されています。
 
-1.  `document.querySelector('[data-testid="accounts-profile-button"]')` で、まずプロファイル全体のボタン要素を取得します。これは比較的安定したセレクタです。
-2.  次に、その内部でユーザー名やプラン情報を含むテキストコンテナを、まず `div.min-w-0` というセレクタで特定します。
-3.  さらにその内部で、ユーザー名が直接含まれる `div.flex` を注入箇所（`nameContainer`）として特定します。
+ユーザー情報を示すプロファイルボタンは複数存在する可能性があるため、以下の手順で正確な要素を特定します。
 
-この構造的アプローチは、`.truncate` のような頻繁に変更されうるユーティリティクラスへの依存を避け、より堅牢な特定を目指すものです。
+1.  `document.querySelectorAll('[data-testid="accounts-profile-button"]')` を使用して、全てのプロファイルボタン要素を取得します。
+2.  取得したボタン要素を走査し、ユーザー名やプラン情報を含む `.min-w-0` クラスの子要素を持つボタンを特定します。これが、バッジを注入する対象となる正しいプロファイルボタンです。
+3.  特定されたプロファイルボタンの内部で、ユーザー名が直接含まれる `div.min-w-0 > div.flex` という構造的セレクタを用いて注入箇所（`nameContainer`）を特定します。
+
+このアプローチは、誤ったプロファイルボタンへの注入を防ぎ、より堅牢なバッジ表示を目指すものです。
 
 ### 描画ロジック (Rendering Logic)
 
@@ -78,7 +80,7 @@ python preprocess.py <target_html_file>
 #### メタデータ規約 (Metadata Conventions)
 -   **@namespace**: `userscript.moukaeritai.work`
 -   **@author**: `Takashi Sasaki`
--   **@homepage**: `x.com/TakashiSasaki`
+-   **@homepage**: `https://x.com/TakashiSasaki`
 -   **@grant**: `GM_setValue`, `GM_getValue`, `GM_registerMenuCommand` など、スクリプトが必要とする権限。
 -   **@updateURL** / **@downloadURL**: GitHubのRAW URL。
 
