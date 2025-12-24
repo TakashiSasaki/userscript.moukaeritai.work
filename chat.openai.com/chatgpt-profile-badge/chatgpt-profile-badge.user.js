@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Profile Badge
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.2
+// @version      0.2.3
 // @description  Add a custom string to the user profile section on ChatGPT.
 // @author       Takashi Sasaki
 // @homepage     https://x.com/TakashiSasaki
@@ -76,16 +76,11 @@
             return;
         }
 
-        // Instead of relying on '.truncate', which can be unstable, navigate by structure.
-        // Find the container for text, which has a '.min-w-0' class in the sample.
-        const textContainer = profileButton.querySelector('.min-w-0');
-        if (!textContainer) {
-            return;
-        }
+        // Refined structural selector:
+        // Navigate from profileButton -> the div with min-w-0 -> the flex div inside it.
+        // This targets the container that directly holds the user's name element.
+        const nameContainer = profileButton.querySelector('div.min-w-0 > div.flex');
         
-        // The first 'div' inside this container holds the user name. This is our injection point.
-        const nameContainer = textContainer.querySelector('div');
-
         if (nameContainer) {
             createAndInjectBadge(nameContainer);
         }
@@ -107,6 +102,18 @@
     const observer = new MutationObserver(() => {
         // The callback just re-runs the check. It's simple and robust.
         findTargetAndInject();
+    });
+
+    // Start observing the document body for changes that might add our target element.
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+    // Initial check in case the element is already present when the script runs.
+    findTargetAndInject();
+
+})();
     });
 
     // Start observing the document body for changes that might add our target element.
