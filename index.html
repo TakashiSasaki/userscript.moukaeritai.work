@@ -138,9 +138,34 @@
             color: #111827;
         }
 
+        .top-nav-link {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .top-nav-link:hover {
+            color: #111827;
+            text-decoration: underline;
+        }
+
         @media (max-width: 600px) {
             body {
                 padding: 16px;
+                padding-top: 40px;
+                /* Space for the static top link if needed, or adjust */
+            }
+
+            .top-nav-link {
+                position: static;
+                display: block;
+                text-align: right;
+                margin-bottom: 8px;
             }
 
             .project-item {
@@ -165,6 +190,7 @@
 </head>
 
 <body>
+    <a href="https://moukaeritai.work/" class="top-nav-link">moukaeritai.work</a>
     <h1>Moukaeritai Userscripts</h1>
 
     <ul class="project-list">
