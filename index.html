@@ -61,14 +61,38 @@
         }
 
         .project-desc {
-            margin: 0;
+            margin: 0 0 16px 0;
             color: #586069;
+        }
+
+        .install-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: #24292e;
+            /* Tampermonkey dark theme color */
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.85em;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .install-button:hover {
+            background-color: #0366d6;
+            text-decoration: none;
+        }
+
+        .install-button svg {
+            fill: currentColor;
         }
     </style>
 </head>
 
 <body>
-    <h1>Userscripts Repository</h1>
+    <h1>Moukaeritai Userscripts Repository</h1>
     <div class="site-domain">userscript.moukaeritai.work</div>
 
     <p>
@@ -86,6 +110,13 @@
             <p class="project-desc">
                 Grokの会話ページで、全てのコピーボタンを順に押して内容を結合し、クリップボードにコピーします。
             </p>
+            <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/grok.com/grok-copy-all/grok-copy-all.user.js"
+                class="install-button" target="_blank">
+                <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                </svg>
+                Install
+            </a>
         </li>
         <li class="project-item">
             <h3 class="project-title">
@@ -94,6 +125,13 @@
             <p class="project-desc">
                 Google Gemini の会話をワンクリックで削除する機能を提供します。
             </p>
+            <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js"
+                class="install-button" target="_blank">
+                <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                </svg>
+                Install
+            </a>
         </li>
         <li class="project-item">
             <h3 class="project-title">
@@ -102,6 +140,13 @@
             <p class="project-desc">
                 Google Gemini の会話やキャンバスを、ワンクリックで Google Docs にエクスポートするユーザースクリプトです。
             </p>
+            <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js"
+                class="install-button" target="_blank">
+                <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                </svg>
+                Install
+            </a>
         </li>
     </ul>
 

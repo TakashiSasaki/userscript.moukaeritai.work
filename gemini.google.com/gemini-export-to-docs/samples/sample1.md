@@ -1,6 +1,101 @@
 # 概要
 
-sample1 はPC表示をした際のGeminiのウェブSPAのHTMLである。
+sample1.html はPC表示をした際のGeminiのウェブSPAのHTMLである。
+本ドキュメントでは、ユーザースクリプトの操作対象となる主要なエクスポート関連ボタン（キャンバス上のボタンおよび各ターンごとのダイアログ内のボタン両方を含む）について記述する。
+
+# 目次
+
+- [Text Node Statistics by Parent Tag](#text-node-statistics-by-parent-tag)
+- [キャンバスからドキュメントをエクスポートするためのボタン](#キャンバスからドキュメントをエクスポートするためのボタン)
+- [特定のターンの応答をエクスポートするためのボタン (バリエーション1)](#特定のターンの応答をエクスポートするためのボタン-バリエーション1)
+- [特定のターンの応答をエクスポートするためのボタン (バリエーション2)](#特定のターンの応答をエクスポートするためのボタン-バリエーション2)
+- [特定のターンの応答をエクスポートするためのボタンを表示するための三点リーダー](#特定のターンの応答をエクスポートするためのボタンを表示するための三点リーダー)
+- [三点リーダーを押すと表示されるダイアログ](#三点リーダーを押すと表示されるダイアログ)
+
+### Text Node Statistics by Parent Tag
+
+| Parent Tag | Count | Max Length | Median Length |
+| :--- | :--- | :--- | :--- |
+| code | 90 | 987 | 10.0 |
+| div | 1049 | 777 | 1 |
+| p | 208 | 699 | 123.0 |
+| span | 101 | 622 | 4 |
+| b | 31 | 356 | 15 |
+| h3 | 20 | 322 | 106.5 |
+| h1 | 4 | 242 | 151.0 |
+| a | 21 | 239 | 9 |
+| strong | 21 | 234 | 13 |
+| h2 | 15 | 217 | 22 |
+| title | 1 | 13 | 13 |
+| html | 3 | 1 | 1 |
+| head | 35 | 1 | 1 |
+| body | 11 | 1 | 1 |
+| svg | 72 | 1 | 1.0 |
+| chat-app | 2 | 1 | 1.0 |
+| main | 2 | 1 | 1.0 |
+| bard-logo | 2 | 1 | 1.0 |
+| top-bar-actions | 2 | 1 | 1.0 |
+| side-navigation-content | 2 | 1 | 1.0 |
+| button | 30 | 1 | 1.0 |
+| infinite-scroller | 12 | 1 | 1.0 |
+| mat-progress-spinner | 6 | 1 | 1.0 |
+| circle | 8 | 1 | 1.0 |
+| side-nav-entry-button | 4 | 1 | 1.0 |
+| my-stuff-recents-preview | 2 | 1 | 1.0 |
+| library-item-card | 6 | 1 | 1.0 |
+| bot-list | 3 | 1 | 1 |
+| bot-list-item | 4 | 1 | 1.0 |
+| conversations-list | 3 | 1 | 1 |
+| bard-sidenav | 2 | 1 | 1.0 |
+| bard-sidenav-content | 3 | 1 | 1 |
+| chat-window | 3 | 1 | 1 |
+| chat-window-content | 4 | 1 | 1.0 |
+| user-query-content | 8 | 1 | 1.0 |
+| model-response | 8 | 1 | 1.0 |
+| response-container | 10 | 1 | 1.0 |
+| tts-control | 12 | 1 | 1.0 |
+| bard-avatar | 8 | 1 | 1.0 |
+| defs | 92 | 1 | 1.0 |
+| clippath | 40 | 1 | 1.0 |
+| rect | 28 | 1 | 1.0 |
+| g | 348 | 1 | 1.0 |
+| path | 84 | 1 | 1.0 |
+| lineargradient | 168 | 1 | 1.0 |
+| stop | 136 | 1 | 1.0 |
+| mask | 44 | 1 | 1.0 |
+| use | 4 | 1 | 1.0 |
+| model-thoughts | 8 | 1 | 1.0 |
+| message-content | 8 | 1 | 1.0 |
+| ul | 33 | 1 | 1 |
+| li | 93 | 1 | 1 |
+| table-block | 2 | 1 | 1.0 |
+| table | 5 | 1 | 1 |
+| thead | 2 | 1 | 1.0 |
+| tr | 44 | 1 | 1.0 |
+| td | 46 | 1 | 1.0 |
+| tbody | 9 | 1 | 1 |
+| ol | 28 | 1 | 1.0 |
+| message-actions | 8 | 1 | 1.0 |
+| code-block | 6 | 1 | 1.0 |
+| immersive-entry-chip | 3 | 1 | 1 |
+| input-container | 2 | 1 | 1.0 |
+| input-area-v2 | 2 | 1 | 1.0 |
+| rich-textarea | 3 | 1 | 1 |
+| uploader | 2 | 1 | 1.0 |
+| toolbox-drawer | 2 | 1 | 1.0 |
+| bard-mode-switcher | 2 | 1 | 1.0 |
+| hallucination-disclaimer | 2 | 1 | 1.0 |
+| extended-response-panel | 3 | 1 | 1 |
+| toolbar | 2 | 1 | 1.0 |
+| versioning-buttons | 2 | 1 | 1.0 |
+| formatting-buttons | 5 | 1 | 1 |
+| canvas-create-button | 2 | 1 | 1.0 |
+| immersive-editor | 2 | 1 | 1.0 |
+| th | 10 | 1 | 1.0 |
+| immersive-editor-side-panel | 2 | 1 | 1.0 |
+| immersive-editor-quick-actions-panel | 2 | 1 | 1.0 |
+| immersive-editor-quick-actions | 2 | 1 | 1.0 |
+| immersive-editor-comments-panel | 2 | 1 | 1.0 |
 
 # キャンバスからドキュメントをエクスポートするためのボタン
 
@@ -17,7 +112,7 @@ sample1 はPC表示をした際のGeminiのウェブSPAのHTMLである。
 ```
 
 
-# 特定のターンの応答をエクスポートするためのボタン
+# 特定のターンの応答をエクスポートするためのボタン (バリエーション1)
 
 ## ボタンのHTML断片
 
@@ -30,7 +125,7 @@ sample1 はPC表示をした際のGeminiのウェブSPAのHTMLである。
 #mat-menu-panel-36 > div > div > button:nth-child(1)
 ```
 
-# 特定のターンの応答をエクスポートするためのボタン
+# 特定のターンの応答をエクスポートするためのボタン (バリエーション2)
 
 ## ボタンのHTML断片
 ```
@@ -59,7 +154,7 @@ sample1 はPC表示をした際のGeminiのウェブSPAのHTMLである。
 
 # 三点リーダーを押すと表示されるダイアログ
 
-三点リーダーを押すとExport to DocsやDraft in Gmailというボタンを含むダイアログが表示される。
+三点リーダーを押すとExport to DocsやDraft in Gmailというボタンを含むダイアログが表示される。この中のExport to Docsボタンも操作対象である。
 
 ## 三点リーダーを押すと表示されるダイアログのHTML断片
 
