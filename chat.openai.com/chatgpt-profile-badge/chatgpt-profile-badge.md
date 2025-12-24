@@ -78,7 +78,7 @@ python preprocess.py <target_html_file>
 
 #### メタデータ規約 (Metadata Conventions)
 -   **@namespace**: `userscript.moukaeritai.work`
--   **@author**: `TakashiSasaki`
+-   **@author**: `Takashi Sasaki`
 -   **@homepage**: `x.com/TakashiSasaki`
 -   **@grant**: `GM_setValue`, `GM_getValue` など、スクリプトが必要とする権限。
 -   **@updateURL** / **@downloadURL**: GitHubのRAW URL。
