@@ -147,6 +147,9 @@
             font-size: 0.9em;
             font-weight: 500;
             transition: color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .top-nav-link:hover {
@@ -163,8 +166,10 @@
 
             .top-nav-link {
                 position: static;
-                display: block;
-                text-align: right;
+                display: flex;
+                /* keep flex in mobile */
+                justify-content: flex-end;
+                /* right align content */
                 margin-bottom: 8px;
             }
 
@@ -190,7 +195,11 @@
 </head>
 
 <body>
-    <a href="https://moukaeritai.work/" class="top-nav-link">moukaeritai.work</a>
+    <a href="https://moukaeritai.work/" class="top-nav-link">
+        <img src="https://www.google.com/s2/favicons?domain=moukaeritai.work&sz=32" alt="" width="16" height="16"
+            style="border-radius: 4px;">
+        moukaeritai.work
+    </a>
     <h1>Moukaeritai Userscripts</h1>
 
     <ul class="project-list">
