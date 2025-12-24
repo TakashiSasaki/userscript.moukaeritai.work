@@ -35,3 +35,8 @@
 - **Namespace**: `userscript.moukaeritai.work`
 - **Updated**: スクリプトの最終更新日時。
 - **Auto Update**: GitHub上の `user.js` (raw URL) から Tampermonkey 等が自動更新を検知できる構成とします。
+
+- **DOM解析とセレクタ戦略**:
+    - 将来的なDOM構造の変化に強い、可能な限り安定したセレクタを採用してください。
+    - 実装にあたっては `samples/` ディレクトリ内の各HTMLファイルを精査し、解析ロジックを設計してください。
+    - 各サンプルの詳細は [samples/samples.md](samples/samples.md) を参照してください。
