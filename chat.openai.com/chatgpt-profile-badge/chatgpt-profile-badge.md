@@ -11,20 +11,15 @@ ChatGPTのウェブページにおいて、ユーザー情報が表示される�
 
 ## 設定 (Configuration)
 
-表示するバッジの文字列は、Tampermonkeyが提供するストレージに保存されます。
+v0.2.0から、ユーザースクリプトのメニューコマンドを通じてバッジのテキストを簡単設定できるようになりました。
 
--   **ストレージキー**: `badge_text`
--   **値**: 表示したい任意の文字列（例: `✨ On Vacation`）
+1.  ブラウザのツールバーにあるTampermonkeyのアイコンをクリックします。
+2.  表示されるメニューから「**Set Badge Text**」を選択します。
+3.  プロンプトが表示されたら、バッジとして表示したいテキストを入力し、「OK」をクリックします。
+    -   テキストを空にすると、バッジは非表示になります。
+    -   設定は即座に反映されます。
 
-開発中に手動で値を設定・確認するには、ブラウザの開発者コンソールで以下の `GM_setValue` / `GM_getValue` 関数を実行します。
-
-```javascript
-// バッジのテキストを設定
-GM_setValue('badge_text', '✨ On Vacation');
-
-// 現在のテキストを取得
-GM_getValue('badge_text').then(value => console.log(value));
-```
+この設定はTampermonkeyが提供するストレージに保存されます。
 
 ---
 
@@ -46,6 +41,7 @@ ChatGPTのUIはクラス名が動的に変更される可能性があるため�
 ### 描画ロジック (Rendering Logic)
 
 -   **重複描画の防止**: `MutationObserver` が複数回発火した場合でもバッジが重複して描画されるのを防ぐため、注入先のコンテナ要素に `data-badge-injected="true"` というカスタムデータ属性を付与します。描画処理の前にこの属性の有無を確認します。
+-   **動的な更新**: メニューからバッジテキストが更新された際、`removeBadge()` 関数が既存のバッジと `data-badge-injected` 属性をDOMから削除します。その後、`findTargetAndInject()` が再実行され、新しいテキストでバッジが再描画（またはテキストが空の場合は非表示）されます。
 -   **スタイリング**: バッジは `<span>` 要素として生成されます。既存のUIとの親和性を保つため、`profile.html` サンプルから特定した `text-token-text-secondary` などのクラスを適用しつつ、バッジとして見せるための追加スタイル（`padding`, `backgroundColor` など）をインラインで設定しています。
 
 ---
@@ -80,7 +76,7 @@ python preprocess.py <target_html_file>
 -   **@namespace**: `userscript.moukaeritai.work`
 -   **@author**: `Takashi Sasaki`
 -   **@homepage**: `x.com/TakashiSasaki`
--   **@grant**: `GM_setValue`, `GM_getValue` など、スクリプトが必要とする権限。
+-   **@grant**: `GM_setValue`, `GM_getValue`, `GM_registerMenuCommand` など、スクリプトが必要とする権限。
 -   **@updateURL** / **@downloadURL**: GitHubのRAW URL。
 
 #### バージョン管理 (Versioning)
