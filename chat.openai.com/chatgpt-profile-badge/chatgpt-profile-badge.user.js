@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         chatgpt-profile-badge
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.0
+// @version      0.1.1
 // @description  Add a custom string to the user profile section on ChatGPT.
 // @author       Takashi Sasaki
 // @homepage     https://x.com/TakashiSasaki
