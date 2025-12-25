@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.20
+// @version      0.1.21
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -254,28 +254,29 @@
      * Check if the playlist loading spinner is active
      */
     function isSpinnerActive() {
-        const spinnerContainer = document.querySelector('ytd-playlist-video-list-renderer #spinner-container');
-        if (!spinnerContainer) return false;
+        // Check for both the initial loading spinner (lite) and the continuation/pagination spinner
+        const spinners = document.querySelectorAll(
+            'ytd-playlist-video-list-renderer tp-yt-paper-spinner, ' +
+            'ytd-playlist-video-list-renderer tp-yt-paper-spinner-lite'
+        );
 
-        // Check content visibility
-        const style = window.getComputedStyle(spinnerContainer);
-        if (style.display === 'none' || style.visibility === 'hidden') return false;
+        for (const spinner of spinners) {
+            // If the spinner has the 'active' attribute, it is definitely loading
+            if (spinner.hasAttribute('active')) {
+                return true;
+            }
 
-        // NEW: Check for the actual spinner component's active state
-        const spinner = spinnerContainer.querySelector('tp-yt-paper-spinner-lite');
-        if (spinner && spinner.hasAttribute('active')) {
-            return true;
+            // Fallback: Check aria-hidden and computed visibility
+            // Some spinners might not use the active attribute but toggle visibility
+            if (spinner.getAttribute('aria-hidden') !== 'true') {
+                const style = window.getComputedStyle(spinner);
+                if (style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') {
+                    return true;
+                }
+            }
         }
 
-        // If the container is visible but no active attribute found, 
-        // fallback to checking aria-hidden (if it's NOT hidden, it might be active)
-        if (spinner && spinner.getAttribute('aria-hidden') !== 'true') {
-            return true;
-        }
-
-        // If we found the spinner element but it's not active/visible, return false.
-        // If we didn't find the spinner element but the container is visible, assume loading (safe fallback).
-        return !spinner;
+        return false;
     }
 
     /**
