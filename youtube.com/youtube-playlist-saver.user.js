@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.15
+// @version      0.1.16
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -545,9 +545,27 @@
     }
 
 
+    function updateResultCount() {
+        const items = document.querySelectorAll('ytd-playlist-video-renderer');
+        // Count items that are NOT hidden
+        // Note: checking style.display is faster than :not([style*="display: none"]) query in large DOMs usually,
+        // but simple querySelectorAll with :not might be fast enough.
+        // Let's use array filter for safety and clarity if N is large.
+        let visibleCount = 0;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].style.display !== 'none') {
+                visibleCount++;
+            }
+        }
+
+        const countEl = document.getElementById('yt-saver-filter-count');
+        if (countEl) {
+            countEl.textContent = `Results: ${visibleCount} / ${items.length}`;
+        }
+    }
+
     function applyFilters() {
         const items = document.querySelectorAll('ytd-playlist-video-renderer');
-        let visibleCount = 0;
 
         items.forEach(item => {
             // 1. Get Title
@@ -566,17 +584,12 @@
 
             if (matchTitle && matchChannel) {
                 item.style.display = '';
-                visibleCount++;
             } else {
                 item.style.display = 'none';
             }
         });
 
-        const countEl = document.getElementById('yt-saver-filter-count');
-        if (countEl) {
-            countEl.textContent = `Results: ${visibleCount} / ${items.length}`;
-        }
-
+        updateResultCount();
         updateAboveInfo(); // Update above info when filters change
     }
 
@@ -599,13 +612,7 @@
             item.style.display = '';
         }
 
-        // Update count for new items
-        const countEl = document.getElementById('yt-saver-filter-count');
-        if (countEl) {
-            const items = document.querySelectorAll('ytd-playlist-video-renderer');
-            const visibleItems = document.querySelectorAll('ytd-playlist-video-renderer:not([style*="display: none"])');
-            countEl.textContent = `Results: ${visibleItems.length} / ${items.length}`;
-        }
+        // REMOVED O(N^2) COUNT UPDATE FROM HERE
 
         if (item.dataset.saverProcessed === playlistId) return;
 
@@ -687,6 +694,7 @@
         const processAllVisible = () => {
             const items = document.querySelectorAll('ytd-playlist-video-renderer');
             items.forEach(item => processItem(item, playlistId, currentSessionSet));
+            updateResultCount(); // Update count ONCE after batch processing
         };
 
         processAllVisible();
