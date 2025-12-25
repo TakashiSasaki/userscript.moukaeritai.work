@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.14
+// @version      0.1.15
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -276,10 +276,18 @@
 
     // --- Filter Feature ---
 
-    let filterState = {
+    // --- Filter Feature ---
+
+    const FILTER_SETTINGS_KEY = 'yt_filter_settings';
+
+    let filterState = GM_getValue(FILTER_SETTINGS_KEY, {
         title: '',
         channel: ''
-    };
+    });
+
+    function saveFilterState() {
+        GM_setValue(FILTER_SETTINGS_KEY, filterState);
+    }
 
     function createFilterPanel() {
         if (document.getElementById('yt-saver-filter-panel')) return;
@@ -304,45 +312,77 @@
             fontFamily: 'Roboto, Arial, sans-serif'
         });
 
-        // Title
-        const titleLabel = document.createElement('div');
-        titleLabel.textContent = 'Filter by Title:';
-        titleLabel.style.fontSize = '12px';
-        titleLabel.style.fontWeight = 'bold';
+        // Helper to create input group with clear button
+        const createInputGroup = (labelText, placeholder, stateKey) => {
+            const container = document.createElement('div');
+            Object.assign(container.style, {
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px'
+            });
 
-        const titleInput = document.createElement('input');
-        titleInput.type = 'text';
-        titleInput.placeholder = 'e.g. Minecraft';
-        Object.assign(titleInput.style, {
-            padding: '4px',
-            fontSize: '12px',
-            border: '1px solid #ccc',
-            borderRadius: '4px'
-        });
-        titleInput.addEventListener('input', debounce((e) => {
-            filterState.title = e.target.value.toLowerCase();
-            applyFilters();
-        }, 500));
+            const label = document.createElement('div');
+            label.textContent = labelText;
+            label.style.fontSize = '12px';
+            label.style.fontWeight = 'bold';
 
-        // Channel
-        const channelLabel = document.createElement('div');
-        channelLabel.textContent = 'Filter by Channel:';
-        channelLabel.style.fontSize = '12px';
-        channelLabel.style.fontWeight = 'bold';
+            const inputWrapper = document.createElement('div');
+            Object.assign(inputWrapper.style, {
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+            });
 
-        const channelInput = document.createElement('input');
-        channelInput.type = 'text';
-        channelInput.placeholder = 'e.g. Official';
-        Object.assign(channelInput.style, {
-            padding: '4px',
-            fontSize: '12px',
-            border: '1px solid #ccc',
-            borderRadius: '4px'
-        });
-        channelInput.addEventListener('input', debounce((e) => {
-            filterState.channel = e.target.value.toLowerCase();
-            applyFilters();
-        }, 500));
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = placeholder;
+            input.value = filterState[stateKey] || ''; // Initialize from state
+            Object.assign(input.style, {
+                padding: '4px',
+                fontSize: '12px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                flex: '1'
+            });
+
+            const clearBtn = document.createElement('button');
+            clearBtn.textContent = '×';
+            clearBtn.title = 'Clear filter';
+            Object.assign(clearBtn.style, {
+                cursor: 'pointer',
+                background: '#eee',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                width: '20px',
+                height: '24px',
+                lineHeight: '1',
+                textAlign: 'center',
+                padding: '0'
+            });
+
+            const updateFilter = () => {
+                filterState[stateKey] = input.value.toLowerCase();
+                saveFilterState();
+                applyFilters();
+            };
+
+            input.addEventListener('input', debounce(updateFilter, 500));
+
+            clearBtn.addEventListener('click', () => {
+                input.value = '';
+                updateFilter();
+            });
+
+            inputWrapper.appendChild(input);
+            inputWrapper.appendChild(clearBtn);
+            container.appendChild(label);
+            container.appendChild(inputWrapper);
+
+            return container;
+        };
+
+        const titleGroup = createInputGroup('Filter by Title:', 'e.g. Minecraft', 'title');
+        const channelGroup = createInputGroup('Filter by Channel:', 'e.g. Official', 'channel');
 
         // Above Info
         const aboveDiv = document.createElement('div');
@@ -387,10 +427,8 @@
         });
         removeAboveBtn.addEventListener('click', removeAboveItems);
 
-        panel.appendChild(titleLabel);
-        panel.appendChild(titleInput);
-        panel.appendChild(channelLabel);
-        panel.appendChild(channelInput);
+        panel.appendChild(titleGroup);
+        panel.appendChild(channelGroup);
         panel.appendChild(countDiv);
         panel.appendChild(aboveDiv);
         panel.appendChild(removeAboveBtn);
