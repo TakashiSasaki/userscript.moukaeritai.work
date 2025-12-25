@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.9
+// @version      0.1.10
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -332,9 +332,10 @@
             color: '#666',
             marginTop: '4px',
             textAlign: 'right',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis'
+            whiteSpace: 'normal',
+            wordBreak: 'break-word',
+            maxHeight: '100px',
+            overflowY: 'auto'
         });
 
         // Result Count
@@ -371,49 +372,28 @@
 
     function updateAboveInfo() {
         const items = Array.from(document.querySelectorAll('ytd-playlist-video-renderer'));
-        const visibleItems = items.filter(item => item.style.display !== 'none');
+        const visibleFilterItems = items.filter(item => item.style.display !== 'none');
 
-        // Find first visible item in viewport
-        // A simple check: top is >= 0 (or close to 0) relative to viewport? 
-        // Or bottom > check.
-        // YouTube header height ~56px.
-        const headerOffset = 80; // Approximate
+        // Target: Items strictly above the bottom of the viewport.
+        // i.e. rect.bottom <= window.innerHeight
+        const viewportHeight = window.innerHeight;
 
-        const firstInView = visibleItems.find(item => {
+        const targetItems = visibleFilterItems.filter(item => {
             const rect = item.getBoundingClientRect();
-            // Item is "in view" if its bottom is below the header offset
-            return rect.bottom > headerOffset;
+            // Include if the item is fully above the bottom edge of the screen
+            // (i.e. not "sticking out below" or fully below)
+            return rect.bottom <= viewportHeight;
         });
 
         const aboveInfoEl = document.getElementById('yt-saver-above-info');
         if (!aboveInfoEl) return;
 
-        if (!firstInView) {
-            // If no items in view (e.g. all scrolled up?), just show all? 
-            // Or if we overlap the bottom.
-            // If we are at the very bottom, maybe no items satisfy "bottom > offset" if they are huge?
-            // Fallback: nothing to show or all above.
-            // If at bottom, it's possible all valid items are "above" if the last one is also scrolled up (unlikely for infinite scroll).
-            if (visibleItems.length > 0 && window.scrollY > 0) {
-                // All might be above if list is short and we scrolled past?
-                // Let's assume the last one is the "current" if none found.
-                // Actually reasonable to say "-" if we can't pin one.
-                aboveInfoEl.textContent = 'Above: (All?)';
-            } else {
-                aboveInfoEl.textContent = 'Above: -';
-            }
+        if (targetItems.length === 0) {
+            aboveInfoEl.textContent = 'Above: -';
             return;
         }
 
-        // Collect indices of visible items BEFORE firstInView
-        const indexInList = visibleItems.indexOf(firstInView);
-        if (indexInList <= 0) {
-            aboveInfoEl.textContent = 'Above: None';
-            return;
-        }
-
-        const precedingItems = visibleItems.slice(0, indexInList);
-        const indices = precedingItems.map(getIndex).filter(i => i !== null);
+        const indices = targetItems.map(getIndex).filter(i => i !== null);
 
         if (indices.length === 0) {
             aboveInfoEl.textContent = 'Above: None';
@@ -421,9 +401,6 @@
         }
 
         // Format indices (Range compression)
-        // e.g. 1, 2, 3 -> "1-3"
-        // 1, 3, 4, 5 -> "1, 3-5"
-
         const ranges = [];
         let rangeStart = indices[0];
         let prev = indices[0];
@@ -441,7 +418,7 @@
         ranges.push(rangeStart === prev ? `${rangeStart}` : `${rangeStart}-${prev}`);
 
         aboveInfoEl.textContent = `Above: ${ranges.join(', ')}`;
-        aboveInfoEl.title = `Above: ${ranges.join(', ')}`; // Tooltip for full list
+        aboveInfoEl.title = `Above: ${ranges.join(', ')}`;
     }
 
     function applyFilters() {
