@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.11
+// @version      0.1.12
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -261,6 +261,19 @@
         };
     }
 
+    function throttle(func, limit) {
+        let inThrottle;
+        return function () {
+            const args = arguments;
+            const context = this;
+            if (!inThrottle) {
+                func.apply(context, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        }
+    }
+
     // --- Filter Feature ---
 
     let filterState = {
@@ -368,9 +381,9 @@
         applyFilters(); // Initial count
 
         // Scroll listener for "Above" info
-        window.addEventListener('scroll', () => { // Throttling recommended in prod, keeping simple for now
+        window.addEventListener('scroll', throttle(() => {
             updateAboveInfo();
-        });
+        }, 200));
     }
 
     function getIndex(item) {
@@ -557,7 +570,7 @@
         document.body.appendChild(btn);
     }
 
-    function run() {
+    async function run() {
         const playlistId = getPlaylistId();
         if (!playlistId) return;
 
@@ -577,22 +590,32 @@
 
         if (window._ytSaverObserver) window._ytSaverObserver.disconnect();
 
+        // Target the specific playlist container
+        let listContainer = document.querySelector('ytd-playlist-video-list-renderer #contents');
+        if (!listContainer) {
+            // Wait for it slightly if not immediately available (e.g. soft nav)
+            listContainer = await waitForElement('ytd-playlist-video-list-renderer #contents', 5000);
+        }
+
+        if (!listContainer) {
+            console.warn('[YouTube Playlist Saver] Playlist container not found. Observer not started to save performance.');
+            return;
+        }
+
+        // Lazy Observer: Just re-scan everything slightly throttled when mutations occur.
+        // This is much lighter than analyzing every mutation record if we just want to catch new items.
+        // And since processItem is safe to call repeatedly, this works well.
+        const throttledProcess = throttle(() => {
+            processAllVisible();
+        }, 1000);
+
         const observer = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-                for (const node of mutation.addedNodes) {
-                    if (node.nodeType === 1) {
-                        if (node.tagName === 'YTD-PLAYLIST-VIDEO-RENDERER') {
-                            processItem(node, playlistId, currentSessionSet);
-                        } else {
-                            const subItems = node.querySelectorAll('ytd-playlist-video-renderer');
-                            subItems.forEach(item => processItem(item, playlistId, currentSessionSet));
-                        }
-                    }
-                }
-            }
+            // Check if any added nodes are relevant? 
+            // Or just blindly run throttled process.
+            // Let's just run. The throttle protects us.
+            throttledProcess();
         });
 
-        const listContainer = document.querySelector('ytd-playlist-video-list-renderer #contents') || document.body;
         observer.observe(listContainer, { childList: true, subtree: true });
 
         window._ytSaverObserver = observer;
