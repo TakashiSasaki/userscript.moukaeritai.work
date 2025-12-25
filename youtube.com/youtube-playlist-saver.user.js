@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.21
+// @version      0.1.22
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -261,12 +261,19 @@
         );
 
         for (const spinner of spinners) {
-            // If the spinner has the 'active' attribute, it is definitely loading
+            // 1. Check if the spinner has the 'active' attribute (primary method)
             if (spinner.hasAttribute('active')) {
                 return true;
             }
 
-            // Fallback: Check aria-hidden and computed visibility
+            // 2. Check internal structure for 'active' class (high precision fallback)
+            // Based on spinner3.html, the internal #spinnerContainer gets the 'active' class
+            const internalContainer = spinner.querySelector('#spinnerContainer');
+            if (internalContainer && internalContainer.classList.contains('active')) {
+                return true;
+            }
+
+            // 3. Fallback: Check aria-hidden and computed visibility
             // Some spinners might not use the active attribute but toggle visibility
             if (spinner.getAttribute('aria-hidden') !== 'true') {
                 const style = window.getComputedStyle(spinner);

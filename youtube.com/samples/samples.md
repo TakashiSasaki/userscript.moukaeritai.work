@@ -31,6 +31,8 @@
   YouTubeで使用されている Web Components (`tp-yt-paper-spinner-lite`) の内部構造（Shadow DOM内の実装詳細）のDOM断片です。
 * **`spinner2.html`**
   プレイリスト画面において、スピナーコンポーネント自体を配置している外側のコンテナ（`#spinner-container` と `<tp-yt-paper-spinner-lite>`）のDOM断片です。
+* **`spinner3.html`**
+  ロード中の状態（active）にある `<tp-yt-paper-spinner>` の内部構造 (`#spinnerContainer`) のDOM断片です。`class="active"` が付与されていることが確認できます。
 
 ## HTMLファイルの前処理
 
