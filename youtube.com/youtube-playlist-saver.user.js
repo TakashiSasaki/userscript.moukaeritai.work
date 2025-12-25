@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.13
+// @version      0.1.14
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -291,7 +291,7 @@
             bottom: '70px',
             right: '20px',
             zIndex: 9999,
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            backgroundColor: '#f4f4f4', // Slightly tinted background
             border: '1px solid #ccc',
             borderRadius: '8px',
             padding: '12px',
@@ -454,7 +454,7 @@
             }
 
             // Delay between actions to prevent rate limiting or UI glitches
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise(r => setTimeout(r, 1000));
         }
 
         if (btn) {
