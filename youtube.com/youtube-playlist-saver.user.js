@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.7
+// @version      0.1.8
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -323,6 +323,20 @@
             applyFilters();
         });
 
+        // Above Info
+        const aboveDiv = document.createElement('div');
+        aboveDiv.id = 'yt-saver-above-info';
+        aboveDiv.textContent = 'Above: -';
+        Object.assign(aboveDiv.style, {
+            fontSize: '11px',
+            color: '#666',
+            marginTop: '4px',
+            textAlign: 'right',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+        });
+
         // Result Count
         const countDiv = document.createElement('div');
         countDiv.id = 'yt-saver-filter-count';
@@ -339,9 +353,95 @@
         panel.appendChild(channelLabel);
         panel.appendChild(channelInput);
         panel.appendChild(countDiv);
+        panel.appendChild(aboveDiv);
 
         document.body.appendChild(panel);
         applyFilters(); // Initial count
+
+        // Scroll listener for "Above" info
+        window.addEventListener('scroll', () => { // Throttling recommended in prod, keeping simple for now
+            updateAboveInfo();
+        });
+    }
+
+    function getIndex(item) {
+        const indexEl = item.querySelector('#index');
+        return indexEl ? parseInt(indexEl.textContent.trim(), 10) : null;
+    }
+
+    function updateAboveInfo() {
+        const items = Array.from(document.querySelectorAll('ytd-playlist-video-renderer'));
+        const visibleItems = items.filter(item => item.style.display !== 'none');
+
+        // Find first visible item in viewport
+        // A simple check: top is >= 0 (or close to 0) relative to viewport? 
+        // Or bottom > check.
+        // YouTube header height ~56px.
+        const headerOffset = 80; // Approximate
+
+        const firstInView = visibleItems.find(item => {
+            const rect = item.getBoundingClientRect();
+            // Item is "in view" if its bottom is below the header offset
+            return rect.bottom > headerOffset;
+        });
+
+        const aboveInfoEl = document.getElementById('yt-saver-above-info');
+        if (!aboveInfoEl) return;
+
+        if (!firstInView) {
+            // If no items in view (e.g. all scrolled up?), just show all? 
+            // Or if we overlap the bottom.
+            // If we are at the very bottom, maybe no items satisfy "bottom > offset" if they are huge?
+            // Fallback: nothing to show or all above.
+            // If at bottom, it's possible all valid items are "above" if the last one is also scrolled up (unlikely for infinite scroll).
+            if (visibleItems.length > 0 && window.scrollY > 0) {
+                // All might be above if list is short and we scrolled past?
+                // Let's assume the last one is the "current" if none found.
+                // Actually reasonable to say "-" if we can't pin one.
+                aboveInfoEl.textContent = 'Above: (All?)';
+            } else {
+                aboveInfoEl.textContent = 'Above: -';
+            }
+            return;
+        }
+
+        // Collect indices of visible items BEFORE firstInView
+        const indexInList = visibleItems.indexOf(firstInView);
+        if (indexInList <= 0) {
+            aboveInfoEl.textContent = 'Above: None';
+            return;
+        }
+
+        const precedingItems = visibleItems.slice(0, indexInList);
+        const indices = precedingItems.map(getIndex).filter(i => i !== null);
+
+        if (indices.length === 0) {
+            aboveInfoEl.textContent = 'Above: None';
+            return;
+        }
+
+        // Format indices (Range compression)
+        // e.g. 1, 2, 3 -> "1-3"
+        // 1, 3, 4, 5 -> "1, 3-5"
+
+        const ranges = [];
+        let rangeStart = indices[0];
+        let prev = indices[0];
+
+        for (let i = 1; i < indices.length; i++) {
+            const curr = indices[i];
+            if (curr === prev + 1) {
+                prev = curr;
+            } else {
+                ranges.push(rangeStart === prev ? `${rangeStart}` : `${rangeStart}-${prev}`);
+                rangeStart = curr;
+                prev = curr;
+            }
+        }
+        ranges.push(rangeStart === prev ? `${rangeStart}` : `${rangeStart}-${prev}`);
+
+        aboveInfoEl.textContent = `Above: ${ranges.join(', ')}`;
+        aboveInfoEl.title = `Above: ${ranges.join(', ')}`; // Tooltip for full list
     }
 
     function applyFilters() {
@@ -375,6 +475,8 @@
         if (countEl) {
             countEl.textContent = `Results: ${visibleCount} / ${items.length}`;
         }
+
+        updateAboveInfo(); // Update above info when filters change
     }
 
     /**
