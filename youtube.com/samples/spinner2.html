@@ -1,0 +1,19 @@
+<!--
+プレイリスト画面（`ytd-playlist-video-list-renderer`）において、スピナーコンポーネント自体を配置している外側のコンテナ。
+`#spinner-container` は配置用ラッパー、`<tp-yt-paper-spinner-lite>` はコンポーネント本体。
+-->
+<div id="spinner-container" class="style-scope ytd-playlist-video-list-renderer">
+    <tp-yt-paper-spinner-lite class="style-scope ytd-playlist-video-list-renderer" aria-hidden="true"
+        aria-label="loading"><!--css-build:shady--><!--css_build_scope:tp-yt-paper-spinner-lite--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_paper_spinner_lite.tp.yt.paper.spinner.lite.css.js-->
+        <div id="spinnerContainer" class="  style-scope tp-yt-paper-spinner-lite">
+            <div class="spinner-layer style-scope tp-yt-paper-spinner-lite">
+                <div class="circle-clipper left style-scope tp-yt-paper-spinner-lite">
+                    <div class="circle style-scope tp-yt-paper-spinner-lite"></div>
+                </div>
+                <div class="circle-clipper right style-scope tp-yt-paper-spinner-lite">
+                    <div class="circle style-scope tp-yt-paper-spinner-lite"></div>
+                </div>
+            </div>
+        </div>
+    </tp-yt-paper-spinner-lite>
+</div>

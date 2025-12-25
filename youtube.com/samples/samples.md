@@ -26,6 +26,12 @@
 * **`playlist-index-1.html`**
   プレイリスト内の動画に付けられている連番（インデックス）を表示している箇所のDOMサンプルです。
 
+### スピナー
+* **`spinner1.html`**
+  YouTubeで使用されている Web Components (`tp-yt-paper-spinner-lite`) の内部構造（Shadow DOM内の実装詳細）のDOM断片です。
+* **`spinner2.html`**
+  プレイリスト画面において、スピナーコンポーネント自体を配置している外側のコンテナ（`#spinner-container` と `<tp-yt-paper-spinner-lite>`）のDOM断片です。
+
 ## HTMLファイルの前処理
 
 ブラウザから保存したDOM断片をサンプルとして使用する際、以下の前処理（クリーンアップ）を行います。
