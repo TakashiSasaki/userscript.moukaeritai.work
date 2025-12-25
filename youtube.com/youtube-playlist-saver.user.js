@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.22
+// @version      0.1.23
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -255,9 +255,10 @@
      */
     function isSpinnerActive() {
         // Check for both the initial loading spinner (lite) and the continuation/pagination spinner
+        // Broadened scope to ytd-browse to catch spinners that might be siblings of the list renderer
         const spinners = document.querySelectorAll(
-            'ytd-playlist-video-list-renderer tp-yt-paper-spinner, ' +
-            'ytd-playlist-video-list-renderer tp-yt-paper-spinner-lite'
+            'ytd-browse[page-subtype="playlist"] tp-yt-paper-spinner, ' +
+            'ytd-browse[page-subtype="playlist"] tp-yt-paper-spinner-lite'
         );
 
         for (const spinner of spinners) {
