@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.16
+// @version      0.1.17
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -168,50 +168,47 @@
 
         menuBtn.click();
 
-        // 2. Wait for Menu Popup
-        const menuPopup = await waitForElement('ytd-menu-popup-renderer');
+        // 2. Wait for Menu Popup (Increased timeout to 3000ms)
+        const menuPopup = await waitForElement('ytd-menu-popup-renderer', 3000);
         if (!menuPopup) {
             console.error('[YouTube Playlist Saver] Popup not found.');
             return false;
         }
 
-        // 3. Find "Remove from [Playlist]" option
-        // Strategy: Look for the trash icon path or specific keywords if icons fail
-        // Note: YouTube menu items are typically `ytd-menu-service-item-renderer`
-        const items = Array.from(menuPopup.querySelectorAll('ytd-menu-service-item-renderer'));
+        // 3. Find "Remove from [Playlist]" option with retry (Polling)
+        // YouTube menus might render content slightly after the popup container appears.
+        const findTargetItem = () => {
+            const items = Array.from(menuPopup.querySelectorAll('ytd-menu-service-item-renderer'));
+            for (const item of items) {
+                // Check text content
+                const text = item.textContent || "";
+                if (text.includes('Remove from') || text.includes('から削除')) {
+                    return item;
+                }
+                // Check icon path (Trash icon)
+                const path = item.querySelector('path');
+                // Standard material trash path or variants
+                const trashPaths = [
+                    "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
+                    "M11 17H9V8h2v9zm4-9h-2v9h2V8zm4-4v1h-1v16H6V5H5V4h4V3h6v1h4zm-2 1H8v15h10V5z"
+                ];
+                if (path) {
+                    const d = path.getAttribute('d');
+                    if (d && trashPaths.includes(d)) return item;
+                }
+            }
+            return null;
+        };
 
         let targetItem = null;
-
-        for (const item of items) {
-            // Check text content
-            const text = item.textContent || "";
-            // Common languages: English, Japanese
-            if (text.includes('Remove from') || text.includes('から削除')) {
-                targetItem = item;
-                break;
-            }
-            // Check icon path (Trash icon)
-            const path = item.querySelector('path');
-            if (path && path.getAttribute('d')?.startsWith('M11 17H9V8h2v9zm4-9h-2v9h2V8zm4-4v1h-1v16H6V5H5V4h4V3h6v1h4zm-2 1H8v15h10V5z')) {
-                // Note: YouTube's trash icon path might vary. Text search is safer for "Remove from" context
-                // Keeping logic simple: text search is usually sufficient for standard playlists
-            }
+        const POLL_RETRIES = 20; // 20 * 100ms = 2000ms wait for content
+        for (let i = 0; i < POLL_RETRIES; i++) {
+            targetItem = findTargetItem();
+            if (targetItem) break;
+            await new Promise(r => setTimeout(r, 100));
         }
 
-        // Strategy 2: If finding by text is ambiguous, usually the "Remove from..." is the trash icon item.
-        // Let's refine text search to be safer.
-        if (!targetItem) {
-            // Fallback: specifically look for the Trash icon used in menus
-            // Path often used by YouTube for delete/remove:
-            const trashPaths = [
-                "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z", // Standard material trash
-                "M11 17H9V8h2v9zm4-9h-2v9h2V8zm4-4v1h-1v16H6V5H5V4h4V3h6v1h4zm-2 1H8v15h10V5z" // Another common one
-            ];
-            targetItem = items.find(item => {
-                const d = item.querySelector('path')?.getAttribute('d');
-                return d && trashPaths.includes(d);
-            });
-        }
+        // Legacy fallback logic removed as it's now covered by the polling finder
 
         if (targetItem) {
             targetItem.click();
@@ -486,9 +483,13 @@
             item.scrollIntoView({ block: 'center', behavior: 'instant' });
             await new Promise(r => setTimeout(r, 100)); // Small wait after scroll
 
-            const success = await attemptRemoveVideo(item);
-            if (!success) {
-                console.warn(`Failed to remove item index ${i}`);
+            try {
+                const success = await attemptRemoveVideo(item);
+                if (!success) {
+                    console.warn(`[YouTube Playlist Saver] Failed to remove item index ${i}`);
+                }
+            } catch (err) {
+                console.error(`[YouTube Playlist Saver] Exception removing item index ${i}`, err);
             }
 
             // Delay between actions to prevent rate limiting or UI glitches
