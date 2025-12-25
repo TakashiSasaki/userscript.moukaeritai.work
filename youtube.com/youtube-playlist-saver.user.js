@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.10
+// @version      0.1.11
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -253,6 +253,14 @@
         });
     }
 
+    function debounce(func, wait) {
+        let timeout;
+        return function (...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
     // --- Filter Feature ---
 
     let filterState = {
@@ -298,10 +306,10 @@
             border: '1px solid #ccc',
             borderRadius: '4px'
         });
-        titleInput.addEventListener('input', (e) => {
+        titleInput.addEventListener('input', debounce((e) => {
             filterState.title = e.target.value.toLowerCase();
             applyFilters();
-        });
+        }, 500));
 
         // Channel
         const channelLabel = document.createElement('div');
@@ -318,10 +326,10 @@
             border: '1px solid #ccc',
             borderRadius: '4px'
         });
-        channelInput.addEventListener('input', (e) => {
+        channelInput.addEventListener('input', debounce((e) => {
             filterState.channel = e.target.value.toLowerCase();
             applyFilters();
-        });
+        }, 500));
 
         // Above Info
         const aboveDiv = document.createElement('div');
