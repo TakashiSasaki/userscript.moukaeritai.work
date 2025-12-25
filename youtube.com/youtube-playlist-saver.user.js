@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.18
+// @version      0.1.19
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -275,6 +275,14 @@
         if (!isSpinnerActive()) return;
 
         console.log('[YouTube Playlist Saver] Spinner detected, waiting...');
+
+        const btn = document.getElementById('yt-saver-remove-above-btn');
+        let originalText = '';
+        if (btn) {
+            originalText = btn.textContent;
+            btn.textContent = 'Waiting for load...';
+        }
+
         const MAX_WAIT_MS = 60000; // 60 seconds max wait
         const START_TIME = Date.now();
 
@@ -285,6 +293,11 @@
             }
             await new Promise(resolve => setTimeout(resolve, 500));
         }
+
+        if (btn && originalText) {
+            btn.textContent = originalText;
+        }
+
         // Small buffer after spinner disappears
         await new Promise(resolve => setTimeout(resolve, 500));
     }
