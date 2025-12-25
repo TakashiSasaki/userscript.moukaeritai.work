@@ -33,6 +33,8 @@
   プレイリスト画面において、スピナーコンポーネント自体を配置している外側のコンテナ（`#spinner-container` と `<tp-yt-paper-spinner-lite>`）のDOM断片です。
 * **`spinner3.html`**
   ロード中の状態（active）にある `<tp-yt-paper-spinner>` の内部構造 (`#spinnerContainer`) のDOM断片です。`class="active"` が付与されていることが確認できます。
+* **`spinner4.html`**
+  ロード中の状態（active）にある `<tp-yt-paper-spinner>` 要素自体のDOM断片です。属性 `active` が付与されており、`aria-hidden` 属性が存在しないことが確認できます。
 
 ## HTMLファイルの前処理
 
