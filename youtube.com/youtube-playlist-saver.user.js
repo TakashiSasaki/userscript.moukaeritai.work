@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.12
+// @version      0.1.13
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -370,12 +370,30 @@
             textAlign: 'right'
         });
 
+        // Bulk Remove Button
+        const removeAboveBtn = document.createElement('button');
+        removeAboveBtn.id = 'yt-saver-remove-above-btn';
+        removeAboveBtn.textContent = 'Remove Above';
+        Object.assign(removeAboveBtn.style, {
+            marginTop: '8px',
+            padding: '6px',
+            fontSize: '11px',
+            backgroundColor: '#ffdddd',
+            border: '1px solid #faa',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            color: '#d00',
+            fontWeight: 'bold'
+        });
+        removeAboveBtn.addEventListener('click', removeAboveItems);
+
         panel.appendChild(titleLabel);
         panel.appendChild(titleInput);
         panel.appendChild(channelLabel);
         panel.appendChild(channelInput);
         panel.appendChild(countDiv);
         panel.appendChild(aboveDiv);
+        panel.appendChild(removeAboveBtn);
 
         document.body.appendChild(panel);
         applyFilters(); // Initial count
@@ -391,20 +409,66 @@
         return indexEl ? parseInt(indexEl.textContent.trim(), 10) : null;
     }
 
-    function updateAboveInfo() {
+    function getAboveItems() {
         const items = Array.from(document.querySelectorAll('ytd-playlist-video-renderer'));
-        const visibleFilterItems = items.filter(item => item.style.display !== 'none');
+        // Exclude hidden items AND already removed items (pointerEvents = none)
+        const visibleFilterItems = items.filter(item =>
+            item.style.display !== 'none' && item.style.pointerEvents !== 'none'
+        );
 
-        // Target: Items strictly above the bottom of the viewport.
-        // i.e. rect.bottom <= window.innerHeight
         const viewportHeight = window.innerHeight;
 
-        const targetItems = visibleFilterItems.filter(item => {
+        return visibleFilterItems.filter(item => {
             const rect = item.getBoundingClientRect();
             // Include if the item is fully above the bottom edge of the screen
-            // (i.e. not "sticking out below" or fully below)
             return rect.bottom <= viewportHeight;
         });
+    }
+
+    async function removeAboveItems() {
+        const items = getAboveItems();
+        if (items.length === 0) {
+            alert('No "Above" items to remove.');
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to remove ${items.length} videos from the playlist?`)) return;
+
+        const btn = document.getElementById('yt-saver-remove-above-btn');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Removing...';
+            btn.style.opacity = '0.5';
+        }
+
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+
+            // Scroll into view gently
+            item.scrollIntoView({ block: 'center', behavior: 'instant' });
+            await new Promise(r => setTimeout(r, 100)); // Small wait after scroll
+
+            const success = await attemptRemoveVideo(item);
+            if (!success) {
+                console.warn(`Failed to remove item index ${i}`);
+            }
+
+            // Delay between actions to prevent rate limiting or UI glitches
+            await new Promise(r => setTimeout(r, 500));
+        }
+
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Remove Above';
+            btn.style.opacity = '1';
+        }
+
+        // Update info after removal
+        applyFilters();
+    }
+
+    function updateAboveInfo() {
+        const targetItems = getAboveItems();
 
         const aboveInfoEl = document.getElementById('yt-saver-above-info');
         if (!aboveInfoEl) return;
@@ -441,6 +505,7 @@
         aboveInfoEl.textContent = `Above: ${ranges.join(', ')}`;
         aboveInfoEl.title = `Above: ${ranges.join(', ')}`;
     }
+
 
     function applyFilters() {
         const items = document.querySelectorAll('ytd-playlist-video-renderer');
