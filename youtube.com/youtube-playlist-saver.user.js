@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.19
+// @version      0.1.20
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -258,14 +258,24 @@
         if (!spinnerContainer) return false;
 
         // Check content visibility
-        // If display is none, it's hidden.
-        // Also check attributes if available, but style is most reliable.
         const style = window.getComputedStyle(spinnerContainer);
         if (style.display === 'none' || style.visibility === 'hidden') return false;
 
-        // Also check the inner spinner element for 'active' attribute if needed,
-        // but container visibility is usually the main toggle.
-        return true;
+        // NEW: Check for the actual spinner component's active state
+        const spinner = spinnerContainer.querySelector('tp-yt-paper-spinner-lite');
+        if (spinner && spinner.hasAttribute('active')) {
+            return true;
+        }
+
+        // If the container is visible but no active attribute found, 
+        // fallback to checking aria-hidden (if it's NOT hidden, it might be active)
+        if (spinner && spinner.getAttribute('aria-hidden') !== 'true') {
+            return true;
+        }
+
+        // If we found the spinner element but it's not active/visible, return false.
+        // If we didn't find the spinner element but the container is visible, assume loading (safe fallback).
+        return !spinner;
     }
 
     /**
