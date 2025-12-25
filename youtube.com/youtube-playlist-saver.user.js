@@ -323,16 +323,31 @@
             applyFilters();
         });
 
+        // Result Count
+        const countDiv = document.createElement('div');
+        countDiv.id = 'yt-saver-filter-count';
+        countDiv.textContent = 'Results: 0 / 0';
+        Object.assign(countDiv.style, {
+            fontSize: '11px',
+            color: '#666',
+            marginTop: '4px',
+            textAlign: 'right'
+        });
+
         panel.appendChild(titleLabel);
         panel.appendChild(titleInput);
         panel.appendChild(channelLabel);
         panel.appendChild(channelInput);
+        panel.appendChild(countDiv);
 
         document.body.appendChild(panel);
+        applyFilters(); // Initial count
     }
 
     function applyFilters() {
         const items = document.querySelectorAll('ytd-playlist-video-renderer');
+        let visibleCount = 0;
+
         items.forEach(item => {
             // 1. Get Title
             const titleEl = item.querySelector('#video-title');
@@ -350,10 +365,16 @@
 
             if (matchTitle && matchChannel) {
                 item.style.display = '';
+                visibleCount++;
             } else {
                 item.style.display = 'none';
             }
         });
+
+        const countEl = document.getElementById('yt-saver-filter-count');
+        if (countEl) {
+            countEl.textContent = `Results: ${visibleCount} / ${items.length}`;
+        }
     }
 
     /**
@@ -373,6 +394,14 @@
             item.style.display = 'none';
         } else {
             item.style.display = '';
+        }
+
+        // Update count for new items
+        const countEl = document.getElementById('yt-saver-filter-count');
+        if (countEl) {
+            const items = document.querySelectorAll('ytd-playlist-video-renderer');
+            const visibleItems = document.querySelectorAll('ytd-playlist-video-renderer:not([style*="display: none"])');
+            countEl.textContent = `Results: ${visibleItems.length} / ${items.length}`;
         }
 
         if (item.dataset.saverProcessed === playlistId) return;
