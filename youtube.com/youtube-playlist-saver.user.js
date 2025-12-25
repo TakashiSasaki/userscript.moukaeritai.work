@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.17
+// @version      0.1.18
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -250,6 +250,45 @@
         });
     }
 
+    /**
+     * Check if the playlist loading spinner is active
+     */
+    function isSpinnerActive() {
+        const spinnerContainer = document.querySelector('ytd-playlist-video-list-renderer #spinner-container');
+        if (!spinnerContainer) return false;
+
+        // Check content visibility
+        // If display is none, it's hidden.
+        // Also check attributes if available, but style is most reliable.
+        const style = window.getComputedStyle(spinnerContainer);
+        if (style.display === 'none' || style.visibility === 'hidden') return false;
+
+        // Also check the inner spinner element for 'active' attribute if needed,
+        // but container visibility is usually the main toggle.
+        return true;
+    }
+
+    /**
+     * Wait until the spinner disappears
+     */
+    async function waitUntilSpinnerDisappears() {
+        if (!isSpinnerActive()) return;
+
+        console.log('[YouTube Playlist Saver] Spinner detected, waiting...');
+        const MAX_WAIT_MS = 60000; // 60 seconds max wait
+        const START_TIME = Date.now();
+
+        while (isSpinnerActive()) {
+            if (Date.now() - START_TIME > MAX_WAIT_MS) {
+                console.warn('[YouTube Playlist Saver] Timed out waiting for spinner to disappear.');
+                break;
+            }
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        // Small buffer after spinner disappears
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
     function debounce(func, wait) {
         let timeout;
         return function (...args) {
@@ -482,6 +521,9 @@
             // Scroll into view gently
             item.scrollIntoView({ block: 'center', behavior: 'instant' });
             await new Promise(r => setTimeout(r, 100)); // Small wait after scroll
+
+            // Wait for spinner to disappear if active
+            await waitUntilSpinnerDisappears();
 
             try {
                 const success = await attemptRemoveVideo(item);
