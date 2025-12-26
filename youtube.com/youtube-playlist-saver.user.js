@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.26
+// @version      0.1.27
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -356,6 +356,7 @@
     });
 
     let isProcessing = false;
+    let isFiltering = false;
 
     function saveFilterState() {
         GM_setValue(FILTER_SETTINGS_KEY, filterState);
@@ -516,7 +517,20 @@
         panel.appendChild(countDiv);
         panel.appendChild(spinnerStatusDiv);
 
-        // Processing Status
+        // Filtering Status
+        const filteringStatusDiv = document.createElement('div');
+        filteringStatusDiv.id = 'yt-saver-filtering-status';
+        filteringStatusDiv.textContent = 'Filtering: Idle';
+        Object.assign(filteringStatusDiv.style, {
+            fontSize: '11px',
+            fontWeight: 'bold',
+            marginTop: '2px',
+            textAlign: 'right',
+            color: '#2ba640'
+        });
+        panel.appendChild(filteringStatusDiv);
+
+        // Processing (Removal) Status
         const processingStatusDiv = document.createElement('div');
         processingStatusDiv.id = 'yt-saver-processing-status';
         processingStatusDiv.textContent = 'Processing: Idle';
@@ -540,11 +554,17 @@
             updateAboveInfo();
         }, 200));
 
-        // Real-time spinner check
+        // Real-time status check
         setInterval(() => {
             const isActive = isSpinnerActive();
             spinnerStatusDiv.textContent = isActive ? 'Spinner: Active' : 'Spinner: Idle';
             spinnerStatusDiv.style.color = isActive ? '#d00' : '#2ba640';
+
+            const filterEl = document.getElementById('yt-saver-filtering-status');
+            if (filterEl) {
+                filterEl.textContent = isFiltering ? 'Filtering: Active' : 'Filtering: Idle';
+                filterEl.style.color = isFiltering ? '#d00' : '#2ba640';
+            }
 
             const procEl = document.getElementById('yt-saver-processing-status');
             if (procEl) {
@@ -687,7 +707,7 @@
     }
 
     function applyFilters() {
-        isProcessing = true;
+        isFiltering = true;
         try {
             const items = document.querySelectorAll('ytd-playlist-video-renderer');
 
@@ -717,7 +737,7 @@
         } finally {
             // Use setTimeout to ensure the "Active" state is visible even for fast sync operations
             setTimeout(() => {
-                isProcessing = false;
+                isFiltering = false;
             }, 100);
         }
     }
