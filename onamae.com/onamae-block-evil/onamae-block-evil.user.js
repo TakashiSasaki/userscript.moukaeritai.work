@@ -6,6 +6,7 @@
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://navi.onamae.com/domain/setting/dns/control/input
+// @match        https://navi.onamae.com/domain/setting/dns/control/done
 // @grant        GM_addStyle
 // @run-at       document-start
 // ==/UserScript==
@@ -20,7 +21,10 @@
         chat,
         #chatplusview,
         #jp.chatplus.app_chat_frame,
-        .chatbot-navi-onamae-com #eye_catcher {
+        .chatbot-navi-onamae-com #eye_catcher,
+        /* 完了画面の広告要素 (Evil 3, 4) */
+        nds-recommend,
+        domain-present-free-modal {
             display: none !important;
             visibility: hidden !important;
             pointer-events: none !important;
@@ -60,24 +64,26 @@
             if (banner) {
                 const h2 = banner.querySelector('.box-DomainBanner-Hdn');
                 // テキスト確認
-                if (h2 && h2.textContent.includes('意図しないDNS設定変更を防ぐために')) {
-                    // ここでtrueを返すとバナー全体が消えてしまうため、
-                    // バナー内の特定のボタンだけを消す処理が必要だが、
-                    // 現在の設計（isEvil -> blockElement）では「渡された要素を消す」仕組み。
-                    // そのため、ここでは「バナー全体はEvilではない」とし、
-                    // observer側で子要素のボタンを個別にチェックする必要があるが、
-                    // blockElementが再帰的に呼ばれるわけではない。
-
-                    // 対策: ここで「バナー内のEvilなボタン」を特定して消してしまう副作用を持たせるか、
-                    // 設計を見直すかだが、簡易的に副作用アプローチをとる。
-                    const evilButton = banner.querySelector('button.is-Primary');
-                    if (evilButton && evilButton.textContent.trim() === '設定する') {
-                        blockElement(evilButton); // 副作用: ここでボタンを消す
+                if (h2) {
+                    if (h2.textContent.includes('意図しないDNS設定変更を防ぐために')) {
+                        // Evil 1: ボタンのみ非表示
+                        const evilButton = banner.querySelector('button.is-Primary');
+                        if (evilButton && evilButton.textContent.trim() === '設定する') {
+                            blockElement(evilButton); // 副作用: ここでボタンを消す
+                        }
+                        return false; // バナー自体は消さない
                     }
-                    return false; // バナー自体は消さない
+                    if (h2.textContent.includes('そのドメインは社名・サービス名・商品名などではありませんか')) {
+                        // Evil 5: ブランド保護/ドメインモニタリング勧誘バナー (dns-control-done-ad2)
+                        // これは全体をブロック
+                        return true;
+                    }
                 }
             }
         }
+
+        // Evil 3 (nds-recommend) と Evil 4 (domain-present-free-modal) はCSSで静的にブロック済みだが、
+        // 動的にclassが付与されるケースや構造変化に対応するため、ここでもチェック可能にしておく（現状はCSSで十分）
 
         // 注意: 会員情報確認ポップアップ (Evil 2) はブロック対象から除外しました
         // ユーザーからの報告により、残しても問題ないと判断されたため
