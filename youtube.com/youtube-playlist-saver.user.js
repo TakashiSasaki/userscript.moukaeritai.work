@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.28
+// @version      0.1.29
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -37,6 +37,7 @@
     }
 
     function getPlaylistId() {
+        if (window.location.pathname !== '/playlist') return null;
         const params = new URLSearchParams(window.location.search);
         return params.get('list');
     }
@@ -883,6 +884,23 @@
 
     // --- Navigation Handling ---
 
+    function cleanupUI() {
+        if (scrollInterval) {
+            clearInterval(scrollInterval);
+            scrollInterval = null;
+        }
+        const scrollBtn = document.getElementById('yt-saver-scroll-btn');
+        if (scrollBtn) scrollBtn.remove();
+
+        const filterPanel = document.getElementById('yt-saver-filter-panel');
+        if (filterPanel) filterPanel.remove();
+
+        if (window._ytSaverObserver) {
+            window._ytSaverObserver.disconnect();
+            window._ytSaverObserver = null;
+        }
+    }
+
     window.addEventListener('yt-navigate-finish', () => {
         // Flush pending save
         if (pendingSaveTimeout) {
@@ -891,17 +909,7 @@
             pendingSaveTimeout = null;
         }
 
-        if (scrollInterval) {
-            clearInterval(scrollInterval);
-            scrollInterval = null;
-            const btn = document.getElementById('yt-saver-scroll-btn');
-            if (btn) btn.remove(); // Re-add in run()
-        }
-
-        const filterPanel = document.getElementById('yt-saver-filter-panel');
-        if (filterPanel) filterPanel.remove();
-
-        if (window._ytSaverObserver) window._ytSaverObserver.disconnect();
+        cleanupUI();
         run();
     });
 
