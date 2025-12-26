@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.27
+// @version      0.1.28
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -733,11 +733,14 @@
             });
 
             updateResultCount();
-            updateAboveInfo(); // Update above info when filters change
+            // Moved updateAboveInfo to setTimeout to ensure layout (getBoundingClientRect) 
+            // is calculated AFTER the DOM updates (display: none) have triggered a reflow.
         } finally {
             // Use setTimeout to ensure the "Active" state is visible even for fast sync operations
+            // AND to wait for layout repaint
             setTimeout(() => {
                 isFiltering = false;
+                updateAboveInfo();
             }, 100);
         }
     }
