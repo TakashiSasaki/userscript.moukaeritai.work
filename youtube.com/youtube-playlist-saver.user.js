@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.30
+// @version      0.1.31
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -686,6 +686,27 @@
     }
 
 
+    function applyFilterToItem(item) {
+        // 1. Get Title
+        const titleEl = item.querySelector('#video-title');
+        const titleText = titleEl ? titleEl.textContent.trim().toLowerCase() : '';
+
+        // 2. Get Channel Name
+        const channelEl = item.querySelector('.ytd-channel-name a') ||
+            item.querySelector('#channel-name #text');
+        const channelText = channelEl ? channelEl.textContent.trim().toLowerCase() : '';
+
+        // 3. Check Matches
+        const matchTitle = !filterState.title || titleText.includes(filterState.title);
+        const matchChannel = !filterState.channel || channelText.includes(filterState.channel);
+
+        if (matchTitle && matchChannel) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
+        }
+    }
+
     function updateResultCount() {
         const items = document.querySelectorAll('ytd-playlist-video-renderer');
         // Count items that are NOT hidden
@@ -709,28 +730,7 @@
         isFiltering = true;
         try {
             const items = document.querySelectorAll('ytd-playlist-video-renderer');
-
-            items.forEach(item => {
-                // 1. Get Title
-                const titleEl = item.querySelector('#video-title');
-                const titleText = titleEl ? titleEl.textContent.trim().toLowerCase() : '';
-
-                // 2. Get Channel Name
-                const channelEl = item.querySelector('.ytd-channel-name a') ||
-                    item.querySelector('#channel-name #text');
-                const channelText = channelEl ? channelEl.textContent.trim().toLowerCase() : '';
-
-                // 3. Check Matches
-                const matchTitle = !filterState.title || titleText.includes(filterState.title);
-                const matchChannel = !filterState.channel || channelText.includes(filterState.channel);
-
-                if (matchTitle && matchChannel) {
-                    item.style.display = '';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-
+            items.forEach(applyFilterToItem);
             updateResultCount();
             // Moved updateAboveInfo to setTimeout to ensure layout (getBoundingClientRect) 
             // is calculated AFTER the DOM updates (display: none) have triggered a reflow.
@@ -744,24 +744,9 @@
         }
     }
 
-    /**
-     * Core processing logic for a single video renderer
-     */
     function processItem(item, playlistId, currentSessionSet) {
-        // Apply filter immediately for new items
-        const titleEl = item.querySelector('#video-title');
-        const titleText = titleEl ? titleEl.textContent.trim().toLowerCase() : '';
-        const channelEl = item.querySelector('.ytd-channel-name a') || item.querySelector('#channel-name #text');
-        const channelText = channelEl ? channelEl.textContent.trim().toLowerCase() : '';
-
-        const matchTitle = !filterState.title || titleText.includes(filterState.title);
-        const matchChannel = !filterState.channel || channelText.includes(filterState.channel);
-
-        if (!(matchTitle && matchChannel)) {
-            item.style.display = 'none';
-        } else {
-            item.style.display = '';
-        }
+        // Apply filter immediately for new/re-scanned items
+        applyFilterToItem(item);
 
 
         if (item.dataset.saverProcessed === playlistId) return;
@@ -842,9 +827,18 @@
         const currentSessionSet = getSavedVideos(playlistId);
 
         const processAllVisible = () => {
-            const items = document.querySelectorAll('ytd-playlist-video-renderer');
-            items.forEach(item => processItem(item, playlistId, currentSessionSet));
-            updateResultCount(); // Update count ONCE after batch processing
+            isFiltering = true; // Activating filtering indicator during re-scan/loading
+            try {
+                const items = document.querySelectorAll('ytd-playlist-video-renderer');
+                items.forEach(item => processItem(item, playlistId, currentSessionSet));
+                updateResultCount();
+            } finally {
+                // Ensure indicator remains visible for 100ms
+                setTimeout(() => {
+                    isFiltering = false;
+                    updateAboveInfo();
+                }, 100);
+            }
         };
 
         processAllVisible();
