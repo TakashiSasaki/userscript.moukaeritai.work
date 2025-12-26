@@ -6,7 +6,7 @@
 
 - **名前**: お名前.com 邪悪広告ブロッカー
 - **Namespace**: `userscript.moukaeritai.work`
-- **現在のバージョン**: `0.1.4` (major.minor.patch 形式)
+- **現在のバージョン**: `0.1.5` (major.minor.patch 形式)
 - **作者**: Takashi Sasaki ([x.com/TakashiSasaki](https://x.com/TakashiSasaki))
 
 ## 2. 目的
@@ -20,8 +20,11 @@
 ## 3. ターゲット（ブロック対象）
 
 ### 3.1. DNS設定変更トラップ (Evil 1)
-- **安定したセレクタ**: `.box-DomainBanner.is-Type2`
-- **判定キー**: `.box-DomainBanner-Hdn` のテキストが「意図しないDNS設定変更を防ぐために」を含む。
+- **ターゲット**: 「ドメインプロテクション」勧誘モーダル内の「設定する」ボタンのみ。
+- **処理**: モーダル自体は残し、誤操作の原因となる「設定する」ボタンだけを非表示にする。
+- **安定したセレクタ**: `.box-DomainBanner button.is-Primary`
+- **判定キー**: 親要素 `.box-DomainBanner-Hdn` が「意図しないDNS設定変更を防ぐために」を含む。
+
 
 ### 3.2. 会員情報確認ポップアップ (Evil 2)
 > **Note**: v0.1.4 にてブロック対象から除外されました。

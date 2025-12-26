@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         お名前.com 邪悪広告ブロッカー
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.4
+// @version      0.1.5
 // @description  お名前.com Navi の操作を妨げる「邪悪な」広告や確認ポップアップを自動的に非表示にします。
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -41,19 +41,46 @@
         if (!el || el.nodeType !== 1) return false;
 
         // 1. DNSプロテクション勧誘モーダル (Evil 1)
-        // クラス名 box-DomainBanner はこの広告特有の可能性が高い
-        const domainBanner = el.classList.contains('box-DomainBanner') ? el : el.querySelector('.box-DomainBanner');
-        if (domainBanner) {
-            const h2 = domainBanner.querySelector('.box-DomainBanner-Hdn');
-            // ヘッダーテキストで内容を確定
-            if (h2 && h2.textContent.includes('意図しないDNS設定変更を防ぐために')) return true;
+        // ユーザー要望により、モーダル全体ではなく「設定する」ボタンのみを非表示にする
+        // ターゲット: .box-DomainBanner 内の button.is-Primary (設定する)
+
+        // 要素自体がボタンの場合
+        if (el.tagName === 'BUTTON' && el.classList.contains('is-Primary')) {
+            const banner = el.closest('.box-DomainBanner');
+            if (banner) {
+                const h2 = banner.querySelector('.box-DomainBanner-Hdn');
+                if (h2 && h2.textContent.includes('意図しないDNS設定変更を防ぐために')) return true;
+            }
+        }
+
+        // 要素がバナー（親）で、その中のボタンを探す場合
+        // （MutationObserverで親が追加されたケース）
+        if (el.classList.contains('box-DomainBanner') || el.querySelector('.box-DomainBanner')) {
+            const banner = el.classList.contains('box-DomainBanner') ? el : el.querySelector('.box-DomainBanner');
+            if (banner) {
+                const h2 = banner.querySelector('.box-DomainBanner-Hdn');
+                // テキスト確認
+                if (h2 && h2.textContent.includes('意図しないDNS設定変更を防ぐために')) {
+                    // ここでtrueを返すとバナー全体が消えてしまうため、
+                    // バナー内の特定のボタンだけを消す処理が必要だが、
+                    // 現在の設計（isEvil -> blockElement）では「渡された要素を消す」仕組み。
+                    // そのため、ここでは「バナー全体はEvilではない」とし、
+                    // observer側で子要素のボタンを個別にチェックする必要があるが、
+                    // blockElementが再帰的に呼ばれるわけではない。
+
+                    // 対策: ここで「バナー内のEvilなボタン」を特定して消してしまう副作用を持たせるか、
+                    // 設計を見直すかだが、簡易的に副作用アプローチをとる。
+                    const evilButton = banner.querySelector('button.is-Primary');
+                    if (evilButton && evilButton.textContent.trim() === '設定する') {
+                        blockElement(evilButton); // 副作用: ここでボタンを消す
+                    }
+                    return false; // バナー自体は消さない
+                }
+            }
         }
 
         // 注意: 会員情報確認ポップアップ (Evil 2) はブロック対象から除外しました
         // ユーザーからの報告により、残しても問題ないと判断されたため
-
-        // 3. その他特定の邪悪なクラス
-        if (el.classList.contains('box-DomainBanner')) return true;
 
         return false;
     };
