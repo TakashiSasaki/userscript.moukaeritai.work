@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.31
+// @version      0.1.32
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -356,6 +356,8 @@
 
     let isProcessing = false;
     let isFiltering = false;
+    let statusInterval = null;
+    let scrollHandler = null;
 
     function saveFilterState() {
         GM_setValue(FILTER_SETTINGS_KEY, filterState);
@@ -549,12 +551,13 @@
         applyFilters(); // Initial count
 
         // Scroll listener for "Above" info
-        window.addEventListener('scroll', throttle(() => {
+        scrollHandler = throttle(() => {
             updateAboveInfo();
-        }, 200));
+        }, 200);
+        window.addEventListener('scroll', scrollHandler);
 
         // Real-time status check
-        setInterval(() => {
+        statusInterval = setInterval(() => {
             const isActive = isSpinnerActive();
             spinnerStatusDiv.textContent = isActive ? 'Spinner: Active' : 'Spinner: Idle';
             spinnerStatusDiv.style.color = isActive ? '#d00' : '#2ba640';
@@ -882,6 +885,14 @@
         if (scrollInterval) {
             clearInterval(scrollInterval);
             scrollInterval = null;
+        }
+        if (statusInterval) {
+            clearInterval(statusInterval);
+            statusInterval = null;
+        }
+        if (scrollHandler) {
+            window.removeEventListener('scroll', scrollHandler);
+            scrollHandler = null;
         }
         const scrollBtn = document.getElementById('yt-saver-scroll-btn');
         if (scrollBtn) scrollBtn.remove();
