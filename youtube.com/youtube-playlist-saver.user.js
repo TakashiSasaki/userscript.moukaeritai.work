@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.34
+// @version      0.1.35
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -225,28 +225,26 @@
     /**
      * Utility: Wait for an element to appear
      */
-    function waitForElement(selector, timeout = 1000) {
+    /**
+     * Utility: Wait for an element to appear (Polling version)
+     * Replaced MutationObserver with polling to avoid hanging during massive DOM removals (e.g. navigation)
+     */
+    function waitForElement(selector, timeout = 3000) {
         return new Promise(resolve => {
             if (document.querySelector(selector)) {
                 return resolve(document.querySelector(selector));
             }
 
-            const observer = new MutationObserver((mutations, obs) => {
+            const startTime = Date.now();
+            const interval = setInterval(() => {
                 if (document.querySelector(selector)) {
+                    clearInterval(interval);
                     resolve(document.querySelector(selector));
-                    obs.disconnect();
+                } else if (Date.now() - startTime > timeout) {
+                    clearInterval(interval);
+                    resolve(null);
                 }
-            });
-
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-
-            setTimeout(() => {
-                observer.disconnect();
-                resolve(null);
-            }, timeout);
+            }, 100);
         });
     }
 
@@ -909,6 +907,7 @@
 
     // Performance: Cleanup EARLIER to avoid observer overhead during page teardown
     window.addEventListener('yt-navigate-start', cleanupUI);
+    window.addEventListener('beforeunload', cleanupUI); // Extra safety for non-SPA navigation or close
 
     window.addEventListener('yt-navigate-finish', () => {
         // Flush pending save
