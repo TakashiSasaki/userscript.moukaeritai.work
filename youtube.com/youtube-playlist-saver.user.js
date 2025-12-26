@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.25
+// @version      0.1.26
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -355,6 +355,8 @@
         channel: ''
     });
 
+    let isProcessing = false;
+
     function saveFilterState() {
         GM_setValue(FILTER_SETTINGS_KEY, filterState);
     }
@@ -512,7 +514,21 @@
         panel.appendChild(titleGroup);
         panel.appendChild(channelGroup);
         panel.appendChild(countDiv);
-        panel.appendChild(spinnerStatusDiv); // Add spinner status
+        panel.appendChild(spinnerStatusDiv);
+
+        // Processing Status
+        const processingStatusDiv = document.createElement('div');
+        processingStatusDiv.id = 'yt-saver-processing-status';
+        processingStatusDiv.textContent = 'Processing: Idle';
+        Object.assign(processingStatusDiv.style, {
+            fontSize: '11px',
+            fontWeight: 'bold',
+            marginTop: '2px',
+            textAlign: 'right',
+            color: '#2ba640'
+        });
+        panel.appendChild(processingStatusDiv);
+
         panel.appendChild(aboveDiv);
         panel.appendChild(removeAboveBtn);
 
@@ -528,7 +544,13 @@
         setInterval(() => {
             const isActive = isSpinnerActive();
             spinnerStatusDiv.textContent = isActive ? 'Spinner: Active' : 'Spinner: Idle';
-            spinnerStatusDiv.style.color = isActive ? '#d00' : '#2ba640'; // Red if active, Green if idle
+            spinnerStatusDiv.style.color = isActive ? '#d00' : '#2ba640';
+
+            const procEl = document.getElementById('yt-saver-processing-status');
+            if (procEl) {
+                procEl.textContent = isProcessing ? 'Processing: Active' : 'Processing: Idle';
+                procEl.style.color = isProcessing ? '#d00' : '#2ba640';
+            }
         }, 500);
     }
 
@@ -562,6 +584,7 @@
 
         if (!confirm(`Are you sure you want to remove ${items.length} videos from the playlist?`)) return;
 
+        isProcessing = true; // Start processing
         const btn = document.getElementById('yt-saver-remove-above-btn');
         if (btn) {
             btn.disabled = true;
@@ -569,37 +592,39 @@
             btn.style.opacity = '0.5';
         }
 
-        for (let i = 0; i < items.length; i++) {
-            const item = items[i];
+        try {
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
 
-            // Scroll into view gently
-            item.scrollIntoView({ block: 'center', behavior: 'instant' });
-            await new Promise(r => setTimeout(r, 100)); // Small wait after scroll
+                // Scroll into view gently
+                item.scrollIntoView({ block: 'center', behavior: 'instant' });
+                await new Promise(r => setTimeout(r, 100)); // Small wait after scroll
 
-            // Wait for spinner to disappear if active
-            await waitUntilSpinnerDisappears();
+                // Wait for spinner to disappear if active
+                await waitUntilSpinnerDisappears();
 
-            try {
-                const success = await attemptRemoveVideo(item);
-                if (!success) {
-                    console.warn(`[YouTube Playlist Saver] Failed to remove item index ${i}`);
+                try {
+                    const success = await attemptRemoveVideo(item);
+                    if (!success) {
+                        console.warn(`[YouTube Playlist Saver] Failed to remove item index ${i}`);
+                    }
+                } catch (err) {
+                    console.error(`[YouTube Playlist Saver] Exception removing item index ${i}`, err);
                 }
-            } catch (err) {
-                console.error(`[YouTube Playlist Saver] Exception removing item index ${i}`, err);
+
+                // Delay between actions to prevent rate limiting or UI glitches
+                await new Promise(r => setTimeout(r, 1000));
             }
-
-            // Delay between actions to prevent rate limiting or UI glitches
-            await new Promise(r => setTimeout(r, 1000));
+        } finally {
+            isProcessing = false; // End processing
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Remove Above';
+                btn.style.opacity = '1';
+            }
+            // Update info after removal
+            applyFilters();
         }
-
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = 'Remove Above';
-            btn.style.opacity = '1';
-        }
-
-        // Update info after removal
-        applyFilters();
     }
 
     function updateAboveInfo() {
@@ -662,32 +687,39 @@
     }
 
     function applyFilters() {
-        const items = document.querySelectorAll('ytd-playlist-video-renderer');
+        isProcessing = true;
+        try {
+            const items = document.querySelectorAll('ytd-playlist-video-renderer');
 
-        items.forEach(item => {
-            // 1. Get Title
-            const titleEl = item.querySelector('#video-title');
-            const titleText = titleEl ? titleEl.textContent.trim().toLowerCase() : '';
+            items.forEach(item => {
+                // 1. Get Title
+                const titleEl = item.querySelector('#video-title');
+                const titleText = titleEl ? titleEl.textContent.trim().toLowerCase() : '';
 
-            // 2. Get Channel Name
-            // Usually found in #channel-name or a.yt-simple-endpoint.yt-formatted-string
-            const channelEl = item.querySelector('.ytd-channel-name a') ||
-                item.querySelector('#channel-name #text');
-            const channelText = channelEl ? channelEl.textContent.trim().toLowerCase() : '';
+                // 2. Get Channel Name
+                const channelEl = item.querySelector('.ytd-channel-name a') ||
+                    item.querySelector('#channel-name #text');
+                const channelText = channelEl ? channelEl.textContent.trim().toLowerCase() : '';
 
-            // 3. Check Matches
-            const matchTitle = !filterState.title || titleText.includes(filterState.title);
-            const matchChannel = !filterState.channel || channelText.includes(filterState.channel);
+                // 3. Check Matches
+                const matchTitle = !filterState.title || titleText.includes(filterState.title);
+                const matchChannel = !filterState.channel || channelText.includes(filterState.channel);
 
-            if (matchTitle && matchChannel) {
-                item.style.display = '';
-            } else {
-                item.style.display = 'none';
-            }
-        });
+                if (matchTitle && matchChannel) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
 
-        updateResultCount();
-        updateAboveInfo(); // Update above info when filters change
+            updateResultCount();
+            updateAboveInfo(); // Update above info when filters change
+        } finally {
+            // Use setTimeout to ensure the "Active" state is visible even for fast sync operations
+            setTimeout(() => {
+                isProcessing = false;
+            }, 100);
+        }
     }
 
     /**
