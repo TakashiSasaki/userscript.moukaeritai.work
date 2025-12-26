@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.33
+// @version      0.1.34
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -906,6 +906,9 @@
             window._ytSaverObserver = null;
         }
     }
+
+    // Performance: Cleanup EARLIER to avoid observer overhead during page teardown
+    window.addEventListener('yt-navigate-start', cleanupUI);
 
     window.addEventListener('yt-navigate-finish', () => {
         // Flush pending save
