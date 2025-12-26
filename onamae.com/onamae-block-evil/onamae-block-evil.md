@@ -6,7 +6,7 @@
 
 - **名前**: お名前.com 邪悪広告ブロッカー
 - **Namespace**: `userscript.moukaeritai.work`
-- **現在のバージョン**: `0.1.5` (major.minor.patch 形式)
+- **現在のバージョン**: `0.1.6` (major.minor.patch 形式)
 - **作者**: Takashi Sasaki ([x.com/TakashiSasaki](https://x.com/TakashiSasaki))
 
 ## 2. 目的
@@ -37,7 +37,7 @@
 ## 4. 基本設計
 
 ### 4.1. 動作環境
-- **対象ドメイン**: `https://navi.onamae.com/*`
+- **対象ドメイン**: `https://navi.onamae.com/domain/setting/dns/control/input`
 - **実行タイミング**: `document-start` でのスタイル注入 + `document-idle` 以降の DOM 監視。
 
 ### 4.2. 実装戦略
