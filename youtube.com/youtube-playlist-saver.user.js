@@ -208,7 +208,6 @@
             await new Promise(r => setTimeout(r, 100));
         }
 
-        // Legacy fallback logic removed as it's now covered by the polling finder
 
         if (targetItem) {
             targetItem.click();
@@ -216,7 +215,6 @@
         } else {
             console.warn('[YouTube Playlist Saver] Remove option not found in menu.');
             // Close menu
-            createIcon("").click(); // click anywhere else? actually clicking body might close it
             document.body.click(); // Attempt to close menu
             return false;
         }
@@ -764,7 +762,6 @@
             item.style.display = '';
         }
 
-        // REMOVED O(N^2) COUNT UPDATE FROM HERE
 
         if (item.dataset.saverProcessed === playlistId) return;
 
