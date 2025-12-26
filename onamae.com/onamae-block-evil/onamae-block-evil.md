@@ -6,7 +6,7 @@
 
 - **名前**: お名前.com 邪悪広告ブロッカー
 - **Namespace**: `userscript.moukaeritai.work`
-- **現在のバージョン**: `0.1.1` (major.minor.patch 形式)
+- **現在のバージョン**: `0.1.2` (major.minor.patch 形式)
 - **作者**: Takashi Sasaki ([x.com/TakashiSasaki](https://x.com/TakashiSasaki))
 
 ## 2. 目的
