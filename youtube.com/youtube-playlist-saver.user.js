@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.24
+// @version      0.1.25
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -480,6 +480,18 @@
             textAlign: 'right'
         });
 
+        // Debug: Spinner Status
+        const spinnerStatusDiv = document.createElement('div');
+        spinnerStatusDiv.id = 'yt-saver-spinner-status';
+        spinnerStatusDiv.textContent = 'Spinner: Checking...';
+        Object.assign(spinnerStatusDiv.style, {
+            fontSize: '11px',
+            fontWeight: 'bold',
+            marginTop: '4px',
+            textAlign: 'right',
+            color: '#666'
+        });
+
         // Bulk Remove Button
         const removeAboveBtn = document.createElement('button');
         removeAboveBtn.id = 'yt-saver-remove-above-btn';
@@ -500,6 +512,7 @@
         panel.appendChild(titleGroup);
         panel.appendChild(channelGroup);
         panel.appendChild(countDiv);
+        panel.appendChild(spinnerStatusDiv); // Add spinner status
         panel.appendChild(aboveDiv);
         panel.appendChild(removeAboveBtn);
 
@@ -510,6 +523,13 @@
         window.addEventListener('scroll', throttle(() => {
             updateAboveInfo();
         }, 200));
+
+        // Real-time spinner check
+        setInterval(() => {
+            const isActive = isSpinnerActive();
+            spinnerStatusDiv.textContent = isActive ? 'Spinner: Active' : 'Spinner: Idle';
+            spinnerStatusDiv.style.color = isActive ? '#d00' : '#2ba640'; // Red if active, Green if idle
+        }, 500);
     }
 
     function getIndex(item) {
