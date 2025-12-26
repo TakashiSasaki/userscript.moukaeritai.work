@@ -136,6 +136,17 @@
     // 3. すでに存在する要素のクリーンアップ（念のため）
     const initialCleanup = () => {
         document.querySelectorAll('.modal, .box-DomainBanner').forEach(blockElement);
+
+        // Evil 6: 汎用的なガイドバナー (画像で判定)
+        // <img src=".../guidance/guidance_main_bg.jpg?v=">
+        const guidanceImages = document.querySelectorAll('img[src*="guidance_main_bg.jpg"]');
+        guidanceImages.forEach(img => {
+            const container = img.closest('.box-Gray');
+            if (container) {
+                container.style.setProperty('display', 'none', 'important');
+                console.log('[onamae-block-evil] Blocked guidance banner (Evil 6)');
+            }
+        });
     };
 
     if (document.readyState === 'loading') {
