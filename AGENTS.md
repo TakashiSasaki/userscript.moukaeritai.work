@@ -77,6 +77,21 @@ repo_root/
     -   **Title**: サイトのFavicon (Google S2 API) + プロジェクト名（ドキュメントへのリンク）。
     -   **Install Button**: 右上に配置し、`.user.js` のRaw URLへリンク。
 
+## UserScript Best Practices (SPA & Performance)
+
+Recent learnings from YouTube userscript development:
+
+### 1. SPA Navigation & Cleanup
+-   **Early Cleanup**: On SPA sites (like YouTube), rely on early navigation events (e.g., `yt-navigate-start`) to stop observers and timers *before* the page teardown begins. Waiting for "finish" events often causes browser hangs due to observers processing thousands of deletion mutations.
+-   **Idempotency**: Ensure cleanup functions are idempotent so they can be safely called multiple times (e.g., on start, on finish, on unload).
+
+### 2. Observer Performance
+-   **Avoid Broad Observation**: Never observe `document.body` with `subtree: true` if you expect massive DOM changes.
+-   **Polling Alternative**: For waiting on elements during transitions, lightweight polling (`setInterval`) is often safer and more performant than `MutationObserver`.
+
+### 3. Strict Context Checking
+-   **URL Verification**: Always verify `window.location.pathname` or parameters at the start of your main logic to ensure the script doesn't leak UI elements into unintended pages (e.g., showing playlist tools on a video watch page).
+
 ## ユーザー固有の好み (User-Specific Preferences)
 
 -   **User Name**: Takashi Sasaki
