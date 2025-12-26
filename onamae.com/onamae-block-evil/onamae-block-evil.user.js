@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         お名前.com 邪悪広告ブロッカー
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.3
+// @version      0.1.4
 // @description  お名前.com Navi の操作を妨げる「邪悪な」広告や確認ポップアップを自動的に非表示にします。
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -49,13 +49,8 @@
             if (h2 && h2.textContent.includes('意図しないDNS設定変更を防ぐために')) return true;
         }
 
-        // 2. 会員情報確認ポップアップ (Evil 2)
-        // .modal クラス内の特定のヘッダータイトルを確認
-        if (el.classList.contains('modal') || el.closest('.modal')) {
-            const modal = el.classList.contains('modal') ? el : el.closest('.modal');
-            const title = modal.querySelector('.modal-Dialog-Header-Title');
-            if (title && title.textContent.includes('会員情報に変更や誤りはございませんか？')) return true;
-        }
+        // 注意: 会員情報確認ポップアップ (Evil 2) はブロック対象から除外しました
+        // ユーザーからの報告により、残しても問題ないと判断されたため
 
         // 3. その他特定の邪悪なクラス
         if (el.classList.contains('box-DomainBanner')) return true;
