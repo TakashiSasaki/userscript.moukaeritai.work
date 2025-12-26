@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         お名前.com 邪悪広告ブロッカー
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.2
+// @version      0.1.3
 // @description  お名前.com Navi の操作を妨げる「邪悪な」広告や確認ポップアップを自動的に非表示にします。
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -35,21 +35,30 @@
 
     /**
      * 要素がブロック対象（邪悪）かどうかを判定する
+     * サンプルのHTML構造に基づき、できるだけ安定したセレクタとテキストで判定する
      */
     const isEvil = (el) => {
         if (!el || el.nodeType !== 1) return false;
 
-        // Evil 1: DNSプロテクション勧誘モーダル
-        if (el.classList.contains('box-DomainBanner') || el.querySelector('.box-DomainBanner')) {
-            const text = el.textContent || '';
-            if (text.includes('意図しないDNS設定変更を防ぐために')) return true;
+        // 1. DNSプロテクション勧誘モーダル (Evil 1)
+        // クラス名 box-DomainBanner はこの広告特有の可能性が高い
+        const domainBanner = el.classList.contains('box-DomainBanner') ? el : el.querySelector('.box-DomainBanner');
+        if (domainBanner) {
+            const h2 = domainBanner.querySelector('.box-DomainBanner-Hdn');
+            // ヘッダーテキストで内容を確定
+            if (h2 && h2.textContent.includes('意図しないDNS設定変更を防ぐために')) return true;
         }
 
-        // Evil 2: 会員情報確認ポップアップ
-        if (el.classList.contains('modal')) {
-            const text = el.textContent || '';
-            if (text.includes('会員情報に変更や誤りはございませんか？')) return true;
+        // 2. 会員情報確認ポップアップ (Evil 2)
+        // .modal クラス内の特定のヘッダータイトルを確認
+        if (el.classList.contains('modal') || el.closest('.modal')) {
+            const modal = el.classList.contains('modal') ? el : el.closest('.modal');
+            const title = modal.querySelector('.modal-Dialog-Header-Title');
+            if (title && title.textContent.includes('会員情報に変更や誤りはございませんか？')) return true;
         }
+
+        // 3. その他特定の邪悪なクラス
+        if (el.classList.contains('box-DomainBanner')) return true;
 
         return false;
     };
