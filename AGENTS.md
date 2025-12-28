@@ -92,6 +92,10 @@ Recent learnings from YouTube userscript development:
 ### 3. Strict Context Checking
 -   **URL Verification**: Always verify `window.location.pathname` or parameters at the start of your main logic to ensure the script doesn't leak UI elements into unintended pages (e.g., showing playlist tools on a video watch page).
 
+### 4. Trusted Types Compliance (Security)
+-   **Avoid `innerHTML`**: Modern sites (like YouTube) enforce Trusted Types security policies that block assignments to `innerHTML`.
+-   **Use DOM Methods**: Always use `document.createElement()`, `textContent`, `setAttribute()`, and `appendChild()` to build UI elements safely.
+
 ## ユーザー固有の好み (User-Specific Preferences)
 
 -   **User Name**: Takashi Sasaki
