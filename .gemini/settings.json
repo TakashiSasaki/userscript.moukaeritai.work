@@ -7,9 +7,19 @@
   },
   "ui": {
     "footer": {
-      "hideContextPercentage": false
+      "hideContextPercentage": true,
+      "hideCWD": true,
+      "hideSandboxStatus": true,
+      "hideModelInfo": true
     },
-    "showMemoryUsage": true,
-    "useAlternateBuffer": true
+    "showMemoryUsage": false,
+    "useAlternateBuffer": true,
+    "hideTips": true,
+    "hideBanner": true,
+    "hideContextSummary": true,
+    "hideFooter": true,
+    "showLineNumbers": false,
+    "hideWindowTitle": true,
+    "incrementalRendering": false
   }
 }
