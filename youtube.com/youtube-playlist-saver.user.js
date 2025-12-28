@@ -10,6 +10,7 @@
 // @grant        GM_getValue
 // @grant        GM_registerMenuCommand
 // @grant        GM_xmlhttpRequest
+// @grant        GM_setClipboard
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver.user.js
 // ==/UserScript==
@@ -166,9 +167,27 @@
         }
     }
 
-    // Register Menu Command
+    function onExportToClipboardClick() {
+        loadStorage(); // Ensure cachedStorage is populated
+        if (!cachedStorage) {
+            alert('[YouTube Playlist Saver] No data to export.');
+            return;
+        }
+        
+        try {
+            const dataStr = JSON.stringify(cachedStorage, null, 2);
+            GM_setClipboard(dataStr, 'text');
+            alert('[YouTube Playlist Saver] Data copied to clipboard!');
+        } catch (e) {
+            console.error(e);
+            alert('[YouTube Playlist Saver] Export failed: ' + e.message);
+        }
+    }
+
+    // Register Menu Commands
     if (typeof GM_registerMenuCommand !== 'undefined') {
         GM_registerMenuCommand("Import Data from URL", onImportMenuClick);
+        GM_registerMenuCommand("Copy Data to Clipboard", onExportToClipboardClick);
     }
 
     // --- UI Helpers ---
