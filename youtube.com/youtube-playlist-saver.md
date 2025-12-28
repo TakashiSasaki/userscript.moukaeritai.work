@@ -103,7 +103,10 @@ URL の `list` パラメータにプレイリスト ID が含まれるページ�
 *   形式: `major.minor.patch` (Semantic Versioning)
 *   更新ルール: スクリプトファイルが少しでも変更された場合は、`patch` レベルを更新します。
 
-### 4.2 メタデータ定義
+### 6.1 現在バージョン
+`0.2.0`
+
+### 6.2 メタデータ定義
 *   **作者**: Takashi Sasaki (x.com/TakashiSasaki)
 *   **Namespace**: `userscript.moukaeritai.work`
 *   **公開・更新**: GitHub (`TakashiSasaki/userscript.moukaeritai.work`) 上で公開し、Tampermonkey の自動更新機能に対応させます。
