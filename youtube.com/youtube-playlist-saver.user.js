@@ -159,9 +159,12 @@
     }
 
     function onImportMenuClick() {
-        const url = prompt("YouTube Playlist Saver\n\nEnter the URL of the JSON data to import (Version 1+):");
+        const lastUrl = GM_getValue('yt_last_import_url', '');
+        const url = prompt("YouTube Playlist Saver\n\nEnter the URL of the JSON data to import (Version 1+):", lastUrl);
         if (url && url.trim().startsWith('http')) {
-            importDataFromUrl(url.trim());
+            const cleanUrl = url.trim();
+            GM_setValue('yt_last_import_url', cleanUrl);
+            importDataFromUrl(cleanUrl);
         } else if (url) {
             alert('Invalid URL. Must start with http.');
         }
