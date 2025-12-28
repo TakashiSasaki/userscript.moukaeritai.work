@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.5
+// @version      0.2.6
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -214,8 +214,20 @@
      * Render the status indicator and Remove button
      */
     function renderIndicator(element, isNew) {
-        const bar = element.querySelector('#engagement-bar');
-        if (!bar) return;
+        // Try multiple selectors for robustness
+        let bar = element.querySelector('#engagement-bar');
+        if (!bar) {
+             // Fallback: try finding the meta block if engagement-bar is missing
+             bar = element.querySelector('.ytd-video-meta-block') || element.querySelector('#meta');
+        }
+
+        if (!bar) {
+            // Only warn if it's not a skeleton/loading element
+            if (!element.querySelector('ytd-playlist-video-renderer')) {
+                 console.warn('[YouTube Playlist Saver] Target container (engagement-bar/meta) not found for item:', element);
+            }
+            return;
+        }
 
         // 1. Status Indicator
         const oldIndicator = bar.querySelector('.yt-saver-indicator');
@@ -229,7 +241,8 @@
             fontWeight: 'bold',
             marginRight: '8px',
             color: isNew ? '#3ea6ff' : '#2ba640',
-            verticalAlign: 'middle'
+            verticalAlign: 'middle',
+            display: 'inline-block' // Ensure visibility
         });
 
         // 2. Remove Button
@@ -246,7 +259,8 @@
             padding: '0',
             marginLeft: '8px',
             verticalAlign: 'middle',
-            opacity: '0.7'
+            opacity: '0.7',
+            display: 'inline-block'
         });
 
         // Trash Icon Path
