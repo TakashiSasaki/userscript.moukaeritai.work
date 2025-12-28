@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.35
+// @version      0.1.36
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -16,22 +16,41 @@
     'use strict';
 
     const DATA_KEY = 'yt_playlist_data';
+    const DATA_VERSION = 1;
 
     // --- Performance Optimization: Batching & Caching ---
-    let cachedData = null;
+    let cachedStorage = null; // Stores { version: N, playlists: { ... } }
     let pendingSaveTimeout = null;
 
     function loadStorage() {
-        if (cachedData) return cachedData;
-        cachedData = GM_getValue(DATA_KEY, {});
-        return cachedData;
+        if (cachedStorage) return cachedStorage.playlists;
+        
+        let rawData = GM_getValue(DATA_KEY, {});
+
+        // Migration logic: Check if it's the old format (no version)
+        if (rawData.version === undefined) {
+            console.log('[YouTube Playlist Saver] Migrating data to Version ' + DATA_VERSION);
+            // Wrap existing data (which is just the playlists map) into the new structure
+            cachedStorage = {
+                version: DATA_VERSION,
+                playlists: rawData
+            };
+            // Save immediately to persist the migration
+            GM_setValue(DATA_KEY, cachedStorage);
+        } else {
+            cachedStorage = rawData;
+        }
+
+        return cachedStorage.playlists;
     }
 
     function requestSave() {
         if (pendingSaveTimeout) clearTimeout(pendingSaveTimeout);
         pendingSaveTimeout = setTimeout(() => {
-            GM_setValue(DATA_KEY, cachedData);
-            console.log('[YouTube Playlist Saver] Batch save completed.');
+            if (cachedStorage) {
+                GM_setValue(DATA_KEY, cachedStorage);
+                console.log('[YouTube Playlist Saver] Batch save completed (v' + cachedStorage.version + ').');
+            }
             pendingSaveTimeout = null;
         }, 2000);
     }
