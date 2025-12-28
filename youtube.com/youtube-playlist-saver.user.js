@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.1
+// @version      0.2.2
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?list=*
@@ -671,6 +671,83 @@
         panel.appendChild(aboveDiv);
         panel.appendChild(removeAboveBtn);
 
+        // --- Auto Scroll Settings UI ---
+        const separator = document.createElement('hr');
+        Object.assign(separator.style, { border: '0', borderTop: '1px solid #ddd', margin: '8px 0', width: '100%' });
+        panel.appendChild(separator);
+
+        const asHeader = document.createElement('div');
+        asHeader.textContent = 'Auto Scroll Settings';
+        Object.assign(asHeader.style, { fontWeight: 'bold', fontSize: '12px', marginBottom: '4px' });
+        panel.appendChild(asHeader);
+
+        // Checkbox: Scroll to Bottom
+        const asCheckboxContainer = document.createElement('div');
+        Object.assign(asCheckboxContainer.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', marginBottom: '4px' });
+        
+        const asCheckbox = document.createElement('input');
+        asCheckbox.type = 'checkbox';
+        asCheckbox.checked = autoScrollSettings.scrollToBottom;
+        asCheckbox.id = 'yt-saver-as-bottom';
+        
+        const asCheckboxLabel = document.createElement('label');
+        asCheckboxLabel.textContent = 'Scroll to Bottom';
+        asCheckboxLabel.htmlFor = 'yt-saver-as-bottom';
+
+        // Step Input Helper
+        const createScrollInput = (label, key, placeholder) => {
+             const container = document.createElement('div');
+             Object.assign(container.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', marginTop: '2px' });
+             
+             const lbl = document.createElement('div');
+             lbl.textContent = label;
+             lbl.style.flex = '1';
+
+             const input = document.createElement('input');
+             input.type = 'number';
+             input.value = autoScrollSettings[key];
+             input.placeholder = placeholder;
+             Object.assign(input.style, { width: '50px', padding: '2px', border: '1px solid #ccc', borderRadius: '4px' });
+             
+             input.addEventListener('change', () => {
+                 let val = parseFloat(input.value);
+                 if (isNaN(val) || val < 0) val = key === 'interval' ? 1 : 0;
+                 autoScrollSettings[key] = val;
+                 saveAutoScrollSettings();
+                 restartAutoScrollIfActive();
+             });
+             
+             container.appendChild(lbl);
+             container.appendChild(input);
+             return { container, input };
+        };
+
+        const stepInputObj = createScrollInput('Step (px):', 'step', '300');
+        const intervalInputObj = createScrollInput('Interval (sec):', 'interval', '5');
+
+        asCheckbox.addEventListener('change', () => {
+            autoScrollSettings.scrollToBottom = asCheckbox.checked;
+            saveAutoScrollSettings();
+            updateStepVisibility();
+            restartAutoScrollIfActive();
+        });
+
+        function updateStepVisibility() {
+            if (autoScrollSettings.scrollToBottom) {
+                stepInputObj.container.style.display = 'none';
+            } else {
+                stepInputObj.container.style.display = 'flex';
+            }
+        }
+        updateStepVisibility();
+        
+        asCheckboxContainer.appendChild(asCheckbox);
+        asCheckboxContainer.appendChild(asCheckboxLabel);
+        panel.appendChild(asCheckboxContainer);
+
+        panel.appendChild(stepInputObj.container);
+        panel.appendChild(intervalInputObj.container);
+
         document.body.appendChild(panel);
         applyFilters(); // Initial count
 
@@ -896,9 +973,17 @@
 
     // --- Auto Scroll Feature ---
 
+    const AUTO_SCROLL_SETTINGS_KEY = 'yt_auto_scroll_settings';
+    let autoScrollSettings = GM_getValue(AUTO_SCROLL_SETTINGS_KEY, {
+        scrollToBottom: true,
+        step: 300,
+        interval: 5.0
+    });
     let scrollInterval = null;
-    const SCROLL_STEP = 300;
-    const SCROLL_DELAY = 500;
+
+    function saveAutoScrollSettings() {
+        GM_setValue(AUTO_SCROLL_SETTINGS_KEY, autoScrollSettings);
+    }
 
     function toggleAutoScroll(btn) {
         if (scrollInterval) {
@@ -911,9 +996,38 @@
             btn.textContent = 'Auto Scroll: ON';
             btn.style.backgroundColor = '#f00';
             btn.style.color = '#fff';
-            scrollInterval = setInterval(() => {
-                window.scrollBy(0, SCROLL_STEP);
-            }, SCROLL_DELAY);
+
+            const intervalMs = Math.max(100, (autoScrollSettings.interval || 5) * 1000);
+            const runScroll = () => {
+                if (autoScrollSettings.scrollToBottom) {
+                    window.scrollTo(0, document.documentElement.scrollHeight);
+                } else {
+                    window.scrollBy(0, autoScrollSettings.step || 300);
+                }
+            };
+
+            // Run immediately once
+            runScroll();
+            scrollInterval = setInterval(runScroll, intervalMs);
+        }
+    }
+
+    function restartAutoScrollIfActive() {
+        const btn = document.getElementById('yt-saver-scroll-btn');
+        // Only restart if currently active (interval exists)
+        if (btn && scrollInterval) {
+            clearInterval(scrollInterval);
+            const intervalMs = Math.max(100, (autoScrollSettings.interval || 5) * 1000);
+            
+            const runScroll = () => {
+                if (autoScrollSettings.scrollToBottom) {
+                     window.scrollTo(0, document.documentElement.scrollHeight);
+                } else {
+                     window.scrollBy(0, autoScrollSettings.step || 300);
+                }
+            };
+            
+            scrollInterval = setInterval(runScroll, intervalMs);
         }
     }
 
