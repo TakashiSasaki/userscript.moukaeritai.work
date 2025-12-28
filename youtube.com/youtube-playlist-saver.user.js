@@ -4,7 +4,7 @@
 // @version      0.2.2
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
 // @author       Takashi Sasaki
-// @match        *://www.youtube.com/playlist?list=*
+// @match        *://www.youtube.com/playlist?*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=youtube.com
 // @connect      gist.githubusercontent.com
 // @grant        GM_setValue
