@@ -8,6 +8,8 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=youtube.com
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_registerMenuCommand
+// @grant        GM_xmlhttpRequest
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver.user.js
 // ==/UserScript==
@@ -86,6 +88,87 @@
             return match ? match[1] : null;
         }
         return null;
+    }
+
+    // --- Import Feature ---
+
+    function mergeImportedData(importedData) {
+        if (!importedData || importedData.version < 1 || !importedData.playlists) {
+            alert('[YouTube Playlist Saver] Import failed: Invalid data format. Only Version 1+ is supported.');
+            return;
+        }
+
+        const localPlaylists = loadStorage(); // Returns reference to cachedStorage.playlists
+        let addedCount = 0;
+
+        for (const [plId, videos] of Object.entries(importedData.playlists)) {
+            if (!Array.isArray(videos)) continue;
+
+            if (!localPlaylists[plId]) {
+                localPlaylists[plId] = [];
+            }
+
+            const currentSet = new Set(localPlaylists[plId]);
+            
+            for (const vid of videos) {
+                if (!currentSet.has(vid)) {
+                    localPlaylists[plId].push(vid);
+                    addedCount++;
+                }
+            }
+        }
+
+        if (addedCount > 0) {
+            requestSave();
+            alert(`[YouTube Playlist Saver] Import successful! Merged ${addedCount} new video ID(s).`);
+            
+            // Refresh view if needed
+            const items = document.querySelectorAll('ytd-playlist-video-renderer');
+            items.forEach(item => {
+                delete item.dataset.saverProcessed; // Force re-scan on next observer trigger
+            });
+        } else {
+            alert('[YouTube Playlist Saver] Import finished. No new data found.');
+        }
+    }
+
+    function importDataFromUrl(url) {
+        console.log(`[YouTube Playlist Saver] Importing data from: ${url}`);
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: url,
+            onload: function(response) {
+                if (response.status === 200) {
+                    try {
+                        const data = JSON.parse(response.responseText);
+                        mergeImportedData(data);
+                    } catch (e) {
+                        console.error(e);
+                        alert('[YouTube Playlist Saver] JSON Parse Error: ' + e.message);
+                    }
+                } else {
+                    alert(`[YouTube Playlist Saver] Download failed. Status: ${response.status}`);
+                }
+            },
+            onerror: function(err) {
+                console.error(err);
+                alert('[YouTube Playlist Saver] Network Error during import.');
+            }
+        });
+    }
+
+    function onImportMenuClick() {
+        const url = prompt("YouTube Playlist Saver\n\nEnter the URL of the JSON data to import (Version 1+):");
+        if (url && url.trim().startsWith('http')) {
+            importDataFromUrl(url.trim());
+        } else if (url) {
+            alert('Invalid URL. Must start with http.');
+        }
+    }
+
+    // Register Menu Command
+    if (typeof GM_registerMenuCommand !== 'undefined') {
+        GM_registerMenuCommand("Import Data from URL", onImportMenuClick);
     }
 
     // --- UI Helpers ---

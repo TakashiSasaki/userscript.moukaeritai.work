@@ -108,3 +108,14 @@ URL の `list` パラメータにプレイリスト ID が含まれるページ�
 *   **Namespace**: `userscript.moukaeritai.work`
 *   **公開・更新**: GitHub (`TakashiSasaki/userscript.moukaeritai.work`) 上で公開し、Tampermonkey の自動更新機能に対応させます。
 
+## 7. データインポート機能
+
+外部サーバー等にバックアップされたJSONデータを取り込むことができます。
+
+*   **使用方法**:
+    1.  Tampermonkeyのユーザースクリプトメニューから「Import Data from URL」を選択します。
+    2.  データのURL（`http` または `https` で始まるもの）を入力します。
+*   **仕様**:
+    *   **対象フォーマット**: バージョン1形式（`{ version: 1, playlists: { ... } }`）のJSONデータのみサポートします。
+    *   **重複排除**: ローカルに既に保存されている動画IDは無視され、新規のIDのみがマージされます。
+    *   **CORS**: `GM_xmlhttpRequest` を使用しているため、クロスドメイン制約を回避してデータを取得できます。
