@@ -5,8 +5,8 @@
 // @description  Adds a 1-click button to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
-// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
-// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
 // @grant        none
 // ==/UserScript==
 

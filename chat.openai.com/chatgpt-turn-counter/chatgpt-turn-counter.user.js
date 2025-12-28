@@ -6,8 +6,8 @@
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://chatgpt.com/c/*
-// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/chat.openai.com/chatgpt-turn-counter/chatgpt-turn-counter.user.js
-// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/chat.openai.com/chatgpt-turn-counter/chatgpt-turn-counter.user.js
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-turn-counter/chatgpt-turn-counter.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-turn-counter/chatgpt-turn-counter.user.js
 // @grant        none
 // ==/UserScript==
 

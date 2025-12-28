@@ -47,4 +47,4 @@ Grokの会話ページでは、各ターンごとに「コピー」ボタンが�
 # リポジトリ
 
 *   **GitHub**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/grok.com/grok-copy-all](https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/grok.com/grok-copy-all)
-*   **Raw Script**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/grok.com/grok-copy-all/grok-copy-all.user.js](https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/grok.com/grok-copy-all/grok-copy-all.user.js)
+*   **Raw Script**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-copy-all/grok-copy-all.user.js](https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-copy-all/grok-copy-all.user.js)

@@ -35,4 +35,4 @@ GeminiのWeb SPAの会話の上部に最初から表示されているメニュ�
 # リポジトリ
 
 *   **GitHub**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/gemini.google.com/gemini-one-click-delete](https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/gemini.google.com/gemini-one-click-delete)
-*   **Raw Script**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js](https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js)
+*   **Raw Script**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js](https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js)

@@ -1,195 +1,153 @@
 <!DOCTYPE html>
+
 <html lang="ja">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Userscripts by Takashi Sasaki</title>
-    <link rel="canonical" href="https://userscript.moukaeritai.work/">
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 40px 20px;
-            line-height: 1.6;
-            color: #333;
-        }
-
-        h1 {
-            border-bottom: 2px solid #eaecef;
-            padding-bottom: 0.3em;
-            margin-bottom: 0;
-        }
-
-        .site-domain {
-            color: #586069;
-            font-size: 0.9em;
-            margin-top: 5px;
-            margin-bottom: 30px;
-        }
-
-        .project-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .project-item {
-            border: 1px solid #e1e4e8;
-            border-radius: 6px;
-            padding: 16px;
-            margin-bottom: 16px;
-            transition: box-shadow 0.2s;
-        }
-
-        .project-item:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .project-title {
-            margin: 0 0 8px 0;
-            font-size: 1.2em;
-        }
-
-        .project-title a {
-            color: #0366d6;
-            text-decoration: none;
-        }
-
-        .project-title a:hover {
-            text-decoration: underline;
-        }
-
-        .project-desc {
-            margin: 0 0 16px 0;
-            color: #586069;
-        }
-
-        .install-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background-color: #24292e;
-            /* Tampermonkey dark theme color */
-            color: #fff;
-            padding: 6px 12px;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 0.85em;
-            font-weight: 600;
-            transition: background-color 0.2s;
-        }
-
-        .install-button:hover {
-            background-color: #0366d6;
-            text-decoration: none;
-        }
-
-        .install-button svg {
-            fill: currentColor;
-        }
-    </style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Moukaeritai Userscripts</title>
+<link href="https://userscript.moukaeritai.work/" rel="canonical"/>
+<link href="/sitemap.xml" rel="sitemap" title="Sitemap" type="application/xml"/>
 </head>
-
 <body>
-    <h1>Moukaeritai Userscripts Repository</h1>
-    <div class="site-domain">userscript.moukaeritai.work</div>
-
-    <p>
-        Takashi Sasaki's personal userscripts collection.<br>
-        Source Code: <a
-            href="https://github.com/TakashiSasaki/userscript.moukaeritai.work">https://github.com/TakashiSasaki/userscript.moukaeritai.work</a>
-    </p>
-
-    <h2>Projects</h2>
-    <ul class="project-list">
-        <li class="project-item">
-            <h3 class="project-title">
-                <a href="onamae.com/onamae-rr-backup.md">Onamae RR Backup</a>
-            </h3>
-            <p class="project-desc">
-                お名前ドットコム（おなまえ.com）のDNSレコード設定ページに表示されているリソースレコード（RR）を自動的に記録・バックアップするためのユーザースクリプトです。
+<a class="top-nav-link" href="https://moukaeritai.work/">
+<img height="16" src="https://moukaeritai.work/pictgram/64x64.webp/slate_teal.webp" style="border-radius: 4px;" width="16"/>
+        moukaeritai.work
+    </a>
+<h1>Moukaeritai Userscripts</h1>
+<ul class="project-list">
+<li class="project-item">
+<h3 class="project-title">
+<img alt="onamae.com" class="project-icon" src="https://www.google.com/s2/favicons?domain=onamae.com&amp;sz=32"/>
+<a href="onamae.com/index.html">onamae-rr-backup 💾</a>
+</h3>
+<p class="project-desc">
+                お名前ドットコムのDNSレコード設定ページからリソースレコード(RR)を自動的に記録・バックアップします。
             </p>
-            <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/onamae.com/onamae-rr-backup.user.js"
-                class="install-button" target="_blank">
-                <svg viewBox="0 0 24 24" width="16" height="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-                </svg>
+<a class="install-button" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/onamae.com/onamae-rr-backup.user.js" target="_blank">
+<svg height="16" viewbox="0 0 24 24" width="16">
+<path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+</svg>
                 Install
             </a>
-        </li>
-        <li class="project-item">
-            <h3 class="project-title">
-                <a href="chat.openai.com/chatgpt-turn-counter/">ChatGPT Turn Counter</a>
-            </h3>
-            <p class="project-desc">
-                ChatGPT上の会話で、メッセージ数、画像数、文字数などをリアルタイムにカウントし表示します。
+</li>
+<li class="project-item">
+<h3 class="project-title">
+<img alt="openai.com" class="project-icon" src="https://www.google.com/s2/favicons?domain=openai.com&amp;sz=32"/>
+<a href="chat.openai.com/chatgpt-turn-counter/index.html">ChatGPT Turn Counter 🔢</a>
+</h3>
+<p class="project-desc">
+                ChatGPTの会話で、ユーザーとアシスタントのターン数、画像数、文字数、コードブロック数をカウントし、画像をDataURLとしてコピーする機能を提供します。
             </p>
-            <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/chat.openai.com/chatgpt-turn-counter/chatgpt-turn-counter.user.js"
-                class="install-button" target="_blank">
-                <svg viewBox="0 0 24 24" width="16" height="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-                </svg>
+<a class="install-button" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-turn-counter/chatgpt-turn-counter.user.js" target="_blank">
+<svg height="16" viewbox="0 0 24 24" width="16">
+<path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+</svg>
                 Install
             </a>
-        </li>
-        <li class="project-item">
-            <h3 class="project-title">
-                <a href="grok.com/grok-copy-all/">Grok Conversation Copy</a>
-            </h3>
-            <p class="project-desc">
+</li>
+<li class="project-item">
+<h3 class="project-title">
+<img alt="openai.com" class="project-icon" src="https://www.google.com/s2/favicons?domain=openai.com&amp;sz=32"/>
+<a href="chat.openai.com/chatgpt-profile-badge/">ChatGPT Profile Badge 📛</a>
+</h3>
+<p class="project-desc">
+                ChatGPTのユーザープロファイルに、好きな文字列や絵文字でカスタム「バッジ」を追加します。
+            </p>
+<a class="install-button" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-profile-badge/chatgpt-profile-badge.user.js" target="_blank">
+<svg height="16" viewbox="0 0 24 24" width="16">
+<path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+</svg>
+                Install
+            </a>
+</li>
+<li class="project-item">
+<h3 class="project-title">
+<img alt="gemini.google.com" class="project-icon" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32"/>
+<a href="gemini.google.com/gemini-profile-badge/index.html">Gemini Profile Badge 📛</a>
+</h3>
+<p class="project-desc">
+                Google Geminiのユーザープロファイルに、好きな文字列や絵文字でカスタム「バッジ」を追加します。
+            </p>
+<a class="install-button" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-profile-badge/gemini-profile-badge.user.js" target="_blank">
+<svg height="16" viewbox="0 0 24 24" width="16">
+<path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+</svg>
+                Install
+            </a>
+</li>
+<li class="project-item">
+<h3 class="project-title">
+<img alt="grok.com" class="project-icon" src="https://www.google.com/s2/favicons?domain=grok.com&amp;sz=32"/>
+<a href="grok.com/grok-copy-all/">Grok Conversation Copy 📋</a>
+</h3>
+<p class="project-desc">
                 Grokの会話ページで、全てのコピーボタンを順に押して内容を結合し、クリップボードにコピーします。
             </p>
-            <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/grok.com/grok-copy-all/grok-copy-all.user.js"
-                class="install-button" target="_blank">
-                <svg viewBox="0 0 24 24" width="16" height="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-                </svg>
+<a class="install-button" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-copy-all/grok-copy-all.user.js" target="_blank">
+<svg height="16" viewbox="0 0 24 24" width="16">
+<path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+</svg>
                 Install
             </a>
-        </li>
-        <li class="project-item">
-            <h3 class="project-title">
-                <a href="gemini.google.com/gemini-one-click-delete/">Gemini One Click Delete</a>
-            </h3>
-            <p class="project-desc">
+</li>
+<li class="project-item">
+<h3 class="project-title">
+<img alt="gemini.google.com" class="project-icon" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32"/>
+<a href="gemini.google.com/gemini-one-click-delete/">Gemini One Click Delete 🗑️</a>
+</h3>
+<p class="project-desc">
                 Google Gemini の会話をワンクリックで削除する機能を提供します。
             </p>
-            <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js"
-                class="install-button" target="_blank">
-                <svg viewBox="0 0 24 24" width="16" height="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-                </svg>
+<a class="install-button" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js" target="_blank">
+<svg height="16" viewbox="0 0 24 24" width="16">
+<path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+</svg>
                 Install
             </a>
-        </li>
-        <li class="project-item">
-            <h3 class="project-title">
-                <a href="gemini.google.com/gemini-export-to-docs/">Gemini Export to Docs</a>
-            </h3>
-            <p class="project-desc">
+</li>
+<li class="project-item">
+<h3 class="project-title">
+<img alt="gemini.google.com" class="project-icon" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32"/>
+<a href="gemini.google.com/gemini-export-to-docs/">Gemini Export to Docs 📄</a>
+</h3>
+<p class="project-desc">
                 Google Gemini の会話やキャンバスを、ワンクリックで Google Docs にエクスポートするユーザースクリプトです。
             </p>
-            <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js"
-                class="install-button" target="_blank">
-                <svg viewBox="0 0 24 24" width="16" height="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-                </svg>
+<a class="install-button" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js" target="_blank">
+<svg height="16" viewbox="0 0 24 24" width="16">
+<path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+</svg>
                 Install
             </a>
-        </li>
-    </ul>
-
-    <footer>
-        <hr>
-        <p>
-            <small>
-                Hosted on GitHub Pages |
-                <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
-                Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
-            </small>
-        </p>
-    </footer>
+</li>
+<li class="project-item">
+<h3 class="project-title">
+<img alt="youtube.com" class="project-icon" src="https://www.google.com/s2/favicons?domain=youtube.com&amp;sz=32"/>
+<a href="youtube.com/index.html">YouTube Playlist Saver 📺</a>
+</h3>
+<p class="project-desc">
+                YouTubeプレイリストの動画IDを管理し、既知動画の判定を行います。「後で見る」リストにも対応。タイトル/チャンネル名でのフィルタリングや、表示済み動画の一括削除、自動スクロール機能を搭載し、大規模なプレイリストの整理を効率化します。
+            </p>
+<a class="install-button" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver.user.js" target="_blank">
+<svg height="16" viewbox="0 0 24 24" width="16">
+<path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+</svg>
+                Install
+            </a>
+</li>
+</ul>
+<footer>
+<hr/>
+<p style="display: flex; align-items: center; gap: 8px;">
+<small>Hosted on GitHub Pages</small>
+<a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work" target="_blank" title="GitHub Repository">
+<svg fill="currentColor" height="20" viewbox="0 0 16 16" width="20">
+<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+</path>
+</svg>
+</a>
+<small> | <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> | Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a></small>
+</p>
+</footer>
 </body>
-
 </html>

@@ -22,6 +22,20 @@
 * **`sample1-remove1.html`**
   メニュー内の「プレイリストから削除」ボタンのサンプルです。
 
+### インデックス
+* **`playlist-index-1.html`**
+  プレイリスト内の動画に付けられている連番（インデックス）を表示している箇所のDOMサンプルです。
+
+### スピナー
+* **`spinner1.html`**
+  YouTubeで使用されている Web Components (`tp-yt-paper-spinner-lite`) の内部構造（Shadow DOM内の実装詳細）のDOM断片です。
+* **`spinner2.html`**
+  プレイリスト画面において、スピナーコンポーネント自体を配置している外側のコンテナ（`#spinner-container` と `<tp-yt-paper-spinner-lite>`）のDOM断片です。
+* **`spinner3.html`**
+  ロード中の状態（active）にある `<tp-yt-paper-spinner>` の内部構造 (`#spinnerContainer`) のDOM断片です。`class="active"` が付与されていることが確認できます。
+* **`spinner4.html`**
+  ロード中の状態（active）にある `<tp-yt-paper-spinner>` 要素自体のDOM断片です。属性 `active` が付与されており、`aria-hidden` 属性が存在しないことが確認できます。
+
 ## HTMLファイルの前処理
 
 ブラウザから保存したDOM断片をサンプルとして使用する際、以下の前処理（クリーンアップ）を行います。
