@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.3
-// @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
+// @version      0.2.4
+// @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=youtube.com
