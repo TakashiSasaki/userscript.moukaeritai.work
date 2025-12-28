@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.4
+// @version      0.2.5
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -608,6 +608,17 @@
             textAlign: 'right'
         });
 
+        // Status Counts (New / Saved)
+        const statusCountsDiv = document.createElement('div');
+        statusCountsDiv.id = 'yt-saver-status-counts';
+        statusCountsDiv.textContent = 'New: 0 | Saved: 0';
+        Object.assign(statusCountsDiv.style, {
+            fontSize: '11px',
+            color: '#666',
+            marginTop: '2px',
+            textAlign: 'right'
+        });
+
         // Debug: Spinner Status
         const spinnerStatusDiv = document.createElement('div');
         spinnerStatusDiv.id = 'yt-saver-spinner-status';
@@ -640,6 +651,7 @@
         panel.appendChild(titleGroup);
         panel.appendChild(channelGroup);
         panel.appendChild(countDiv);
+        panel.appendChild(statusCountsDiv);
         panel.appendChild(spinnerStatusDiv);
 
         // Filtering Status
@@ -750,6 +762,7 @@
 
         document.body.appendChild(panel);
         applyFilters(); // Initial count
+        updateStatusCounts(); // Initial stats
 
         // Scroll listener for "Above" info
         scrollHandler = throttle(() => {
@@ -774,6 +787,9 @@
                 procEl.textContent = isProcessing ? 'Processing: Active' : 'Processing: Idle';
                 procEl.style.color = isProcessing ? '#d00' : '#2ba640';
             }
+            
+            // Periodically update counts to catch up with any missed changes
+            updateStatusCounts();
         }, 500);
     }
 
@@ -837,6 +853,9 @@
 
                 // Delay between actions to prevent rate limiting or UI glitches
                 await new Promise(r => setTimeout(r, 1000));
+                
+                // Update stats during removal
+                updateStatusCounts();
             }
         } finally {
             isProcessing = false; // End processing
@@ -847,6 +866,7 @@
             }
             // Update info after removal
             applyFilters();
+            updateStatusCounts();
         }
     }
 
@@ -927,6 +947,26 @@
         const countEl = document.getElementById('yt-saver-filter-count');
         if (countEl) {
             countEl.textContent = `Results: ${visibleCount} / ${items.length}`;
+        }
+    }
+
+    function updateStatusCounts() {
+        const items = document.querySelectorAll('ytd-playlist-video-renderer');
+        let newCount = 0;
+        let savedCount = 0;
+
+        items.forEach(item => {
+            const indicator = item.querySelector('.yt-saver-indicator');
+            if (indicator) {
+                const text = indicator.textContent || "";
+                if (text.includes('NEW')) newCount++;
+                else if (text.includes('SAVED')) savedCount++;
+            }
+        });
+
+        const el = document.getElementById('yt-saver-status-counts');
+        if (el) {
+             el.innerHTML = `<span style="color:#3ea6ff">New: ${newCount}</span> | <span style="color:#2ba640">Saved: ${savedCount}</span>`;
         }
     }
 
@@ -1078,6 +1118,7 @@
                 setTimeout(() => {
                     isFiltering = false;
                     updateAboveInfo();
+                    updateStatusCounts();
                 }, 100);
             }
         };
