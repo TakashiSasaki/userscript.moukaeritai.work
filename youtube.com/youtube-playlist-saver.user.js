@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.15
+// @version      0.2.16
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -242,15 +242,39 @@
         });
     }
 
+    function normalizeGistUrl(url) {
+        // Convert specific revision Raw URL to latest revision Raw URL
+        // From: https://gist.githubusercontent.com/USER/ID/raw/HASH/FILE
+        // To:   https://gist.githubusercontent.com/USER/ID/raw/FILE
+        const gistRawRegex = /^(https:\/\/gist\.githubusercontent\.com\/[^\/]+\/[^\/]+\/raw\/)[0-9a-f]{40}\/(.+)$/i;
+        return url.replace(gistRawRegex, '$1$2');
+    }
+
     function onImportMenuClick() {
         const lastUrl = GM_getValue('yt_last_import_url', '');
-        const url = prompt("YouTube Playlist Saver\n\nEnter the URL of the JSON data to import (Version 1+):", lastUrl);
+        const url = prompt("YouTube Playlist Saver\n\nEnter the URL of the JSON data to import (Version 1+):\n(Gist Raw URLs will be normalized to the latest revision)", lastUrl);
         if (url && url.trim().startsWith('http')) {
-            const cleanUrl = url.trim();
+            const cleanUrl = normalizeGistUrl(url.trim());
             GM_setValue('yt_last_import_url', cleanUrl);
             importDataFromUrl(cleanUrl);
         } else if (url) {
             alert('Invalid URL. Must start with http.');
+        }
+    }
+
+    function onOpenGistPageClick() {
+        const url = GM_getValue('yt_last_import_url', '');
+        if (!url) return;
+        
+        // Extract user and id from raw URL to construct main Gist page URL
+        // From: https://gist.githubusercontent.com/USER/ID/raw/...
+        // To:   https://gist.github.com/USER/ID
+        const match = url.match(/https:\/\/gist\.githubusercontent\.com\/([^\/]+\/[^\/]+)\/raw/);
+        if (match) {
+            const mainUrl = `https://gist.github.com/${match[1]}`;
+            window.open(mainUrl, '_blank');
+        } else {
+            alert('Last import URL is not a standard Gist Raw URL.');
         }
     }
 
@@ -274,6 +298,12 @@
     // Register Menu Commands
     if (typeof GM_registerMenuCommand !== 'undefined') {
         GM_registerMenuCommand("Import Data from URL", onImportMenuClick);
+        
+        const lastUrl = GM_getValue('yt_last_import_url', '');
+        if (lastUrl && lastUrl.includes('gist.githubusercontent.com')) {
+            GM_registerMenuCommand("Open Gist Main Page", onOpenGistPageClick);
+        }
+        
         GM_registerMenuCommand("Copy Data to Clipboard", onExportToClipboardClick);
     }
 
