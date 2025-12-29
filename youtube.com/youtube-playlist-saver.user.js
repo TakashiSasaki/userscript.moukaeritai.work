@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.25
+// @version      0.2.26
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -635,14 +635,6 @@
         await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    function debounce(func, wait) {
-        let timeout;
-        return function (...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
-        };
-    }
-
     function throttle(func, limit) {
         let inThrottle;
         return function () {
@@ -705,7 +697,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.24';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.26';
         titleLabel.textContent = `Playlist Saver v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px' });
 
@@ -796,12 +788,35 @@
                 padding: '0'
             });
 
+            const applyBtn = document.createElement('button');
+            applyBtn.textContent = 'Apply';
+            applyBtn.title = 'Apply filter';
+            Object.assign(applyBtn.style, {
+                cursor: 'pointer',
+                background: '#e0e0e0',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                padding: '0 6px',
+                height: '24px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                color: '#333'
+            });
+
             const updateFilter = () => {
                 filterState[stateKey] = input.value.toLowerCase();
                 applyFilters();
             };
 
-            input.addEventListener('input', debounce(updateFilter, 500));
+            // Apply on Enter key
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    updateFilter();
+                }
+            });
+
+            // Apply on Button Click
+            applyBtn.addEventListener('click', updateFilter);
 
             clearBtn.addEventListener('click', () => {
                 input.value = '';
@@ -810,6 +825,7 @@
 
             inputWrapper.appendChild(input);
             inputWrapper.appendChild(clearBtn);
+            inputWrapper.appendChild(applyBtn);
             container.appendChild(label);
             container.appendChild(inputWrapper);
 
