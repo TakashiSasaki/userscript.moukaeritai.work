@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://userscript.moukaeritai.work/youtube.com/data-format/data-format-v0.schema.json",
+  "title": "YouTube Playlist Saver Data Format v0 (Legacy)",
+  "description": "Initial data format mapping Playlist IDs directly to arrays of Video IDs. No version field.",
+  "type": "object",
+  "additionalProperties": {
+    "type": "array",
+    "items": {
+      "type": "string",
+      "description": "YouTube Video ID (e.g., dQw4w9WgXcQ)",
+      "pattern": "^[a-zA-Z0-9_-]{11}$"
+    },
+    "description": "Array of saved Video IDs for the playlist."
+  },
+  "examples": [
+    {
+      "PL12345ABCDE": [
+        "dQw4w9WgXcQ",
+        "jNQXAC9IVRw"
+      ],
+      "LL": [
+        "9bZkp7q19f0"
+      ]
+    }
+  ]
+}

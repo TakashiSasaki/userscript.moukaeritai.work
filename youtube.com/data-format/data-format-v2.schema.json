@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://userscript.moukaeritai.work/youtube.com/data-format/data-format-v2.schema.json",
+  "title": "YouTube Playlist Saver Data Format v2",
+  "description": "Version 2 data format which stores metadata (title, channel, addedAt) for each video ID.",
+  "type": "object",
+  "required": [
+    "version",
+    "playlists"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 2,
+      "description": "Data format version number."
+    },
+    "playlists": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "description": "Map of saved videos within a playlist, keyed by Video ID.",
+        "additionalProperties": {
+          "type": "object",
+          "description": "Metadata for a specific video.",
+          "properties": {
+            "title": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "The title of the video."
+            },
+            "channel": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "The uploader channel name."
+            },
+            "addedAt": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "Unix timestamp (ms) when the video was first saved."
+            }
+          },
+          "required": [
+            "title",
+            "channel",
+            "addedAt"
+          ]
+        }
+      },
+      "description": "Map of playlists, keyed by Playlist ID."
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "version": 2,
+      "playlists": {
+        "PL12345ABCDE": {
+          "dQw4w9WgXcQ": {
+            "title": "Rick Astley - Never Gonna Give You Up (Official Music Video)",
+            "channel": "Rick Astley",
+            "addedAt": 1700000000000
+          }
+        }
+      }
+    }
+  ]
+}
