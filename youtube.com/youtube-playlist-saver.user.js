@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.11
+// @version      0.2.12
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -20,7 +20,7 @@
     'use strict';
 
     const DATA_KEY = 'yt_playlist_data';
-    const DATA_VERSION = 1;
+    const DATA_VERSION = 2;
 
     // --- Performance Optimization: Batching & Caching ---
     let cachedStorage = null; // Stores { version: N, playlists: { ... } }
@@ -31,17 +31,37 @@
         
         let rawData = GM_getValue(DATA_KEY, {});
 
-        // Migration logic: Check if it's the old format (no version)
+        // Migration: v0 (No version) -> v2
         if (rawData.version === undefined) {
-            console.log('[YouTube Playlist Saver] Migrating data to Version ' + DATA_VERSION);
-            // Wrap existing data (which is just the playlists map) into the new structure
-            cachedStorage = {
-                version: DATA_VERSION,
-                playlists: rawData
-            };
-            // Save immediately to persist the migration
+            console.log('[YouTube Playlist Saver] Migrating data (v0 -> v2)');
+            const newPlaylists = {};
+            for (const [plId, videos] of Object.entries(rawData)) {
+                if (Array.isArray(videos)) {
+                    newPlaylists[plId] = {};
+                    videos.forEach(vid => {
+                        newPlaylists[plId][vid] = { title: null, channel: null, addedAt: null };
+                    });
+                }
+            }
+            cachedStorage = { version: DATA_VERSION, playlists: newPlaylists };
             GM_setValue(DATA_KEY, cachedStorage);
-        } else {
+        } 
+        // Migration: v1 -> v2
+        else if (rawData.version === 1) {
+            console.log('[YouTube Playlist Saver] Migrating data (v1 -> v2)');
+            const newPlaylists = {};
+            for (const [plId, videos] of Object.entries(rawData.playlists)) {
+                if (Array.isArray(videos)) {
+                    newPlaylists[plId] = {};
+                    videos.forEach(vid => {
+                        newPlaylists[plId][vid] = { title: null, channel: null, addedAt: null };
+                    });
+                }
+            }
+            cachedStorage = { version: DATA_VERSION, playlists: newPlaylists };
+            GM_setValue(DATA_KEY, cachedStorage);
+        }
+        else {
             cachedStorage = rawData;
         }
 
@@ -67,17 +87,28 @@
 
     function getSavedVideos(playlistId) {
         const data = loadStorage();
-        return new Set(data[playlistId] || []);
+        // Return Set of IDs for compatibility with existing check logic
+        return new Set(Object.keys(data[playlistId] || {}));
     }
 
-    function queueVideoId(playlistId, videoId) {
+    function queueVideoId(playlistId, videoId, title = null, channel = null) {
         const data = loadStorage();
-        const list = data[playlistId] || [];
-        if (!list.includes(videoId)) {
-            list.push(videoId);
-            data[playlistId] = list;
+        if (!data[playlistId]) data[playlistId] = {};
+        
+        const playlistMap = data[playlistId]; // It's an object now
+
+        // Check if exists AND has metadata
+        const existing = playlistMap[videoId];
+        
+        // If new, or if existing but missing metadata (and we have new metadata provided)
+        if (!existing || (title && existing.title === null)) {
+            playlistMap[videoId] = {
+                title: title || (existing ? existing.title : null),
+                channel: channel || (existing ? existing.channel : null),
+                addedAt: existing ? existing.addedAt : Date.now()
+            };
             requestSave();
-            return true;
+            return !existing; // Returns true ONLY if it was genuinely new (not just metadata update)
         }
         return false;
     }
@@ -95,27 +126,40 @@
     // --- Import Feature ---
 
     function mergeImportedData(importedData) {
-        if (!importedData || importedData.version < 1 || !importedData.playlists) {
-            alert('[YouTube Playlist Saver] Import failed: Invalid data format. Only Version 1+ is supported.');
+        if (!importedData || !importedData.playlists) {
+            alert('[YouTube Playlist Saver] Import failed: Invalid data format.');
             return;
         }
 
-        const localPlaylists = loadStorage(); // Returns reference to cachedStorage.playlists
+        const localPlaylists = loadStorage(); // Returns reference to cachedStorage.playlists (v2 structure)
         let addedCount = 0;
 
-        for (const [plId, videos] of Object.entries(importedData.playlists)) {
-            if (!Array.isArray(videos)) continue;
-
+        for (const [plId, content] of Object.entries(importedData.playlists)) {
+            // Ensure local playlist container exists (as object)
             if (!localPlaylists[plId]) {
-                localPlaylists[plId] = [];
+                localPlaylists[plId] = {};
             }
 
-            const currentSet = new Set(localPlaylists[plId]);
-            
-            for (const vid of videos) {
-                if (!currentSet.has(vid)) {
-                    localPlaylists[plId].push(vid);
-                    addedCount++;
+            // Case A: Import data is v1 (Array of strings)
+            if (Array.isArray(content)) {
+                for (const vid of content) {
+                    if (!localPlaylists[plId][vid]) {
+                        localPlaylists[plId][vid] = { title: null, channel: null, addedAt: null };
+                        addedCount++;
+                    }
+                }
+            } 
+            // Case B: Import data is v2 (Object map)
+            else if (typeof content === 'object') {
+                for (const [vid, meta] of Object.entries(content)) {
+                    const existing = localPlaylists[plId][vid];
+                    if (!existing) {
+                        localPlaylists[plId][vid] = meta || { title: null, channel: null, addedAt: null };
+                        addedCount++;
+                    } else if (meta && existing.title === null) {
+                        // Update metadata if local is missing it
+                        localPlaylists[plId][vid] = meta;
+                    }
                 }
             }
         }
@@ -1103,22 +1147,30 @@
         // Apply filter immediately for new/re-scanned items
         applyFilterToItem(item);
 
-
         if (item.dataset.saverProcessed === playlistId) return;
 
         const videoId = extractVideoId(item);
         if (!videoId) return;
 
-        let isNew = false;
-        if (!currentSessionSet.has(videoId)) {
-            const queued = queueVideoId(playlistId, videoId);
-            if (queued) {
-                isNew = true;
-                currentSessionSet.add(videoId);
-            }
+        // Extract metadata
+        const titleEl = item.querySelector('#video-title');
+        const title = titleEl ? titleEl.textContent.trim() : null;
+
+        const channelEl = item.querySelector('.ytd-channel-name a') || item.querySelector('#channel-name #text');
+        const channel = channelEl ? channelEl.textContent.trim() : null;
+
+        const wasInDb = currentSessionSet.has(videoId);
+
+        // Always attempt to queue/update. 
+        // If ID exists but metadata is missing, this updates it.
+        // If ID is new, this adds it.
+        queueVideoId(playlistId, videoId, title, channel);
+
+        if (!wasInDb) {
+            currentSessionSet.add(videoId);
         }
 
-        renderIndicator(item, isNew);
+        renderIndicator(item, !wasInDb);
         item.dataset.saverProcessed = playlistId;
     }
 
