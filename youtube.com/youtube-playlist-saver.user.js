@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.30
+// @version      0.2.31
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -519,7 +519,11 @@
             if (menuPopup) {
                 // Check for item existence
                 targetItem = findTargetItem(menuPopup);
-                if (targetItem) break;
+                if (targetItem) {
+                    // Highlight the item to be clicked for visual confirmation
+                    targetItem.style.backgroundColor = 'rgba(255, 0, 0, 0.2)';
+                    break;
+                }
             }
             // Wait 100ms before next check
             await new Promise(r => setTimeout(r, 100));
