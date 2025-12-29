@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.26
+// @version      0.2.27
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -697,7 +697,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.26';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.27';
         titleLabel.textContent = `Playlist Saver v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px' });
 
@@ -749,10 +749,32 @@
                 gap: '2px'
             });
 
-            const label = document.createElement('div');
+            const labelRow = document.createElement('div');
+            Object.assign(labelRow.style, {
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+            });
+
+            const label = document.createElement('span');
             label.textContent = labelText;
             label.style.fontSize = '12px';
             label.style.fontWeight = 'bold';
+
+            const applyBtn = document.createElement('button');
+            applyBtn.textContent = 'Apply';
+            applyBtn.title = 'Apply filter';
+            Object.assign(applyBtn.style, {
+                cursor: 'pointer',
+                background: '#e0e0e0',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                padding: '0 6px',
+                height: '20px',
+                fontSize: '10px',
+                fontWeight: 'bold',
+                color: '#333'
+            });
 
             const inputWrapper = document.createElement('div');
             Object.assign(inputWrapper.style, {
@@ -788,21 +810,6 @@
                 padding: '0'
             });
 
-            const applyBtn = document.createElement('button');
-            applyBtn.textContent = 'Apply';
-            applyBtn.title = 'Apply filter';
-            Object.assign(applyBtn.style, {
-                cursor: 'pointer',
-                background: '#e0e0e0',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                padding: '0 6px',
-                height: '24px',
-                fontSize: '11px',
-                fontWeight: 'bold',
-                color: '#333'
-            });
-
             const updateFilter = () => {
                 filterState[stateKey] = input.value.toLowerCase();
                 applyFilters();
@@ -823,10 +830,11 @@
                 updateFilter();
             });
 
+            labelRow.appendChild(label);
+            labelRow.appendChild(applyBtn);
             inputWrapper.appendChild(input);
             inputWrapper.appendChild(clearBtn);
-            inputWrapper.appendChild(applyBtn);
-            container.appendChild(label);
+            container.appendChild(labelRow);
             container.appendChild(inputWrapper);
 
             return container;
