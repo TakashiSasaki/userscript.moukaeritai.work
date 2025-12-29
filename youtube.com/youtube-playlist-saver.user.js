@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.12
+// @version      0.2.13
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -126,43 +126,96 @@
     // --- Import Feature ---
 
     function mergeImportedData(importedData) {
-        if (!importedData || !importedData.playlists) {
-            alert('[YouTube Playlist Saver] Import failed: Invalid data format.');
-            return;
+        if (!importedData) {
+             alert('[YouTube Playlist Saver] Import failed: No data.');
+             return;
+        }
+
+        // Normalize Input: Handle v0 (root keys), v1 (playlists array), v2 (playlists object)
+        let sourcePlaylists = {};
+        
+        if (importedData.playlists) {
+            // v1 or v2
+            sourcePlaylists = importedData.playlists;
+        } else {
+            // v0 or invalid? Check if it looks like v0 (keys are IDs, values are arrays)
+            const keys = Object.keys(importedData);
+            // Ignore if it's just {version: ...} without playlists, but v0 has no version.
+            if (keys.length > 0 && Array.isArray(importedData[keys[0]])) {
+                 console.log('[YouTube Playlist Saver] Detected v0 import format.');
+                 sourcePlaylists = importedData;
+            } else if (keys.length === 0) {
+                 // Empty object
+                 alert('[YouTube Playlist Saver] Import failed: Data is empty.');
+                 return;
+            } else {
+                 alert('[YouTube Playlist Saver] Import failed: Unknown data format.');
+                 return;
+            }
         }
 
         const localPlaylists = loadStorage(); // Returns reference to cachedStorage.playlists (v2 structure)
         let addedCount = 0;
+        let updatedCount = 0;
 
-        for (const [plId, content] of Object.entries(importedData.playlists)) {
+        for (const [plId, content] of Object.entries(sourcePlaylists)) {
             // Ensure local playlist container exists (as object)
             if (!localPlaylists[plId]) {
                 localPlaylists[plId] = {};
             }
 
-            // Case A: Import data is v1 (Array of strings)
+            // Standardize to Object format for processing
+            let entries = [];
             if (Array.isArray(content)) {
-                for (const vid of content) {
-                    if (!localPlaylists[plId][vid]) {
-                        localPlaylists[plId][vid] = { title: null, channel: null, addedAt: null };
-                        addedCount++;
+                // v0/v1: Array of IDs -> Convert to [ID, null] entries
+                entries = content.map(vid => [vid, null]);
+            } else if (typeof content === 'object') {
+                // v2: Object map -> Entries
+                entries = Object.entries(content);
+            }
+
+            for (const [vid, remoteMeta] of entries) {
+                const existing = localPlaylists[plId][vid];
+                
+                if (!existing) {
+                    // NEW: Add it
+                    localPlaylists[plId][vid] = remoteMeta || { title: null, channel: null, addedAt: null };
+                    addedCount++;
+                } else if (remoteMeta) {
+                    // UPDATE: Check if local is missing info that remote has
+                    let changed = false;
+                    
+                    if (existing.title === null && remoteMeta.title) {
+                        existing.title = remoteMeta.title;
+                        changed = true;
                     }
-                }
-            } 
-            // Case B: Import data is v2 (Object map)
-            else if (typeof content === 'object') {
-                for (const [vid, meta] of Object.entries(content)) {
-                    const existing = localPlaylists[plId][vid];
-                    if (!existing) {
-                        localPlaylists[plId][vid] = meta || { title: null, channel: null, addedAt: null };
-                        addedCount++;
-                    } else if (meta && existing.title === null) {
-                        // Update metadata if local is missing it
-                        localPlaylists[plId][vid] = meta;
+                    if (existing.channel === null && remoteMeta.channel) {
+                        existing.channel = remoteMeta.channel;
+                        changed = true;
                     }
+                    if (existing.addedAt === null && remoteMeta.addedAt) {
+                         existing.addedAt = remoteMeta.addedAt;
+                         changed = true;
+                    }
+                    
+                    if (changed) updatedCount++;
                 }
             }
         }
+
+        if (addedCount > 0 || updatedCount > 0) {
+            requestSave();
+            alert(`[YouTube Playlist Saver] Import successful!\nAdded: ${addedCount} videos\nUpdated Metadata: ${updatedCount} videos`);
+            
+            // Refresh view
+            const items = document.querySelectorAll('ytd-playlist-video-renderer');
+            items.forEach(item => {
+                delete item.dataset.saverProcessed; // Force re-scan
+            });
+        } else {
+            alert('[YouTube Playlist Saver] Import finished. No new data or better metadata found.');
+        }
+    }
 
         if (addedCount > 0) {
             requestSave();
