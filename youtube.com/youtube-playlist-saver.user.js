@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.19
+// @version      0.2.20
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -412,7 +412,7 @@
     async function attemptRemoveVideo(videoContainer) {
         // 1. Find Action Menu Button (Three dots)
         const menuBtn = videoContainer.querySelector('#menu button') ||
-            videoContainer.querySelector('button.dropdown-trigger'); // Fallback logic
+            videoContainer.querySelector('button.dropdown-trigger');
 
         if (!menuBtn) {
             console.error('[YouTube Playlist Saver] Menu button not found.');
@@ -421,26 +421,16 @@
 
         menuBtn.click();
 
-        // 2. Wait for Menu Popup (Increased timeout to 3000ms)
-        const menuPopup = await waitForElement('ytd-menu-popup-renderer', 3000);
-        if (!menuPopup) {
-            console.error('[YouTube Playlist Saver] Popup not found.');
-            return false;
-        }
-
-        // 3. Find "Remove from [Playlist]" option with retry (Polling)
-        // YouTube menus might render content slightly after the popup container appears.
-        const findTargetItem = () => {
-            const items = Array.from(menuPopup.querySelectorAll('ytd-menu-service-item-renderer'));
+        // Helper to find the target item within the popup
+        const findTargetItem = (popup) => {
+            if (!popup) return null;
+            const items = Array.from(popup.querySelectorAll('ytd-menu-service-item-renderer'));
             for (const item of items) {
-                // Check text content
                 const text = item.textContent || "";
                 if (text.includes('Remove from') || text.includes('から削除')) {
                     return item;
                 }
-                // Check icon path (Trash icon)
                 const path = item.querySelector('path');
-                // Standard material trash path or variants
                 const trashPaths = [
                     "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
                     "M11 17H9V8h2v9zm4-9h-2v9h2V8zm4-4v1h-1v16H6V5H5V4h4V3h6v1h4zm-2 1H8v15h10V5z",
@@ -454,22 +444,31 @@
             return null;
         };
 
+        // 2. Wait for Menu Popup AND Target Item (Combined Polling)
+        // Retry for up to 8 seconds to handle slow UI responses
+        const MAX_WAIT = 8000;
+        const START_TIME = Date.now();
         let targetItem = null;
-        const POLL_RETRIES = 20; // 20 * 100ms = 2000ms wait for content
-        for (let i = 0; i < POLL_RETRIES; i++) {
-            targetItem = findTargetItem();
-            if (targetItem) break;
+
+        while (Date.now() - START_TIME < MAX_WAIT) {
+            // Check for popup existence
+            const menuPopup = document.querySelector('ytd-menu-popup-renderer');
+            if (menuPopup) {
+                // Check for item existence
+                targetItem = findTargetItem(menuPopup);
+                if (targetItem) break;
+            }
+            // Wait 100ms before next check
             await new Promise(r => setTimeout(r, 100));
         }
-
 
         if (targetItem) {
             targetItem.click();
             return true;
         } else {
-            console.warn('[YouTube Playlist Saver] Remove option not found in menu.');
-            // Close menu
-            document.body.click(); // Attempt to close menu
+            console.warn(`[YouTube Playlist Saver] Remove option not found after ${MAX_WAIT}ms.`);
+            // Attempt to close menu by clicking body
+            document.body.click(); 
             return false;
         }
     }
