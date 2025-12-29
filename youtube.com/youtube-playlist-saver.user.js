@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.16
+// @version      0.2.17
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -969,30 +969,6 @@
             updateAboveInfo();
         }, 200);
         window.addEventListener('scroll', scrollHandler);
-
-        // Real-time status check (UI flags)
-        statusInterval = setInterval(() => {
-            const isActive = isSpinnerActive();
-            spinnerStatusDiv.textContent = isActive ? 'Spinner: Active' : 'Spinner: Idle';
-            spinnerStatusDiv.style.color = isActive ? '#d00' : '#2ba640';
-
-            const filterEl = document.getElementById('yt-saver-filtering-status');
-            if (filterEl) {
-                filterEl.textContent = isFiltering ? 'Filtering: Active' : 'Filtering: Idle';
-                filterEl.style.color = isFiltering ? '#d00' : '#2ba640';
-            }
-
-            const procEl = document.getElementById('yt-saver-processing-status');
-            if (procEl) {
-                procEl.textContent = isProcessing ? 'Processing: Active' : 'Processing: Idle';
-                procEl.style.color = isProcessing ? '#d00' : '#2ba640';
-            }
-        }, 500);
-
-        // Separate interval for heavier DOM scan (every 10 seconds)
-        countsInterval = setInterval(() => {
-            updateStatusCounts();
-        }, 10000);
     }
 
     function getIndex(item) {
@@ -1313,6 +1289,41 @@
 
         console.log(`[YouTube Playlist Saver] Processing playlist: ${playlistId}`);
         createFilterPanel();
+
+        // Start Status Intervals with Panel Resurrection Logic
+        if (statusInterval) clearInterval(statusInterval);
+        statusInterval = setInterval(() => {
+            // 1. Check if panel is alive
+            if (!document.getElementById('yt-saver-filter-panel')) {
+                 console.warn('[YouTube Playlist Saver] Panel disappeared, recreating...');
+                 createFilterPanel();
+            }
+
+            // 2. UI Updates
+            const isActive = isSpinnerActive();
+            const spinnerStatusDiv = document.getElementById('yt-saver-spinner-status');
+            if (spinnerStatusDiv) {
+                spinnerStatusDiv.textContent = isActive ? 'Spinner: Active' : 'Spinner: Idle';
+                spinnerStatusDiv.style.color = isActive ? '#d00' : '#2ba640';
+            }
+
+            const filterEl = document.getElementById('yt-saver-filtering-status');
+            if (filterEl) {
+                filterEl.textContent = isFiltering ? 'Filtering: Active' : 'Filtering: Idle';
+                filterEl.style.color = isFiltering ? '#d00' : '#2ba640';
+            }
+
+            const procEl = document.getElementById('yt-saver-processing-status');
+            if (procEl) {
+                procEl.textContent = isProcessing ? 'Processing: Active' : 'Processing: Idle';
+                procEl.style.color = isProcessing ? '#d00' : '#2ba640';
+            }
+        }, 500);
+
+        if (countsInterval) clearInterval(countsInterval);
+        countsInterval = setInterval(() => {
+            updateStatusCounts();
+        }, 10000);
 
         // Use local Cache
         const currentSessionSet = getSavedVideos(playlistId);
