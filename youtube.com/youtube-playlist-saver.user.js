@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.21
+// @version      0.2.22
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -864,6 +864,22 @@
         });
         contentContainer.appendChild(processingStatusDiv);
 
+        // Processing Detail
+        const processingDetailDiv = document.createElement('div');
+        processingDetailDiv.id = 'yt-saver-processing-detail';
+        processingDetailDiv.textContent = '';
+        Object.assign(processingDetailDiv.style, {
+            fontSize: '10px',
+            color: '#666',
+            marginTop: '2px',
+            textAlign: 'right',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: '100%'
+        });
+        contentContainer.appendChild(processingDetailDiv);
+
         contentContainer.appendChild(aboveDiv);
         contentContainer.appendChild(removeAboveBtn);
 
@@ -1024,6 +1040,18 @@
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
 
+                // Extract metadata for progress display
+                const titleEl = item.querySelector('#video-title');
+                const title = titleEl ? titleEl.textContent.trim() : 'Unknown';
+                const channelEl = item.querySelector('.ytd-channel-name a') || item.querySelector('#channel-name #text');
+                const channel = channelEl ? channelEl.textContent.trim() : 'Unknown';
+
+                const detailEl = document.getElementById('yt-saver-processing-detail');
+                if (detailEl) {
+                    detailEl.textContent = `${title} (${channel})`;
+                    detailEl.title = `${title} (${channel})`; // Tooltip for full text
+                }
+
                 // Scroll into view gently
                 item.scrollIntoView({ block: 'center', behavior: 'instant' });
                 await new Promise(r => setTimeout(r, 250)); // Small wait after scroll
@@ -1052,6 +1080,13 @@
             }
         } finally {
             isProcessing = false; // End processing
+            
+            const detailEl = document.getElementById('yt-saver-processing-detail');
+            if (detailEl) {
+                detailEl.textContent = '';
+                detailEl.title = '';
+            }
+
             if (btn) {
                 btn.disabled = false;
                 btn.textContent = 'Remove Above';
