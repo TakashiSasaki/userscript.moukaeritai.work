@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.29
+// @version      0.2.30
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -1146,6 +1146,9 @@
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
 
+                // Show DELETING indicator before processing
+                updateDeletingIndicator(item, true);
+
                 // Extract metadata for progress display
                 const titleEl = item.querySelector('#video-title');
                 const title = titleEl ? titleEl.textContent.trim() : 'Unknown';
@@ -1169,6 +1172,7 @@
                     const success = await attemptRemoveVideo(item);
                     if (!success) {
                         console.warn(`[YouTube Playlist Saver] Failed to remove item index ${i}`);
+                        updateDeletingIndicator(item, false); // Clean up indicator
                     } else {
                         // Mark as removed visually and logically to prevent double-processing
                         item.style.opacity = '0.3';
@@ -1185,6 +1189,7 @@
                     }
                 } catch (err) {
                     console.error(`[YouTube Playlist Saver] Exception removing item index ${i}`, err);
+                    updateDeletingIndicator(item, false); // Clean up indicator
                 }
 
                 // Delay between actions to prevent rate limiting or UI glitches
@@ -1277,6 +1282,36 @@
             });
             // Insert after NEW/SAVED indicator if exists, otherwise prepend
             const existingIndicator = bar.querySelector('.yt-saver-indicator');
+            if (existingIndicator) {
+                existingIndicator.after(indicator);
+            } else {
+                bar.prepend(indicator);
+            }
+        }
+    }
+
+    function updateDeletingIndicator(element, show = false) {
+        let bar = element.querySelector('#engagement-bar, .ytd-video-meta-block, #meta');
+        if (!bar) return;
+
+        const oldIndicator = bar.querySelector('.yt-saver-deleting-indicator');
+        if (oldIndicator) oldIndicator.remove();
+
+        if (show) {
+            const indicator = document.createElement('span');
+            indicator.className = 'yt-saver-deleting-indicator';
+            indicator.textContent = ' [DELETING] ';
+            Object.assign(indicator.style, {
+                fontSize: '11px',
+                fontWeight: 'bold',
+                marginRight: '8px',
+                color: '#d00', // Red
+                verticalAlign: 'middle',
+                display: 'inline-block'
+            });
+
+            // Insert after other indicators if they exist
+            const existingIndicator = bar.querySelector('.yt-saver-matched-indicator, .yt-saver-indicator');
             if (existingIndicator) {
                 existingIndicator.after(indicator);
             } else {
