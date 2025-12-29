@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.31
+// @version      0.2.32
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -529,13 +529,17 @@
             await new Promise(r => setTimeout(r, 100));
         }
 
-        if (targetItem) {
-            targetItem.click();
-            // Ensure menu is closed by clicking body immediately after
-            document.body.click(); 
-            return true;
-        } else {
-            console.warn(`[YouTube Playlist Saver] Remove option not found after ${MAX_WAIT}ms.`);
+                if (targetItem) {
+                    targetItem.click();
+                    // Highlight the item AFTER it has been clicked for visual confirmation
+                    targetItem.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'; // Light green
+                    // Small delay to make the color change visible before menu closes
+                    await new Promise(r => setTimeout(r, 100)); 
+        
+                    // Ensure menu is closed by clicking body immediately after
+                    document.body.click();
+                    return true;
+                } else {            console.warn(`[YouTube Playlist Saver] Remove option not found after ${MAX_WAIT}ms.`);
             // Attempt to close menu by clicking body
             document.body.click(); 
             return false;
