@@ -840,6 +840,12 @@
 
         if (!confirm(`Are you sure you want to remove ${items.length} videos from the playlist?`)) return;
 
+        // Automatically stop auto scroll if it's active
+        if (scrollInterval) {
+            const scrollBtn = document.getElementById('yt-saver-scroll-btn');
+            if (scrollBtn) toggleAutoScroll(scrollBtn);
+        }
+
         isProcessing = true; // Start processing
         const btn = document.getElementById('yt-saver-remove-above-btn');
         if (btn) {
