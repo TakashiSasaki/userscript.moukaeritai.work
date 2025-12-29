@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.7
+// @version      0.2.8
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -495,6 +495,7 @@
     let isProcessing = false;
     let isFiltering = false;
     let statusInterval = null;
+    let countsInterval = null;
     let scrollHandler = null;
 
     function saveFilterState() {
@@ -784,7 +785,7 @@
         }, 200);
         window.addEventListener('scroll', scrollHandler);
 
-        // Real-time status check
+        // Real-time status check (UI flags)
         statusInterval = setInterval(() => {
             const isActive = isSpinnerActive();
             spinnerStatusDiv.textContent = isActive ? 'Spinner: Active' : 'Spinner: Idle';
@@ -801,10 +802,12 @@
                 procEl.textContent = isProcessing ? 'Processing: Active' : 'Processing: Idle';
                 procEl.style.color = isProcessing ? '#d00' : '#2ba640';
             }
-            
-            // Periodically update counts to catch up with any missed changes
-            updateStatusCounts();
         }, 500);
+
+        // Separate interval for heavier DOM scan (every 10 seconds)
+        countsInterval = setInterval(() => {
+            updateStatusCounts();
+        }, 10000);
     }
 
     function getIndex(item) {
@@ -1195,6 +1198,10 @@
         if (statusInterval) {
             clearInterval(statusInterval);
             statusInterval = null;
+        }
+        if (countsInterval) {
+            clearInterval(countsInterval);
+            countsInterval = null;
         }
         if (scrollHandler) {
             window.removeEventListener('scroll', scrollHandler);
