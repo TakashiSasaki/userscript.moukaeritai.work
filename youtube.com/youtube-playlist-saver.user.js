@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.28
+// @version      0.2.29
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -527,6 +527,8 @@
 
         if (targetItem) {
             targetItem.click();
+            // Ensure menu is closed by clicking body immediately after
+            document.body.click(); 
             return true;
         } else {
             console.warn(`[YouTube Playlist Saver] Remove option not found after ${MAX_WAIT}ms.`);
@@ -559,6 +561,26 @@
                     resolve(null);
                 }
             }, 100);
+        });
+    }
+
+    /**
+     * Utility: Wait for an element to be removed from DOM
+     */
+    function waitForDomRemoval(element, timeout = 10000) {
+        return new Promise(resolve => {
+            if (!document.contains(element)) return resolve(true);
+
+            const start = Date.now();
+            const interval = setInterval(() => {
+                if (!document.contains(element)) {
+                    clearInterval(interval);
+                    resolve(true);
+                } else if (Date.now() - start > timeout) {
+                    clearInterval(interval);
+                    resolve(false);
+                }
+            }, 200);
         });
     }
 
@@ -1151,6 +1173,15 @@
                         // Mark as removed visually and logically to prevent double-processing
                         item.style.opacity = '0.3';
                         item.style.pointerEvents = 'none';
+                        
+                        // Wait for YouTube to actually remove the element from DOM
+                        const removed = await waitForDomRemoval(item, 5000);
+                        
+                        if (!removed) {
+                             console.warn(`[YouTube Playlist Saver] Item index ${i} was not removed by YouTube in time.`);
+                             // Fallback: hide it manually if YouTube didn't update UI in time
+                             item.style.display = 'none'; 
+                        }
                     }
                 } catch (err) {
                     console.error(`[YouTube Playlist Saver] Exception removing item index ${i}`, err);
