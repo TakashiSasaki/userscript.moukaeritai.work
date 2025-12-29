@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.17
+// @version      0.2.18
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -605,6 +605,9 @@
         channel: ''
     });
 
+    const PANEL_STATE_KEY = 'yt_panel_minimized';
+    let isMinimized = GM_getValue(PANEL_STATE_KEY, false);
+
     let isProcessing = false;
     let isFiltering = false;
     let statusInterval = null;
@@ -672,11 +675,19 @@
             gap: '8px'
         });
 
+        const updatePanelMinState = (min) => {
+            contentContainer.style.display = min ? 'none' : 'flex';
+            minimizeBtn.textContent = min ? '+' : '−';
+            isMinimized = min;
+            GM_setValue(PANEL_STATE_KEY, min);
+        };
+
         minimizeBtn.addEventListener('click', () => {
-            const isHidden = contentContainer.style.display === 'none';
-            contentContainer.style.display = isHidden ? 'flex' : 'none';
-            minimizeBtn.textContent = isHidden ? '−' : '+';
+            updatePanelMinState(!isMinimized);
         });
+
+        // Initialize state
+        updatePanelMinState(isMinimized);
 
         headerRow.appendChild(titleLabel);
         headerRow.appendChild(minimizeBtn);
@@ -963,12 +974,6 @@
         document.body.appendChild(panel);
         applyFilters(); // Initial count
         updateStatusCounts(); // Initial stats
-
-        // Scroll listener for "Above" info
-        scrollHandler = throttle(() => {
-            updateAboveInfo();
-        }, 200);
-        window.addEventListener('scroll', scrollHandler);
     }
 
     function getIndex(item) {
@@ -1283,6 +1288,38 @@
         }
     }
 
+    function processAllVisible(playlistId, currentSessionSet) {
+        isFiltering = true; // Activating filtering indicator during re-scan/loading
+        try {
+            const items = document.querySelectorAll('ytd-playlist-video-renderer');
+            items.forEach(item => processItem(item, playlistId, currentSessionSet));
+            updateResultCount();
+        } finally {
+            // Ensure indicator remains visible for 100ms
+            setTimeout(() => {
+                isFiltering = false;
+                updateAboveInfo();
+                updateStatusCounts();
+            }, 100);
+        }
+    }
+
+    function initObserver(listContainer, playlistId, currentSessionSet) {
+        if (window._ytSaverObserver) window._ytSaverObserver.disconnect();
+
+        const throttledProcess = throttle(() => {
+            processAllVisible(playlistId, currentSessionSet);
+        }, 1000);
+
+        const observer = new MutationObserver((_mutations) => {
+            throttledProcess();
+        });
+
+        observer.observe(listContainer, { childList: true, subtree: true });
+        window._ytSaverObserver = observer;
+        window._ytSaverObservedElement = listContainer;
+    }
+
     async function run() {
         const playlistId = getPlaylistId();
         if (!playlistId) return;
@@ -1290,7 +1327,18 @@
         console.log(`[YouTube Playlist Saver] Processing playlist: ${playlistId}`);
         createFilterPanel();
 
-        // Start Status Intervals with Panel Resurrection Logic
+        // Initialize Scroll Listener if not already present
+        if (!scrollHandler) {
+            scrollHandler = throttle(() => {
+                updateAboveInfo();
+            }, 200);
+            window.addEventListener('scroll', scrollHandler);
+        }
+
+        // Use local Cache
+        const currentSessionSet = getSavedVideos(playlistId);
+
+        // Start Status Intervals with Panel/Observer Resurrection Logic
         if (statusInterval) clearInterval(statusInterval);
         statusInterval = setInterval(() => {
             // 1. Check if panel is alive
@@ -1299,7 +1347,14 @@
                  createFilterPanel();
             }
 
-            // 2. UI Updates
+            // 2. Check if list container is still in DOM (Observer check)
+            const listContainer = document.querySelector('ytd-playlist-video-list-renderer #contents');
+            if (listContainer && (!window._ytSaverObservedElement || window._ytSaverObservedElement !== listContainer || !document.contains(window._ytSaverObservedElement))) {
+                 console.warn('[YouTube Playlist Saver] List container replaced or observer missing, re-initializing...');
+                 initObserver(listContainer, playlistId, currentSessionSet);
+            }
+
+            // 3. UI Updates
             const isActive = isSpinnerActive();
             const spinnerStatusDiv = document.getElementById('yt-saver-spinner-status');
             if (spinnerStatusDiv) {
@@ -1325,58 +1380,17 @@
             updateStatusCounts();
         }, 10000);
 
-        // Use local Cache
-        const currentSessionSet = getSavedVideos(playlistId);
+        processAllVisible(playlistId, currentSessionSet);
 
-        const processAllVisible = () => {
-            isFiltering = true; // Activating filtering indicator during re-scan/loading
-            try {
-                const items = document.querySelectorAll('ytd-playlist-video-renderer');
-                items.forEach(item => processItem(item, playlistId, currentSessionSet));
-                updateResultCount();
-            } finally {
-                // Ensure indicator remains visible for 100ms
-                setTimeout(() => {
-                    isFiltering = false;
-                    updateAboveInfo();
-                    updateStatusCounts();
-                }, 100);
-            }
-        };
-
-        processAllVisible();
-
-        if (window._ytSaverObserver) window._ytSaverObserver.disconnect();
-
-        // Target the specific playlist container
-        let listContainer = document.querySelector('ytd-playlist-video-list-renderer #contents');
-        if (!listContainer) {
-            // Wait for it slightly if not immediately available (e.g. soft nav)
-            listContainer = await waitForElement('ytd-playlist-video-list-renderer #contents', 5000);
+        // Initial Observer setup
+        const listContainer = document.querySelector('ytd-playlist-video-list-renderer #contents') ||
+                             await waitForElement('ytd-playlist-video-list-renderer #contents', 5000);
+                             
+        if (listContainer) {
+            initObserver(listContainer, playlistId, currentSessionSet);
+        } else {
+            console.warn('[YouTube Playlist Saver] Playlist container not found. Observer not started.');
         }
-
-        if (!listContainer) {
-            console.warn('[YouTube Playlist Saver] Playlist container not found. Observer not started to save performance.');
-            return;
-        }
-
-        // Lazy Observer: Just re-scan everything slightly throttled when mutations occur.
-        // This is much lighter than analyzing every mutation record if we just want to catch new items.
-        // And since processItem is safe to call repeatedly, this works well.
-        const throttledProcess = throttle(() => {
-            processAllVisible();
-        }, 1000);
-
-        const observer = new MutationObserver((_mutations) => {
-            // Check if any added nodes are relevant? 
-            // Or just blindly run throttled process.
-            // Let's just run. The throttle protects us.
-            throttledProcess();
-        });
-
-        observer.observe(listContainer, { childList: true, subtree: true });
-
-        window._ytSaverObserver = observer;
     }
 
     // --- Navigation Handling ---
