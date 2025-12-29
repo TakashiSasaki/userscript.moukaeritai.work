@@ -863,6 +863,10 @@
                     const success = await attemptRemoveVideo(item);
                     if (!success) {
                         console.warn(`[YouTube Playlist Saver] Failed to remove item index ${i}`);
+                    } else {
+                        // Mark as removed visually and logically to prevent double-processing
+                        item.style.opacity = '0.3';
+                        item.style.pointerEvents = 'none';
                     }
                 } catch (err) {
                     console.error(`[YouTube Playlist Saver] Exception removing item index ${i}`, err);
