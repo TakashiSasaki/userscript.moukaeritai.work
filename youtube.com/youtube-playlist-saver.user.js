@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.10
+// @version      0.2.11
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -519,11 +519,55 @@
             boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px',
+            // gap: '8px', // Moved to contentContainer
             width: '200px',
             color: '#333',
             fontFamily: 'Roboto, Arial, sans-serif'
         });
+
+        // --- Header (Title & Minimize Button) ---
+        const headerRow = document.createElement('div');
+        Object.assign(headerRow.style, {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '4px'
+        });
+
+        const titleLabel = document.createElement('span');
+        titleLabel.textContent = 'Playlist Saver';
+        Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px' });
+
+        const minimizeBtn = document.createElement('button');
+        minimizeBtn.textContent = '−';
+        Object.assign(minimizeBtn.style, {
+            cursor: 'pointer',
+            background: 'none',
+            border: 'none',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            padding: '0 4px',
+            lineHeight: '1',
+            color: '#666'
+        });
+
+        const contentContainer = document.createElement('div');
+        Object.assign(contentContainer.style, {
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+        });
+
+        minimizeBtn.addEventListener('click', () => {
+            const isHidden = contentContainer.style.display === 'none';
+            contentContainer.style.display = isHidden ? 'flex' : 'none';
+            minimizeBtn.textContent = isHidden ? '−' : '+';
+        });
+
+        headerRow.appendChild(titleLabel);
+        headerRow.appendChild(minimizeBtn);
+        panel.appendChild(headerRow);
+        panel.appendChild(contentContainer);
 
         // Helper to create input group with clear button
         const createInputGroup = (labelText, placeholder, stateKey) => {
@@ -663,11 +707,11 @@
         });
         removeAboveBtn.addEventListener('click', removeAboveItems);
 
-        panel.appendChild(titleGroup);
-        panel.appendChild(channelGroup);
-        panel.appendChild(countDiv);
-        panel.appendChild(statusCountsDiv);
-        panel.appendChild(spinnerStatusDiv);
+        contentContainer.appendChild(titleGroup);
+        contentContainer.appendChild(channelGroup);
+        contentContainer.appendChild(countDiv);
+        contentContainer.appendChild(statusCountsDiv);
+        contentContainer.appendChild(spinnerStatusDiv);
 
         // Filtering Status
         const filteringStatusDiv = document.createElement('div');
@@ -680,7 +724,7 @@
             textAlign: 'right',
             color: '#2ba640'
         });
-        panel.appendChild(filteringStatusDiv);
+        contentContainer.appendChild(filteringStatusDiv);
 
         // Processing (Removal) Status
         const processingStatusDiv = document.createElement('div');
@@ -693,15 +737,15 @@
             textAlign: 'right',
             color: '#2ba640'
         });
-        panel.appendChild(processingStatusDiv);
+        contentContainer.appendChild(processingStatusDiv);
 
-        panel.appendChild(aboveDiv);
-        panel.appendChild(removeAboveBtn);
+        contentContainer.appendChild(aboveDiv);
+        contentContainer.appendChild(removeAboveBtn);
 
         // --- Auto Scroll Settings UI ---
         const separator = document.createElement('hr');
         Object.assign(separator.style, { border: '0', borderTop: '1px solid #ddd', margin: '8px 0', width: '100%' });
-        panel.appendChild(separator);
+        contentContainer.appendChild(separator);
 
         const asHeaderContainer = document.createElement('div');
         Object.assign(asHeaderContainer.style, { 
@@ -733,7 +777,7 @@
 
         asHeaderContainer.appendChild(asHeader);
         asHeaderContainer.appendChild(asToggleBtn);
-        panel.appendChild(asHeaderContainer);
+        contentContainer.appendChild(asHeaderContainer);
 
         // Checkbox: Scroll to Bottom
         const asCheckboxContainer = document.createElement('div');
@@ -797,10 +841,10 @@
         
         asCheckboxContainer.appendChild(asCheckbox);
         asCheckboxContainer.appendChild(asCheckboxLabel);
-        panel.appendChild(asCheckboxContainer);
+        contentContainer.appendChild(asCheckboxContainer);
 
-        panel.appendChild(stepInputObj.container);
-        panel.appendChild(intervalInputObj.container);
+        contentContainer.appendChild(stepInputObj.container);
+        contentContainer.appendChild(intervalInputObj.container);
 
         document.body.appendChild(panel);
         applyFilters(); // Initial count
