@@ -6,6 +6,10 @@ Version 1 introduced a explicit `version` field and moved the playlist data unde
 
 ## Schema Definition
 
+A JSON Schema definition for this data format is available.
+
+- [data-format-v1.schema.json](./data-format-v1.schema.json)
+
 ```typescript
 interface StorageDataV1 {
   /**

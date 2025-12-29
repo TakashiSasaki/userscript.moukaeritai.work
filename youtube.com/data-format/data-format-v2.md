@@ -6,6 +6,10 @@ Version 2 of the data storage format transitions from a simple list of video IDs
 
 ## Schema Definition
 
+A JSON Schema definition for this data format is available.
+
+- [data-format-v2.schema.json](./data-format-v2.schema.json)
+
 ```typescript
 interface StorageDataV2 {
   /**

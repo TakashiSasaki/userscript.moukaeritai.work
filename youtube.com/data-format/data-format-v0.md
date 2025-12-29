@@ -6,6 +6,10 @@ The initial data format had no versioning field. The root object directly mapped
 
 ## Schema Definition
 
+A JSON Schema definition for this data format is available.
+
+- [data-format-v0.schema.json](./data-format-v0.schema.json)
+
 ```typescript
 interface StorageDataV0 {
   /**
