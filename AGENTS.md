@@ -38,6 +38,12 @@ DOM解析用のサンプルHTML (`samples/` ディレクトリ) は、開発効�
 3.  **Remove Attributes**: 空の属性 (`style=""` など) や不要なイベントハンドラは削除する。
 4.  **Automation**: 各 `samples/` ディレクトリに `preprocess_samples.py` を配置し、これを実行して処理を行うこと。
 
+### JavaScript Quality & Linting (JSの品質とリンティング)
+JavaScript（`.user.js`）のコードを変更した後は、必ずESLintを実行して文法エラーや潜在的なバグがないか確認してください。
+
+-   **Command**: `npx eslint path/to/script.user.js`
+-   **Requirement**: コミット前にすべてのエラーを解消し、警告も可能な限り修正してください。
+
 ## Repository Information (リポジトリ情報)
 
 -   **Remote URL**: `https://github.com/TakashiSasaki/userscript.moukaeritai.work`
@@ -67,8 +73,9 @@ repo_root/
 2.  **Preprocess**: `preprocess_samples.py` でHTMLを軽量化。
 3.  **Specify**: `SCRIPT_NAME.md` に仕様記述。
 4.  **Implement**: `.user.js` 実装。
-5.  **Document**: `index.html` 作成。
-6.  **Register**: ルート `index.html` にプロジェクト追加。
+5.  **Lint**: `npx eslint` でコードチェックを行い、エラーを修正。
+6.  **Document**: `index.html` 作成。
+7.  **Register**: ルート `index.html` にプロジェクト追加。
 
 ## Root index.html Maintenance
 
