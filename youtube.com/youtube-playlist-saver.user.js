@@ -618,7 +618,8 @@
         });
 
         const titleLabel = document.createElement('span');
-        titleLabel.textContent = 'Playlist Saver';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.14';
+        titleLabel.textContent = `Playlist Saver v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px' });
 
         const minimizeBtn = document.createElement('button');
