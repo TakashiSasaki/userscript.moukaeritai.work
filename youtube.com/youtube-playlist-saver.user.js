@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.13
+// @version      0.2.14
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -214,20 +214,6 @@
             });
         } else {
             alert('[YouTube Playlist Saver] Import finished. No new data or better metadata found.');
-        }
-    }
-
-        if (addedCount > 0) {
-            requestSave();
-            alert(`[YouTube Playlist Saver] Import successful! Merged ${addedCount} new video ID(s).`);
-            
-            // Refresh view if needed
-            const items = document.querySelectorAll('ytd-playlist-video-renderer');
-            items.forEach(item => {
-                delete item.dataset.saverProcessed; // Force re-scan on next observer trigger
-            });
-        } else {
-            alert('[YouTube Playlist Saver] Import finished. No new data found.');
         }
     }
 
