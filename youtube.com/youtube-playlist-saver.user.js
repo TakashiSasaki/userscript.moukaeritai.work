@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.9
+// @version      0.2.10
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -703,10 +703,37 @@
         Object.assign(separator.style, { border: '0', borderTop: '1px solid #ddd', margin: '8px 0', width: '100%' });
         panel.appendChild(separator);
 
+        const asHeaderContainer = document.createElement('div');
+        Object.assign(asHeaderContainer.style, { 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            marginBottom: '4px'
+        });
+
         const asHeader = document.createElement('div');
-        asHeader.textContent = 'Auto Scroll Settings';
-        Object.assign(asHeader.style, { fontWeight: 'bold', fontSize: '12px', marginBottom: '4px' });
-        panel.appendChild(asHeader);
+        asHeader.textContent = 'Auto Scroll';
+        Object.assign(asHeader.style, { fontWeight: 'bold', fontSize: '12px' });
+        
+        // Auto Scroll Toggle Button (Integrated)
+        const asToggleBtn = document.createElement('button');
+        asToggleBtn.id = 'yt-saver-as-toggle';
+        asToggleBtn.textContent = 'OFF';
+        Object.assign(asToggleBtn.style, {
+            padding: '2px 8px',
+            fontSize: '11px',
+            backgroundColor: '#ccc',
+            color: '#000',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+        });
+        asToggleBtn.addEventListener('click', () => toggleAutoScroll(asToggleBtn));
+
+        asHeaderContainer.appendChild(asHeader);
+        asHeaderContainer.appendChild(asToggleBtn);
+        panel.appendChild(asHeaderContainer);
 
         // Checkbox: Scroll to Bottom
         const asCheckboxContainer = document.createElement('div');
@@ -842,7 +869,7 @@
 
         // Automatically stop auto scroll if it's active
         if (scrollInterval) {
-            const scrollBtn = document.getElementById('yt-saver-scroll-btn');
+            const scrollBtn = document.getElementById('yt-saver-as-toggle');
             if (scrollBtn) toggleAutoScroll(scrollBtn);
         }
 
@@ -1066,15 +1093,19 @@
     }
 
     function toggleAutoScroll(btn) {
+        // If btn is not provided, try to find it
+        if (!btn) btn = document.getElementById('yt-saver-as-toggle');
+        if (!btn) return;
+
         if (scrollInterval) {
             clearInterval(scrollInterval);
             scrollInterval = null;
-            btn.textContent = 'Auto Scroll: OFF';
+            btn.textContent = 'OFF';
             btn.style.backgroundColor = '#ccc';
             btn.style.color = '#000';
         } else {
-            btn.textContent = 'Auto Scroll: ON';
-            btn.style.backgroundColor = '#f00';
+            btn.textContent = 'ON';
+            btn.style.backgroundColor = '#2ba640';
             btn.style.color = '#fff';
 
             const intervalMs = Math.max(100, (autoScrollSettings.interval || 5) * 1000);
@@ -1093,9 +1124,8 @@
     }
 
     function restartAutoScrollIfActive() {
-        const btn = document.getElementById('yt-saver-scroll-btn');
         // Only restart if currently active (interval exists)
-        if (btn && scrollInterval) {
+        if (scrollInterval) {
             clearInterval(scrollInterval);
             const intervalMs = Math.max(100, (autoScrollSettings.interval || 5) * 1000);
             
@@ -1111,37 +1141,11 @@
         }
     }
 
-    function addAutoScrollButton() {
-        if (document.getElementById('yt-saver-scroll-btn')) return;
-
-        const btn = document.createElement('button');
-        btn.id = 'yt-saver-scroll-btn';
-        btn.textContent = 'Auto Scroll: OFF';
-        Object.assign(btn.style, {
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            zIndex: 9999,
-            padding: '10px 15px',
-            backgroundColor: '#ccc',
-            color: '#000',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
-        });
-
-        btn.addEventListener('click', () => toggleAutoScroll(btn));
-        document.body.appendChild(btn);
-    }
-
     async function run() {
         const playlistId = getPlaylistId();
         if (!playlistId) return;
 
         console.log(`[YouTube Playlist Saver] Processing playlist: ${playlistId}`);
-        addAutoScrollButton();
         createFilterPanel();
 
         // Use local Cache
@@ -1217,8 +1221,6 @@
             window.removeEventListener('scroll', scrollHandler);
             scrollHandler = null;
         }
-        const scrollBtn = document.getElementById('yt-saver-scroll-btn');
-        if (scrollBtn) scrollBtn.remove();
 
         const filterPanel = document.getElementById('yt-saver-filter-panel');
         if (filterPanel) filterPanel.remove();
