@@ -860,7 +860,7 @@
 
                 // Scroll into view gently
                 item.scrollIntoView({ block: 'center', behavior: 'instant' });
-                await new Promise(r => setTimeout(r, 100)); // Small wait after scroll
+                await new Promise(r => setTimeout(r, 250)); // Small wait after scroll
 
                 // Wait for spinner to disappear if active
                 await waitUntilSpinnerDisappears();
