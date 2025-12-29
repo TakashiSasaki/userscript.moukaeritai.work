@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.22
+// @version      0.2.23
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -250,6 +250,66 @@
         return url.replace(gistRawRegex, '$1$2');
     }
 
+    function exportDataToFile() {
+        loadStorage(); // Ensure cachedStorage is populated
+        if (!cachedStorage) {
+            alert('[YouTube Playlist Saver] No data to export.');
+            return;
+        }
+
+        try {
+            const dataStr = JSON.stringify(cachedStorage, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'youtube_playlist_saver_data.json';
+            document.body.appendChild(a);
+            a.click();
+            
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 100);
+            
+        } catch (e) {
+            console.error(e);
+            alert('[YouTube Playlist Saver] Export failed: ' + e.message);
+        }
+    }
+
+    function importDataFromFile() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.style.display = 'none';
+        
+        input.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    mergeImportedData(data);
+                } catch (err) {
+                    console.error(err);
+                    alert('[YouTube Playlist Saver] JSON Parse Error: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        document.body.appendChild(input);
+        input.click();
+        setTimeout(() => {
+            document.body.removeChild(input);
+        }, 1000);
+    }
+
     function onImportMenuClick() {
         const lastUrl = GM_getValue('yt_last_import_url', '');
         const url = prompt("YouTube Playlist Saver\n\nEnter the URL of the JSON data to import (Version 1+):\n(Gist Raw URLs will be normalized to the latest revision)", lastUrl);
@@ -298,6 +358,7 @@
     // Register Menu Commands
     if (typeof GM_registerMenuCommand !== 'undefined') {
         GM_registerMenuCommand("Import Data from URL", onImportMenuClick);
+        GM_registerMenuCommand("Import Data from File", importDataFromFile);
         
         const lastUrl = GM_getValue('yt_last_import_url', '');
         if (lastUrl && lastUrl.includes('gist.githubusercontent.com')) {
@@ -305,6 +366,7 @@
         }
         
         GM_registerMenuCommand("Copy Data to Clipboard", onExportToClipboardClick);
+        GM_registerMenuCommand("Export Data to File", exportDataToFile);
     }
 
     // --- UI Helpers ---
