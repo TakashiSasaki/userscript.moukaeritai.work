@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.24
+// @version      0.2.25
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -1191,6 +1191,38 @@
     }
 
 
+    function updateMatchedIndicator(element, isMatched) {
+        let bar = element.querySelector('#engagement-bar');
+        if (!bar) {
+             bar = element.querySelector('.ytd-video-meta-block') || element.querySelector('#meta');
+        }
+        if (!bar) return;
+
+        const oldIndicator = bar.querySelector('.yt-saver-matched-indicator');
+        if (oldIndicator) oldIndicator.remove();
+
+        if (isMatched) {
+            const indicator = document.createElement('span');
+            indicator.className = 'yt-saver-matched-indicator';
+            indicator.textContent = ' [MATCHED] ';
+            Object.assign(indicator.style, {
+                fontSize: '11px',
+                fontWeight: 'bold',
+                marginRight: '8px',
+                color: '#ff9800', // Orange
+                verticalAlign: 'middle',
+                display: 'inline-block'
+            });
+            // Insert after NEW/SAVED indicator if exists, otherwise prepend
+            const existingIndicator = bar.querySelector('.yt-saver-indicator');
+            if (existingIndicator) {
+                existingIndicator.after(indicator);
+            } else {
+                bar.prepend(indicator);
+            }
+        }
+    }
+
     function applyFilterToItem(item) {
         // 1. Get Title
         const titleEl = item.querySelector('#video-title');
@@ -1202,14 +1234,18 @@
         const channelText = channelEl ? channelEl.textContent.trim().toLowerCase() : '';
 
         // 3. Check Matches
+        const isFilterActive = filterState.title || filterState.channel;
         const matchTitle = !filterState.title || titleText.includes(filterState.title);
         const matchChannel = !filterState.channel || channelText.includes(filterState.channel);
+        const isMatched = matchTitle && matchChannel;
 
-        if (matchTitle && matchChannel) {
+        if (isMatched) {
             item.style.display = '';
         } else {
             item.style.display = 'none';
         }
+
+        updateMatchedIndicator(item, isFilterActive && isMatched);
     }
 
     function updateResultCount() {
