@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.27
+// @version      0.2.28
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -697,7 +697,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.27';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.28';
         titleLabel.textContent = `Playlist Saver v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px' });
 
@@ -813,7 +813,13 @@
             const updateFilter = () => {
                 filterState[stateKey] = input.value.toLowerCase();
                 applyFilters();
+                input.style.backgroundColor = '#e8f5e9'; // Light green for "Applied"
             };
+
+            // Reset background on modification
+            input.addEventListener('input', () => {
+                input.style.backgroundColor = '';
+            });
 
             // Apply on Enter key
             input.addEventListener('keydown', (e) => {
@@ -827,6 +833,7 @@
 
             clearBtn.addEventListener('click', () => {
                 input.value = '';
+                input.style.backgroundColor = '';
                 updateFilter();
             });
 
