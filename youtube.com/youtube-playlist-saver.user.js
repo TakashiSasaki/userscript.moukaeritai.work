@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.23
+// @version      0.2.24
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -658,14 +658,10 @@
 
     // --- Filter Feature ---
 
-    // --- Filter Feature ---
-
-    const FILTER_SETTINGS_KEY = 'yt_filter_settings';
-
-    let filterState = GM_getValue(FILTER_SETTINGS_KEY, {
+    let filterState = {
         title: '',
         channel: ''
-    });
+    };
 
     const PANEL_STATE_KEY = 'yt_panel_minimized';
     let isMinimized = GM_getValue(PANEL_STATE_KEY, false);
@@ -675,10 +671,6 @@
     let statusInterval = null;
     let countsInterval = null;
     let scrollHandler = null;
-
-    function saveFilterState() {
-        GM_setValue(FILTER_SETTINGS_KEY, filterState);
-    }
 
     function createFilterPanel() {
         if (document.getElementById('yt-saver-filter-panel')) return;
@@ -713,7 +705,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.15';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.24';
         titleLabel.textContent = `Playlist Saver v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px' });
 
@@ -806,7 +798,6 @@
 
             const updateFilter = () => {
                 filterState[stateKey] = input.value.toLowerCase();
-                saveFilterState();
                 applyFilters();
             };
 
