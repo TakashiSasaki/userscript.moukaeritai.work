@@ -13,6 +13,33 @@ except ImportError:
 
 def validate_json(schema_path, data_path):
     """
+This script validates a JSON data file against a specified JSON schema file.
+
+Usage:
+    python validate_schema.py <path_to_schema.json> <path_to_data.json>
+
+Arguments:
+    <path_to_schema.json>   : The file path to the JSON schema.
+    <path_to_data.json>     : The file path to the JSON data to be validated.
+
+Prerequisites:
+    - Python 3
+    - The 'jsonschema' library: Install using 'pip install jsonschema'
+
+Example:
+    python validate_schema.py youtube.com/data-format/data-format-v2.schema.json youtube.com/data-format/example.json
+"""
+
+try:
+    from jsonschema import validate
+    from jsonschema.exceptions import ValidationError
+except ImportError:
+    print("Error: jsonschema is not installed. Please install it using:")
+    print("pip install jsonschema")
+    sys.exit(1)
+
+def validate_json(schema_path, data_path):
+    """
     Validates a JSON data file against a JSON schema file.
     """
     if not os.path.exists(schema_path):
@@ -49,7 +76,7 @@ def validate_json(schema_path, data_path):
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print("Usage: python validate_schema.py <path_to_schema.json> <path_to_data.json>")
+        print(__doc__) # Print the docstring as usage
         sys.exit(1)
         
     schema_file = sys.argv[1]
