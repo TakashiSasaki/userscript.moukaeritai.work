@@ -561,7 +561,7 @@
                 inThrottle = true;
                 setTimeout(() => inThrottle = false, limit);
             }
-        }
+        };
     }
 
     // --- Filter Feature ---
@@ -1325,7 +1325,7 @@
             processAllVisible();
         }, 1000);
 
-        const observer = new MutationObserver((mutations) => {
+        const observer = new MutationObserver((_mutations) => {
             // Check if any added nodes are relevant? 
             // Or just blindly run throttled process.
             // Let's just run. The throttle protects us.
@@ -1374,7 +1374,7 @@
         // Flush pending save
         if (pendingSaveTimeout) {
             clearTimeout(pendingSaveTimeout);
-            GM_setValue(DATA_KEY, cachedData);
+            GM_setValue(DATA_KEY, cachedStorage);
             pendingSaveTimeout = null;
         }
 
