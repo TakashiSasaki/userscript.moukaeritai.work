@@ -665,6 +665,15 @@
         await new Promise(resolve => setTimeout(resolve, 500));
     }
 
+    function debounce(func, delay) {
+        let timer;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timer);
+            timer = setTimeout(() => func.apply(context, args), delay);
+        };
+    }
+
     function throttle(func, limit) {
         let inThrottle;
         return function () {
@@ -1557,16 +1566,24 @@
         console.log(`[YouTube Playlist Saver] Processing playlist: ${playlistId}`);
         createFilterPanel();
 
+
+
+        // Use local Cache
+        const currentSessionSet = getSavedVideos(playlistId);
+
+        // Create debounced scanner for scroll events (1 second delay)
+        const debouncedScan = debounce(() => {
+             processAllVisible(playlistId, currentSessionSet);
+        }, 1000);
+
         // Initialize Scroll Listener if not already present
         if (!scrollHandler) {
             scrollHandler = throttle(() => {
                 updateAboveInfo();
+                debouncedScan();
             }, 200);
             window.addEventListener('scroll', scrollHandler);
         }
-
-        // Use local Cache
-        const currentSessionSet = getSavedVideos(playlistId);
 
         // Start Status Intervals with Panel/Observer Resurrection Logic
         if (statusInterval) clearInterval(statusInterval);
