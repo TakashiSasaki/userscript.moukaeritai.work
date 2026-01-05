@@ -23,12 +23,20 @@
 -   **@namespace**: `userscript.moukaeritai.work`
 -   **@author**: `Takashi Sasaki`
 -   **@homepageURL**: `https://x.com/TakashiSasaki`
+-   **Published at**: `https://userscript.moukaeritai.work` (README等のドキュメントに記載)
 -   **@version**: `major.minor.patch` (セマンティックバージョニング形式)
     -   機能追加やバグ修正ごとにパッチバージョンをインクリメントしてください。
 -   **@updateURL** / **@downloadURL**:
     -   GitHubのRawファイルURLを指定し、Tampermonkey等のマネージャーが更新を自動検出できるようにします。
     -   Format: `https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/DOMAIN_NAME/SCRIPT_NAME/SCRIPT_NAME.user.js`
     -   **注意**: デフォルトブランチ名は `userscript.moukaeritai.work` です。
+
+### Documentation Layers (ドキュメントの3層構造)
+ドキュメントの肥大化を防ぎ、人間とAIの双方に最適な情報を提供するため、以下の3層構造を維持してください。
+
+1.  **`index.html` (ビューア)**: プレミアムデザインテンプレートを使用したドキュメント閲覧用ページ。
+2.  **`{project-name}.md` (人間用)**: ユーザー向けの概要、目的、機能説明。実装の詳細は含めない。
+3.  **`AGENTS.md` (AI用)**: エージェント向けの実装ノート。セレクタリスト、設計戦略、運用ルール等を記述。
 
 ### HTML Sample Preprocessing (サンプルHTMLの前処理)
 DOM解析用のサンプルHTML (`samples/` ディレクトリ) は、開発効率とファイルサイズ削減のため、必ず以下の前処理を行ってください。
@@ -57,32 +65,35 @@ JavaScript（`.user.js`）のコードを変更した後は、必ずESLintを実
 ```
 repo_root/
   ├── index.html                  # Main project list (Landing page)
+  ├── AGENTS.md                   # Global agent guidelines (This file)
   ├── DOMAIN_NAME/                # e.g., gemini.google.com
+  │   ├── AGENTS.md               # Directory-level agent instructions
   │   └── SCRIPT_NAME/            # e.g., gemini-profile-badge
   │       ├── SCRIPT_NAME.user.js # Userscript source
-  │       ├── SCRIPT_NAME.md      # Specification / Documentation
-  │       ├── index.html          # Documentation viewer (Markdown renderer)
+  │       ├── SCRIPT_NAME.md      # Specification (Human-readable)
+  │       ├── AGENTS.md           # Implementation details (Agent-readable)
+  │       ├── index.html          # Documentation viewer
   │       └── samples/            # DOM snapshots
-  │           ├── preprocess_samples.py # HTML cleanup script
-  │           ├── samples.md      # Samples description
-  │           └── *.html          # Raw/Processed HTML samples
 ```
 
 ### Development Workflow
 1.  **Capture Samples**: DOMスナップショットを取得し `samples/` へ保存。
 2.  **Preprocess**: `preprocess_samples.py` でHTMLを軽量化。
-3.  **Specify**: `SCRIPT_NAME.md` に仕様記述。
-4.  **Implement**: `.user.js` 実装。
-5.  **Lint**: `npx eslint` でコードチェックを行い、エラーを修正。
-6.  **Document**: `index.html` 作成。
-7.  **Register**: ルート `index.html` にプロジェクト追加。
+3.  **Specify**: `SCRIPT_NAME.md` にユーザー向け仕様を記述。
+4.  **Note**: `AGENTS.md` にエージェント向け技術詳細（セレクタ等）を記述。
+5.  **Implement**: `.user.js` 実装。
+6.  **Lint**: `npx eslint` でチェック。
+7.  **Document**: プレミアムデザインの `index.html` を作成。
+8.  **Register**: ルート `index.html` にプロジェクト追加。
 
-## Root index.html Maintenance
+## Index Maintenance (インデックスの維持)
 
-新しいプロジェクトを追加する際は、ルートの `index.html` を更新してください。
--   **Card Content**:
+新しいプロジェクトを追加する際は、ルートおよび各ディレクトリの `index.html` を更新してください。
+-   **Consistency**: `onamae.com/index.html` 等、サブディレクトリにもインデックスを配置し、回遊性を高める。
+-   **Card Design**:
     -   **Title**: サイトのFavicon (Google S2 API) + プロジェクト名（ドキュメントへのリンク）。
-    -   **Install Button**: 右上に配置し、`.user.js` のRaw URLへリンク。
+    -   **Positioning**: **インストールボタンはカードの右下(bottom-right)に配置**してください。
+
 
 ## UserScript Best Practices (SPA & Performance)
 
