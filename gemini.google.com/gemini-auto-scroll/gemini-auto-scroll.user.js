@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.15
+// @version      0.1.16
 // @description  Automatically scroll to the current conversation in the Gemini sidebar with a toggle switch
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -80,26 +80,24 @@
         style.id = 'gemini-auto-scroll-styles';
         style.textContent = `
             #gemini-auto-scroll-toggle {
-                position: fixed;
-                bottom: 20px;
-                left: 20px;
-                z-index: 9999;
+                position: absolute;
+                top: 8px;
+                left: 48px; /* Approximate offset */
+                z-index: 1000;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                border-radius: 8px; /* Square with rounded corners for checkbox feel */
-                border: 1px solid rgba(255, 255, 255, 0.3);
-                background-color: #1e1f20;
+                border-radius: 4px; 
+                border: none;
+                background-color: transparent;
                 cursor: pointer;
-                transition: all 0.2s;
+                transition: background-color 0.2s;
                 padding: 0;
-                width: 40px;
-                height: 40px;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                width: 32px;
+                height: 32px;
             }
             #gemini-auto-scroll-toggle:hover {
-                background-color: #303134;
-                border-color: rgba(255, 255, 255, 0.6);
+                background-color: rgba(60, 64, 67, 0.08); /* Light grey hover */
             }
             /* Icon Container */
             .gtc-icon {
@@ -114,20 +112,17 @@
                 height: 24px;
             }
 
-            /* ON STATE - Visual Emphasis */
-            #gemini-auto-scroll-toggle.enabled {
-                background-color: #8ab4f8; /* Gemini Blue Fill */
-                border-color: #8ab4f8;
-            }
+            /* ON STATE */
             #gemini-auto-scroll-toggle.enabled .gtc-icon {
-                color: #202124; /* Dark Icon for Contrast */
+                color: #1a73e8; /* Google Blue */
             }
-            #gemini-auto-scroll-toggle.enabled:hover {
-                background-color: #aecbfa;
+            #gemini-auto-scroll-toggle.enabled {
+                /* Optional: subtle background or nothing */
             }
+            
             /* OFF STATE */
             #gemini-auto-scroll-toggle.disabled .gtc-icon {
-                color: #bdc1c6;
+                color: #5f6368; /* Google Grey */
             }
             
             #gemini-auto-scroll-toggle.processing .gtc-icon {
@@ -158,24 +153,25 @@
 
             .gtc-tooltip {
                 visibility: hidden;
-                background-color: #202124;
-                color: #e8eaed;
+                background-color: #333;
+                color: #fff;
                 text-align: center;
                 border-radius: 4px;
-                padding: 6px 10px;
+                padding: 4px 8px;
                 position: absolute;
                 z-index: 10000;
-                top: -40px; /* Show above button */
-                left: 0;
-                transform: none; /* Align left */
+                top: 100%; /* Show below */
+                left: 50%;
+                transform: translateX(-50%);
                 font-size: 11px;
                 white-space: nowrap;
                 pointer-events: none;
                 opacity: 0;
                 transition: opacity 0.2s;
-                border: 1px solid #444746;
-                box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+                margin-top: 4px;
+                border: 1px solid rgba(255,255,255,0.2);
             }
+
             #gemini-auto-scroll-toggle:hover .gtc-tooltip {
                 visibility: visible;
                 opacity: 1;
@@ -246,7 +242,14 @@
     }
 
     function injectToggleButton() {
-        // We inject into body now, so we don't depend on MENU_BUTTON existence for placement.
+        // Target the Search button/container
+        const searchBtnWrapper = document.querySelector('search-nav-button');
+        if (!searchBtnWrapper) {
+            // Retry if not yet loaded
+            setTimeout(injectToggleButton, 1000);
+            return;
+        }
+
         if (document.getElementById('gemini-auto-scroll-toggle')) return;
 
         injectStyles();
@@ -267,7 +270,15 @@
             setTimeout(() => btn.style.transform = "scale(1)", 100);
         });
 
-        document.body.appendChild(btn);
+        // Ensure parent allows positioning (though we are using absolute left:48px)
+        const parent = searchBtnWrapper.parentElement;
+        if (window.getComputedStyle(parent).position === 'static') {
+            parent.style.position = 'relative';
+        }
+
+        // Insert after search button
+        parent.insertBefore(btn, searchBtnWrapper.nextSibling);
+
         updateToggleButtonUI();
     }
 
@@ -332,7 +343,7 @@
     async function attemptScrollToConversation() {
         if (isProcessing || !isAutoScrollEnabled()) return;
 
-        const currentId = getConversationIdFromUrl();
+        let currentId = getConversationIdFromUrl();
         if (!currentId) return;
 
         // Check if already visible
@@ -351,6 +362,11 @@
             const maxRetries = CONSTANTS.ENDLESS_RETRIES;
 
             while (retries < maxRetries && isAutoScrollEnabled()) {
+                // Refresh ID in case URL changed
+                const newId = getConversationIdFromUrl();
+                if (newId) currentId = newId;
+                if (!currentId) break;
+
                 const element = findConversationElement(currentId);
                 if (element) {
                     console.log(`[GeminiAutoScroll] Found conversation ${currentId}.`);
@@ -399,8 +415,8 @@
 
                     // If simply no spinner appeared, we might be at the true end.
                     // But lets try ONE more time in next loop iteration or log it.
-                    console.log('[GeminiAutoScroll] Spinner did not appear. Assuming end of list.');
-                    break;
+                    // If simply no spinner appeared, we continue retrying (periodically scrolling)
+                    console.log('[GeminiAutoScroll] Spinner did not appear. Retrying scroll...');
                 }
 
                 // Wait for spinner to disappear
