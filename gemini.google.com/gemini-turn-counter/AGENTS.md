@@ -30,6 +30,13 @@ This project is a port of the `chatgpt-turn-counter` userscript to the Google Ge
 
 これにより、ファイルサイズを削減し、DOM構造のノイズを減らして解析しやすくします。
 
+### 4.4 バージョン管理ポリシー
+ユーザースクリプト (`gemini-turn-counter.user.js` 等) に何らかの変更を加えた際は、必ず `@version` のパッチレベル（末尾の数字）をインクリメントしてください。
+
+例: `0.1.0` -> `0.1.1`
+
+これは、Tampermonkey等の自動更新機能が正常に動作するために必須です。
+
 ### Reference
 -   **Source Project**: `chatgpt-turn-counter` (located in `../../chat.openai.com/chatgpt-turn-counter/`)
 -   **Key Logic**:
