@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.5
+// @version      0.1.6
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -257,7 +257,7 @@
             setInnerHTML(contentDiv, `
                 <div style="margin-bottom: 8px; font-weight: bold; border-bottom:1px solid #555; padding-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
                     <span>Gemini Turns</span>
-                    <span style="font-size:10px; font-weight:normal; opacity:0.7;">v0.1.5</span>
+                    <span style="font-size:10px; font-weight:normal; opacity:0.7;">v0.1.6</span>
                 </div>
                 <div class="gtc-row"><span>User:</span> <span class="gtc-val">${userTurns.length} (${userCharCount.toLocaleString()})</span></div>
                 <div class="gtc-row"><span>Model:</span> <span class="gtc-val">${modelTurns.length} (${modelCharCount.toLocaleString()})</span></div>
@@ -281,29 +281,34 @@
             // Attach Copy All event
             const copyBtn = contentDiv.querySelector('#gtc-copy-all');
             if (copyBtn) {
-                copyBtn.addEventListener('click', async (e) => {
+                copyBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     copyBtn.textContent = '...';
 
-                    const imgTags = await Promise.all(collectedImages.map(async (url) => {
-                        const dataUri = await fetchImageData(url);
-                        // Add max-height: 200px to prevent images from being too large in the clipboard target app
-                        return dataUri ? `<img src="${dataUri}" style="max-height: 200px;" />` : '';
-                    }));
+                    // Use Promise-based ClipboardItem construction to prevent "Document is not focused" error
+                    const clipboardPromise = (async () => {
+                        try {
+                            const imgTags = await Promise.all(collectedImages.map(async (url) => {
+                                const dataUri = await fetchImageData(url);
+                                // Add max-height: 200px to prevent images from being too large in the clipboard target app
+                                return dataUri ? `<img src="${dataUri}" style="max-height: 200px;" />` : '';
+                            }));
+                            const htmlToCopy = imgTags.join('');
+                            return new Blob([htmlToCopy], { type: "text/html" });
+                        } catch (err) {
+                            console.error('Image processing failed', err);
+                            throw err;
+                        }
+                    })();
 
-                    const htmlToCopy = imgTags.join('');
-                    if (htmlToCopy) {
-                        const type = "text/html";
-                        const blob = new Blob([htmlToCopy], { type });
-                        const data = [new ClipboardItem({ [type]: blob })];
-                        navigator.clipboard.write(data).then(() => {
-                            copyBtn.textContent = 'Copied!';
-                            setTimeout(() => copyBtn.textContent = 'Copy', 2000);
-                        }).catch(err => {
-                            console.error(err);
-                            copyBtn.textContent = 'Err';
-                        });
-                    }
+                    const item = new ClipboardItem({ "text/html": clipboardPromise });
+                    navigator.clipboard.write([item]).then(() => {
+                        copyBtn.textContent = 'Copied!';
+                        setTimeout(() => copyBtn.textContent = 'Copy', 2000);
+                    }).catch(err => {
+                        console.error('Clipboard write failed:', err);
+                        copyBtn.textContent = 'Err';
+                    });
                 });
             }
 
