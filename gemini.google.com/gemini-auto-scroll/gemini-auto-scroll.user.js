@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.9
+// @version      0.1.10
 // @description  Automatically scroll to the current conversation in the Gemini sidebar with a toggle switch
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -153,8 +153,41 @@
                 visibility: visible;
                 opacity: 1;
             }
+
+            .gtc-conversation-index {
+                position: absolute;
+                top: 2px;
+                left: 2px;
+                background-color: rgba(0, 0, 0, 0.5);
+                color: #fff;
+                font-size: 9px;
+                padding: 1px 3px;
+                border-radius: 4px;
+                z-index: 10;
+                pointer-events: none;
+                font-family: monospace;
+            }
         `;
         document.head.appendChild(style);
+    }
+
+    function updateConversationIndices() {
+        const items = document.querySelectorAll(SELECTORS.CONVERSATION_ITEM);
+        items.forEach((item, index) => {
+            // Ensure relative positioning for absolute child
+            if (getComputedStyle(item).position === 'static') {
+                item.style.position = 'relative';
+            }
+
+            let badge = item.querySelector('.gtc-conversation-index');
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'gtc-conversation-index';
+                item.appendChild(badge);
+            }
+            badge.textContent = index + 1;
+        });
+        return items.length;
     }
 
     function updateToggleButtonUI() {
@@ -170,7 +203,8 @@
             icon.textContent = enabled ? 'toggle_on' : 'toggle_off';
         }
 
-        const count = document.querySelectorAll(SELECTORS.CONVERSATION_ITEM).length;
+        // Update count and indices
+        const count = updateConversationIndices();
         const badge = btn.querySelector('.gtc-badge');
         if (badge) {
             badge.textContent = count;
