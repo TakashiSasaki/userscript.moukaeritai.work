@@ -17,3 +17,12 @@
 1. **patch**: スクリプトの軽微な修正、リファクタリング、挙動の改善時に増加させます。
 2. **minor**: データストアの記録形式（スキーマ）に変更があり、既存データの移行や再構築が必要になる場合に増加させます。
 3. **major**: 開発者が手動で更新します（AIエージェントによる自動変更は行いません）。
+
+## メタデータ仕様
+スクリプトのヘッダーには以下の情報を記載してください：
+
+- **Author**: `Takashi Sasaki`
+- **Homepage**: [https://x.com/TakashiSasaki](https://x.com/TakashiSasaki)
+- **Namespace**: `userscript.moukaeritai.work`
+- **Updated**: スクリプトの最終更新日時。
+- **Auto Update**: GitHub上の `user.js` (raw URL) から Tampermonkey 等が自動更新を検知できる構成とします。

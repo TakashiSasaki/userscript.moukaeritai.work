@@ -16,11 +16,13 @@
 - **データ形式の考慮**: RRのタイプ（A, AAAA, MX, CNAME, TXT等）に応じた適切な形式で値を記録します。
 - **ライフサイクル管理**: 各レコードが「最初に観測された日時（first seen）」と「最後に観測された日時（last seen）」を記録します。
 
-## メタデータ仕様
-スクリプトのヘッダーには以下の情報を記載してください：
+## 動作環境
+- Tampermonkey で動作確認済みです。
 
+
+## 開発者情報
 - **Author**: `Takashi Sasaki`
 - **Homepage**: [https://x.com/TakashiSasaki](https://x.com/TakashiSasaki)
-- **Namespace**: `userscript.moukaeritai.work`
-- **Updated**: スクリプトの最終更新日時。
-- **Auto Update**: GitHub上の `user.js` (raw URL) から Tampermonkey 等が自動更新を検知できる構成とします。
+- **Published at**: [https://userscript.moukaeritai.work](https://userscript.moukaeritai.work)
+
+
