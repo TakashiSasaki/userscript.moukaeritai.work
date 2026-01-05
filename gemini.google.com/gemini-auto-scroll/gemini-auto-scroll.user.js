@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.7
+// @version      0.1.8
 // @description  Automatically scroll to the current conversation in the Gemini sidebar with a toggle switch
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -221,8 +221,37 @@
         return document.querySelector(`${SELECTORS.CONVERSATION_ITEM}[jslog*="c_${id}"]`);
     }
 
+    function findScrollableParent(element) {
+        let parent = element.parentElement;
+        while (parent) {
+            const style = window.getComputedStyle(parent);
+            const isScrollable = (parent.scrollHeight > parent.clientHeight) &&
+                (style.overflowY === 'auto' || style.overflowY === 'scroll');
+            if (isScrollable) return parent;
+            parent = parent.parentElement;
+            if (parent === document.body) return null; // Stop at body
+        }
+        return null;
+    }
+
     function getScrollContainer() {
-        return document.querySelector(SELECTORS.SCROLL_CONTAINER);
+        // Strategy 1: Find valid scroll container from a list item
+        const anyItem = document.querySelector(SELECTORS.CONVERSATION_ITEM);
+        if (anyItem) {
+            const scrollParent = findScrollableParent(anyItem);
+            if (scrollParent) {
+                if (!window._gtcInfoLogged) {
+                    console.log('[GeminiAutoScroll] Detected scroll container:', scrollParent);
+                    window._gtcInfoLogged = true;
+                }
+                return scrollParent;
+            }
+        }
+
+        // Strategy 2: Fallback to known selectors
+        return document.querySelector(SELECTORS.SCROLL_CONTAINER) ||
+            document.querySelector('.conversation-items-container') ||
+            document.querySelector('conversations-list');
     }
 
     function isSpinnerVisible() {
@@ -265,7 +294,10 @@
                 }
 
                 const container = getScrollContainer();
-                if (!container) break;
+                if (!container) {
+                    console.warn('[GeminiAutoScroll] No scroll container found.');
+                    break;
+                }
 
                 // Trigger load more
                 container.scrollTop = container.scrollHeight;
