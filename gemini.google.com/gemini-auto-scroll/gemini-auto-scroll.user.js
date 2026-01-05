@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.17
+// @version      0.1.18
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -307,37 +307,55 @@
     }
 
     function getScrollContainer() {
-        // Strategy 0: Explicit User-Identified Tag
-        const explicitContainer = document.querySelector('infinite-scroller');
-        if (explicitContainer) {
-            // The infinite-scroller itself might not be the scrollable element.
-            // We search for a known scrollable child.
-            const knownChild = explicitContainer.querySelector('.conversations-container') ||
-                explicitContainer.querySelector('.chat-history-list');
-
-            if (knownChild) {
-                // Verify it is actually scrollable or just return it as Best Guess
-                return knownChild;
-            }
-            return explicitContainer;
-        }
-
-        // Strategy 1: Find valid scroll container from a list item (Auto-Detect)
+        // Strategy 1: Find valid scroll container from a list item (Auto-Detect) - BEST
+        // This checks actual computed styles for overflow and scrollHeight.
         const anyItem = document.querySelector(SELECTORS.CONVERSATION_ITEM);
         if (anyItem) {
             const scrollParent = findScrollableParent(anyItem);
             if (scrollParent) {
                 if (!window._gtcInfoLogged) {
-                    console.log('[GeminiAutoScroll] Detected scroll container:', scrollParent);
+                    console.log('[GeminiAutoScroll] Detected scroll container via item:', scrollParent);
                     window._gtcInfoLogged = true;
                 }
                 return scrollParent;
             }
         }
 
+        // Strategy 0: Explicit User-Identified Tag (Fallback)
+        // If Strategy 1 failed (e.g. no items, or not enough items to scroll yet), we try to guess.
+        const explicitContainer = document.querySelector('infinite-scroller');
+        if (explicitContainer) {
+            // Check if the infinite-scroller itself is the scroller
+            if (isElementScrollable(explicitContainer)) return explicitContainer;
+
+            // Check known children
+            const candidates = [
+                explicitContainer.querySelector('.conversations-container'),
+                explicitContainer.querySelector('.chat-history-list'),
+                explicitContainer.querySelector('conversations-list')
+            ];
+
+            for (const candidate of candidates) {
+                if (candidate && isElementScrollable(candidate)) {
+                    return candidate;
+                }
+            }
+
+            // If we are here, we found structure but no scrollbar.
+            // Maybe it is too short to scroll? Or styles not loaded?
+            // Return one as best guess to allow attempts.
+            return candidates[0] || explicitContainer;
+        }
+
         // Strategy 2: Fallback to known selectors
         return document.querySelector(SELECTORS.SCROLL_CONTAINER) ||
             document.querySelector('conversations-list');
+    }
+
+    function isElementScrollable(element) {
+        const style = window.getComputedStyle(element);
+        return (element.scrollHeight > element.clientHeight) &&
+            (style.overflowY === 'auto' || style.overflowY === 'scroll');
     }
 
     function isSpinnerVisible() {
