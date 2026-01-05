@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.4
+// @version      0.1.5
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -257,7 +257,7 @@
             setInnerHTML(contentDiv, `
                 <div style="margin-bottom: 8px; font-weight: bold; border-bottom:1px solid #555; padding-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
                     <span>Gemini Turns</span>
-                    <span style="font-size:10px; font-weight:normal; opacity:0.7;">v0.1.4</span>
+                    <span style="font-size:10px; font-weight:normal; opacity:0.7;">v0.1.5</span>
                 </div>
                 <div class="gtc-row"><span>User:</span> <span class="gtc-val">${userTurns.length} (${userCharCount.toLocaleString()})</span></div>
                 <div class="gtc-row"><span>Model:</span> <span class="gtc-val">${modelTurns.length} (${modelCharCount.toLocaleString()})</span></div>
@@ -287,7 +287,8 @@
 
                     const imgTags = await Promise.all(collectedImages.map(async (url) => {
                         const dataUri = await fetchImageData(url);
-                        return dataUri ? `<img src="${dataUri}" />` : '';
+                        // Add max-height: 200px to prevent images from being too large in the clipboard target app
+                        return dataUri ? `<img src="${dataUri}" style="max-height: 200px;" />` : '';
                     }));
 
                     const htmlToCopy = imgTags.join('');
