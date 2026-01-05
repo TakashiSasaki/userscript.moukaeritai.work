@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Auto-Scroll - Documentation</title>
+    <!-- Github Markdown CSS for styling -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <style>
+        body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+
+        @media (max-width: 767px) {
+            body {
+                padding: 15px;
+            }
+        }
+
+        .home-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #24292e;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .home-button svg {
+            fill: currentColor;
+        }
+
+        .home-button:hover {
+            background-color: #0366d6;
+            color: white;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body class="markdown-body">
+    <a href="https://userscript.moukaeritai.work/" class="home-button">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
+            <path
+                d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
+        </svg>
+        userscript.moukaeritai.work
+    </a>
+    <div id="content">Loading documentation...</div>
+
+    <!-- Marked library for parsing markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('gemini-auto-scroll.md')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    document.getElementById('content').innerHTML = marked.parse(text);
+                })
+                .catch(err => {
+                    document.getElementById('content').innerHTML = `
+                        <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 1em; border-radius: 4px;">
+                            <h3 style="margin-top: 0;">Error loading document</h3>
+                            <p>${err.message}</p>
+                            <hr>
+                            <p><strong>注意:</strong> このファイルをローカルファイルシステム (file://) から直接開いている場合、ブラウザのセキュリティポリシー(CORS)により外部ファイルの読み込みがブロックされることがあります。</p>
+                            <p>以下のいずれかの方法で閲覧してください：</p>
+                            <ul>
+                                <li>ローカルサーバーを起動してアクセスする (例: <code>python -m http.server</code> や <code>npx http-server</code>)</li>
+                                <li>VSCodeの "Live Server" 拡張機能を使用する</li>
+                            </ul>
+                        </div>
+                    `;
+                    console.error('Error fetching markdown:', err);
+                });
+        });
+    </script>
+    <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
+    <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
+        <p>
+            Hosted on GitHub Pages |
+            <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
+            Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
+        </p>
+    </footer>
+</body>
+
+</html>
