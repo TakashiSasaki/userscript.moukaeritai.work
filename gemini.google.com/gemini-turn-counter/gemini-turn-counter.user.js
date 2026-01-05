@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.1
+// @version      0.1.2
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -22,6 +22,27 @@
         // Text content selectors (broad approximation, refinement needed)
         userText: '.query-text',
         modelText: '.model-response-text, .response-content', // Needs verification on whole-dom
+    };
+
+    // Trusted Types Policy Creation
+    let policy;
+    if (window.trustedTypes && window.trustedTypes.createPolicy) {
+        try {
+            policy = window.trustedTypes.createPolicy('geminiTurnCounter', {
+                createHTML: (string) => string
+            });
+        } catch (e) {
+            console.warn('Gemini Turn Counter: Failed to create trustedTypes policy', e);
+        }
+    }
+
+    // Helper to safely set innerHTML
+    const setInnerHTML = (element, html) => {
+        if (policy) {
+            element.innerHTML = policy.createHTML(html);
+        } else {
+            element.innerHTML = html;
+        }
     };
 
     // Inject CSS styles (Ported from chatgpt-turn-counter with minor tweaks)
@@ -119,10 +140,10 @@
         <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM9 17H7V10H9V17ZM13 17H11V7H13V17ZM17 17H15V13H17V17Z"/>
     </svg>`;
 
-    container.innerHTML = `
+    setInnerHTML(container, `
         <div class="gtc-icon">${iconSvg}</div>
         <div class="gtc-content">Loading...</div>
-    `;
+    `);
     document.body.appendChild(container);
 
     const contentDiv = container.querySelector('.gtc-content');
@@ -209,7 +230,7 @@
                    </div>`
                 : '';
 
-            contentDiv.innerHTML = `
+            setInnerHTML(contentDiv, `
                 <div style="margin-bottom: 8px; font-weight: bold; border-bottom:1px solid #555; padding-bottom:4px;">Gemini Turns</div>
                 <div class="gtc-row"><span>User:</span> <span class="gtc-val">${userTurns.length} (${userCharCount.toLocaleString()})</span></div>
                 <div class="gtc-row"><span>Model:</span> <span class="gtc-val">${modelTurns.length} (${modelCharCount.toLocaleString()})</span></div>
@@ -221,7 +242,7 @@
                     </span>
                 </div>
                 ${thumbnailsHtml}
-            `;
+            `);
 
             // Attach Copy All event
             const copyBtn = contentDiv.querySelector('#gtc-copy-all');
