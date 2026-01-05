@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.5
+// @version      0.1.7
 // @description  Automatically scroll to the current conversation in the Gemini sidebar with a toggle switch
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -74,76 +74,84 @@
         style.id = 'gemini-auto-scroll-styles';
         style.textContent = `
             #gemini-auto-scroll-toggle {
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+                z-index: 9999;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                width: 40px;
-                height: 40px;
-                border-radius: 50%;
-                border: none;
-                background: transparent;
+                border-radius: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                background-color: #1e1f20; /* Dark background */
                 cursor: pointer;
-                margin-left: 4px;
-                transition: background-color 0.2s, color 0.2s;
-                vertical-align: middle;
-                position: relative;
+                transition: opacity 0.2s, background-color 0.2s;
+                padding: 0 4px;
+                height: 40px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             }
             #gemini-auto-scroll-toggle:hover {
-                background-color: rgba(255, 255, 255, 0.1);
+                background-color: #2b2c2d;
             }
             #gemini-auto-scroll-toggle .material-symbols-outlined {
-                font-size: 24px;
+                font-size: 28px;
                 font-family: 'Google Symbols';
             }
-            #gemini-auto-scroll-toggle.enabled {
+            #gemini-auto-scroll-toggle.enabled .material-symbols-outlined {
                 color: #8ab4f8; /* Gemini Blue */
             }
-            #gemini-auto-scroll-toggle.disabled {
+            #gemini-auto-scroll-toggle.disabled .material-symbols-outlined {
                 color: #bdc1c6; /* Grey */
-                opacity: 0.6;
+                opacity: 0.5;
             }
-            #gemini-auto-scroll-toggle.processing {
-                animation: gtc-spin 2s linear infinite;
+            #gemini-auto-scroll-toggle.processing .material-symbols-outlined {
+                animation: gtc-pulse 1.5s infinite ease-in-out;
             }
-            @keyframes gtc-spin {
-                from { transform: rotate(0deg); }
-                to { transform: rotate(360deg); }
+            @keyframes gtc-pulse {
+                0% { opacity: 1; text-shadow: 0 0 0 rgba(138, 180, 248, 0); }
+                50% { opacity: 0.5; text-shadow: 0 0 5px rgba(138, 180, 248, 0.5); }
+                100% { opacity: 1; text-shadow: 0 0 0 rgba(138, 180, 248, 0); }
             }
-            .gtc-tooltip {
-                visibility: hidden;
-                background-color: #3c4043;
-                color: #fff;
-                text-align: center;
-                border-radius: 4px;
-                padding: 4px 8px;
-                position: absolute;
-                z-index: 10000;
-                bottom: -32px;
-                left: 50%;
-                transform: translateX(-50%);
-                font-size: 11px;
-                white-space: nowrap;
-                pointer-events: none;
-                opacity: 0;
-                transition: opacity 0.3s;
-            }
-            #gemini-auto-scroll-toggle:hover .gtc-tooltip {
-                visibility: visible;
-                opacity: 1;
-            }
+
             .gtc-badge {
                 position: absolute;
-                top: -2px;
-                right: -2px;
-                background-color: #5bb974;
+                top: -4px;
+                right: -4px;
+                background-color: #34a853;
                 color: #fff;
                 font-size: 10px;
                 font-weight: bold;
                 padding: 1px 4px;
                 border-radius: 8px;
-                min-width: 14px;
+                min-width: 16px;
                 text-align: center;
                 pointer-events: none;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            }
+
+            .gtc-tooltip {
+                visibility: hidden;
+                background-color: #202124;
+                color: #e8eaed;
+                text-align: center;
+                border-radius: 4px;
+                padding: 6px 10px;
+                position: absolute;
+                z-index: 10000;
+                top: -40px; /* Show above button */
+                left: 0;
+                transform: none; /* Align left */
+                font-size: 11px;
+                white-space: nowrap;
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity 0.2s;
+                border: 1px solid #444746;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            }
+            #gemini-auto-scroll-toggle:hover .gtc-tooltip {
+                visibility: visible;
+                opacity: 1;
             }
         `;
         document.head.appendChild(style);
@@ -159,10 +167,9 @@
 
         const icon = btn.querySelector('.material-symbols-outlined');
         if (icon) {
-            icon.textContent = enabled ? 'sync' : 'sync_disabled';
+            icon.textContent = enabled ? 'toggle_on' : 'toggle_off';
         }
 
-        // Update count
         const count = document.querySelectorAll(SELECTORS.CONVERSATION_ITEM).length;
         const badge = btn.querySelector('.gtc-badge');
         if (badge) {
@@ -172,31 +179,34 @@
 
         const tooltip = btn.querySelector('.gtc-tooltip');
         if (tooltip) {
-            tooltip.textContent = `Auto-Scroll: ${enabled ? 'ON' : 'OFF'} (Found: ${count})`;
+            const status = isProcessing ? 'Scanning...' : (enabled ? 'ON' : 'OFF');
+            tooltip.textContent = `Auto-Scroll: ${status} (${count} items)`;
         }
     }
 
     function injectToggleButton() {
-        const menuBtn = document.querySelector(SELECTORS.MENU_BUTTON);
-        if (!menuBtn || document.getElementById('gemini-auto-scroll-toggle')) return;
+        // We inject into body now, so we don't depend on MENU_BUTTON existence for placement.
+        if (document.getElementById('gemini-auto-scroll-toggle')) return;
 
         injectStyles();
 
         const btn = document.createElement('button');
         btn.id = 'gemini-auto-scroll-toggle';
         setInnerHTML(btn, `
-            <span class="material-symbols-outlined">sync</span>
+            <span class="material-symbols-outlined">toggle_on</span>
             <span class="gtc-badge">0</span>
-            <span class="gtc-tooltip">Auto-Scroll: ON</span>
+            <span class="gtc-tooltip">Auto-Scroll</span>
         `);
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             toggleAutoScroll();
+            // Pulse animation
+            btn.style.transform = "scale(0.95)";
+            setTimeout(() => btn.style.transform = "scale(1)", 100);
         });
 
-        // Inject after the menu button
-        menuBtn.parentNode.insertBefore(btn, menuBtn.nextSibling);
+        document.body.appendChild(btn);
         updateToggleButtonUI();
     }
 
