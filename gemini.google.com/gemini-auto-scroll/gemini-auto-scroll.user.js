@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.4
+// @version      0.1.5
 // @description  Automatically scroll to the current conversation in the Gemini sidebar with a toggle switch
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -131,6 +131,20 @@
                 visibility: visible;
                 opacity: 1;
             }
+            .gtc-badge {
+                position: absolute;
+                top: -2px;
+                right: -2px;
+                background-color: #5bb974;
+                color: #fff;
+                font-size: 10px;
+                font-weight: bold;
+                padding: 1px 4px;
+                border-radius: 8px;
+                min-width: 14px;
+                text-align: center;
+                pointer-events: none;
+            }
         `;
         document.head.appendChild(style);
     }
@@ -148,9 +162,17 @@
             icon.textContent = enabled ? 'sync' : 'sync_disabled';
         }
 
+        // Update count
+        const count = document.querySelectorAll(SELECTORS.CONVERSATION_ITEM).length;
+        const badge = btn.querySelector('.gtc-badge');
+        if (badge) {
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'block' : 'none';
+        }
+
         const tooltip = btn.querySelector('.gtc-tooltip');
         if (tooltip) {
-            tooltip.textContent = `Auto-Scroll: ${enabled ? 'ON' : 'OFF'}`;
+            tooltip.textContent = `Auto-Scroll: ${enabled ? 'ON' : 'OFF'} (Found: ${count})`;
         }
     }
 
@@ -164,6 +186,7 @@
         btn.id = 'gemini-auto-scroll-toggle';
         setInnerHTML(btn, `
             <span class="material-symbols-outlined">sync</span>
+            <span class="gtc-badge">0</span>
             <span class="gtc-tooltip">Auto-Scroll: ON</span>
         `);
         btn.addEventListener('click', (e) => {
