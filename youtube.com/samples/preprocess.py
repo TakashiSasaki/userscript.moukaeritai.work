@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 # Check if bs4 is installed, if not hint to install it.
 try:
     from bs4 import BeautifulSoup, Comment
@@ -37,16 +38,33 @@ def preprocess_html(file_path):
             # BS4 sometimes parses style as list if configured? Usually string. 
             # Safe check handled implicitly.
 
-    # 1. Truncate text nodes > 1000 chars
-    print("Truncating long text nodes...")
+    # 3. Remove empty or whitespace-only comments
+    print("Removing empty comments...")
+    for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
+        if not comment.strip():
+            comment.decompose()
+
+    # 1. Truncate text nodes > 99 chars and normalize whitespace
+    print("Truncating long text nodes and normalizing whitespace...")
     for text in soup.find_all(string=True):
         if isinstance(text, Comment):
-            continue # 3. Keep comments
-        if len(text) > 1000:
-            text.replace_with(text[:1000] + '...[TRUNCATED]')
+            continue 
+        
+        # Normalize whitespace in the node
+        normalized_text = re.sub(r'\s+', ' ', text)
+        
+        if len(normalized_text) > 99:
+            text.replace_with(normalized_text[:99] + '...[TRUNCATED]')
+        else:
+            text.replace_with(normalized_text)
+
+    # Secondary pass: Collapse whitespace in the entire document string
+    content = str(soup)
+    print("Performing final whitespace collapse...")
+    content = re.sub(r'\s+', ' ', content)
 
     with open(file_path, 'w', encoding='utf-8') as f:
-        f.write(str(soup))
+        f.write(content.strip())
     print("Done.")
 
 if __name__ == "__main__":
