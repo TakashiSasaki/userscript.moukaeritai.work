@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
-// @namespace    http://tampermonkey.net/
-// @version      0.1.2
+// @namespace    userscript.moukaeritai.work
+// @version      0.1.3
 // @description  Automatically scroll to the current conversation in the Gemini sidebar with a toggle switch
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -26,6 +26,27 @@
         SPINNER_WAIT_MS: 3000,
         SCROLL_DELAY_MS: 500,
         STORAGE_KEY: 'gemini_auto_scroll_enabled'
+    };
+
+    // --- State & Trusted Types ---
+
+    let policy;
+    if (window.trustedTypes && window.trustedTypes.createPolicy) {
+        try {
+            policy = window.trustedTypes.createPolicy('geminiAutoScroll', {
+                createHTML: (string) => string
+            });
+        } catch (e) {
+            console.warn('[GeminiAutoScroll] Failed to create trustedTypes policy', e);
+        }
+    }
+
+    const setInnerHTML = (element, html) => {
+        if (policy) {
+            element.innerHTML = policy.createHTML(html);
+        } else {
+            element.innerHTML = html;
+        }
     };
 
     let isProcessing = false;
@@ -141,10 +162,10 @@
 
         const btn = document.createElement('button');
         btn.id = 'gemini-auto-scroll-toggle';
-        btn.innerHTML = `
+        setInnerHTML(btn, `
             <span class="material-symbols-outlined">sync</span>
             <span class="gtc-tooltip">Auto-Scroll: ON</span>
-        `;
+        `);
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -200,7 +221,7 @@
 
         try {
             let retries = 0;
-            const maxRetries = CONSTANTS.ENDLESS_RETRIES; // Use "endless" retry count
+            const maxRetries = CONSTANTS.ENDLESS_RETRIES;
 
             while (retries < maxRetries && isAutoScrollEnabled()) {
                 const element = findConversationElement(currentId);
@@ -228,7 +249,6 @@
                 }
 
                 if (!spinnerAppeared) {
-                    // Final check
                     if (findConversationElement(currentId)) {
                         findConversationElement(currentId).scrollIntoView({ behavior: 'smooth', block: 'center' });
                     } else {
@@ -257,13 +277,11 @@
 
     let lastUrl = window.location.href;
 
-    // UI Injection Observer
     const uiObserver = new MutationObserver(() => {
         injectToggleButton();
     });
     uiObserver.observe(document.body, { childList: true, subtree: true });
 
-    // URL Monitoring
     setInterval(() => {
         const currentUrl = window.location.href;
         if (currentUrl !== lastUrl) {
@@ -272,7 +290,6 @@
         }
     }, 1000);
 
-    // Initial load
     setTimeout(() => {
         injectToggleButton();
         attemptScrollToConversation();
