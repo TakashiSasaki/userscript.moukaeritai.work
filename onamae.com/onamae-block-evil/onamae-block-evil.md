@@ -6,8 +6,9 @@
 
 - **名前**: お名前.com 邪悪広告ブロッカー
 - **Namespace**: `userscript.moukaeritai.work`
-- **現在のバージョン**: `0.1.6` (major.minor.patch 形式)
-- **作者**: Takashi Sasaki ([x.com/TakashiSasaki](https://x.com/TakashiSasaki))
+- **現在のバージョン**: `0.1.6`
+- **Author**: Takashi Sasaki ([x.com/TakashiSasaki](https://x.com/TakashiSasaki))
+- **Published at**: [https://userscript.moukaeritai.work](https://userscript.moukaeritai.work)
 
 ## 2. 目的
 
@@ -20,45 +21,20 @@
 ## 3. ターゲット（ブロック対象）
 
 ### 3.1. DNS設定変更トラップ (Evil 1)
-- **ターゲット**: 「ドメインプロテクション」勧誘モーダル内の「設定する」ボタンのみ。
-- **処理**: モーダル自体は残し、誤操作の原因となる「設定する」ボタンだけを非表示にする。
-- **安定したセレクタ**: `.box-DomainBanner button.is-Primary`
-- **判定キー**: 親要素 `.box-DomainBanner-Hdn` が「意図しないDNS設定変更を防ぐために」を含む。
-
+- 「ドメインプロテクション」勧誘モーダル内の「設定する」ボタンを非表示化。
+- モーダル自体は残し、誤操作による意図しない設定変更のみを防ぎます。
 
 ### 3.2. 会員情報確認ポップアップ (Evil 2)
-> **Note**: v0.1.4 にてブロック対象から除外されました。
-
+- ※ v0.1.4 にてブロック対象から除外されました。
 
 ### 3.3. チャットサポート・ウィジェット (ChatPlus)
-- **安定したセレクタ**: `chat`, `#chatplusview`, `#jp.chatplus.app_chat_frame`
-- **静的ブロック**: `display: none !important` で初期段階から排除可能。
+- 画面右下等に表示されるチャットウィジェットを非表示化。
 
-## 4. 基本設計
-
-### 4.1. 動作環境
-- **対象ドメイン**: `https://navi.onamae.com/domain/setting/dns/control/input`
-- **実行タイミング**: `document-start` でのスタイル注入 + `document-idle` 以降の DOM 監視。
-
-### 4.2. 実装戦略
-1. **静的CSSによる非表示 (CSS Injection)**
-   - 識別が明確なIDやクラス名に対しては、`display: none !important;` を注入する。
-   - `body.is-ModalOpen` によるスクロール制限を強制解除するスタイルを適用する。
-
-2. **DOM監視 (MutationObserver)**
-   - Angular 等の SPA 構造により動的に生成・表示されるモーダルを検知する。
-   - 要素内のテキストコンテンツを判定し、条件に合致する場合は非表示化（`display: none`）または `click()` による自動クローズを試行する。
-
-3. **ボディロックの解除**
-   - モーダルが非表示になっても `body` の `overflow: hidden` が残る場合があるため、定期的にチェックし解除する。
-
-## 5. 期待される効果
+## 4. 期待される効果
 - 誤操作による意図しない有料サービスへの契約防止。
 - 画面遷移ごとのポップアップによるストレスの軽減。
 - ページ本来のコンテンツ（ドメイン一覧や設定項目）へのアクセス速度向上。
 
-## 6. 運用・管理ルール
-
-### 6.1. バージョニング
-- `major.minor.patch` 形式を使用する。
-- スクリプトに何らかの改変（微修正含む）を行った場合は、必ず **patch** バージョンをインクリメントする。
+## 5. 動作環境
+- Tampermonkey で動作確認済み。
+- 対象ページ: ドメイン設定入力画面等。
