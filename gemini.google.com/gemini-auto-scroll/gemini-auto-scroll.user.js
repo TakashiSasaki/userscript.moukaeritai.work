@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.13
+// @version      0.1.14
 // @description  Automatically scroll to the current conversation in the Gemini sidebar with a toggle switch
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -68,6 +68,12 @@
 
     // --- UI Injection ---
 
+    // SVG Icons (Material Design) - Fail-safe compared to font ligatures
+    const ICONS = {
+        CHECKED: `<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="currentColor"><path d="M280-520l-80-80-120 120 200 200 400-400-120-120-280 280z"/></svg>`, // Simple check mark
+        UNCHECKED: `<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200zm0-80h560v-560H200v560z"/></svg>` // Outline box
+    };
+
     function injectStyles() {
         if (document.getElementById('gemini-auto-scroll-styles')) return;
         const style = document.createElement('style');
@@ -95,27 +101,36 @@
                 background-color: #303134;
                 border-color: rgba(255, 255, 255, 0.6);
             }
-            #gemini-auto-scroll-toggle .material-symbols-outlined {
-                font-size: 24px;
-                font-family: 'Google Symbols';
+            /* Icon Container */
+            .gtc-icon {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 24px;
+                height: 24px;
             }
+            .gtc-icon svg {
+                width: 24px;
+                height: 24px;
+            }
+
             /* ON STATE - Visual Emphasis */
             #gemini-auto-scroll-toggle.enabled {
                 background-color: #8ab4f8; /* Gemini Blue Fill */
                 border-color: #8ab4f8;
             }
-            #gemini-auto-scroll-toggle.enabled .material-symbols-outlined {
+            #gemini-auto-scroll-toggle.enabled .gtc-icon {
                 color: #202124; /* Dark Icon for Contrast */
             }
             #gemini-auto-scroll-toggle.enabled:hover {
                 background-color: #aecbfa;
             }
             /* OFF STATE */
-            #gemini-auto-scroll-toggle.disabled .material-symbols-outlined {
+            #gemini-auto-scroll-toggle.disabled .gtc-icon {
                 color: #bdc1c6;
             }
             
-            #gemini-auto-scroll-toggle.processing .material-symbols-outlined {
+            #gemini-auto-scroll-toggle.processing .gtc-icon {
                 animation: gtc-pulse 1.5s infinite ease-in-out;
             }
             @keyframes gtc-pulse {
@@ -210,10 +225,9 @@
         btn.className = enabled ? 'enabled' : 'disabled';
         if (isProcessing) btn.classList.add('processing');
 
-        const icon = btn.querySelector('.material-symbols-outlined');
+        const icon = btn.querySelector('.gtc-icon');
         if (icon) {
-            // Use checkbox icons
-            icon.textContent = enabled ? 'check_box' : 'check_box_outline_blank';
+            setInnerHTML(icon, enabled ? ICONS.CHECKED : ICONS.UNCHECKED);
         }
 
         // Update count and indices
@@ -240,7 +254,7 @@
         const btn = document.createElement('button');
         btn.id = 'gemini-auto-scroll-toggle';
         setInnerHTML(btn, `
-            <span class="material-symbols-outlined">check_box</span>
+            <span class="gtc-icon"></span>
             <span class="gtc-badge">0</span>
             <span class="gtc-tooltip">Auto-Scroll</span>
         `);
