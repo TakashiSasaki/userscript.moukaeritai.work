@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.8
+// @version      0.1.9
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -84,11 +84,30 @@
             cursor: default;
         }
         #gemini-turn-counter-ui .gtc-icon {
-            display: block;
-            line-height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            position: relative;
         }
         #gemini-turn-counter-ui.expanded .gtc-icon {
             display: none;
+        }
+        .gtc-icon-badge {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            background-color: #8ab4f8;
+            color: #202124;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 0 4px;
+            border-radius: 10px;
+            min-width: 14px;
+            text-align: center;
+            line-height: 14px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
         #gemini-turn-counter-ui .gtc-content {
             display: none;
@@ -169,12 +188,16 @@
     </svg>`;
 
     setInnerHTML(container, `
-        <div class="gtc-icon">${iconSvg}</div>
+        <div class="gtc-icon">
+            ${iconSvg}
+            <span class="gtc-icon-badge">0</span>
+        </div>
         <div class="gtc-content">Loading...</div>
     `);
     document.body.appendChild(container);
 
     const contentDiv = container.querySelector('.gtc-content');
+    const badgeSpan = container.querySelector('.gtc-icon-badge');
 
     // UI Events
     container.addEventListener('click', () => {
@@ -233,6 +256,13 @@
         try {
             const userTurns = document.querySelectorAll(SELECTORS.userTurn);
             const modelTurns = document.querySelectorAll(SELECTORS.modelTurn);
+
+            // Update Badge
+            if (badgeSpan) {
+                badgeSpan.textContent = modelTurns.length;
+                // Optional: Hide badge if 0? 
+                // badgeSpan.style.display = modelTurns.length > 0 ? 'block' : 'none';
+            }
 
             let userCharCount = 0;
             let collectedImages = [];
