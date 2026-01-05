@@ -1,0 +1,25 @@
+{
+  "name": "userscript.moukaeritai.work",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TakashiSasaki/userscript.moukaeritai.work.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/TakashiSasaki/userscript.moukaeritai.work/issues"
+  },
+  "homepage": "https://github.com/TakashiSasaki/userscript.moukaeritai.work#readme",
+  "devDependencies": {
+    "eslint": "^9.39.2",
+    "globals": "^16.5.0"
+  }
+}

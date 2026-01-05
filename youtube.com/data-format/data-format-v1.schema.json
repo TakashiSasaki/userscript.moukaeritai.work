@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://userscript.moukaeritai.work/youtube.com/data-format/data-format-v1.schema.json",
+  "title": "YouTube Playlist Saver Data Format v1",
+  "description": "Version 1 data format with an explicit version field and data nested under 'playlists'.",
+  "type": "object",
+  "required": [
+    "version",
+    "playlists"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Data format version number."
+    },
+    "playlists": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "description": "YouTube Video ID",
+          "pattern": "^[a-zA-Z0-9_-]{11}$"
+        },
+        "description": "Array of saved Video IDs for the playlist."
+      },
+      "description": "Map of playlists, keyed by Playlist ID."
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "version": 1,
+      "playlists": {
+        "PL12345ABCDE": [
+          "dQw4w9WgXcQ",
+          "jNQXAC9IVRw"
+        ],
+        "LL": [
+          "9bZkp7q19f0"
+        ]
+      }
+    }
+  ]
+}

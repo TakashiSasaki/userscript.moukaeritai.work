@@ -1,13 +1,17 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.35
-// @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。
+// @version      0.2.33
+// @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
-// @match        *://www.youtube.com/playlist?list=*
+// @match        *://www.youtube.com/playlist?*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=youtube.com
+// @connect      gist.githubusercontent.com
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_registerMenuCommand
+// @grant        GM_xmlhttpRequest
+// @grant        GM_setClipboard
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver.user.js
 // ==/UserScript==
@@ -16,22 +20,61 @@
     'use strict';
 
     const DATA_KEY = 'yt_playlist_data';
+    const DATA_VERSION = 2;
 
     // --- Performance Optimization: Batching & Caching ---
-    let cachedData = null;
+    let cachedStorage = null; // Stores { version: N, playlists: { ... } }
     let pendingSaveTimeout = null;
 
     function loadStorage() {
-        if (cachedData) return cachedData;
-        cachedData = GM_getValue(DATA_KEY, {});
-        return cachedData;
+        if (cachedStorage) return cachedStorage.playlists;
+        
+        let rawData = GM_getValue(DATA_KEY, {});
+
+        // Migration: v0 (No version) -> v2
+        if (rawData.version === undefined) {
+            console.log('[YouTube Playlist Saver] Migrating data (v0 -> v2)');
+            const newPlaylists = {};
+            for (const [plId, videos] of Object.entries(rawData)) {
+                if (Array.isArray(videos)) {
+                    newPlaylists[plId] = {};
+                    videos.forEach(vid => {
+                        newPlaylists[plId][vid] = { title: null, channel: null, addedAt: null };
+                    });
+                }
+            }
+            cachedStorage = { version: DATA_VERSION, playlists: newPlaylists };
+            GM_setValue(DATA_KEY, cachedStorage);
+        } 
+        // Migration: v1 -> v2
+        else if (rawData.version === 1) {
+            console.log('[YouTube Playlist Saver] Migrating data (v1 -> v2)');
+            const newPlaylists = {};
+            for (const [plId, videos] of Object.entries(rawData.playlists)) {
+                if (Array.isArray(videos)) {
+                    newPlaylists[plId] = {};
+                    videos.forEach(vid => {
+                        newPlaylists[plId][vid] = { title: null, channel: null, addedAt: null };
+                    });
+                }
+            }
+            cachedStorage = { version: DATA_VERSION, playlists: newPlaylists };
+            GM_setValue(DATA_KEY, cachedStorage);
+        }
+        else {
+            cachedStorage = rawData;
+        }
+
+        return cachedStorage.playlists;
     }
 
     function requestSave() {
         if (pendingSaveTimeout) clearTimeout(pendingSaveTimeout);
         pendingSaveTimeout = setTimeout(() => {
-            GM_setValue(DATA_KEY, cachedData);
-            console.log('[YouTube Playlist Saver] Batch save completed.');
+            if (cachedStorage) {
+                GM_setValue(DATA_KEY, cachedStorage);
+                console.log('[YouTube Playlist Saver] Batch save completed (v' + cachedStorage.version + ').');
+            }
             pendingSaveTimeout = null;
         }, 2000);
     }
@@ -44,17 +87,28 @@
 
     function getSavedVideos(playlistId) {
         const data = loadStorage();
-        return new Set(data[playlistId] || []);
+        // Return Set of IDs for compatibility with existing check logic
+        return new Set(Object.keys(data[playlistId] || {}));
     }
 
-    function queueVideoId(playlistId, videoId) {
+    function queueVideoId(playlistId, videoId, title = null, channel = null) {
         const data = loadStorage();
-        const list = data[playlistId] || [];
-        if (!list.includes(videoId)) {
-            list.push(videoId);
-            data[playlistId] = list;
+        if (!data[playlistId]) data[playlistId] = {};
+        
+        const playlistMap = data[playlistId]; // It's an object now
+
+        // Check if exists AND has metadata
+        const existing = playlistMap[videoId];
+        
+        // If new, or if existing but missing metadata (and we have new metadata provided)
+        if (!existing || (title && existing.title === null)) {
+            playlistMap[videoId] = {
+                title: title || (existing ? existing.title : null),
+                channel: channel || (existing ? existing.channel : null),
+                addedAt: existing ? existing.addedAt : Date.now()
+            };
             requestSave();
-            return true;
+            return !existing; // Returns true ONLY if it was genuinely new (not just metadata update)
         }
         return false;
     }
@@ -67,6 +121,252 @@
             return match ? match[1] : null;
         }
         return null;
+    }
+
+    // --- Import Feature ---
+
+    function mergeImportedData(importedData) {
+        if (!importedData) {
+             alert('[YouTube Playlist Saver] Import failed: No data.');
+             return;
+        }
+
+        // Normalize Input: Handle v0 (root keys), v1 (playlists array), v2 (playlists object)
+        let sourcePlaylists = {};
+        
+        if (importedData.playlists) {
+            // v1 or v2
+            sourcePlaylists = importedData.playlists;
+        } else {
+            // v0 or invalid? Check if it looks like v0 (keys are IDs, values are arrays)
+            const keys = Object.keys(importedData);
+            // Ignore if it's just {version: ...} without playlists, but v0 has no version.
+            if (keys.length > 0 && Array.isArray(importedData[keys[0]])) {
+                 console.log('[YouTube Playlist Saver] Detected v0 import format.');
+                 sourcePlaylists = importedData;
+            } else if (keys.length === 0) {
+                 // Empty object
+                 alert('[YouTube Playlist Saver] Import failed: Data is empty.');
+                 return;
+            } else {
+                 alert('[YouTube Playlist Saver] Import failed: Unknown data format.');
+                 return;
+            }
+        }
+
+        const localPlaylists = loadStorage(); // Returns reference to cachedStorage.playlists (v2 structure)
+        let addedCount = 0;
+        let updatedCount = 0;
+
+        for (const [plId, content] of Object.entries(sourcePlaylists)) {
+            // Ensure local playlist container exists (as object)
+            if (!localPlaylists[plId]) {
+                localPlaylists[plId] = {};
+            }
+
+            // Standardize to Object format for processing
+            let entries = [];
+            if (Array.isArray(content)) {
+                // v0/v1: Array of IDs -> Convert to [ID, null] entries
+                entries = content.map(vid => [vid, null]);
+            } else if (typeof content === 'object') {
+                // v2: Object map -> Entries
+                entries = Object.entries(content);
+            }
+
+            for (const [vid, remoteMeta] of entries) {
+                const existing = localPlaylists[plId][vid];
+                
+                if (!existing) {
+                    // NEW: Add it
+                    localPlaylists[plId][vid] = remoteMeta || { title: null, channel: null, addedAt: null };
+                    addedCount++;
+                } else if (remoteMeta) {
+                    // UPDATE: Check if local is missing info that remote has
+                    let changed = false;
+                    
+                    if (existing.title === null && remoteMeta.title) {
+                        existing.title = remoteMeta.title;
+                        changed = true;
+                    }
+                    if (existing.channel === null && remoteMeta.channel) {
+                        existing.channel = remoteMeta.channel;
+                        changed = true;
+                    }
+                    if (existing.addedAt === null && remoteMeta.addedAt) {
+                         existing.addedAt = remoteMeta.addedAt;
+                         changed = true;
+                    }
+                    
+                    if (changed) updatedCount++;
+                }
+            }
+        }
+
+        if (addedCount > 0 || updatedCount > 0) {
+            requestSave();
+            alert(`[YouTube Playlist Saver] Import successful!\nAdded: ${addedCount} videos\nUpdated Metadata: ${updatedCount} videos`);
+            
+            // Refresh view
+            const items = document.querySelectorAll('ytd-playlist-video-renderer');
+            items.forEach(item => {
+                delete item.dataset.saverProcessed; // Force re-scan
+            });
+        } else {
+            alert('[YouTube Playlist Saver] Import finished. No new data or better metadata found.');
+        }
+    }
+
+    function importDataFromUrl(url) {
+        console.log(`[YouTube Playlist Saver] Importing data from: ${url}`);
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: url,
+            onload: function(response) {
+                if (response.status === 200) {
+                    try {
+                        const data = JSON.parse(response.responseText);
+                        mergeImportedData(data);
+                    } catch (e) {
+                        console.error(e);
+                        alert('[YouTube Playlist Saver] JSON Parse Error: ' + e.message);
+                    }
+                } else {
+                    alert(`[YouTube Playlist Saver] Download failed. Status: ${response.status}`);
+                }
+            },
+            onerror: function(err) {
+                console.error(err);
+                alert('[YouTube Playlist Saver] Network Error during import.');
+            }
+        });
+    }
+
+    function normalizeGistUrl(url) {
+        // Convert specific revision Raw URL to latest revision Raw URL
+        // From: https://gist.githubusercontent.com/USER/ID/raw/HASH/FILE
+        // To:   https://gist.githubusercontent.com/USER/ID/raw/FILE
+        const gistRawRegex = /^(https:\/\/gist\.githubusercontent\.com\/[^\/]+\/[^\/]+\/raw\/)[0-9a-f]{40}\/(.+)$/i;
+        return url.replace(gistRawRegex, '$1$2');
+    }
+
+    function exportDataToFile() {
+        loadStorage(); // Ensure cachedStorage is populated
+        if (!cachedStorage) {
+            alert('[YouTube Playlist Saver] No data to export.');
+            return;
+        }
+
+        try {
+            const dataStr = JSON.stringify(cachedStorage, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'youtube_playlist_saver_data.json';
+            document.body.appendChild(a);
+            a.click();
+            
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 100);
+            
+        } catch (e) {
+            console.error(e);
+            alert('[YouTube Playlist Saver] Export failed: ' + e.message);
+        }
+    }
+
+    function importDataFromFile() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.style.display = 'none';
+        
+        input.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    mergeImportedData(data);
+                } catch (err) {
+                    console.error(err);
+                    alert('[YouTube Playlist Saver] JSON Parse Error: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        document.body.appendChild(input);
+        input.click();
+        setTimeout(() => {
+            document.body.removeChild(input);
+        }, 1000);
+    }
+
+    function onImportMenuClick() {
+        const lastUrl = GM_getValue('yt_last_import_url', '');
+        const url = prompt("YouTube Playlist Saver\n\nEnter the URL of the JSON data to import (Version 1+):\n(Gist Raw URLs will be normalized to the latest revision)", lastUrl);
+        if (url && url.trim().startsWith('http')) {
+            const cleanUrl = normalizeGistUrl(url.trim());
+            GM_setValue('yt_last_import_url', cleanUrl);
+            importDataFromUrl(cleanUrl);
+        } else if (url) {
+            alert('Invalid URL. Must start with http.');
+        }
+    }
+
+    function onOpenGistPageClick() {
+        const url = GM_getValue('yt_last_import_url', '');
+        if (!url) return;
+        
+        // Extract user and id from raw URL to construct main Gist page URL
+        // From: https://gist.githubusercontent.com/USER/ID/raw/...
+        // To:   https://gist.github.com/USER/ID
+        const match = url.match(/https:\/\/gist\.githubusercontent\.com\/([^\/]+\/[^\/]+)\/raw/);
+        if (match) {
+            const mainUrl = `https://gist.github.com/${match[1]}`;
+            window.open(mainUrl, '_blank');
+        } else {
+            alert('Last import URL is not a standard Gist Raw URL.');
+        }
+    }
+
+    function onExportToClipboardClick() {
+        loadStorage(); // Ensure cachedStorage is populated
+        if (!cachedStorage) {
+            alert('[YouTube Playlist Saver] No data to export.');
+            return;
+        }
+        
+        try {
+            const dataStr = JSON.stringify(cachedStorage, null, 2);
+            GM_setClipboard(dataStr, 'text');
+            alert('[YouTube Playlist Saver] Data copied to clipboard!');
+        } catch (e) {
+            console.error(e);
+            alert('[YouTube Playlist Saver] Export failed: ' + e.message);
+        }
+    }
+
+    // Register Menu Commands
+    if (typeof GM_registerMenuCommand !== 'undefined') {
+        GM_registerMenuCommand("Import Data from URL", onImportMenuClick);
+        GM_registerMenuCommand("Import Data from File", importDataFromFile);
+        
+        const lastUrl = GM_getValue('yt_last_import_url', '');
+        if (lastUrl && lastUrl.includes('gist.githubusercontent.com')) {
+            GM_registerMenuCommand("Open Gist Main Page", onOpenGistPageClick);
+        }
+        
+        GM_registerMenuCommand("Copy Data to Clipboard", onExportToClipboardClick);
+        GM_registerMenuCommand("Export Data to File", exportDataToFile);
     }
 
     // --- UI Helpers ---
@@ -89,8 +389,20 @@
      * Render the status indicator and Remove button
      */
     function renderIndicator(element, isNew) {
-        const bar = element.querySelector('#engagement-bar');
-        if (!bar) return;
+        // Try multiple selectors for robustness
+        let bar = element.querySelector('#engagement-bar');
+        if (!bar) {
+             // Fallback: try finding the meta block if engagement-bar is missing
+             bar = element.querySelector('.ytd-video-meta-block') || element.querySelector('#meta');
+        }
+
+        if (!bar) {
+            // Only warn if it's not a skeleton/loading element
+            if (!element.querySelector('ytd-playlist-video-renderer')) {
+                 console.warn('[YouTube Playlist Saver] Target container (engagement-bar/meta) not found for item:', element);
+            }
+            return;
+        }
 
         // 1. Status Indicator
         const oldIndicator = bar.querySelector('.yt-saver-indicator');
@@ -104,7 +416,8 @@
             fontWeight: 'bold',
             marginRight: '8px',
             color: isNew ? '#3ea6ff' : '#2ba640',
-            verticalAlign: 'middle'
+            verticalAlign: 'middle',
+            display: 'inline-block' // Ensure visibility
         });
 
         // 2. Remove Button
@@ -121,7 +434,8 @@
             padding: '0',
             marginLeft: '8px',
             verticalAlign: 'middle',
-            opacity: '0.7'
+            opacity: '0.7',
+            display: 'inline-block'
         });
 
         // Trash Icon Path
@@ -154,13 +468,19 @@
         bar.prepend(indicator);
     }
 
+    const TRASH_ICON_PATHS = [
+        "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
+        "M11 17H9V8h2v9zm4-9h-2v9h2V8zm4-4v1h-1v16H6V5H5V4h4V3h6v1h4zm-2 1H8v15h10V5z",
+        "M19 3h-4V2a1 1 0 00-1-1h-4a1 1 0 00-1 1v1H5a2 2 0 00-2 2h18a2 2 0 00-2-2ZM6 19V7H4v12a4 4 0 004 4h8a4 4 0 004-4V7h-2v12a2 2 0 01-2 2H8a2 2 0 01-2-2Zm4-11a1 1 0 00-1 1v8a1 1 0 102 0V9a1 1 0 00-1-1Zm4 0a1 1 0 00-1 1v8a1 1 0 002 0V9a1 1 0 00-1-1Z"
+    ];
+
     /**
      * DOM Interaction to remove video
      */
     async function attemptRemoveVideo(videoContainer) {
         // 1. Find Action Menu Button (Three dots)
         const menuBtn = videoContainer.querySelector('#menu button') ||
-            videoContainer.querySelector('button.dropdown-trigger'); // Fallback logic
+            videoContainer.querySelector('button.dropdown-trigger');
 
         if (!menuBtn) {
             console.error('[YouTube Playlist Saver] Menu button not found.');
@@ -169,55 +489,59 @@
 
         menuBtn.click();
 
-        // 2. Wait for Menu Popup (Increased timeout to 3000ms)
-        const menuPopup = await waitForElement('ytd-menu-popup-renderer', 3000);
-        if (!menuPopup) {
-            console.error('[YouTube Playlist Saver] Popup not found.');
-            return false;
-        }
-
-        // 3. Find "Remove from [Playlist]" option with retry (Polling)
-        // YouTube menus might render content slightly after the popup container appears.
-        const findTargetItem = () => {
-            const items = Array.from(menuPopup.querySelectorAll('ytd-menu-service-item-renderer'));
+        // Helper to find the target item within the popup
+        const findTargetItem = (popup) => {
+            if (!popup) return null;
+            const items = Array.from(popup.querySelectorAll('ytd-menu-service-item-renderer'));
             for (const item of items) {
-                // Check text content
                 const text = item.textContent || "";
                 if (text.includes('Remove from') || text.includes('から削除')) {
                     return item;
                 }
-                // Check icon path (Trash icon)
                 const path = item.querySelector('path');
-                // Standard material trash path or variants
-                const trashPaths = [
-                    "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
-                    "M11 17H9V8h2v9zm4-9h-2v9h2V8zm4-4v1h-1v16H6V5H5V4h4V3h6v1h4zm-2 1H8v15h10V5z",
-                    "M19 3h-4V2a1 1 0 00-1-1h-4a1 1 0 00-1 1v1H5a2 2 0 00-2 2h18a2 2 0 00-2-2ZM6 19V7H4v12a4 4 0 004 4h8a4 4 0 004-4V7h-2v12a2 2 0 01-2 2H8a2 2 0 01-2-2Zm4-11a1 1 0 00-1 1v8a1 1 0 102 0V9a1 1 0 00-1-1Zm4 0a1 1 0 00-1 1v8a1 1 0 002 0V9a1 1 0 00-1-1Z"
-                ];
                 if (path) {
                     const d = path.getAttribute('d');
-                    if (d && trashPaths.includes(d)) return item;
+                    if (d && TRASH_ICON_PATHS.includes(d)) return item;
                 }
             }
             return null;
         };
 
+        // 2. Wait for Menu Popup AND Target Item (Combined Polling)
+        // Retry for up to 8 seconds to handle slow UI responses
+        const MAX_WAIT = 8000;
+        const START_TIME = Date.now();
         let targetItem = null;
-        const POLL_RETRIES = 20; // 20 * 100ms = 2000ms wait for content
-        for (let i = 0; i < POLL_RETRIES; i++) {
-            targetItem = findTargetItem();
-            if (targetItem) break;
+
+        while (Date.now() - START_TIME < MAX_WAIT) {
+            // Check for popup existence
+            const menuPopup = document.querySelector('ytd-menu-popup-renderer');
+            if (menuPopup) {
+                // Check for item existence
+                targetItem = findTargetItem(menuPopup);
+                if (targetItem) {
+                    // Highlight the item to be clicked for visual confirmation
+                    targetItem.style.backgroundColor = 'rgba(255, 0, 0, 0.2)';
+                    break;
+                }
+            }
+            // Wait 100ms before next check
             await new Promise(r => setTimeout(r, 100));
         }
 
-
-        if (targetItem) {
-            targetItem.click();
-            return true;
-        } else {
-            console.warn('[YouTube Playlist Saver] Remove option not found in menu.');
-            // Close menu
-            document.body.click(); // Attempt to close menu
+                if (targetItem) {
+                    targetItem.click();
+                    // Highlight the item AFTER it has been clicked for visual confirmation
+                    targetItem.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'; // Light green
+                    // Small delay to make the color change visible before menu closes
+                    await new Promise(r => setTimeout(r, 100)); 
+        
+                    // Ensure menu is closed by clicking body immediately after
+                    document.body.click();
+                    return true;
+                } else {            console.warn(`[YouTube Playlist Saver] Remove option not found after ${MAX_WAIT}ms.`);
+            // Attempt to close menu by clicking body
+            document.body.click(); 
             return false;
         }
     }
@@ -245,6 +569,26 @@
                     resolve(null);
                 }
             }, 100);
+        });
+    }
+
+    /**
+     * Utility: Wait for an element to be removed from DOM
+     */
+    function waitForDomRemoval(element, timeout = 10000) {
+        return new Promise(resolve => {
+            if (!document.contains(element)) return resolve(true);
+
+            const start = Date.now();
+            const interval = setInterval(() => {
+                if (!document.contains(element)) {
+                    clearInterval(interval);
+                    resolve(true);
+                } else if (Date.now() - start > timeout) {
+                    clearInterval(interval);
+                    resolve(false);
+                }
+            }, 200);
         });
     }
 
@@ -321,11 +665,12 @@
         await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    function debounce(func, wait) {
-        let timeout;
-        return function (...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
+    function debounce(func, delay) {
+        let timer;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timer);
+            timer = setTimeout(() => func.apply(context, args), delay);
         };
     }
 
@@ -339,28 +684,24 @@
                 inThrottle = true;
                 setTimeout(() => inThrottle = false, limit);
             }
-        }
+        };
     }
 
     // --- Filter Feature ---
 
-    // --- Filter Feature ---
-
-    const FILTER_SETTINGS_KEY = 'yt_filter_settings';
-
-    let filterState = GM_getValue(FILTER_SETTINGS_KEY, {
+    let filterState = {
         title: '',
         channel: ''
-    });
+    };
+
+    const PANEL_STATE_KEY = 'yt_panel_minimized';
+    let isMinimized = GM_getValue(PANEL_STATE_KEY, false);
 
     let isProcessing = false;
     let isFiltering = false;
     let statusInterval = null;
+    let countsInterval = null;
     let scrollHandler = null;
-
-    function saveFilterState() {
-        GM_setValue(FILTER_SETTINGS_KEY, filterState);
-    }
 
     function createFilterPanel() {
         if (document.getElementById('yt-saver-filter-panel')) return;
@@ -379,11 +720,64 @@
             boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px',
+            // gap: '8px', // Moved to contentContainer
             width: '200px',
             color: '#333',
             fontFamily: 'Roboto, Arial, sans-serif'
         });
+
+        // --- Header (Title & Minimize Button) ---
+        const headerRow = document.createElement('div');
+        Object.assign(headerRow.style, {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '4px'
+        });
+
+        const titleLabel = document.createElement('span');
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.28';
+        titleLabel.textContent = `Playlist Saver v${version}`;
+        Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px' });
+
+        const minimizeBtn = document.createElement('button');
+        minimizeBtn.textContent = '−';
+        Object.assign(minimizeBtn.style, {
+            cursor: 'pointer',
+            background: 'none',
+            border: 'none',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            padding: '0 4px',
+            lineHeight: '1',
+            color: '#666'
+        });
+
+        const contentContainer = document.createElement('div');
+        Object.assign(contentContainer.style, {
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+        });
+
+        const updatePanelMinState = (min) => {
+            contentContainer.style.display = min ? 'none' : 'flex';
+            minimizeBtn.textContent = min ? '+' : '−';
+            isMinimized = min;
+            GM_setValue(PANEL_STATE_KEY, min);
+        };
+
+        minimizeBtn.addEventListener('click', () => {
+            updatePanelMinState(!isMinimized);
+        });
+
+        // Initialize state
+        updatePanelMinState(isMinimized);
+
+        headerRow.appendChild(titleLabel);
+        headerRow.appendChild(minimizeBtn);
+        panel.appendChild(headerRow);
+        panel.appendChild(contentContainer);
 
         // Helper to create input group with clear button
         const createInputGroup = (labelText, placeholder, stateKey) => {
@@ -394,10 +788,32 @@
                 gap: '2px'
             });
 
-            const label = document.createElement('div');
+            const labelRow = document.createElement('div');
+            Object.assign(labelRow.style, {
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+            });
+
+            const label = document.createElement('span');
             label.textContent = labelText;
             label.style.fontSize = '12px';
             label.style.fontWeight = 'bold';
+
+            const applyBtn = document.createElement('button');
+            applyBtn.textContent = 'Apply';
+            applyBtn.title = 'Apply filter';
+            Object.assign(applyBtn.style, {
+                cursor: 'pointer',
+                background: '#e0e0e0',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                padding: '0 6px',
+                height: '20px',
+                fontSize: '10px',
+                fontWeight: 'bold',
+                color: '#333'
+            });
 
             const inputWrapper = document.createElement('div');
             Object.assign(inputWrapper.style, {
@@ -435,20 +851,36 @@
 
             const updateFilter = () => {
                 filterState[stateKey] = input.value.toLowerCase();
-                saveFilterState();
                 applyFilters();
+                input.style.backgroundColor = '#e8f5e9'; // Light green for "Applied"
             };
 
-            input.addEventListener('input', debounce(updateFilter, 500));
+            // Reset background on modification
+            input.addEventListener('input', () => {
+                input.style.backgroundColor = '';
+            });
+
+            // Apply on Enter key
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    updateFilter();
+                }
+            });
+
+            // Apply on Button Click
+            applyBtn.addEventListener('click', updateFilter);
 
             clearBtn.addEventListener('click', () => {
                 input.value = '';
+                input.style.backgroundColor = '';
                 updateFilter();
             });
 
+            labelRow.appendChild(label);
+            labelRow.appendChild(applyBtn);
             inputWrapper.appendChild(input);
             inputWrapper.appendChild(clearBtn);
-            container.appendChild(label);
+            container.appendChild(labelRow);
             container.appendChild(inputWrapper);
 
             return container;
@@ -483,6 +915,17 @@
             textAlign: 'right'
         });
 
+        // Status Counts (New / Saved)
+        const statusCountsDiv = document.createElement('div');
+        statusCountsDiv.id = 'yt-saver-status-counts';
+        statusCountsDiv.textContent = 'New: 0 | Saved: 0';
+        Object.assign(statusCountsDiv.style, {
+            fontSize: '11px',
+            color: '#666',
+            marginTop: '2px',
+            textAlign: 'right'
+        });
+
         // Debug: Spinner Status
         const spinnerStatusDiv = document.createElement('div');
         spinnerStatusDiv.id = 'yt-saver-spinner-status';
@@ -512,10 +955,11 @@
         });
         removeAboveBtn.addEventListener('click', removeAboveItems);
 
-        panel.appendChild(titleGroup);
-        panel.appendChild(channelGroup);
-        panel.appendChild(countDiv);
-        panel.appendChild(spinnerStatusDiv);
+        contentContainer.appendChild(titleGroup);
+        contentContainer.appendChild(channelGroup);
+        contentContainer.appendChild(countDiv);
+        contentContainer.appendChild(statusCountsDiv);
+        contentContainer.appendChild(spinnerStatusDiv);
 
         // Filtering Status
         const filteringStatusDiv = document.createElement('div');
@@ -528,7 +972,7 @@
             textAlign: 'right',
             color: '#2ba640'
         });
-        panel.appendChild(filteringStatusDiv);
+        contentContainer.appendChild(filteringStatusDiv);
 
         // Processing (Removal) Status
         const processingStatusDiv = document.createElement('div');
@@ -541,38 +985,134 @@
             textAlign: 'right',
             color: '#2ba640'
         });
-        panel.appendChild(processingStatusDiv);
+        contentContainer.appendChild(processingStatusDiv);
 
-        panel.appendChild(aboveDiv);
-        panel.appendChild(removeAboveBtn);
+        // Processing Detail
+        const processingDetailDiv = document.createElement('div');
+        processingDetailDiv.id = 'yt-saver-processing-detail';
+        processingDetailDiv.textContent = '';
+        Object.assign(processingDetailDiv.style, {
+            fontSize: '10px',
+            color: '#666',
+            marginTop: '2px',
+            textAlign: 'right',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: '100%'
+        });
+        contentContainer.appendChild(processingDetailDiv);
+
+        contentContainer.appendChild(aboveDiv);
+        contentContainer.appendChild(removeAboveBtn);
+
+        // --- Auto Scroll Settings UI ---
+        const separator = document.createElement('hr');
+        Object.assign(separator.style, { border: '0', borderTop: '1px solid #ddd', margin: '8px 0', width: '100%' });
+        contentContainer.appendChild(separator);
+
+        const asHeaderContainer = document.createElement('div');
+        Object.assign(asHeaderContainer.style, { 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            marginBottom: '4px'
+        });
+
+        const asHeader = document.createElement('div');
+        asHeader.textContent = 'Auto Scroll';
+        Object.assign(asHeader.style, { fontWeight: 'bold', fontSize: '12px' });
+        
+        // Auto Scroll Toggle Button (Integrated)
+        const asToggleBtn = document.createElement('button');
+        asToggleBtn.id = 'yt-saver-as-toggle';
+        asToggleBtn.textContent = 'OFF';
+        Object.assign(asToggleBtn.style, {
+            padding: '2px 8px',
+            fontSize: '11px',
+            backgroundColor: '#ccc',
+            color: '#000',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+        });
+        asToggleBtn.addEventListener('click', () => toggleAutoScroll(asToggleBtn));
+
+        asHeaderContainer.appendChild(asHeader);
+        asHeaderContainer.appendChild(asToggleBtn);
+        contentContainer.appendChild(asHeaderContainer);
+
+        // Checkbox: Scroll to Bottom
+        const asCheckboxContainer = document.createElement('div');
+        Object.assign(asCheckboxContainer.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', marginBottom: '4px' });
+        
+        const asCheckbox = document.createElement('input');
+        asCheckbox.type = 'checkbox';
+        asCheckbox.checked = autoScrollSettings.scrollToBottom;
+        asCheckbox.id = 'yt-saver-as-bottom';
+        
+        const asCheckboxLabel = document.createElement('label');
+        asCheckboxLabel.textContent = 'Scroll to Bottom';
+        asCheckboxLabel.htmlFor = 'yt-saver-as-bottom';
+
+        // Step Input Helper
+        const createScrollInput = (label, key, placeholder) => {
+             const container = document.createElement('div');
+             Object.assign(container.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', marginTop: '2px' });
+             
+             const lbl = document.createElement('div');
+             lbl.textContent = label;
+             lbl.style.flex = '1';
+
+             const input = document.createElement('input');
+             input.type = 'number';
+             input.value = autoScrollSettings[key];
+             input.placeholder = placeholder;
+             Object.assign(input.style, { width: '50px', padding: '2px', border: '1px solid #ccc', borderRadius: '4px' });
+             
+             input.addEventListener('change', () => {
+                 let val = parseFloat(input.value);
+                 if (isNaN(val) || val < 0) val = key === 'interval' ? 1 : 0;
+                 autoScrollSettings[key] = val;
+                 saveAutoScrollSettings();
+                 restartAutoScrollIfActive();
+             });
+             
+             container.appendChild(lbl);
+             container.appendChild(input);
+             return { container, input };
+        };
+
+        const stepInputObj = createScrollInput('Step (px):', 'step', '300');
+        const intervalInputObj = createScrollInput('Interval (sec):', 'interval', '5');
+
+        asCheckbox.addEventListener('change', () => {
+            autoScrollSettings.scrollToBottom = asCheckbox.checked;
+            saveAutoScrollSettings();
+            updateStepVisibility();
+            restartAutoScrollIfActive();
+        });
+
+        function updateStepVisibility() {
+            if (autoScrollSettings.scrollToBottom) {
+                stepInputObj.container.style.display = 'none';
+            } else {
+                stepInputObj.container.style.display = 'flex';
+            }
+        }
+        updateStepVisibility();
+        
+        asCheckboxContainer.appendChild(asCheckbox);
+        asCheckboxContainer.appendChild(asCheckboxLabel);
+        contentContainer.appendChild(asCheckboxContainer);
+
+        contentContainer.appendChild(stepInputObj.container);
+        contentContainer.appendChild(intervalInputObj.container);
 
         document.body.appendChild(panel);
         applyFilters(); // Initial count
-
-        // Scroll listener for "Above" info
-        scrollHandler = throttle(() => {
-            updateAboveInfo();
-        }, 200);
-        window.addEventListener('scroll', scrollHandler);
-
-        // Real-time status check
-        statusInterval = setInterval(() => {
-            const isActive = isSpinnerActive();
-            spinnerStatusDiv.textContent = isActive ? 'Spinner: Active' : 'Spinner: Idle';
-            spinnerStatusDiv.style.color = isActive ? '#d00' : '#2ba640';
-
-            const filterEl = document.getElementById('yt-saver-filtering-status');
-            if (filterEl) {
-                filterEl.textContent = isFiltering ? 'Filtering: Active' : 'Filtering: Idle';
-                filterEl.style.color = isFiltering ? '#d00' : '#2ba640';
-            }
-
-            const procEl = document.getElementById('yt-saver-processing-status');
-            if (procEl) {
-                procEl.textContent = isProcessing ? 'Processing: Active' : 'Processing: Idle';
-                procEl.style.color = isProcessing ? '#d00' : '#2ba640';
-            }
-        }, 500);
+        updateStatusCounts(); // Initial stats
     }
 
     function getIndex(item) {
@@ -605,6 +1145,12 @@
 
         if (!confirm(`Are you sure you want to remove ${items.length} videos from the playlist?`)) return;
 
+        // Automatically stop auto scroll if it's active
+        if (scrollInterval) {
+            const scrollBtn = document.getElementById('yt-saver-as-toggle');
+            if (scrollBtn) toggleAutoScroll(scrollBtn);
+        }
+
         isProcessing = true; // Start processing
         const btn = document.getElementById('yt-saver-remove-above-btn');
         if (btn) {
@@ -617,9 +1163,24 @@
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
 
+                // Show DELETING indicator before processing
+                updateDeletingIndicator(item, true);
+
+                // Extract metadata for progress display
+                const titleEl = item.querySelector('#video-title');
+                const title = titleEl ? titleEl.textContent.trim() : 'Unknown';
+                const channelEl = item.querySelector('.ytd-channel-name a') || item.querySelector('#channel-name #text');
+                const channel = channelEl ? channelEl.textContent.trim() : 'Unknown';
+
+                const detailEl = document.getElementById('yt-saver-processing-detail');
+                if (detailEl) {
+                    detailEl.textContent = `${title} (${channel})`;
+                    detailEl.title = `${title} (${channel})`; // Tooltip for full text
+                }
+
                 // Scroll into view gently
                 item.scrollIntoView({ block: 'center', behavior: 'instant' });
-                await new Promise(r => setTimeout(r, 100)); // Small wait after scroll
+                await new Promise(r => setTimeout(r, 250)); // Small wait after scroll
 
                 // Wait for spinner to disappear if active
                 await waitUntilSpinnerDisappears();
@@ -628,16 +1189,41 @@
                     const success = await attemptRemoveVideo(item);
                     if (!success) {
                         console.warn(`[YouTube Playlist Saver] Failed to remove item index ${i}`);
+                        updateDeletingIndicator(item, false); // Clean up indicator
+                    } else {
+                        // Mark as removed visually and logically to prevent double-processing
+                        item.style.opacity = '0.3';
+                        item.style.pointerEvents = 'none';
+                        
+                        // Wait for YouTube to actually remove the element from DOM
+                        const removed = await waitForDomRemoval(item, 5000);
+                        
+                        if (!removed) {
+                             console.warn(`[YouTube Playlist Saver] Item index ${i} was not removed by YouTube in time.`);
+                             // Fallback: hide it manually if YouTube didn't update UI in time
+                             item.style.display = 'none'; 
+                        }
                     }
                 } catch (err) {
                     console.error(`[YouTube Playlist Saver] Exception removing item index ${i}`, err);
+                    updateDeletingIndicator(item, false); // Clean up indicator
                 }
 
                 // Delay between actions to prevent rate limiting or UI glitches
                 await new Promise(r => setTimeout(r, 1000));
+                
+                // Update stats during removal
+                updateStatusCounts();
             }
         } finally {
             isProcessing = false; // End processing
+            
+            const detailEl = document.getElementById('yt-saver-processing-detail');
+            if (detailEl) {
+                detailEl.textContent = '';
+                detailEl.title = '';
+            }
+
             if (btn) {
                 btn.disabled = false;
                 btn.textContent = 'Remove Above';
@@ -645,6 +1231,7 @@
             }
             // Update info after removal
             applyFilters();
+            updateStatusCounts();
         }
     }
 
@@ -688,6 +1275,68 @@
     }
 
 
+    function updateMatchedIndicator(element, isMatched) {
+        let bar = element.querySelector('#engagement-bar');
+        if (!bar) {
+             bar = element.querySelector('.ytd-video-meta-block') || element.querySelector('#meta');
+        }
+        if (!bar) return;
+
+        const oldIndicator = bar.querySelector('.yt-saver-matched-indicator');
+        if (oldIndicator) oldIndicator.remove();
+
+        if (isMatched) {
+            const indicator = document.createElement('span');
+            indicator.className = 'yt-saver-matched-indicator';
+            indicator.textContent = ' [MATCHED] ';
+            Object.assign(indicator.style, {
+                fontSize: '11px',
+                fontWeight: 'bold',
+                marginRight: '8px',
+                color: '#ff9800', // Orange
+                verticalAlign: 'middle',
+                display: 'inline-block'
+            });
+            // Insert after NEW/SAVED indicator if exists, otherwise prepend
+            const existingIndicator = bar.querySelector('.yt-saver-indicator');
+            if (existingIndicator) {
+                existingIndicator.after(indicator);
+            } else {
+                bar.prepend(indicator);
+            }
+        }
+    }
+
+    function updateDeletingIndicator(element, show = false) {
+        let bar = element.querySelector('#engagement-bar, .ytd-video-meta-block, #meta');
+        if (!bar) return;
+
+        const oldIndicator = bar.querySelector('.yt-saver-deleting-indicator');
+        if (oldIndicator) oldIndicator.remove();
+
+        if (show) {
+            const indicator = document.createElement('span');
+            indicator.className = 'yt-saver-deleting-indicator';
+            indicator.textContent = ' [DELETING] ';
+            Object.assign(indicator.style, {
+                fontSize: '11px',
+                fontWeight: 'bold',
+                marginRight: '8px',
+                color: '#d00', // Red
+                verticalAlign: 'middle',
+                display: 'inline-block'
+            });
+
+            // Insert after other indicators if they exist
+            const existingIndicator = bar.querySelector('.yt-saver-matched-indicator, .yt-saver-indicator');
+            if (existingIndicator) {
+                existingIndicator.after(indicator);
+            } else {
+                bar.prepend(indicator);
+            }
+        }
+    }
+
     function applyFilterToItem(item) {
         // 1. Get Title
         const titleEl = item.querySelector('#video-title');
@@ -699,14 +1348,18 @@
         const channelText = channelEl ? channelEl.textContent.trim().toLowerCase() : '';
 
         // 3. Check Matches
+        const isFilterActive = filterState.title || filterState.channel;
         const matchTitle = !filterState.title || titleText.includes(filterState.title);
         const matchChannel = !filterState.channel || channelText.includes(filterState.channel);
+        const isMatched = matchTitle && matchChannel;
 
-        if (matchTitle && matchChannel) {
+        if (isMatched) {
             item.style.display = '';
         } else {
             item.style.display = 'none';
         }
+
+        updateMatchedIndicator(item, isFilterActive && isMatched);
     }
 
     function updateResultCount() {
@@ -725,6 +1378,39 @@
         const countEl = document.getElementById('yt-saver-filter-count');
         if (countEl) {
             countEl.textContent = `Results: ${visibleCount} / ${items.length}`;
+        }
+    }
+
+    function updateStatusCounts() {
+        const items = document.querySelectorAll('ytd-playlist-video-renderer');
+        let newCount = 0;
+        let savedCount = 0;
+
+        items.forEach(item => {
+            const indicator = item.querySelector('.yt-saver-indicator');
+            if (indicator) {
+                const text = indicator.textContent || "";
+                if (text.includes('NEW')) newCount++;
+                else if (text.includes('SAVED')) savedCount++;
+            }
+        });
+
+        const el = document.getElementById('yt-saver-status-counts');
+        if (el) {
+             // Avoid innerHTML to prevent Trusted Types violations
+             while (el.firstChild) el.removeChild(el.firstChild);
+
+             const newSpan = document.createElement('span');
+             newSpan.style.color = '#3ea6ff';
+             newSpan.textContent = `New: ${newCount}`;
+
+             const savedSpan = document.createElement('span');
+             savedSpan.style.color = '#2ba640';
+             savedSpan.textContent = `Saved: ${savedCount}`;
+
+             el.appendChild(newSpan);
+             el.appendChild(document.createTextNode(' | '));
+             el.appendChild(savedSpan);
         }
     }
 
@@ -750,71 +1436,127 @@
         // Apply filter immediately for new/re-scanned items
         applyFilterToItem(item);
 
-
         if (item.dataset.saverProcessed === playlistId) return;
 
         const videoId = extractVideoId(item);
         if (!videoId) return;
 
-        let isNew = false;
-        if (!currentSessionSet.has(videoId)) {
-            const queued = queueVideoId(playlistId, videoId);
-            if (queued) {
-                isNew = true;
-                currentSessionSet.add(videoId);
-            }
+        // Extract metadata
+        const titleEl = item.querySelector('#video-title');
+        const title = titleEl ? titleEl.textContent.trim() : null;
+
+        const channelEl = item.querySelector('.ytd-channel-name a') || item.querySelector('#channel-name #text');
+        const channel = channelEl ? channelEl.textContent.trim() : null;
+
+        const wasInDb = currentSessionSet.has(videoId);
+
+        // Always attempt to queue/update. 
+        // If ID exists but metadata is missing, this updates it.
+        // If ID is new, this adds it.
+        queueVideoId(playlistId, videoId, title, channel);
+
+        if (!wasInDb) {
+            currentSessionSet.add(videoId);
         }
 
-        renderIndicator(item, isNew);
+        renderIndicator(item, !wasInDb);
         item.dataset.saverProcessed = playlistId;
     }
 
     // --- Auto Scroll Feature ---
 
+    const AUTO_SCROLL_SETTINGS_KEY = 'yt_auto_scroll_settings';
+    let autoScrollSettings = GM_getValue(AUTO_SCROLL_SETTINGS_KEY, {
+        scrollToBottom: true,
+        step: 300,
+        interval: 5.0
+    });
     let scrollInterval = null;
-    const SCROLL_STEP = 300;
-    const SCROLL_DELAY = 500;
+
+    function saveAutoScrollSettings() {
+        GM_setValue(AUTO_SCROLL_SETTINGS_KEY, autoScrollSettings);
+    }
 
     function toggleAutoScroll(btn) {
+        // If btn is not provided, try to find it
+        if (!btn) btn = document.getElementById('yt-saver-as-toggle');
+        if (!btn) return;
+
         if (scrollInterval) {
             clearInterval(scrollInterval);
             scrollInterval = null;
-            btn.textContent = 'Auto Scroll: OFF';
+            btn.textContent = 'OFF';
             btn.style.backgroundColor = '#ccc';
             btn.style.color = '#000';
         } else {
-            btn.textContent = 'Auto Scroll: ON';
-            btn.style.backgroundColor = '#f00';
+            btn.textContent = 'ON';
+            btn.style.backgroundColor = '#2ba640';
             btn.style.color = '#fff';
-            scrollInterval = setInterval(() => {
-                window.scrollBy(0, SCROLL_STEP);
-            }, SCROLL_DELAY);
+
+            const intervalMs = Math.max(100, (autoScrollSettings.interval || 5) * 1000);
+            const runScroll = () => {
+                if (autoScrollSettings.scrollToBottom) {
+                    window.scrollTo(0, document.documentElement.scrollHeight);
+                } else {
+                    window.scrollBy(0, autoScrollSettings.step || 300);
+                }
+            };
+
+            // Run immediately once
+            runScroll();
+            scrollInterval = setInterval(runScroll, intervalMs);
         }
     }
 
-    function addAutoScrollButton() {
-        if (document.getElementById('yt-saver-scroll-btn')) return;
+    function restartAutoScrollIfActive() {
+        // Only restart if currently active (interval exists)
+        if (scrollInterval) {
+            clearInterval(scrollInterval);
+            const intervalMs = Math.max(100, (autoScrollSettings.interval || 5) * 1000);
+            
+            const runScroll = () => {
+                if (autoScrollSettings.scrollToBottom) {
+                     window.scrollTo(0, document.documentElement.scrollHeight);
+                } else {
+                     window.scrollBy(0, autoScrollSettings.step || 300);
+                }
+            };
+            
+            scrollInterval = setInterval(runScroll, intervalMs);
+        }
+    }
 
-        const btn = document.createElement('button');
-        btn.id = 'yt-saver-scroll-btn';
-        btn.textContent = 'Auto Scroll: OFF';
-        Object.assign(btn.style, {
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            zIndex: 9999,
-            padding: '10px 15px',
-            backgroundColor: '#ccc',
-            color: '#000',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
+    function processAllVisible(playlistId, currentSessionSet) {
+        isFiltering = true; // Activating filtering indicator during re-scan/loading
+        try {
+            const items = document.querySelectorAll('ytd-playlist-video-renderer');
+            items.forEach(item => processItem(item, playlistId, currentSessionSet));
+            updateResultCount();
+        } finally {
+            // Ensure indicator remains visible for 100ms
+            setTimeout(() => {
+                isFiltering = false;
+                updateAboveInfo();
+                updateStatusCounts();
+            }, 100);
+        }
+    }
+
+    function initObserver(listContainer, playlistId, currentSessionSet) {
+        if (window._ytSaverObserver) window._ytSaverObserver.disconnect();
+
+        const throttledProcess = throttle(() => {
+            processAllVisible(playlistId, currentSessionSet);
+        }, 1000);
+
+        const observer = new MutationObserver((_mutations) => {
+            throttledProcess();
         });
 
-        btn.addEventListener('click', () => toggleAutoScroll(btn));
-        document.body.appendChild(btn);
+        // Performance: Stop observing subtree. Only observe direct child additions (new videos).
+        observer.observe(listContainer, { childList: true, subtree: false });
+        window._ytSaverObserver = observer;
+        window._ytSaverObservedElement = listContainer;
     }
 
     async function run() {
@@ -822,60 +1564,80 @@
         if (!playlistId) return;
 
         console.log(`[YouTube Playlist Saver] Processing playlist: ${playlistId}`);
-        addAutoScrollButton();
         createFilterPanel();
+
+
 
         // Use local Cache
         const currentSessionSet = getSavedVideos(playlistId);
 
-        const processAllVisible = () => {
-            isFiltering = true; // Activating filtering indicator during re-scan/loading
-            try {
-                const items = document.querySelectorAll('ytd-playlist-video-renderer');
-                items.forEach(item => processItem(item, playlistId, currentSessionSet));
-                updateResultCount();
-            } finally {
-                // Ensure indicator remains visible for 100ms
-                setTimeout(() => {
-                    isFiltering = false;
-                    updateAboveInfo();
-                }, 100);
-            }
-        };
-
-        processAllVisible();
-
-        if (window._ytSaverObserver) window._ytSaverObserver.disconnect();
-
-        // Target the specific playlist container
-        let listContainer = document.querySelector('ytd-playlist-video-list-renderer #contents');
-        if (!listContainer) {
-            // Wait for it slightly if not immediately available (e.g. soft nav)
-            listContainer = await waitForElement('ytd-playlist-video-list-renderer #contents', 5000);
-        }
-
-        if (!listContainer) {
-            console.warn('[YouTube Playlist Saver] Playlist container not found. Observer not started to save performance.');
-            return;
-        }
-
-        // Lazy Observer: Just re-scan everything slightly throttled when mutations occur.
-        // This is much lighter than analyzing every mutation record if we just want to catch new items.
-        // And since processItem is safe to call repeatedly, this works well.
-        const throttledProcess = throttle(() => {
-            processAllVisible();
+        // Create debounced scanner for scroll events (1 second delay)
+        const debouncedScan = debounce(() => {
+             processAllVisible(playlistId, currentSessionSet);
         }, 1000);
 
-        const observer = new MutationObserver((mutations) => {
-            // Check if any added nodes are relevant? 
-            // Or just blindly run throttled process.
-            // Let's just run. The throttle protects us.
-            throttledProcess();
-        });
+        // Initialize Scroll Listener if not already present
+        if (!scrollHandler) {
+            scrollHandler = throttle(() => {
+                updateAboveInfo();
+                debouncedScan();
+            }, 200);
+            window.addEventListener('scroll', scrollHandler);
+        }
 
-        observer.observe(listContainer, { childList: true, subtree: true });
+        // Start Status Intervals with Panel/Observer Resurrection Logic
+        if (statusInterval) clearInterval(statusInterval);
+        statusInterval = setInterval(() => {
+            // 1. Check if panel is alive
+            if (!document.getElementById('yt-saver-filter-panel')) {
+                 console.warn('[YouTube Playlist Saver] Panel disappeared, recreating...');
+                 createFilterPanel();
+            }
 
-        window._ytSaverObserver = observer;
+            // 2. Check if list container is still in DOM (Observer check)
+            const listContainer = document.querySelector('ytd-playlist-video-list-renderer #contents');
+            if (listContainer && (!window._ytSaverObservedElement || window._ytSaverObservedElement !== listContainer || !document.contains(window._ytSaverObservedElement))) {
+                 console.warn('[YouTube Playlist Saver] List container replaced or observer missing, re-initializing...');
+                 initObserver(listContainer, playlistId, currentSessionSet);
+            }
+
+            // 3. UI Updates
+            const isActive = isSpinnerActive();
+            const spinnerStatusDiv = document.getElementById('yt-saver-spinner-status');
+            if (spinnerStatusDiv) {
+                spinnerStatusDiv.textContent = isActive ? 'Spinner: Active' : 'Spinner: Idle';
+                spinnerStatusDiv.style.color = isActive ? '#d00' : '#2ba640';
+            }
+
+            const filterEl = document.getElementById('yt-saver-filtering-status');
+            if (filterEl) {
+                filterEl.textContent = isFiltering ? 'Filtering: Active' : 'Filtering: Idle';
+                filterEl.style.color = isFiltering ? '#d00' : '#2ba640';
+            }
+
+            const procEl = document.getElementById('yt-saver-processing-status');
+            if (procEl) {
+                procEl.textContent = isProcessing ? 'Processing: Active' : 'Processing: Idle';
+                procEl.style.color = isProcessing ? '#d00' : '#2ba640';
+            }
+        }, 500);
+
+        if (countsInterval) clearInterval(countsInterval);
+        countsInterval = setInterval(() => {
+            updateStatusCounts();
+        }, 10000);
+
+        processAllVisible(playlistId, currentSessionSet);
+
+        // Initial Observer setup
+        const listContainer = document.querySelector('ytd-playlist-video-list-renderer #contents') ||
+                             await waitForElement('ytd-playlist-video-list-renderer #contents', 5000);
+                             
+        if (listContainer) {
+            initObserver(listContainer, playlistId, currentSessionSet);
+        } else {
+            console.warn('[YouTube Playlist Saver] Playlist container not found. Observer not started.');
+        }
     }
 
     // --- Navigation Handling ---
@@ -889,12 +1651,14 @@
             clearInterval(statusInterval);
             statusInterval = null;
         }
+        if (countsInterval) {
+            clearInterval(countsInterval);
+            countsInterval = null;
+        }
         if (scrollHandler) {
             window.removeEventListener('scroll', scrollHandler);
             scrollHandler = null;
         }
-        const scrollBtn = document.getElementById('yt-saver-scroll-btn');
-        if (scrollBtn) scrollBtn.remove();
 
         const filterPanel = document.getElementById('yt-saver-filter-panel');
         if (filterPanel) filterPanel.remove();
@@ -913,7 +1677,7 @@
         // Flush pending save
         if (pendingSaveTimeout) {
             clearTimeout(pendingSaveTimeout);
-            GM_setValue(DATA_KEY, cachedData);
+            GM_setValue(DATA_KEY, cachedStorage);
             pendingSaveTimeout = null;
         }
 
