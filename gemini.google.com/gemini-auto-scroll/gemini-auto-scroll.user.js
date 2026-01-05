@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.3
+// @version      0.1.4
 // @description  Automatically scroll to the current conversation in the Gemini sidebar with a toggle switch
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -16,7 +16,7 @@
     const SELECTORS = {
         CONVERSATION_ITEM: 'div[data-test-id="conversation"]',
         SPINNER: 'mat-progress-spinner[data-test-id="loading-history-spinner"]',
-        SCROLL_CONTAINER: 'conversations-list .conversations-container',
+        SCROLL_CONTAINER: 'conversations-list', // Updated from incorrect class name
         MENU_BUTTON: 'side-nav-menu-button'
     };
 
