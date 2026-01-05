@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.7
+// @version      0.1.8
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -137,6 +137,24 @@
             margin-left: 5px;
             color: #8ab4f8;
         }
+        .gtc-setting-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 4px;
+            font-size: 11px;
+            color: #bdc1c6;
+        }
+        .gtc-input {
+            background: #1e1f20;
+            border: 1px solid #444746;
+            color: #e3e3e3;
+            width: 40px;
+            padding: 1px 2px;
+            border-radius: 2px;
+            font-size: 11px;
+            text-align: right;
+        }
         /* Modal & Tooltip styles would go here (omitted for initial brevity) */
     `;
     document.head.appendChild(style);
@@ -262,7 +280,7 @@
             setInnerHTML(contentDiv, `
                 <div style="margin-bottom: 8px; font-weight: bold; border-bottom:1px solid #555; padding-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
                     <span>Gemini Turns</span>
-                    <span style="font-size:10px; font-weight:normal; opacity:0.7;">v0.1.7</span>
+                    <span style="font-size:10px; font-weight:normal; opacity:0.7;">v0.1.8</span>
                 </div>
                 <div class="gtc-row"><span>User:</span> <span class="gtc-val">${userTurns.length} (${userCharCount.toLocaleString()})</span></div>
                 <div class="gtc-row"><span>Model:</span> <span class="gtc-val">${modelTurns.length} (${modelCharCount.toLocaleString()})</span></div>
@@ -279,22 +297,33 @@
                         <span class="gtc-val">${imageCount}</span>
                         ${imageCount > 0 ?
                     `<button id="gtc-copy-all" style="margin-left: 8px; padding: 2px 6px; font-size: 11px; cursor: pointer;">Copy</button>
-                             <span id="gtc-copy-status"></span>`
+                                 <span id="gtc-copy-status"></span>`
                     : ''}
                     </span>
                 </div>
+                ${imageCount > 0 ? `
+                <div class="gtc-setting-row">
+                    <input type="checkbox" id="gtc-height-enable" checked style="margin: 0; vertical-align: middle;">
+                    <label for="gtc-height-enable" style="cursor: pointer; vertical-align: middle;">Max Height:</label>
+                    <input type="number" id="gtc-height-input" value="200" class="gtc-input"> px
+                </div>` : ''}
                 ${thumbnailsHtml}
             `);
 
             // Attach Copy All event
             const copyBtn = contentDiv.querySelector('#gtc-copy-all');
             const statusSpan = contentDiv.querySelector('#gtc-copy-status');
+            const heightEnable = contentDiv.querySelector('#gtc-height-enable');
+            const heightInput = contentDiv.querySelector('#gtc-height-input');
 
             if (copyBtn) {
                 copyBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     copyBtn.textContent = '...';
                     if (statusSpan) statusSpan.textContent = '0/' + collectedImages.length;
+
+                    const useHeightLimit = heightEnable ? heightEnable.checked : false;
+                    const heightLimit = heightInput ? heightInput.value : 200;
 
                     // Use Promise-based ClipboardItem construction to prevent "Document is not focused" error
                     const clipboardPromise = (async () => {
@@ -306,8 +335,13 @@
                                 const dataUri = await fetchImageData(url);
                                 processedCount++;
                                 if (statusSpan) statusSpan.textContent = `${processedCount}/${collectedImages.length}`;
-                                // Add max-height: 200px to prevent images from being too large in the clipboard target app
-                                return dataUri ? `<img src="${dataUri}" style="max-height: 200px;" />` : '';
+
+                                let imgTag = '';
+                                if (dataUri) {
+                                    const styleAttr = useHeightLimit ? ` style="max-height: ${heightLimit}px;"` : '';
+                                    imgTag = `<img src="${dataUri}"${styleAttr} />`;
+                                }
+                                return imgTag;
                             });
 
                             const results = await Promise.all(promises);
