@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.11
+// @version      0.1.13
 // @description  Automatically scroll to the current conversation in the Gemini sidebar with a toggle switch
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -81,52 +81,64 @@
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                border-radius: 20px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                background-color: #1e1f20; /* Dark background */
+                border-radius: 8px; /* Square with rounded corners for checkbox feel */
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                background-color: #1e1f20;
                 cursor: pointer;
-                transition: opacity 0.2s, background-color 0.2s;
-                padding: 0 4px;
+                transition: all 0.2s;
+                padding: 0;
+                width: 40px;
                 height: 40px;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             }
             #gemini-auto-scroll-toggle:hover {
-                background-color: #2b2c2d;
+                background-color: #303134;
+                border-color: rgba(255, 255, 255, 0.6);
             }
             #gemini-auto-scroll-toggle .material-symbols-outlined {
-                font-size: 28px;
+                font-size: 24px;
                 font-family: 'Google Symbols';
             }
+            /* ON STATE - Visual Emphasis */
+            #gemini-auto-scroll-toggle.enabled {
+                background-color: #8ab4f8; /* Gemini Blue Fill */
+                border-color: #8ab4f8;
+            }
             #gemini-auto-scroll-toggle.enabled .material-symbols-outlined {
-                color: #8ab4f8; /* Gemini Blue */
+                color: #202124; /* Dark Icon for Contrast */
             }
+            #gemini-auto-scroll-toggle.enabled:hover {
+                background-color: #aecbfa;
+            }
+            /* OFF STATE */
             #gemini-auto-scroll-toggle.disabled .material-symbols-outlined {
-                color: #bdc1c6; /* Grey */
-                opacity: 0.5;
+                color: #bdc1c6;
             }
+            
             #gemini-auto-scroll-toggle.processing .material-symbols-outlined {
                 animation: gtc-pulse 1.5s infinite ease-in-out;
             }
             @keyframes gtc-pulse {
-                0% { opacity: 1; text-shadow: 0 0 0 rgba(138, 180, 248, 0); }
-                50% { opacity: 0.5; text-shadow: 0 0 5px rgba(138, 180, 248, 0.5); }
-                100% { opacity: 1; text-shadow: 0 0 0 rgba(138, 180, 248, 0); }
+                0% { opacity: 1; }
+                50% { opacity: 0.4; }
+                100% { opacity: 1; }
             }
 
             .gtc-badge {
                 position: absolute;
-                top: -4px;
-                right: -4px;
+                top: -6px;
+                right: -6px;
                 background-color: #34a853;
                 color: #fff;
                 font-size: 10px;
                 font-weight: bold;
                 padding: 1px 4px;
-                border-radius: 8px;
+                border-radius: 10px;
                 min-width: 16px;
                 text-align: center;
                 pointer-events: none;
                 box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+                border: 1px solid #1e1f20;
             }
 
             .gtc-tooltip {
@@ -200,7 +212,8 @@
 
         const icon = btn.querySelector('.material-symbols-outlined');
         if (icon) {
-            icon.textContent = enabled ? 'toggle_on' : 'toggle_off';
+            // Use checkbox icons
+            icon.textContent = enabled ? 'check_box' : 'check_box_outline_blank';
         }
 
         // Update count and indices
@@ -213,8 +226,8 @@
 
         const tooltip = btn.querySelector('.gtc-tooltip');
         if (tooltip) {
-            const status = isProcessing ? 'Scanning...' : (enabled ? 'ON' : 'OFF');
-            tooltip.textContent = `Auto-Scroll: ${status} (${count} items)`;
+            const status = isProcessing ? 'Scanning...' : (enabled ? 'Auto-Scroll ON' : 'OFF');
+            tooltip.textContent = `${status} (${count} items)`;
         }
     }
 
@@ -227,7 +240,7 @@
         const btn = document.createElement('button');
         btn.id = 'gemini-auto-scroll-toggle';
         setInnerHTML(btn, `
-            <span class="material-symbols-outlined">toggle_on</span>
+            <span class="material-symbols-outlined">check_box</span>
             <span class="gtc-badge">0</span>
             <span class="gtc-tooltip">Auto-Scroll</span>
         `);
@@ -379,9 +392,16 @@
     // --- Monitoring ---
 
     let lastUrl = window.location.href;
+    let _debounceTimer;
 
     const uiObserver = new MutationObserver(() => {
         injectToggleButton();
+
+        // Debounce UI updates to prevent performance issues during scrolling
+        if (_debounceTimer) clearTimeout(_debounceTimer);
+        _debounceTimer = setTimeout(() => {
+            updateToggleButtonUI();
+        }, 500);
     });
     uiObserver.observe(document.body, { childList: true, subtree: true });
 
@@ -389,9 +409,13 @@
         const currentUrl = window.location.href;
         if (currentUrl !== lastUrl) {
             lastUrl = currentUrl;
+            // Re-trigger scroll when URL changes
             setTimeout(attemptScrollToConversation, 1200);
         }
+        // Also periodically ensure UI is accurate
+        updateToggleButtonUI();
     }, 1000);
+
 
     setTimeout(() => {
         injectToggleButton();
