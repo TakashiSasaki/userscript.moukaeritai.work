@@ -4,7 +4,9 @@
 // @version      0.1.0
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
-// @match        https://gemini.google.com/*
+// @match        https://gemini.google.com/app/*
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js
 // @grant        none
 // ==/UserScript==
 
