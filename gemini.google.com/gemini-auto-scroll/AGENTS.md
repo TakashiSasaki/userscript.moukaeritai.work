@@ -1,22 +1,32 @@
-# HTML Preprocessing Guidelines for Agents
+# Gemini Auto-Scroll Development Guidelines
 
-To keep the DOM snapshots manageable and useful for development, follow these preprocessing steps when adding or updating HTML files in this project:
+## HTML Preprocessing
+See `youtube.com/samples/preprocess.py` for the cleaning logic.
+Always re-process snapshots if the cleaning script changes.
 
-## Recommended Tool
-Use the script located at `youtube.com/samples/preprocess.py`.
+## Conversation List Analysis
 
-## Preprocessing steps implemented in the script:
-1.  **Remove Script and Style Tags**: Delete all `<script>` and `<style>` elements to reduce noise and file size.
-2.  **Clean SVGs**: Remove the children of `<svg>` elements while keeping the tag itself.
-3.  **Remove Empty Attributes**: Delete empty `style=""` attributes.
-4.  **Remove Empty Comments**: Remove comments that are empty or contain only whitespace (e.g., `<!-- -->`).
-5.  **Normalize Whitespace**:
-    -   Replace all consecutive whitespace characters (spaces, tabs, newlines) within text nodes with a single space.
-    -   Perform a final global pass to collapse all redundant whitespace across the entire document.
-6.  **Truncate Text Nodes**: Limit the length of any text node to a maximum of **99 characters**. Truncated text should be appended with `...[TRUNCATED]`.
+### 1. Identifying the Current Conversation
+The conversation ID is present in the URL: `https://gemini.google.com/app/<ID>`.
+In the conversation list (sidebar), each item is a `div[data-test-id="conversation"]`.
+The ID is stored within the `jslog` attribute, prefixed with `c_`.
+- **Selector**: `div[data-test-id="conversation"][jslog*="c_<ID>"]`
+- **Verification**: The ID in `jslog` looks like `"c_fef36eb6be619216"`. The URL part is just `fef36eb6be619216`.
 
-## Usage
-Run the following command from the project root:
-```powershell
-python youtube.com/samples/preprocess.py path/to/your/file.html
-```
+### 2. Detecting the Loading State
+The conversation list uses infinite scroll. When more items are being fetched:
+- A spinner element appears: `mat-progress-spinner[data-test-id="loading-history-spinner"]`.
+- The spinner is typically located inside an `infinite-scroller` component at the bottom of the list.
+- **Loading Check**: `document.querySelector('mat-progress-spinner[data-test-id="loading-history-spinner"]') !== null`
+- **Container**: The scrollable container is `conversations-list` or its internal `.conversations-container`.
+
+### 3. Scroll Triggering and Convergence
+To load more conversations automatically:
+1. Extract ID from URL.
+2. Check if ID exists in sidebar.
+3. If not found:
+    - Scroll the sidebar container to the absolute bottom.
+    - Wait for the loading spinner to appear AND then disappear (indicator of a finished fetch).
+    - Re-search for the ID.
+4. Repeat if necessary.
+5. **Giving Up**: If the spinner doesn't appear after scrolling to the bottom, or if we reach a maximum number of scrolls (e.g., 20), stop.
