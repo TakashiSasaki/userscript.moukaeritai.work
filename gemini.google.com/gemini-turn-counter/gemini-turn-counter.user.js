@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.2
+// @version      0.1.3
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js
-// @grant        none
+// @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
 (function () {
@@ -169,22 +169,30 @@
         return length;
     };
 
-    const fetchImageData = async (src) => {
-        try {
+    const fetchImageData = (src) => {
+        return new Promise((resolve) => {
             // Check if src is already data URI
-            if (src.startsWith('data:')) return src;
+            if (src.startsWith('data:')) {
+                resolve(src);
+                return;
+            }
 
-            const response = await fetch(src);
-            const blob = await response.blob();
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.readAsDataURL(blob);
+            GM_xmlhttpRequest({
+                method: "GET",
+                url: src,
+                responseType: "blob",
+                onload: (response) => {
+                    const blob = response.response;
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                },
+                onerror: (e) => {
+                    console.error('Gemini Turn Counter: Failed to fetch image data with GM_xmlhttpRequest', e);
+                    resolve(null);
+                }
             });
-        } catch (e) {
-            console.error('Failed to fetch image data:', e);
-            return null;
-        }
+        });
     };
 
     // Keep track of processed images to avoid refetching heavily
