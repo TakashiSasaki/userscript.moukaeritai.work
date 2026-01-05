@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.8
+// @version      0.1.9
 // @description  Automatically scroll to the current conversation in the Gemini sidebar with a toggle switch
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -249,9 +249,10 @@
         }
 
         // Strategy 2: Fallback to known selectors
+        // Note: 'conversation-items-container' is a single item wrapper, not the list.
         return document.querySelector(SELECTORS.SCROLL_CONTAINER) ||
-            document.querySelector('.conversation-items-container') ||
-            document.querySelector('conversations-list');
+            document.querySelector('conversations-list') ||
+            document.querySelector('infinite-scroller');
     }
 
     function isSpinnerVisible() {
