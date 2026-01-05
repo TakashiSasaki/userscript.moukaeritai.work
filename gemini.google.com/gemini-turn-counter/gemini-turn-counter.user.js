@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.6
+// @version      0.1.7
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -132,6 +132,11 @@
         .gtc-thumbnail.copied {
             border: 2px solid #8ab4f8; /* Gemini Blue */
         }
+        #gtc-copy-status {
+            font-size: 10px;
+            margin-left: 5px;
+            color: #8ab4f8;
+        }
         /* Modal & Tooltip styles would go here (omitted for initial brevity) */
     `;
     document.head.appendChild(style);
@@ -257,7 +262,7 @@
             setInnerHTML(contentDiv, `
                 <div style="margin-bottom: 8px; font-weight: bold; border-bottom:1px solid #555; padding-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
                     <span>Gemini Turns</span>
-                    <span style="font-size:10px; font-weight:normal; opacity:0.7;">v0.1.6</span>
+                    <span style="font-size:10px; font-weight:normal; opacity:0.7;">v0.1.7</span>
                 </div>
                 <div class="gtc-row"><span>User:</span> <span class="gtc-val">${userTurns.length} (${userCharCount.toLocaleString()})</span></div>
                 <div class="gtc-row"><span>Model:</span> <span class="gtc-val">${modelTurns.length} (${modelCharCount.toLocaleString()})</span></div>
@@ -272,7 +277,10 @@
                     <span>Images:</span> 
                     <span>
                         <span class="gtc-val">${imageCount}</span>
-                        ${imageCount > 0 ? '<button id="gtc-copy-all" style="margin-left: 8px; padding: 2px 6px; font-size: 11px; cursor: pointer;">Copy</button>' : ''}
+                        ${imageCount > 0 ?
+                    `<button id="gtc-copy-all" style="margin-left: 8px; padding: 2px 6px; font-size: 11px; cursor: pointer;">Copy</button>
+                             <span id="gtc-copy-status"></span>`
+                    : ''}
                     </span>
                 </div>
                 ${thumbnailsHtml}
@@ -280,23 +288,37 @@
 
             // Attach Copy All event
             const copyBtn = contentDiv.querySelector('#gtc-copy-all');
+            const statusSpan = contentDiv.querySelector('#gtc-copy-status');
+
             if (copyBtn) {
                 copyBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     copyBtn.textContent = '...';
+                    if (statusSpan) statusSpan.textContent = '0/' + collectedImages.length;
 
                     // Use Promise-based ClipboardItem construction to prevent "Document is not focused" error
                     const clipboardPromise = (async () => {
                         try {
-                            const imgTags = await Promise.all(collectedImages.map(async (url) => {
+                            const imgTags = [];
+                            let processedCount = 0;
+
+                            const promises = collectedImages.map(async (url) => {
                                 const dataUri = await fetchImageData(url);
+                                processedCount++;
+                                if (statusSpan) statusSpan.textContent = `${processedCount}/${collectedImages.length}`;
                                 // Add max-height: 200px to prevent images from being too large in the clipboard target app
                                 return dataUri ? `<img src="${dataUri}" style="max-height: 200px;" />` : '';
-                            }));
-                            const htmlToCopy = imgTags.join('');
+                            });
+
+                            const results = await Promise.all(promises);
+                            const htmlToCopy = results.join('');
+
+                            if (statusSpan) statusSpan.textContent = `${htmlToCopy.length} chars`;
+
                             return new Blob([htmlToCopy], { type: "text/html" });
                         } catch (err) {
                             console.error('Image processing failed', err);
+                            if (statusSpan) statusSpan.textContent = 'Err';
                             throw err;
                         }
                     })();
@@ -304,7 +326,10 @@
                     const item = new ClipboardItem({ "text/html": clipboardPromise });
                     navigator.clipboard.write([item]).then(() => {
                         copyBtn.textContent = 'Copied!';
-                        setTimeout(() => copyBtn.textContent = 'Copy', 2000);
+                        setTimeout(() => {
+                            copyBtn.textContent = 'Copy';
+                            if (statusSpan && !statusSpan.textContent.includes('chars')) statusSpan.textContent = '';
+                        }, 3000);
                     }).catch(err => {
                         console.error('Clipboard write failed:', err);
                         copyBtn.textContent = 'Err';
