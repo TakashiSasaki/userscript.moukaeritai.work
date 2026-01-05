@@ -1,5 +1,9 @@
 # Gemini Auto-Scroll Development Guidelines
 
+## Cross-Platform Compatibility
+- Use Python scripts for file processing, searching, and analysis tasks when possible.
+- Avoid OS-specific shell commands (like `grep`, `ls`, `cat`) to ensure workflows run smoothly on both Windows and Linux environments.
+
 ## HTML Preprocessing
 See `youtube.com/samples/preprocess.py` for the cleaning logic.
 Always re-process snapshots if the cleaning script changes.
