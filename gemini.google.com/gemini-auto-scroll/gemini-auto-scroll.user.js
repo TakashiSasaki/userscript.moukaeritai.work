@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.14
+// @version      0.1.15
 // @description  Automatically scroll to the current conversation in the Gemini sidebar with a toggle switch
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -22,7 +22,7 @@
 
     const CONSTANTS = {
         MAX_RETRIES: 20,
-        ENDLESS_RETRIES: 150, // "Endless" enough for most cases
+        ENDLESS_RETRIES: 300, // "Endless" enough for most cases
         SPINNER_WAIT_MS: 3000,
         SCROLL_DELAY_MS: 500,
         STORAGE_KEY: 'gemini_auto_scroll_enabled'
@@ -183,12 +183,12 @@
 
             .gtc-conversation-index {
                 position: absolute;
-                top: 2px;
-                left: 2px;
-                background-color: rgba(0, 0, 0, 0.5);
+                top: 6px;
+                left: 6px;
+                background-color: rgba(0, 0, 0, 0.7);
                 color: #fff;
-                font-size: 9px;
-                padding: 1px 3px;
+                font-size: 10px;
+                padding: 0 4px;
                 border-radius: 4px;
                 z-index: 10;
                 pointer-events: none;
@@ -367,23 +367,39 @@
                 // Trigger load more
                 container.scrollTop = container.scrollHeight;
 
-                // Wait for spinner appearance
+                // Wait for spinner appearance - Robust check
                 let spinnerAppeared = false;
-                for (let i = 0; i < 20; i++) {
+                const spinnerCheckAttempts = 50; // Wait up to 5 seconds
+
+                for (let i = 0; i < spinnerCheckAttempts; i++) {
                     await sleep(100);
                     if (isSpinnerVisible()) {
                         spinnerAppeared = true;
                         break;
                     }
+
+                    // "Wiggle" scroll if taking too long to trigger event e.g. at 2s
+                    if (i === 20) {
+                        container.scrollTop = container.scrollHeight - 50;
+                        await sleep(100);
+                        container.scrollTop = container.scrollHeight;
+                    }
+
                     if (!isAutoScrollEnabled()) break;
                 }
 
                 if (!spinnerAppeared) {
+                    // One last check: maybe it loaded instantly without spinner?
                     if (findConversationElement(currentId)) {
-                        findConversationElement(currentId).scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    } else {
-                        console.log('[GeminiAutoScroll] End of list reached.');
+                        const el = findConversationElement(currentId);
+                        console.log(`[GeminiAutoScroll] Found conversation ${currentId} (no spinner).`);
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        break;
                     }
+
+                    // If simply no spinner appeared, we might be at the true end.
+                    // But lets try ONE more time in next loop iteration or log it.
+                    console.log('[GeminiAutoScroll] Spinner did not appear. Assuming end of list.');
                     break;
                 }
 
