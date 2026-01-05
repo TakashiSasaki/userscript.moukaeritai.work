@@ -9,3 +9,5 @@ chat.openai.com/chatgpt-turn-counter/samples/verification_copy_all_modal.html
 chat.openai.com/chatgpt-turn-counter/samples/verification_mime_fix.html
 .venv
 node_modules/
+analyze_structure.py
+debug-info.js
