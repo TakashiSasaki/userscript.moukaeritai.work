@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         お名前.com DNSレコードバックアップ
 // @namespace    userscript.moukaeritai.work
-// @version      0.0.3
+// @version      0.0.4
 // @description  お名前.comのDNSレコード設定画面を表示するたびに、レコード情報を自動的にバックアップします。
 // @author       Takashi Sasaki
 // @homepage     https://x.com/TakashiSasaki
@@ -18,12 +18,16 @@
     'use strict';
 
     if (location.hostname === 'userscript.moukaeritai.work') {
-        window.dispatchEvent(new CustomEvent('userscript-check-installed', {
-            detail: {
-                name: GM_info.script.name,
-                version: GM_info.script.version
-            }
-        }));
+        const report = () => {
+            document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+                detail: {
+                    name: GM_info.script.name,
+                    version: GM_info.script.version
+                }
+            }));
+        };
+        report();
+        document.addEventListener('userscript-ping', report);
         return;
     }
 

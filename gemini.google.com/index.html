@@ -248,7 +248,7 @@
         </p>
     </footer>
     <script>
-        window.addEventListener('userscript-check-installed', (event) => {
+        document.addEventListener('userscript-check-installed', (event) => {
             const { name, version } = event.detail;
             const buttons = document.querySelectorAll('.install-button');
             buttons.forEach(btn => {
@@ -260,6 +260,9 @@
                 }
             });
         });
+
+        // Ping userscripts to report themselves
+        document.dispatchEvent(new CustomEvent('userscript-ping'));
     </script>
 </body>
 

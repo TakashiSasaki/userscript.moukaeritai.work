@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Profile Badge
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.3
+// @version      0.2.4
 // @description  Add a custom string to the user profile section on ChatGPT.
 // @author       Takashi Sasaki
 // @homepage     https://x.com/TakashiSasaki
@@ -20,12 +20,16 @@
     'use strict';
 
     if (location.hostname === 'userscript.moukaeritai.work') {
-        window.dispatchEvent(new CustomEvent('userscript-check-installed', {
-            detail: {
-                name: GM_info.script.name,
-                version: GM_info.script.version
-            }
-        }));
+        const report = () => {
+            document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+                detail: {
+                    name: GM_info.script.name,
+                    version: GM_info.script.version
+                }
+            }));
+        };
+        report();
+        document.addEventListener('userscript-ping', report);
         return;
     }
 
