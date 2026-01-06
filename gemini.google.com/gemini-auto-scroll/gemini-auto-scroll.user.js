@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.32
+// @version      0.1.33
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -651,6 +651,12 @@
         if (target) {
             console.log(`[GeminiAutoScroll] Auto-selecting next conversation at index ${newIndex}`);
             target.click();
+            // Ensure focus is returned to the web page from the address bar
+            window.focus();
+            if (document.activeElement) {
+                document.activeElement.blur();
+            }
+            document.body.focus();
         }
         isNavigatingAfterDelete = false;
     }
