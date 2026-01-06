@@ -1,3 +1,4 @@
+// ==UserScript==
 // @name         お名前.com DNSレコードバックアップ
 // @namespace    userscript.moukaeritai.work
 // @version      0.0.3
