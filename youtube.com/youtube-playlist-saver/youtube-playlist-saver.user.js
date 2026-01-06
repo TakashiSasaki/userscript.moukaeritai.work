@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.42
+// @version      0.2.43
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -1003,109 +1003,7 @@
         contentContainer.appendChild(aboveDiv);
         contentContainer.appendChild(removeAboveBtn);
 
-        // --- Auto Scroll Settings UI ---
-        const separator = document.createElement('hr');
-        Object.assign(separator.style, { border: '0', borderTop: '1px solid #ddd', margin: '8px 0', width: '100%' });
-        contentContainer.appendChild(separator);
 
-        const asHeaderContainer = document.createElement('div');
-        Object.assign(asHeaderContainer.style, {
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '4px'
-        });
-
-        const asHeader = document.createElement('div');
-        asHeader.textContent = 'Auto Scroll';
-        Object.assign(asHeader.style, { fontWeight: 'bold', fontSize: '12px' });
-
-        // Auto Scroll Toggle Button (Integrated)
-        const asToggleBtn = document.createElement('button');
-        asToggleBtn.id = 'yt-saver-as-toggle';
-        asToggleBtn.textContent = 'OFF';
-        Object.assign(asToggleBtn.style, {
-            padding: '2px 8px',
-            fontSize: '11px',
-            backgroundColor: '#ccc',
-            color: '#000',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontWeight: 'bold'
-        });
-        asToggleBtn.addEventListener('click', () => toggleAutoScroll(asToggleBtn));
-
-        asHeaderContainer.appendChild(asHeader);
-        asHeaderContainer.appendChild(asToggleBtn);
-        contentContainer.appendChild(asHeaderContainer);
-
-        // Checkbox: Scroll to Bottom
-        const asCheckboxContainer = document.createElement('div');
-        Object.assign(asCheckboxContainer.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', marginBottom: '4px' });
-
-        const asCheckbox = document.createElement('input');
-        asCheckbox.type = 'checkbox';
-        asCheckbox.checked = autoScrollSettings.scrollToBottom;
-        asCheckbox.id = 'yt-saver-as-bottom';
-
-        const asCheckboxLabel = document.createElement('label');
-        asCheckboxLabel.textContent = 'Scroll to Bottom';
-        asCheckboxLabel.htmlFor = 'yt-saver-as-bottom';
-
-        // Step Input Helper
-        const createScrollInput = (label, key, placeholder) => {
-            const container = document.createElement('div');
-            Object.assign(container.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', marginTop: '2px' });
-
-            const lbl = document.createElement('div');
-            lbl.textContent = label;
-            lbl.style.flex = '1';
-
-            const input = document.createElement('input');
-            input.type = 'number';
-            input.value = autoScrollSettings[key];
-            input.placeholder = placeholder;
-            Object.assign(input.style, { width: '50px', padding: '2px', border: '1px solid #ccc', borderRadius: '4px' });
-
-            input.addEventListener('change', () => {
-                let val = parseFloat(input.value);
-                if (isNaN(val) || val < 0) val = key === 'interval' ? 1 : 0;
-                autoScrollSettings[key] = val;
-                saveAutoScrollSettings();
-                restartAutoScrollIfActive();
-            });
-
-            container.appendChild(lbl);
-            container.appendChild(input);
-            return { container, input };
-        };
-
-        const stepInputObj = createScrollInput('Step (px):', 'step', '300');
-        const intervalInputObj = createScrollInput('Interval (sec):', 'interval', '5');
-
-        asCheckbox.addEventListener('change', () => {
-            autoScrollSettings.scrollToBottom = asCheckbox.checked;
-            saveAutoScrollSettings();
-            updateStepVisibility();
-            restartAutoScrollIfActive();
-        });
-
-        function updateStepVisibility() {
-            if (autoScrollSettings.scrollToBottom) {
-                stepInputObj.container.style.display = 'none';
-            } else {
-                stepInputObj.container.style.display = 'flex';
-            }
-        }
-        updateStepVisibility();
-
-        asCheckboxContainer.appendChild(asCheckbox);
-        asCheckboxContainer.appendChild(asCheckboxLabel);
-        contentContainer.appendChild(asCheckboxContainer);
-
-        contentContainer.appendChild(stepInputObj.container);
-        contentContainer.appendChild(intervalInputObj.container);
 
         document.body.appendChild(panel);
         applyFilters(); // Initial count
@@ -1142,11 +1040,7 @@
 
         if (!confirm(`Are you sure you want to remove ${items.length} videos from the playlist?`)) return;
 
-        // Automatically stop auto scroll if it's active
-        if (scrollInterval) {
-            const scrollBtn = document.getElementById('yt-saver-as-toggle');
-            if (scrollBtn) toggleAutoScroll(scrollBtn);
-        }
+
 
         isProcessing = true; // Start processing
         const btn = document.getElementById('yt-saver-remove-above-btn');
@@ -1461,68 +1355,7 @@
         observeVideosForAboveCheck([item]);
     }
 
-    // --- Auto Scroll Feature ---
 
-    const AUTO_SCROLL_SETTINGS_KEY = 'yt_auto_scroll_settings';
-    let autoScrollSettings = GM_getValue(AUTO_SCROLL_SETTINGS_KEY, {
-        scrollToBottom: true,
-        step: 300,
-        interval: 5.0
-    });
-    let scrollInterval = null;
-
-    function saveAutoScrollSettings() {
-        GM_setValue(AUTO_SCROLL_SETTINGS_KEY, autoScrollSettings);
-    }
-
-    function toggleAutoScroll(btn) {
-        // If btn is not provided, try to find it
-        if (!btn) btn = document.getElementById('yt-saver-as-toggle');
-        if (!btn) return;
-
-        if (scrollInterval) {
-            clearInterval(scrollInterval);
-            scrollInterval = null;
-            btn.textContent = 'OFF';
-            btn.style.backgroundColor = '#ccc';
-            btn.style.color = '#000';
-        } else {
-            btn.textContent = 'ON';
-            btn.style.backgroundColor = '#2ba640';
-            btn.style.color = '#fff';
-
-            const intervalMs = Math.max(100, (autoScrollSettings.interval || 5) * 1000);
-            const runScroll = () => {
-                if (autoScrollSettings.scrollToBottom) {
-                    window.scrollTo(0, document.documentElement.scrollHeight);
-                } else {
-                    window.scrollBy(0, autoScrollSettings.step || 300);
-                }
-            };
-
-            // Run immediately once
-            runScroll();
-            scrollInterval = setInterval(runScroll, intervalMs);
-        }
-    }
-
-    function restartAutoScrollIfActive() {
-        // Only restart if currently active (interval exists)
-        if (scrollInterval) {
-            clearInterval(scrollInterval);
-            const intervalMs = Math.max(100, (autoScrollSettings.interval || 5) * 1000);
-
-            const runScroll = () => {
-                if (autoScrollSettings.scrollToBottom) {
-                    window.scrollTo(0, document.documentElement.scrollHeight);
-                } else {
-                    window.scrollBy(0, autoScrollSettings.step || 300);
-                }
-            };
-
-            scrollInterval = setInterval(runScroll, intervalMs);
-        }
-    }
 
     function processAllVisible(playlistId, currentSessionSet) {
         // Optimization: Only select items that haven't been processed yet for this playlist
@@ -1765,10 +1598,7 @@
     // --- Navigation Handling ---
 
     function cleanupUI() {
-        if (scrollInterval) {
-            clearInterval(scrollInterval);
-            scrollInterval = null;
-        }
+
         if (statusInterval) {
             clearInterval(statusInterval);
             statusInterval = null;
