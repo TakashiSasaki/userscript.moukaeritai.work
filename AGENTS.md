@@ -93,6 +93,7 @@ repo_root/
 -   **Card Design**:
     -   **Title**: サイトのFavicon (Google S2 API) + プロジェクト名（ドキュメントへのリンク）。
     -   **Positioning**: **インストールボタンはカードの右下(bottom-right)に配置**してください。
+-   **Version Updates**: ユーザースクリプトのバージョンを上げた際は、必ず `index.html` 内のそのスクリプトの `Install` ボタンのテキスト（例: `Install (vX.Y.Z)`）も最新のバージョン番号に更新してください。
 
 
 ## UserScript Best Practices (SPA & Performance)
