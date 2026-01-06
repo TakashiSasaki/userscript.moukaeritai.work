@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.39
+// @version      0.2.40
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -1583,7 +1583,8 @@
                 // If it's not intersecting and top < 0, it's likely above.
 
                 // Correction: We want to track items that are "Above the active view" to remove them.
-                // An item is "Above" if it has scrolled past the top.
+                // An item is "Above" if it has scrolled past the top (header area).
+                // YouTube header is approx 56px. We use 180px as a safe threshold to say "it's definitely above/behind header".
 
                 if (entry.target.style.display === 'none') {
                     // Ignore hidden items
@@ -1594,7 +1595,8 @@
                     return;
                 }
 
-                if (rect.bottom <= 0 && rect.top < 0) {
+                // If the bottom of the element is near the top of the viewport (considering header)
+                if (rect.bottom < 180) {
                     // Above
                     if (!itemsAboveSet.has(entry.target)) {
                         itemsAboveSet.add(entry.target);
