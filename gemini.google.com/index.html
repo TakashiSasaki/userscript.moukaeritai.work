@@ -4,249 +4,381 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>gemini.google.com Userscripts - Moukaeritai</title>
+    <title>Gemini Userscripts - Moukaeritai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://userscript.moukaeritai.work/gemini.google.com/index.html" rel="canonical" />
     <style>
+        :root {
+            --primary: #4e95ff;
+            --primary-dark: #3a7bd5;
+            --bg-gradient: linear-gradient(135.2deg, rgba(7, 12, 23, 1) 1.2%, rgba(13, 33, 64, 1) 98.1%);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-dim: #b0b8c4;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
             padding: 2em;
-            background-color: #f8f9fa;
-            color: #212529;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 4em;
+            padding-top: 2em;
         }
 
         h1 {
-            text-align: center;
-            margin-bottom: 1.5em;
-            font-weight: 300;
+            font-weight: 600;
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #4e95ff, #00d2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .header-desc {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .top-nav {
+            position: absolute;
+            top: 2em;
+            left: 2em;
+            z-index: 10;
         }
 
         .top-nav-link {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             text-decoration: none;
-            color: #495057;
-            position: absolute;
-            top: 1.5em;
-            left: 2em;
+            color: var(--text-dim);
+            font-weight: 400;
+            padding: 8px 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
         }
 
         .top-nav-link:hover {
-            text-decoration: underline;
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
         }
 
         .project-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
             list-style: none;
             padding: 0;
             margin: 0;
         }
 
         .project-item {
-            background-color: white;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
             display: flex;
             flex-direction: column;
             position: relative;
-            transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(15px);
+            overflow: hidden;
+        }
+
+        .project-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
         }
 
         .project-item:hover {
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-            transform: translateY(-2px);
+            transform: translateY(-10px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .project-item:hover::before {
+            transform: translateX(100%);
         }
 
         .project-title {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            margin-top: 0;
-            margin-bottom: 1rem;
+            gap: 1rem;
+            margin: 0 0 1.2rem 0;
+        }
+
+        .project-title img {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: white;
+            padding: 2px;
         }
 
         .project-title a {
             text-decoration: none;
-            color: #0056b3;
-            font-weight: 500;
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 1.25rem;
+            transition: color 0.2s;
         }
 
         .project-title a:hover {
-            text-decoration: underline;
-        }
-
-        .project-icon {
-            width: 32px;
-            height: 32px;
+            color: var(--primary);
         }
 
         .project-desc {
             flex-grow: 1;
-            color: #495057;
-            font-size: 0.95em;
-            line-height: 1.5;
-            margin-bottom: 1rem;
+            color: var(--text-dim);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            font-weight: 300;
         }
 
         .install-button {
-            position: absolute;
-            bottom: 1.5rem;
-            right: 1.5rem;
+            align-self: flex-start;
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
-            padding: 0.5rem 1rem;
-            background-color: #28a745;
+            gap: 10px;
+            padding: 12px 24px;
+            background: var(--primary);
             color: white;
             text-decoration: none;
-            border-radius: 5px;
-            font-size: 0.9em;
-            font-weight: bold;
-            transition: background-color 0.2s;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(78, 149, 255, 0.3);
         }
 
         .install-button:hover {
-            background-color: #218838;
+            background: var(--primary-dark);
+            box-shadow: 0 6px 20px rgba(78, 149, 255, 0.5);
+            transform: scale(1.05);
         }
 
         .install-button svg {
             fill: currentColor;
         }
 
+        .install-button.installed {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: var(--text-dim) !important;
+            border: 1px solid var(--glass-border);
+            box-shadow: none !important;
+            pointer-events: none;
+        }
+
         footer {
             text-align: center;
-            margin-top: 3em;
-            color: #6c757d;
+            margin-top: 6em;
+            padding-bottom: 3em;
+            color: var(--text-dim);
+            font-weight: 300;
         }
 
         footer a {
-            color: #0056b3;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .social-icon {
+            color: var(--text-dim);
+            transition: color 0.3s ease;
+        }
+
+        .social-icon:hover {
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            .top-nav {
+                position: static;
+                margin-bottom: 2em;
+                display: flex;
+                justify-content: center;
+            }
+
+            body {
+                padding: 1em;
+            }
         }
     </style>
 </head>
 
 <body>
-    <a class="top-nav-link" href="../index.html">
-        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
-            <path
-                d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-        </svg>
-        userscript.moukaeritai.work
-    </a>
-    <h1>gemini.google.com Userscripts</h1>
-    <ul class="project-list">
-        <li class="project-item">
-            <h3 class="project-title">
-                <img alt="gemini.google.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=32" />
-                <a href="gemini-profile-badge/index.html">Gemini Profile Badge 📛</a>
-            </h3>
-            <p class="project-desc">
-                Google Geminiのユーザープロファイルに、好きな文字列や絵文字でカスタム「バッジ」を追加します。
-            </p>
-            <a class="install-button" data-script-name="Gemini Profile Badge"
-                href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-profile-badge/gemini-profile-badge.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install (v0.1.3)
-            </a>
-        </li>
-        <li class="project-item">
-            <h3 class="project-title">
-                <img alt="gemini.google.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=32" />
-                <a href="gemini-one-click-delete/index.html">Gemini One Click Delete 🗑️</a>
-            </h3>
-            <p class="project-desc">
-                Google Gemini の会話をワンクリックで削除する機能を提供します。
-            </p>
-            <a class="install-button" data-script-name="Gemini 1-Click Delete Conversation"
-                href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install (v0.1.8)
-            </a>
-        </li>
-        <li class="project-item">
-            <h3 class="project-title">
-                <img alt="gemini.google.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=32" />
-                <a href="gemini-export-to-docs/index.html">Gemini Export to Docs 📄</a>
-            </h3>
-            <p class="project-desc">
-                Google Gemini の会話やキャンバスを、ワンクリックで Google Docs にエクスポートするユーザースクリプトです。
-            </p>
-            <a class="install-button" data-script-name="Gemini 1-Click Export to Docs"
-                href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install (v0.1.15)
-            </a>
-        </li>
-        <li class="project-item">
-            <h3 class="project-title">
-                <img alt="gemini.google.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=32" />
-                <a href="gemini-auto-scroll/index.html">Gemini Auto-Scroll 📜</a>
-            </h3>
-            <p class="project-desc">
-                Google Gemini のサイドバー（会話リスト）を無限に自動スクロールし、すべての会話履歴を一括でロードするためのユーザースクリプトです。
-            </p>
-            <a class="install-button" data-script-name="Gemini Auto-Scroll"
-                href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install (v0.1.21)
-            </a>
-        </li>
-        <li class="project-item">
-            <h3 class="project-title">
-                <img alt="gemini.google.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=32" />
-                <a href="gemini-turn-counter/index.html">Gemini Turn Counter 🔢</a>
-            </h3>
-            <p class="project-desc">
-                Google Gemini 上での会話において、メッセージ数（ターン数）、文字数、画像数をリアルタイムにカウントし表示します。
-            </p>
-            <a class="install-button" data-script-name="Gemini Turn Counter"
-                href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install (v0.1.12)
-            </a>
-        </li>
-    </ul>
-
-    <footer>
-        <hr />
-        <p style="display: flex; align-items: center; gap: 8px; justify-content: center;">
-            <small>Hosted on GitHub Pages</small>
-            <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work" target="_blank"
-                title="GitHub Repository">
-                <svg fill="currentColor" height="20" viewbox="0 0 16 16" width="20">
+    <div class="container">
+        <nav class="top-nav">
+            <a class="top-nav-link" href="../index.html">
+                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
                     <path
-                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
-                    </path>
+                        d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
                 </svg>
+                Home
             </a>
-            <small> | <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> | Developed by <a
-                    href="https://x.com/TakashiSasaki">Takashi Sasaki</a></small>
-        </p>
-    </footer>
+        </nav>
+
+        <header>
+            <h1>Gemini App Tools</h1>
+            <p class="header-desc">
+                Google Gemini の体験をより快適に。会話管理、データ出力、UIカスタマイズのための高品質なユーザースクリプト集です。
+            </p>
+        </header>
+
+        <ul class="project-list">
+            <li class="project-item">
+                <div class="project-title">
+                    <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
+                    <a href="gemini-profile-badge/index.html">Profile Badge 📛</a>
+                </div>
+                <p class="project-desc">
+                    Google Gemini のプロファイル覧に、好きな絵文字やテキストでカスタムバッジを表示します。複数のバッジ設定にも対応。
+                </p>
+                <a class="install-button" data-script-name="Gemini Profile Badge"
+                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-profile-badge/gemini-profile-badge.user.js"
+                    target="_blank">
+                    <svg height="18" viewbox="0 0 24 24" width="18">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install (v0.1.3)
+                </a>
+            </li>
+
+            <li class="project-item">
+                <div class="project-title">
+                    <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
+                    <a href="gemini-one-click-delete/index.html">One Click Delete 🗑️</a>
+                </div>
+                <p class="project-desc">
+                    サイドバーの削除アイコンを探す手間を省きます。現在の会話をワンクリックで即座に削除するボタンを追加します。
+                </p>
+                <a class="install-button" data-script-name="Gemini 1-Click Delete Conversation"
+                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js"
+                    target="_blank">
+                    <svg height="18" viewbox="0 0 24 24" width="18">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install (v0.1.8)
+                </a>
+            </li>
+
+            <li class="project-item">
+                <div class="project-title">
+                    <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
+                    <a href="gemini-export-to-docs/index.html">Export to Docs 📄</a>
+                </div>
+                <p class="project-desc">
+                    Gemini との会話内容を美しくフォーマットして Google ドキュメントへ直接出力します。Canvas（ドキュメント作成機能）にも対応。
+                </p>
+                <a class="install-button" data-script-name="Gemini 1-Click Export to Docs"
+                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js"
+                    target="_blank">
+                    <svg height="18" viewbox="0 0 24 24" width="18">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install (v0.1.15)
+                </a>
+            </li>
+
+            <li class="project-item">
+                <div class="project-title">
+                    <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
+                    <a href="gemini-auto-scroll/index.html">Auto-Scroll 📜</a>
+                </div>
+                <p class="project-desc">
+                    会話履歴が膨大な場合に。サイドバーを自動で一番下までスクロールし続け、過去のすべての会話履歴を読み込みます。
+                </p>
+                <a class="install-button" data-script-name="Gemini Auto-Scroll"
+                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js"
+                    target="_blank">
+                    <svg height="18" viewbox="0 0 24 24" width="18">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install (v0.1.21)
+                </a>
+            </li>
+
+            <li class="project-item">
+                <div class="project-title">
+                    <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
+                    <a href="gemini-turn-counter/index.html">Turn Counter 🔢</a>
+                </div>
+                <p class="project-desc">
+                    会話のターン数、文字数、画像数をリアルタイムに計測します。利用制限の把握や、長文作成の進捗確認に最適です。
+                </p>
+                <a class="install-button" data-script-name="Gemini Turn Counter"
+                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js"
+                    target="_blank">
+                    <svg height="18" viewbox="0 0 24 24" width="18">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install (v0.1.12)
+                </a>
+            </li>
+        </ul>
+
+        <footer>
+            <div class="social-links">
+                <a class="social-icon" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work"
+                    target="_blank">
+                    <svg fill="currentColor" height="24" viewbox="0 0 16 16" width="24">
+                        <path
+                            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                    </svg>
+                </a>
+            </div>
+            <p>
+                <small>Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a> | <a
+                        href="https://userscript.moukaeritai.work/">moukaeritai.work</a></small>
+            </p>
+        </footer>
+    </div>
+
     <script>
         document.addEventListener('userscript-check-installed', (event) => {
             const { name, version } = event.detail;
@@ -254,15 +386,15 @@
             buttons.forEach(btn => {
                 if (btn.getAttribute('data-script-name') === name) {
                     btn.textContent = `Installed (v${version})`;
-                    btn.style.backgroundColor = '#6c757d';
-                    btn.style.pointerEvents = 'none';
                     btn.classList.add('installed');
                 }
             });
         });
 
-        // Ping userscripts to report themselves
-        document.dispatchEvent(new CustomEvent('userscript-ping'));
+        // Ping after load
+        window.addEventListener('load', () => {
+            document.dispatchEvent(new CustomEvent('userscript-ping'));
+        });
     </script>
 </body>
 
