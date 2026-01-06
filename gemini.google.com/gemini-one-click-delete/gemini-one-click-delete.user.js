@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.1.9
+// @version      0.1.10
 // @description  Adds a 1-click button to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -378,10 +378,47 @@
         observer.observe(document.body, { childList: true, subtree: true });
     }
 
+    /**
+     * Handle Keyboard Shortcut (Ctrl+D)
+     */
+    async function handleKeyboardShortcut(e) {
+        // Only trigger on Ctrl + D (or Meta + D for Mac support if desired, though usually Ctrl in Windows context)
+        if (!((e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D'))) return;
+
+        // Ignore if user is typing in an input
+        const activeTag = document.activeElement.tagName.toLowerCase();
+        if (activeTag === 'input' || activeTag === 'textarea' || document.activeElement.isContentEditable) {
+            return;
+        }
+
+        e.preventDefault(); // Prevent bookmarking or other default browser actions
+        console.log('Ctrl+D detected: Triggering 1-Click Delete...');
+
+        // 1. Try to find an existing standard delete button (header)
+        const standardBtn = document.querySelector('.gemini-quick-delete-btn:not(.floating)');
+        if (standardBtn && !standardBtn.disabled) {
+            standardBtn.click();
+            return;
+        }
+
+        // 2. Try floating button (search view context)
+        const floatingBtn = document.querySelector('.gemini-quick-delete-btn.floating');
+        if (floatingBtn && !floatingBtn.disabled && floatingBtn.style.display !== 'none') {
+            floatingBtn.click();
+            return;
+        }
+
+        console.warn('Delete button not available or disabled.');
+    }
+
     if (document.body) {
         init();
+        document.addEventListener('keydown', handleKeyboardShortcut);
     } else {
-        window.addEventListener('DOMContentLoaded', init);
+        window.addEventListener('DOMContentLoaded', () => {
+            init();
+            document.addEventListener('keydown', handleKeyboardShortcut);
+        });
     }
 
 })();
