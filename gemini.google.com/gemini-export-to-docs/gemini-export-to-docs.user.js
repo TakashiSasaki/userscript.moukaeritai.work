@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.1.16
+// @version      0.1.17
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -488,6 +488,49 @@
     }
 
     /**
+     * Handle Keyboard Shortcut (Ctrl+E)
+     */
+    async function handleKeyboardShortcut(e) {
+        // Only trigger on Ctrl + E
+        if (!(e.ctrlKey && (e.key === 'e' || e.key === 'E'))) return;
+
+        // Ignore if user is typing in an input
+        const activeTag = document.activeElement.tagName.toLowerCase();
+        if (activeTag === 'input' || activeTag === 'textarea' || document.activeElement.isContentEditable) {
+            return;
+        }
+
+        e.preventDefault();
+        console.log('Ctrl+E detected: Triggering first response export...');
+
+        // Find the FIRST response container's "More" button
+        const firstMoreBtn = document.querySelector(SELECTORS.moreMenuButton);
+        if (firstMoreBtn) {
+            // Visualize the action (optional: highlight the button temporarily?)
+
+            // Re-use existing export logic
+            showOverlay();
+            try {
+                await handleTurnExport(firstMoreBtn);
+
+                // Mark success on UI
+                const container = firstMoreBtn.closest(SELECTORS.turnContainer);
+                if (container) {
+                    const allBtns = container.querySelectorAll('.gemini-quick-export-btn');
+                    allBtns.forEach(b => markAsExported(b));
+                }
+            } catch (err) {
+                console.error('Shortcut Export failed:', err);
+                alert('Shortcut Export failed. See console.');
+            } finally {
+                hideOverlay();
+            }
+        } else {
+            console.warn('No conversation turns found to export.');
+        }
+    }
+
+    /**
      * Initialize
      */
     function init() {
@@ -495,6 +538,9 @@
 
         // Initial process
         processNodes();
+
+        // Keyboard Listener
+        document.addEventListener('keydown', handleKeyboardShortcut);
 
         // Observe for new turns / dynamic content
         const observer = new MutationObserver((mutations) => {
