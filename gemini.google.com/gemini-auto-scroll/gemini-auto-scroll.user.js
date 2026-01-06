@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.29
+// @version      0.1.30
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -10,6 +10,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js
 // @grant        GM_info
+// @grant        GM_registerMenuCommand
 // ==/UserScript==
 
 (function () {
@@ -27,6 +28,18 @@
         report();
         document.addEventListener('userscript-ping', report);
         return;
+    }
+
+    // --- Tampermonkey Menu ---
+    if (typeof GM_registerMenuCommand !== 'undefined') {
+        GM_registerMenuCommand("現在の会話IDを表示", () => {
+            const currentId = findSelectedConversationId();
+            if (currentId) {
+                alert(`現在の会話ID: ${currentId}`);
+            } else {
+                alert("会話IDが見つかりませんでした。");
+            }
+        });
     }
 
     const SELECTORS = {
