@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.1.15
+// @version      0.1.16
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -85,7 +85,7 @@
         if (!element) return;
         ['mousedown', 'mouseup', 'click'].forEach(eventType => {
             element.dispatchEvent(new MouseEvent(eventType, {
-                view: window,
+                view: null,
                 bubbles: true,
                 cancelable: true
             }));
