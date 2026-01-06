@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.27
+// @version      0.1.28
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -472,13 +472,16 @@
             }
         };
 
+        // Local debounce timer to avoid conflict with the global UI debounce timer
+        let scrollDebounceTimer = null;
+
         const attachObserver = (target) => {
             if (mutationObserver) mutationObserver.disconnect();
             mutationObserver = new MutationObserver((mutations) => {
                 if (!isAutoScrollEnabled()) return;
                 // Debounce scrolling to avoid slamming the browser/app with events
-                if (_debounceTimer) clearTimeout(_debounceTimer);
-                _debounceTimer = setTimeout(scrollDown, 100);
+                if (scrollDebounceTimer) clearTimeout(scrollDebounceTimer);
+                scrollDebounceTimer = setTimeout(scrollDown, 100);
             });
             mutationObserver.observe(target, { childList: true, subtree: true });
         };
