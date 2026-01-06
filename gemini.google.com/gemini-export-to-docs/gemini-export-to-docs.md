@@ -1,3 +1,5 @@
+# Gemini 1-Click Export to Docs
+
 # 目的
 
 Geminiのウェブアプリケーション（SPA）において、会話の特定のターンまたはキャンバスをGoogle Docsにエクスポートする操作を簡略化する。
