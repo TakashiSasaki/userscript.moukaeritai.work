@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.36
+// @version      0.2.37
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -567,28 +567,7 @@
     /**
      * Utility: Wait for an element to appear
      */
-    /**
-     * Utility: Wait for an element to appear (Polling version)
-     * Replaced MutationObserver with polling to avoid hanging during massive DOM removals (e.g. navigation)
-     */
-    function waitForElement(selector, timeout = 3000) {
-        return new Promise(resolve => {
-            if (document.querySelector(selector)) {
-                return resolve(document.querySelector(selector));
-            }
 
-            const startTime = Date.now();
-            const interval = setInterval(() => {
-                if (document.querySelector(selector)) {
-                    clearInterval(interval);
-                    resolve(document.querySelector(selector));
-                } else if (Date.now() - startTime > timeout) {
-                    clearInterval(interval);
-                    resolve(null);
-                }
-            }, 100);
-        });
-    }
 
     /**
      * Utility: Wait for an element to be removed from DOM
@@ -1648,13 +1627,12 @@
         processAllVisible(playlistId, currentSessionSet);
 
         // Initial Observer setup
-        const listContainer = document.querySelector('ytd-playlist-video-list-renderer #contents') ||
-            await waitForElement('ytd-playlist-video-list-renderer #contents', 5000);
+        const listContainer = document.querySelector('ytd-playlist-video-list-renderer #contents');
 
         if (listContainer) {
             initObserver(listContainer, playlistId, currentSessionSet);
         } else {
-            console.warn('[YouTube Playlist Saver] Playlist container not found. Observer not started.');
+            console.warn('[YouTube Playlist Saver] Playlist container not found initially. Will retry via statusInterval.');
         }
     }
 
