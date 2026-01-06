@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.37
+// @version      0.2.38
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -1458,6 +1458,9 @@
 
         renderIndicator(item, !wasInDb);
         item.dataset.saverProcessed = playlistId;
+
+        // Ensure this item is tracked by the Above Observer (IntersectionObserver)
+        observeVideosForAboveCheck([item]);
     }
 
     // --- Auto Scroll Feature ---
@@ -1556,6 +1559,89 @@
         window._ytSaverObservedElement = listContainer;
     }
 
+    // --- Scroll & Visibility Handling (Intersection Observer) ---
+
+    let aboveObserver = null;
+    let itemsAboveSet = new Set(); // Stores elements that are fully above the viewport
+
+    function initAboveObserver() {
+        if (aboveObserver) return;
+
+        // Observer triggered when items enter/leave the viewport
+        // rootMargin top negative value is tricky for "fully above", so we use a standard check
+        // combined with boundingClientRect in the callback (which is available in the entry).
+        aboveObserver = new IntersectionObserver((entries) => {
+            let changed = false;
+            entries.forEach(entry => {
+                const rect = entry.boundingClientRect;
+                const isAbove = !entry.isIntersecting && rect.bottom < 0; // Completely above
+
+                // Note: IntersectionObserver is not perfect for "where did it go?" without checking rect
+                // If it's not intersecting and top < 0, it's likely above.
+
+                // Correction: We want to track items that are "Above the active view" to remove them.
+                // An item is "Above" if it has scrolled past the top.
+
+                if (entry.target.style.display === 'none') {
+                    // Ignore hidden items
+                    if (itemsAboveSet.has(entry.target)) {
+                        itemsAboveSet.delete(entry.target);
+                        changed = true;
+                    }
+                    return;
+                }
+
+                if (rect.bottom <= 0 && rect.top < 0) {
+                    // Above
+                    if (!itemsAboveSet.has(entry.target)) {
+                        itemsAboveSet.add(entry.target);
+                        changed = true;
+                    }
+                } else {
+                    // Inside or Below
+                    if (itemsAboveSet.has(entry.target)) {
+                        itemsAboveSet.delete(entry.target);
+                        changed = true;
+                    }
+                }
+            });
+
+            if (changed) {
+                // Debounce the UI update to avoid flickering during fast scrolling
+                lazyUpdateAboveInfo();
+            }
+        }, {
+            root: null, // viewport
+            threshold: 0 // trigger as soon as even 1 pixel leaves/enters
+        });
+    }
+
+    const lazyUpdateAboveInfo = debounce(() => {
+        updateAboveInfo();
+    }, 200);
+
+
+    function getAboveItems() {
+        // Use the Set maintained by IntersectionObserver
+        // Also verify they are still valid (still in DOM, not hidden)
+        // because Observer might lag slightly behind display:none changes if not manually untracked
+        return Array.from(itemsAboveSet).filter(item =>
+            document.contains(item) &&
+            item.style.display !== 'none' &&
+            item.style.pointerEvents !== 'none'
+        );
+    }
+
+    // Hook Observer to new items
+    function observeVideosForAboveCheck(items) {
+        if (!aboveObserver) initAboveObserver();
+        items.forEach(item => {
+            aboveObserver.observe(item);
+        });
+    }
+
+    // --- Original Logic Refactored ---
+
     async function run() {
         const playlistId = getPlaylistId();
         if (!playlistId) return;
@@ -1563,24 +1649,24 @@
         console.log(`[YouTube Playlist Saver] Processing playlist: ${playlistId}`);
         createFilterPanel();
 
-
-
         // Use local Cache
         const currentSessionSet = getSavedVideos(playlistId);
 
-        // Create debounced scanner for scroll events (1 second delay)
-        const debouncedScan = debounce(() => {
-            processAllVisible(playlistId, currentSessionSet);
-        }, 1000);
+        // Initial scan
+        processAllVisible(playlistId, currentSessionSet);
 
-        // Initialize Scroll Listener if not already present
-        if (!scrollHandler) {
-            scrollHandler = throttle(() => {
-                updateAboveInfo();
-                debouncedScan();
-            }, 200);
-            window.addEventListener('scroll', scrollHandler);
+        // Initial Observer setup
+        const listContainer = document.querySelector('ytd-playlist-video-list-renderer #contents');
+        if (listContainer) {
+            initObserver(listContainer, playlistId, currentSessionSet);
+        } else {
+            console.warn('[YouTube Playlist Saver] Playlist container not found initially. Will retry via statusInterval.');
         }
+
+        // Initialize Above Checker
+        initAboveObserver();
+        const initialItems = document.querySelectorAll('ytd-playlist-video-renderer');
+        observeVideosForAboveCheck(initialItems);
 
         // Start Status Intervals with Panel/Observer Resurrection Logic
         if (statusInterval) clearInterval(statusInterval);
@@ -1596,6 +1682,9 @@
             if (listContainer && (!window._ytSaverObservedElement || window._ytSaverObservedElement !== listContainer || !document.contains(window._ytSaverObservedElement))) {
                 console.warn('[YouTube Playlist Saver] List container replaced or observer missing, re-initializing...');
                 initObserver(listContainer, playlistId, currentSessionSet);
+                // Also re-hook above observer for new items
+                itemsAboveSet.clear(); // Reset above set on full re-init
+                observeVideosForAboveCheck(document.querySelectorAll('ytd-playlist-video-renderer'));
             }
 
             // 3. UI Updates
@@ -1623,17 +1712,6 @@
         countsInterval = setInterval(() => {
             updateStatusCounts();
         }, 10000);
-
-        processAllVisible(playlistId, currentSessionSet);
-
-        // Initial Observer setup
-        const listContainer = document.querySelector('ytd-playlist-video-list-renderer #contents');
-
-        if (listContainer) {
-            initObserver(listContainer, playlistId, currentSessionSet);
-        } else {
-            console.warn('[YouTube Playlist Saver] Playlist container not found initially. Will retry via statusInterval.');
-        }
     }
 
     // --- Navigation Handling ---
@@ -1651,10 +1729,7 @@
             clearInterval(countsInterval);
             countsInterval = null;
         }
-        if (scrollHandler) {
-            window.removeEventListener('scroll', scrollHandler);
-            scrollHandler = null;
-        }
+        // Removed scrollHandler cleanup as it is no longer used
 
         const filterPanel = document.getElementById('yt-saver-filter-panel');
         if (filterPanel) filterPanel.remove();
@@ -1662,6 +1737,12 @@
         if (window._ytSaverObserver) {
             window._ytSaverObserver.disconnect();
             window._ytSaverObserver = null;
+        }
+
+        if (aboveObserver) {
+            aboveObserver.disconnect();
+            aboveObserver = null;
+            itemsAboveSet.clear();
         }
     }
 
