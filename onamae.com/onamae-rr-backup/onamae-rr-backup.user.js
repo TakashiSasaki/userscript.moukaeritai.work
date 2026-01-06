@@ -1,15 +1,14 @@
-// ==UserScript==
-// @name         onamae-rr-backup
+// @name         お名前.com DNSレコードバックアップ
 // @namespace    userscript.moukaeritai.work
-// @version      0.0.1
-// @description  Backup DNS records from onamae.com
+// @version      0.0.2
+// @description  お名前.comのDNSレコード設定画面を表示するたびに、レコード情報を自動的にバックアップします。
 // @author       Takashi Sasaki
 // @homepage     https://x.com/TakashiSasaki
 // @match        https://navi.onamae.com/domain/setting/dns/control/input
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @updateURL    https://github.com/TakashiSasaki/userscript/raw/main/onamae.com/onamae-rr-backup.user.js
-// @downloadURL  https://github.com/TakashiSasaki/userscript/raw/main/onamae.com/onamae-rr-backup.user.js
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/onamae.com/onamae-rr-backup/onamae-rr-backup.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/onamae.com/onamae-rr-backup/onamae-rr-backup.user.js
 // ==/UserScript==
 
 (function () {
