@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.24
+// @version      0.1.25
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -429,7 +429,8 @@
 
         const scrollDown = () => {
             if (container && isAutoScrollEnabled()) {
-                container.scrollTop = container.scrollHeight;
+                // Use a large number to scroll to bottom without reading scrollHeight (which forces reflow)
+                container.scrollTop = 99999999;
             }
         };
 
@@ -456,18 +457,17 @@
                 }
 
                 if (container) {
-                    // Force scroll
-                    const isAtBottom = (container.scrollHeight - container.scrollTop - container.clientHeight) < 50;
-                    if (!isAtBottom) {
-                        scrollDown();
-                    }
+                    // Just scroll. Reading scrollHeight/scrollTop forces reflow. 
+                    // Since this loop is now a fallback (2s interval), blind scroll is acceptable 
+                    // and much more performant than forcing layout calc.
+                    scrollDown();
                 } else {
                     // Only log periodically to avoid spam
                     if (Math.random() < 0.05) console.warn('[GeminiAutoScroll] No scroll container found.');
                 }
 
-                // Wait loop
-                await sleep(500);
+                // Wait loop - Increased to 2s to rely mostly on MutationObserver and reduce CPU usage
+                await sleep(2000);
 
                 // Check for spinner to pause slightly? 
                 // Actually, if we want to "force" past the spinner to trigger loader, 
