@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.1.8
+// @version      0.1.9
 // @description  Adds a 1-click button to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -91,7 +91,7 @@
         if (!element) return;
         ['mousedown', 'mouseup', 'click'].forEach(eventType => {
             element.dispatchEvent(new MouseEvent(eventType, {
-                view: window,
+                view: null,
                 bubbles: true,
                 cancelable: true
             }));
