@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.31
+// @version      0.1.32
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -81,6 +81,8 @@
     };
 
     let isProcessing = false;
+    let lastSelectedIndex = -1;
+    let isNavigatingAfterDelete = false;
 
     // --- State Management ---
 
@@ -366,6 +368,13 @@
         const currentId = findSelectedConversationId();
         idLabel.textContent = currentId || '';
 
+        // --- Track selected index ---
+        const items = Array.from(document.querySelectorAll(SELECTORS.CONVERSATION_ITEM));
+        const selectedIndex = items.findIndex(item => item.classList.contains('selected'));
+        if (selectedIndex !== -1) {
+            lastSelectedIndex = selectedIndex;
+        }
+
         const tooltip = btn.querySelector('.gtc-tooltip');
         if (tooltip) {
             const status = isProcessing ? 'Scanning...' : (enabled ? 'Auto-Scroll ON' : 'OFF');
@@ -601,15 +610,51 @@
     let lastUrl = window.location.href;
     let _debounceTimer;
 
-    const uiObserver = new MutationObserver(() => {
+    const uiObserver = new MutationObserver((mutations) => {
         injectToggleButton();
 
-        // Debounce UI updates to prevent performance issues during scrolling
+        // Check for deletions of the selected item
+        for (const mutation of mutations) {
+            for (const removedNode of mutation.removedNodes) {
+                if (removedNode.nodeType === 1) { // Element node
+                    const isConversation = removedNode.matches(SELECTORS.CONVERSATION_ITEM) || removedNode.querySelector(SELECTORS.CONVERSATION_ITEM);
+                    const wasSelected = removedNode.classList?.contains('selected') || removedNode.querySelector('.selected');
+
+                    if (isConversation && wasSelected && lastSelectedIndex !== -1) {
+                        console.log('[GeminiAutoScroll] Selected conversation deleted. Selecting next at index:', lastSelectedIndex);
+                        isNavigatingAfterDelete = true;
+                        // Execute selection in next tick to allow DOM to settle
+                        setTimeout(selectNextConversation, 50);
+                    }
+                }
+            }
+        }
+
+        // Debounce UI updates
         if (_debounceTimer) clearTimeout(_debounceTimer);
         _debounceTimer = setTimeout(() => {
             updateToggleButtonUI();
         }, 500);
     });
+
+    function selectNextConversation() {
+        const items = document.querySelectorAll(SELECTORS.CONVERSATION_ITEM);
+        if (items.length === 0) {
+            isNavigatingAfterDelete = false;
+            return;
+        }
+
+        // Select the one that is now at the same index, or the last one if we were at the end
+        const newIndex = Math.min(lastSelectedIndex, items.length - 1);
+        const target = items[newIndex];
+
+        if (target) {
+            console.log(`[GeminiAutoScroll] Auto-selecting next conversation at index ${newIndex}`);
+            target.click();
+        }
+        isNavigatingAfterDelete = false;
+    }
+
     uiObserver.observe(document.body, { childList: true, subtree: true });
 
     setInterval(() => {
