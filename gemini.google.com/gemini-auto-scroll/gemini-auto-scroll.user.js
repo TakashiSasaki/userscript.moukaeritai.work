@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.21
+// @version      0.1.22
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -206,6 +206,36 @@
                 pointer-events: none;
                 font-family: monospace;
             }
+
+            /* --- Custom Scrollbar Styles --- */
+            /* Target generic scroll containers and specific ones */
+            ::-webkit-scrollbar {
+                width: 16px !important;
+                height: 16px !important;
+                background-color: #f0f0f0;
+                display: block !important;
+            }
+            
+            ::-webkit-scrollbar-track {
+                background: #e0e0e0;
+                border-left: 1px solid #ccc;
+            }
+            
+            ::-webkit-scrollbar-thumb {
+                background-color: #ff6f00; /* High contrast Orange */
+                border-radius: 4px;
+                border: 2px solid #e0e0e0;
+            }
+            
+            ::-webkit-scrollbar-thumb:hover {
+                background-color: #e65100;
+            }
+
+            /* Specifically for the conversations list */
+            conversations-list, .conversations-list, infinite-scroller {
+                scrollbar-color: #ff6f00 #e0e0e0 !important; /* Firefox support */
+                scrollbar-width: auto !important;
+            }
         `;
         document.head.appendChild(style);
     }
@@ -385,73 +415,74 @@
     // --- Main Logic ---
 
     async function attemptScrollToConversation() {
-        if (isProcessing || !isAutoScrollEnabled()) return;
+        if (isProcessing) return;
+        if (!isAutoScrollEnabled()) return;
 
         isProcessing = true;
         updateToggleButtonUI();
-        console.log('[GeminiAutoScroll] Starting auto-scroll...');
+        console.log('[GeminiAutoScroll] Auto-scroll loop started.');
+
+        let container = getScrollContainer();
+
+        // 1. Setup MutationObserver for the container to detect new items immediately
+        let mutationObserver = null;
+
+        const scrollDown = () => {
+            if (container && isAutoScrollEnabled()) {
+                container.scrollTop = container.scrollHeight;
+            }
+        };
+
+        const attachObserver = (target) => {
+            if (mutationObserver) mutationObserver.disconnect();
+            mutationObserver = new MutationObserver((mutations) => {
+                if (!isAutoScrollEnabled()) return;
+                // If height changed or nodes added, scroll
+                scrollDown();
+            });
+            mutationObserver.observe(target, { childList: true, subtree: true });
+        };
 
         try {
-            // Infinite loop (controlled by isAutoScrollEnabled)
-            // The user requested "endless scrolling", so we do not stop when the current conversation is found.
             while (isAutoScrollEnabled()) {
-                const container = getScrollContainer();
-                if (!container) {
-                    console.warn('[GeminiAutoScroll] No scroll container found.');
-                    // Retry briefly in case of loading
-                    await sleep(1000);
-                    continue;
+                // Determine container (it might change or be created lazily)
+                const currentContainer = getScrollContainer();
+
+                if (currentContainer && currentContainer !== container) {
+                    container = currentContainer;
+                    console.log('[GeminiAutoScroll] New scroll container found:', container);
+                    attachObserver(container);
                 }
 
-                // Scroll to bottom
-                const previousHeight = container.scrollHeight;
-                container.scrollTop = previousHeight;
-
-                // Wait for spinner appearance - Robust check
-                let spinnerAppeared = false;
-                const spinnerCheckAttempts = 50; // Wait up to 5 seconds for reaction
-
-                for (let i = 0; i < spinnerCheckAttempts; i++) {
-                    await sleep(100);
-                    if (isSpinnerVisible()) {
-                        spinnerAppeared = true;
-                        break;
+                if (container) {
+                    // Force scroll
+                    const isAtBottom = (container.scrollHeight - container.scrollTop - container.clientHeight) < 50;
+                    if (!isAtBottom) {
+                        scrollDown();
                     }
-
-                    // "Wiggle" scroll if taking too long to trigger event e.g. at 2s
-                    if (i === 20) {
-                        container.scrollTop = previousHeight - 50;
-                        await sleep(100);
-                        container.scrollTop = previousHeight;
-                    }
-
-                    if (!isAutoScrollEnabled()) break;
+                } else {
+                    // Only log periodically to avoid spam
+                    if (Math.random() < 0.05) console.warn('[GeminiAutoScroll] No scroll container found.');
                 }
 
-                if (!spinnerAppeared) {
-                    // Check if height increased without spinner
-                    if (container.scrollHeight > previousHeight) {
-                        console.log('[GeminiAutoScroll] Content loaded without spinner.');
-                    } else {
-                        // We might be at the end, OR it's just slow.
-                        // We continue retrying as per "endless" request.
-                        console.log('[GeminiAutoScroll] No new content or spinner. Retrying...');
-                        await sleep(1000);
-                    }
-                }
+                // Wait loop
+                await sleep(500);
 
-                // Wait for spinner to disappear
-                while (isSpinnerVisible() && isAutoScrollEnabled()) {
+                // Check for spinner to pause slightly? 
+                // Actually, if we want to "force" past the spinner to trigger loader, 
+                // keeping it at the bottom is usually correct for "endless" lists.
+                // But we can pause briefly if we see a spinner to let it render.
+                if (isSpinnerVisible()) {
                     await sleep(200);
                 }
-
-                await sleep(400); // DOM settling
             }
         } catch (e) {
             console.error('[GeminiAutoScroll] Error:', e);
         } finally {
+            if (mutationObserver) mutationObserver.disconnect();
             isProcessing = false;
             updateToggleButtonUI();
+            console.log('[GeminiAutoScroll] Auto-scroll loop stopped.');
         }
     }
 
