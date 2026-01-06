@@ -1,18 +1,30 @@
 // ==UserScript==
 // @name         お名前.com 邪悪広告ブロッカー
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.6
+// @version      0.1.7
 // @description  お名前.com Navi の操作を妨げる「邪悪な」広告や確認ポップアップを自動的に非表示にします。
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://navi.onamae.com/domain/setting/dns/control/input
 // @match        https://navi.onamae.com/domain/setting/dns/control/done
+// @match        https://userscript.moukaeritai.work/*
 // @grant        GM_addStyle
+// @grant        GM_info
 // @run-at       document-start
 // ==/UserScript==
 
 (function () {
     'use strict';
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        window.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+        return;
+    }
 
     // 1. 静的要素の非表示設定
     // 識別が容易で誤爆の恐れが低いものはCSSで即座に非表示にする

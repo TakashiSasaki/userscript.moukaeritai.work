@@ -1,21 +1,33 @@
 // ==UserScript==
 // @name         ChatGPT Profile Badge
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.2
+// @version      0.2.3
 // @description  Add a custom string to the user profile section on ChatGPT.
 // @author       Takashi Sasaki
 // @homepage     https://x.com/TakashiSasaki
 // @match        https://chat.openai.com/*
 // @match        https://chatgpt.com/*
+// @match        https://userscript.moukaeritai.work/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_registerMenuCommand
+// @grant        GM_info
 // @updateURL    https://github.com/TakashiSasaki/world/raw/main/chat.openai.com/chatgpt-profile-badge/chatgpt-profile-badge.user.js
 // @downloadURL  https://github.com/TakashiSasaki/world/raw/main/chat.openai.com/chatgpt-profile-badge/chatgpt-profile-badge.user.js
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        window.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+        return;
+    }
 
     const BADGE_ID = 'chatgpt-profile-badge-container';
     const STORAGE_KEY = 'badge_text';
@@ -52,7 +64,7 @@
         const badge = document.createElement('span');
         badge.id = BADGE_ID;
         badge.textContent = badgeText;
-        
+
         // Style the badge to match the "Plus" label, with some adjustments for a "badge" look.
         badge.className = 'text-token-text-secondary inline-flex items-center text-xs font-normal';
         badge.style.marginLeft = '8px';
@@ -90,7 +102,7 @@
         // Now that we have the correct profile button, find the name container within it.
         // Navigate: targetProfileButton -> div.min-w-0 -> div.flex
         const nameContainer = targetProfileButton.querySelector('div.min-w-0 > div.flex');
-        
+
         if (nameContainer) {
             createAndInjectBadge(nameContainer);
         }

@@ -148,7 +148,7 @@
             <p class="project-desc">
                 お名前ドットコムのDNSレコード設定ページからリソースレコード(RR)を自動的に記録・バックアップします。
             </p>
-            <a class="install-button"
+            <a class="install-button" data-script-name="お名前.com DNSレコードバックアップ"
                 href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/onamae.com/onamae-rr-backup/onamae-rr-backup.user.js"
                 target="_blank">
                 <svg height="16" viewbox="0 0 24 24" width="16">
@@ -166,7 +166,7 @@
             <p class="project-desc">
                 お名前.com Navi の操作を妨げる「邪悪な」広告や確認ポップアップ、チャットサポート等を自動的に非表示にします。
             </p>
-            <a class="install-button"
+            <a class="install-button" data-script-name="お名前.com 邪悪広告ブロッカー"
                 href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/onamae.com/onamae-block-evil/onamae-block-evil.user.js"
                 target="_blank">
                 <svg height="16" viewbox="0 0 24 24" width="16">
@@ -192,6 +192,20 @@
                     href="https://x.com/TakashiSasaki">Takashi Sasaki</a></small>
         </p>
     </footer>
+    <script>
+        window.addEventListener('userscript-check-installed', (event) => {
+            const { name, version } = event.detail;
+            const buttons = document.querySelectorAll('.install-button');
+            buttons.forEach(btn => {
+                if (btn.getAttribute('data-script-name') === name) {
+                    btn.textContent = `Installed (v${version})`;
+                    btn.style.backgroundColor = '#6c757d';
+                    btn.style.pointerEvents = 'none';
+                    btn.classList.add('installed');
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.33
+// @version      0.2.34
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
+// @match        https://userscript.moukaeritai.work/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=youtube.com
 // @connect      gist.githubusercontent.com
 // @grant        GM_setValue
@@ -12,12 +13,23 @@
 // @grant        GM_registerMenuCommand
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setClipboard
+// @grant        GM_info
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver.user.js
 // ==/UserScript==
 
 (function () {
     'use strict';
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        window.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+        return;
+    }
 
     const DATA_KEY = 'yt_playlist_data';
     const DATA_VERSION = 2;
@@ -28,7 +40,7 @@
 
     function loadStorage() {
         if (cachedStorage) return cachedStorage.playlists;
-        
+
         let rawData = GM_getValue(DATA_KEY, {});
 
         // Migration: v0 (No version) -> v2
@@ -45,7 +57,7 @@
             }
             cachedStorage = { version: DATA_VERSION, playlists: newPlaylists };
             GM_setValue(DATA_KEY, cachedStorage);
-        } 
+        }
         // Migration: v1 -> v2
         else if (rawData.version === 1) {
             console.log('[YouTube Playlist Saver] Migrating data (v1 -> v2)');
@@ -94,12 +106,12 @@
     function queueVideoId(playlistId, videoId, title = null, channel = null) {
         const data = loadStorage();
         if (!data[playlistId]) data[playlistId] = {};
-        
+
         const playlistMap = data[playlistId]; // It's an object now
 
         // Check if exists AND has metadata
         const existing = playlistMap[videoId];
-        
+
         // If new, or if existing but missing metadata (and we have new metadata provided)
         if (!existing || (title && existing.title === null)) {
             playlistMap[videoId] = {
@@ -127,13 +139,13 @@
 
     function mergeImportedData(importedData) {
         if (!importedData) {
-             alert('[YouTube Playlist Saver] Import failed: No data.');
-             return;
+            alert('[YouTube Playlist Saver] Import failed: No data.');
+            return;
         }
 
         // Normalize Input: Handle v0 (root keys), v1 (playlists array), v2 (playlists object)
         let sourcePlaylists = {};
-        
+
         if (importedData.playlists) {
             // v1 or v2
             sourcePlaylists = importedData.playlists;
@@ -142,15 +154,15 @@
             const keys = Object.keys(importedData);
             // Ignore if it's just {version: ...} without playlists, but v0 has no version.
             if (keys.length > 0 && Array.isArray(importedData[keys[0]])) {
-                 console.log('[YouTube Playlist Saver] Detected v0 import format.');
-                 sourcePlaylists = importedData;
+                console.log('[YouTube Playlist Saver] Detected v0 import format.');
+                sourcePlaylists = importedData;
             } else if (keys.length === 0) {
-                 // Empty object
-                 alert('[YouTube Playlist Saver] Import failed: Data is empty.');
-                 return;
+                // Empty object
+                alert('[YouTube Playlist Saver] Import failed: Data is empty.');
+                return;
             } else {
-                 alert('[YouTube Playlist Saver] Import failed: Unknown data format.');
-                 return;
+                alert('[YouTube Playlist Saver] Import failed: Unknown data format.');
+                return;
             }
         }
 
@@ -176,7 +188,7 @@
 
             for (const [vid, remoteMeta] of entries) {
                 const existing = localPlaylists[plId][vid];
-                
+
                 if (!existing) {
                     // NEW: Add it
                     localPlaylists[plId][vid] = remoteMeta || { title: null, channel: null, addedAt: null };
@@ -184,7 +196,7 @@
                 } else if (remoteMeta) {
                     // UPDATE: Check if local is missing info that remote has
                     let changed = false;
-                    
+
                     if (existing.title === null && remoteMeta.title) {
                         existing.title = remoteMeta.title;
                         changed = true;
@@ -194,10 +206,10 @@
                         changed = true;
                     }
                     if (existing.addedAt === null && remoteMeta.addedAt) {
-                         existing.addedAt = remoteMeta.addedAt;
-                         changed = true;
+                        existing.addedAt = remoteMeta.addedAt;
+                        changed = true;
                     }
-                    
+
                     if (changed) updatedCount++;
                 }
             }
@@ -206,7 +218,7 @@
         if (addedCount > 0 || updatedCount > 0) {
             requestSave();
             alert(`[YouTube Playlist Saver] Import successful!\nAdded: ${addedCount} videos\nUpdated Metadata: ${updatedCount} videos`);
-            
+
             // Refresh view
             const items = document.querySelectorAll('ytd-playlist-video-renderer');
             items.forEach(item => {
@@ -222,7 +234,7 @@
         GM_xmlhttpRequest({
             method: "GET",
             url: url,
-            onload: function(response) {
+            onload: function (response) {
                 if (response.status === 200) {
                     try {
                         const data = JSON.parse(response.responseText);
@@ -235,7 +247,7 @@
                     alert(`[YouTube Playlist Saver] Download failed. Status: ${response.status}`);
                 }
             },
-            onerror: function(err) {
+            onerror: function (err) {
                 console.error(err);
                 alert('[YouTube Playlist Saver] Network Error during import.');
             }
@@ -261,19 +273,19 @@
             const dataStr = JSON.stringify(cachedStorage, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
-            
+
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = url;
             a.download = 'youtube_playlist_saver_data.json';
             document.body.appendChild(a);
             a.click();
-            
+
             setTimeout(() => {
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
             }, 100);
-            
+
         } catch (e) {
             console.error(e);
             alert('[YouTube Playlist Saver] Export failed: ' + e.message);
@@ -285,13 +297,13 @@
         input.type = 'file';
         input.accept = '.json';
         input.style.display = 'none';
-        
-        input.addEventListener('change', function(e) {
+
+        input.addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 try {
                     const data = JSON.parse(e.target.result);
                     mergeImportedData(data);
@@ -325,7 +337,7 @@
     function onOpenGistPageClick() {
         const url = GM_getValue('yt_last_import_url', '');
         if (!url) return;
-        
+
         // Extract user and id from raw URL to construct main Gist page URL
         // From: https://gist.githubusercontent.com/USER/ID/raw/...
         // To:   https://gist.github.com/USER/ID
@@ -344,7 +356,7 @@
             alert('[YouTube Playlist Saver] No data to export.');
             return;
         }
-        
+
         try {
             const dataStr = JSON.stringify(cachedStorage, null, 2);
             GM_setClipboard(dataStr, 'text');
@@ -359,12 +371,12 @@
     if (typeof GM_registerMenuCommand !== 'undefined') {
         GM_registerMenuCommand("Import Data from URL", onImportMenuClick);
         GM_registerMenuCommand("Import Data from File", importDataFromFile);
-        
+
         const lastUrl = GM_getValue('yt_last_import_url', '');
         if (lastUrl && lastUrl.includes('gist.githubusercontent.com')) {
             GM_registerMenuCommand("Open Gist Main Page", onOpenGistPageClick);
         }
-        
+
         GM_registerMenuCommand("Copy Data to Clipboard", onExportToClipboardClick);
         GM_registerMenuCommand("Export Data to File", exportDataToFile);
     }
@@ -392,14 +404,14 @@
         // Try multiple selectors for robustness
         let bar = element.querySelector('#engagement-bar');
         if (!bar) {
-             // Fallback: try finding the meta block if engagement-bar is missing
-             bar = element.querySelector('.ytd-video-meta-block') || element.querySelector('#meta');
+            // Fallback: try finding the meta block if engagement-bar is missing
+            bar = element.querySelector('.ytd-video-meta-block') || element.querySelector('#meta');
         }
 
         if (!bar) {
             // Only warn if it's not a skeleton/loading element
             if (!element.querySelector('ytd-playlist-video-renderer')) {
-                 console.warn('[YouTube Playlist Saver] Target container (engagement-bar/meta) not found for item:', element);
+                console.warn('[YouTube Playlist Saver] Target container (engagement-bar/meta) not found for item:', element);
             }
             return;
         }
@@ -529,19 +541,20 @@
             await new Promise(r => setTimeout(r, 100));
         }
 
-                if (targetItem) {
-                    targetItem.click();
-                    // Highlight the item AFTER it has been clicked for visual confirmation
-                    targetItem.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'; // Light green
-                    // Small delay to make the color change visible before menu closes
-                    await new Promise(r => setTimeout(r, 100)); 
-        
-                    // Ensure menu is closed by clicking body immediately after
-                    document.body.click();
-                    return true;
-                } else {            console.warn(`[YouTube Playlist Saver] Remove option not found after ${MAX_WAIT}ms.`);
+        if (targetItem) {
+            targetItem.click();
+            // Highlight the item AFTER it has been clicked for visual confirmation
+            targetItem.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'; // Light green
+            // Small delay to make the color change visible before menu closes
+            await new Promise(r => setTimeout(r, 100));
+
+            // Ensure menu is closed by clicking body immediately after
+            document.body.click();
+            return true;
+        } else {
+            console.warn(`[YouTube Playlist Saver] Remove option not found after ${MAX_WAIT}ms.`);
             // Attempt to close menu by clicking body
-            document.body.click(); 
+            document.body.click();
             return false;
         }
     }
@@ -667,7 +680,7 @@
 
     function debounce(func, delay) {
         let timer;
-        return function(...args) {
+        return function (...args) {
             const context = this;
             clearTimeout(timer);
             timer = setTimeout(() => func.apply(context, args), delay);
@@ -1012,9 +1025,9 @@
         contentContainer.appendChild(separator);
 
         const asHeaderContainer = document.createElement('div');
-        Object.assign(asHeaderContainer.style, { 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+        Object.assign(asHeaderContainer.style, {
+            display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: '4px'
         });
@@ -1022,7 +1035,7 @@
         const asHeader = document.createElement('div');
         asHeader.textContent = 'Auto Scroll';
         Object.assign(asHeader.style, { fontWeight: 'bold', fontSize: '12px' });
-        
+
         // Auto Scroll Toggle Button (Integrated)
         const asToggleBtn = document.createElement('button');
         asToggleBtn.id = 'yt-saver-as-toggle';
@@ -1046,42 +1059,42 @@
         // Checkbox: Scroll to Bottom
         const asCheckboxContainer = document.createElement('div');
         Object.assign(asCheckboxContainer.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', marginBottom: '4px' });
-        
+
         const asCheckbox = document.createElement('input');
         asCheckbox.type = 'checkbox';
         asCheckbox.checked = autoScrollSettings.scrollToBottom;
         asCheckbox.id = 'yt-saver-as-bottom';
-        
+
         const asCheckboxLabel = document.createElement('label');
         asCheckboxLabel.textContent = 'Scroll to Bottom';
         asCheckboxLabel.htmlFor = 'yt-saver-as-bottom';
 
         // Step Input Helper
         const createScrollInput = (label, key, placeholder) => {
-             const container = document.createElement('div');
-             Object.assign(container.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', marginTop: '2px' });
-             
-             const lbl = document.createElement('div');
-             lbl.textContent = label;
-             lbl.style.flex = '1';
+            const container = document.createElement('div');
+            Object.assign(container.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', marginTop: '2px' });
 
-             const input = document.createElement('input');
-             input.type = 'number';
-             input.value = autoScrollSettings[key];
-             input.placeholder = placeholder;
-             Object.assign(input.style, { width: '50px', padding: '2px', border: '1px solid #ccc', borderRadius: '4px' });
-             
-             input.addEventListener('change', () => {
-                 let val = parseFloat(input.value);
-                 if (isNaN(val) || val < 0) val = key === 'interval' ? 1 : 0;
-                 autoScrollSettings[key] = val;
-                 saveAutoScrollSettings();
-                 restartAutoScrollIfActive();
-             });
-             
-             container.appendChild(lbl);
-             container.appendChild(input);
-             return { container, input };
+            const lbl = document.createElement('div');
+            lbl.textContent = label;
+            lbl.style.flex = '1';
+
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.value = autoScrollSettings[key];
+            input.placeholder = placeholder;
+            Object.assign(input.style, { width: '50px', padding: '2px', border: '1px solid #ccc', borderRadius: '4px' });
+
+            input.addEventListener('change', () => {
+                let val = parseFloat(input.value);
+                if (isNaN(val) || val < 0) val = key === 'interval' ? 1 : 0;
+                autoScrollSettings[key] = val;
+                saveAutoScrollSettings();
+                restartAutoScrollIfActive();
+            });
+
+            container.appendChild(lbl);
+            container.appendChild(input);
+            return { container, input };
         };
 
         const stepInputObj = createScrollInput('Step (px):', 'step', '300');
@@ -1102,7 +1115,7 @@
             }
         }
         updateStepVisibility();
-        
+
         asCheckboxContainer.appendChild(asCheckbox);
         asCheckboxContainer.appendChild(asCheckboxLabel);
         contentContainer.appendChild(asCheckboxContainer);
@@ -1194,14 +1207,14 @@
                         // Mark as removed visually and logically to prevent double-processing
                         item.style.opacity = '0.3';
                         item.style.pointerEvents = 'none';
-                        
+
                         // Wait for YouTube to actually remove the element from DOM
                         const removed = await waitForDomRemoval(item, 5000);
-                        
+
                         if (!removed) {
-                             console.warn(`[YouTube Playlist Saver] Item index ${i} was not removed by YouTube in time.`);
-                             // Fallback: hide it manually if YouTube didn't update UI in time
-                             item.style.display = 'none'; 
+                            console.warn(`[YouTube Playlist Saver] Item index ${i} was not removed by YouTube in time.`);
+                            // Fallback: hide it manually if YouTube didn't update UI in time
+                            item.style.display = 'none';
                         }
                     }
                 } catch (err) {
@@ -1211,13 +1224,13 @@
 
                 // Delay between actions to prevent rate limiting or UI glitches
                 await new Promise(r => setTimeout(r, 1000));
-                
+
                 // Update stats during removal
                 updateStatusCounts();
             }
         } finally {
             isProcessing = false; // End processing
-            
+
             const detailEl = document.getElementById('yt-saver-processing-detail');
             if (detailEl) {
                 detailEl.textContent = '';
@@ -1278,7 +1291,7 @@
     function updateMatchedIndicator(element, isMatched) {
         let bar = element.querySelector('#engagement-bar');
         if (!bar) {
-             bar = element.querySelector('.ytd-video-meta-block') || element.querySelector('#meta');
+            bar = element.querySelector('.ytd-video-meta-block') || element.querySelector('#meta');
         }
         if (!bar) return;
 
@@ -1397,20 +1410,20 @@
 
         const el = document.getElementById('yt-saver-status-counts');
         if (el) {
-             // Avoid innerHTML to prevent Trusted Types violations
-             while (el.firstChild) el.removeChild(el.firstChild);
+            // Avoid innerHTML to prevent Trusted Types violations
+            while (el.firstChild) el.removeChild(el.firstChild);
 
-             const newSpan = document.createElement('span');
-             newSpan.style.color = '#3ea6ff';
-             newSpan.textContent = `New: ${newCount}`;
+            const newSpan = document.createElement('span');
+            newSpan.style.color = '#3ea6ff';
+            newSpan.textContent = `New: ${newCount}`;
 
-             const savedSpan = document.createElement('span');
-             savedSpan.style.color = '#2ba640';
-             savedSpan.textContent = `Saved: ${savedCount}`;
+            const savedSpan = document.createElement('span');
+            savedSpan.style.color = '#2ba640';
+            savedSpan.textContent = `Saved: ${savedCount}`;
 
-             el.appendChild(newSpan);
-             el.appendChild(document.createTextNode(' | '));
-             el.appendChild(savedSpan);
+            el.appendChild(newSpan);
+            el.appendChild(document.createTextNode(' | '));
+            el.appendChild(savedSpan);
         }
     }
 
@@ -1513,15 +1526,15 @@
         if (scrollInterval) {
             clearInterval(scrollInterval);
             const intervalMs = Math.max(100, (autoScrollSettings.interval || 5) * 1000);
-            
+
             const runScroll = () => {
                 if (autoScrollSettings.scrollToBottom) {
-                     window.scrollTo(0, document.documentElement.scrollHeight);
+                    window.scrollTo(0, document.documentElement.scrollHeight);
                 } else {
-                     window.scrollBy(0, autoScrollSettings.step || 300);
+                    window.scrollBy(0, autoScrollSettings.step || 300);
                 }
             };
-            
+
             scrollInterval = setInterval(runScroll, intervalMs);
         }
     }
@@ -1573,7 +1586,7 @@
 
         // Create debounced scanner for scroll events (1 second delay)
         const debouncedScan = debounce(() => {
-             processAllVisible(playlistId, currentSessionSet);
+            processAllVisible(playlistId, currentSessionSet);
         }, 1000);
 
         // Initialize Scroll Listener if not already present
@@ -1590,15 +1603,15 @@
         statusInterval = setInterval(() => {
             // 1. Check if panel is alive
             if (!document.getElementById('yt-saver-filter-panel')) {
-                 console.warn('[YouTube Playlist Saver] Panel disappeared, recreating...');
-                 createFilterPanel();
+                console.warn('[YouTube Playlist Saver] Panel disappeared, recreating...');
+                createFilterPanel();
             }
 
             // 2. Check if list container is still in DOM (Observer check)
             const listContainer = document.querySelector('ytd-playlist-video-list-renderer #contents');
             if (listContainer && (!window._ytSaverObservedElement || window._ytSaverObservedElement !== listContainer || !document.contains(window._ytSaverObservedElement))) {
-                 console.warn('[YouTube Playlist Saver] List container replaced or observer missing, re-initializing...');
-                 initObserver(listContainer, playlistId, currentSessionSet);
+                console.warn('[YouTube Playlist Saver] List container replaced or observer missing, re-initializing...');
+                initObserver(listContainer, playlistId, currentSessionSet);
             }
 
             // 3. UI Updates
@@ -1631,8 +1644,8 @@
 
         // Initial Observer setup
         const listContainer = document.querySelector('ytd-playlist-video-list-renderer #contents') ||
-                             await waitForElement('ytd-playlist-video-list-renderer #contents', 5000);
-                             
+            await waitForElement('ytd-playlist-video-list-renderer #contents', 5000);
+
         if (listContainer) {
             initObserver(listContainer, playlistId, currentSessionSet);
         } else {

@@ -148,7 +148,7 @@
             <p class="project-desc">
                 Google Geminiのユーザープロファイルに、好きな文字列や絵文字でカスタム「バッジ」を追加します。
             </p>
-            <a class="install-button"
+            <a class="install-button" data-script-name="Gemini Profile Badge"
                 href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-profile-badge/gemini-profile-badge.user.js"
                 target="_blank">
                 <svg height="16" viewbox="0 0 24 24" width="16">
@@ -166,7 +166,7 @@
             <p class="project-desc">
                 Google Gemini の会話をワンクリックで削除する機能を提供します。
             </p>
-            <a class="install-button"
+            <a class="install-button" data-script-name="Gemini 1-Click Delete Conversation"
                 href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js"
                 target="_blank">
                 <svg height="16" viewbox="0 0 24 24" width="16">
@@ -184,7 +184,7 @@
             <p class="project-desc">
                 Google Gemini の会話やキャンバスを、ワンクリックで Google Docs にエクスポートするユーザースクリプトです。
             </p>
-            <a class="install-button"
+            <a class="install-button" data-script-name="Gemini 1-Click Export to Docs"
                 href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js"
                 target="_blank">
                 <svg height="16" viewbox="0 0 24 24" width="16">
@@ -202,7 +202,7 @@
             <p class="project-desc">
                 Google Gemini のサイドバー（会話リスト）を無限に自動スクロールし、すべての会話履歴を一括でロードするためのユーザースクリプトです。
             </p>
-            <a class="install-button"
+            <a class="install-button" data-script-name="Gemini Auto-Scroll"
                 href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js"
                 target="_blank">
                 <svg height="16" viewbox="0 0 24 24" width="16">
@@ -220,7 +220,7 @@
             <p class="project-desc">
                 Google Gemini 上での会話において、メッセージ数（ターン数）、文字数、画像数をリアルタイムにカウントし表示します。
             </p>
-            <a class="install-button"
+            <a class="install-button" data-script-name="Gemini Turn Counter"
                 href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js"
                 target="_blank">
                 <svg height="16" viewbox="0 0 24 24" width="16">
@@ -247,6 +247,20 @@
                     href="https://x.com/TakashiSasaki">Takashi Sasaki</a></small>
         </p>
     </footer>
+    <script>
+        window.addEventListener('userscript-check-installed', (event) => {
+            const { name, version } = event.detail;
+            const buttons = document.querySelectorAll('.install-button');
+            buttons.forEach(btn => {
+                if (btn.getAttribute('data-script-name') === name) {
+                    btn.textContent = `Installed (v${version})`;
+                    btn.style.backgroundColor = '#6c757d';
+                    btn.style.pointerEvents = 'none';
+                    btn.classList.add('installed');
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

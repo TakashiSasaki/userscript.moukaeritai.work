@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         Grok Conversation Copy
 // @namespace    https://userscript.moukaeritai.work/
-// @version      1.3.2
+// @version      1.3.3
 // @description  Grokの会話ページで、全てのコピーボタンを順に押して内容を結合し、ユーザーとモデルを区別するインジケーター付きでクリップボードにコピーします。ボタンにメッセージ数を表示。
 // @author       Takashi Sasaki
 // @match        https://grok.com/c/*
+// @match        https://userscript.moukaeritai.work/*
 // @grant        GM_setClipboard
 // @grant        GM_registerMenuCommand
+// @grant        GM_info
 // @run-at       document-idle
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-copy-all/grok-copy-all.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-copy-all/grok-copy-all.user.js
@@ -14,6 +16,16 @@
 
 (function () {
     'use strict';
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        window.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+        return;
+    }
 
     const CONFIG = {
         buttonSelector: 'button[aria-label="コピー"], button[aria-label="Copy"]',

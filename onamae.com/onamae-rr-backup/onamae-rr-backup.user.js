@@ -1,18 +1,30 @@
 // @name         お名前.com DNSレコードバックアップ
 // @namespace    userscript.moukaeritai.work
-// @version      0.0.2
+// @version      0.0.3
 // @description  お名前.comのDNSレコード設定画面を表示するたびに、レコード情報を自動的にバックアップします。
 // @author       Takashi Sasaki
 // @homepage     https://x.com/TakashiSasaki
 // @match        https://navi.onamae.com/domain/setting/dns/control/input
+// @match        https://userscript.moukaeritai.work/*
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_info
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/onamae.com/onamae-rr-backup/onamae-rr-backup.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/onamae.com/onamae-rr-backup/onamae-rr-backup.user.js
 // ==/UserScript==
 
 (function () {
     'use strict';
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        window.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+        return;
+    }
 
     /**
      * DNS Record types that use 4 input fields for the value (e.g. A record IPv4).
