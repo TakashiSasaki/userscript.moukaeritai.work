@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.26
+// @version      0.1.27
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -33,7 +33,9 @@
         CONVERSATION_ITEM: 'div[data-test-id="conversation"]',
         SPINNER: 'mat-progress-spinner[data-test-id="loading-history-spinner"]',
         SCROLL_CONTAINER: 'conversations-list', // Updated from incorrect class name
-        MENU_BUTTON: 'side-nav-menu-button'
+        MENU_BUTTON: 'side-nav-menu-button',
+        ERROR_SNACKBAR: 'mat-snack-bar-container',
+        ERROR_LABEL: '.mat-mdc-snack-bar-label'
     };
 
     const CONSTANTS = {
@@ -428,6 +430,18 @@
             (style.overflowY === 'auto' || style.overflowY === 'scroll');
     }
 
+    function checkErrorState() {
+        // Broadly scan for the error message
+        const snackbars = document.querySelectorAll(SELECTORS.ERROR_SNACKBAR);
+        for (const sb of snackbars) {
+            if (sb.textContent.includes("Couldn’t load recent chats") ||
+                sb.textContent.includes("Try reloading this page")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function isSpinnerVisible() {
         return document.querySelector(SELECTORS.SPINNER) !== null;
     }
@@ -471,6 +485,14 @@
 
         try {
             while (isAutoScrollEnabled()) {
+                // Critical Error Check
+                if (checkErrorState()) {
+                    console.warn('[GeminiAutoScroll] Critical error detected ("Couldn\'t load"). Stopping auto-scroll.');
+                    toggleAutoScroll(); // This will disable it
+                    alert('Gemini Auto-Scroll halted: "Couldn’t load recent chats" error detected. Please reload the page.');
+                    break;
+                }
+
                 // Determine container (it might change or be created lazily)
                 const currentContainer = getScrollContainer();
 
