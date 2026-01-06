@@ -12,8 +12,8 @@
 // @grant        GM_getValue
 // @grant        GM_registerMenuCommand
 // @grant        GM_info
-// @updateURL    https://github.com/TakashiSasaki/world/raw/main/chat.openai.com/chatgpt-profile-badge/chatgpt-profile-badge.user.js
-// @downloadURL  https://github.com/TakashiSasaki/world/raw/main/chat.openai.com/chatgpt-profile-badge/chatgpt-profile-badge.user.js
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-profile-badge/chatgpt-profile-badge.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-profile-badge/chatgpt-profile-badge.user.js
 // ==/UserScript==
 
 (function () {
