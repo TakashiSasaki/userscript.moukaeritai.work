@@ -7,6 +7,7 @@
 // @match        https://gemini.google.com/app
 // @match        https://gemini.google.com/app/
 // @include      /^https:\/\/gemini\.google\.com\/app\/[a-f0-9]{16}(\?.*)?$/
+// @match        https://gemini.google.com/search*
 // @grant        none
 // ==/UserScript==
 
@@ -16,8 +17,41 @@
     const SNIPPET_SELECTOR = 'search-snippet';
     const TITLE_SELECTOR = '.title';
     const NUMBER_CLASS = 'search-snippet-helper-number';
+    const SEARCH_PAGE_PREFIX = 'https://gemini.google.com/search';
+
+    function isSearchPage() {
+        return window.location.href.startsWith(SEARCH_PAGE_PREFIX);
+    }
+
+    // --- URL Change Detection ---
+    function onUrlChange() {
+        if (isSearchPage()) {
+            addNumbers();
+        }
+    }
+
+    // 1. Listen for browser back/forward
+    window.addEventListener('popstate', onUrlChange);
+
+    // 2. Monkey-patch pushState and replaceState for SPA navigation
+    const originalPushState = history.pushState;
+    history.pushState = function () {
+        const ret = originalPushState.apply(this, arguments);
+        onUrlChange();
+        return ret;
+    };
+
+    const originalReplaceState = history.replaceState;
+    history.replaceState = function () {
+        const ret = originalReplaceState.apply(this, arguments);
+        onUrlChange();
+        return ret;
+    };
+    // -----------------------------
 
     function addNumbers() {
+        if (!isSearchPage()) return;
+
         const snippets = document.querySelectorAll(SNIPPET_SELECTOR);
         snippets.forEach((snippet, index) => {
             const title = snippet.querySelector(TITLE_SELECTOR);
@@ -40,19 +74,17 @@
     }
 
     const observer = new MutationObserver((mutations) => {
+        if (!isSearchPage()) return;
+
         let shouldUpdate = false;
         for (const mutation of mutations) {
             if (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0) {
-                // Check if the mutation affects search-snippet or its parents/containers
-                // Simply checking if we are anywhere near search results
                 shouldUpdate = true;
                 break;
             }
         }
 
         if (shouldUpdate) {
-            // Debounce or just run? Run for now, optimization later if needed.
-            // requestAnimationFrame to batch UI updates
             requestAnimationFrame(addNumbers);
         }
     });

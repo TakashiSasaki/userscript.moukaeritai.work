@@ -15,10 +15,14 @@ Gemini の検索結果一覧において、各会話カードのタイトルに�
 ## 技術仕様
 
 ### 対象 URL
+- `https://gemini.google.com/search` (検索結果ページ)
 - `https://gemini.google.com/app`
 - `https://gemini.google.com/app/`
 - 特定の会話ページ (`regex: /^https:\/\/gemini\.google\.com\/app\/[a-f0-9]{16}(\?.*)?$/`)
-    - *注記: 検索機能は主に `/app` 上でモーダル的またはサイドパネル的に動作する可能性がありますが、ユーザースクリプトの適用範囲として他のスクリプトと統一しています。*
+
+**実行制御ロジック:**
+- 本スクリプトはユーザーが明示的に検索を行ったページ（URLが `https://gemini.google.com/search` で始まる場合）でのみ機能を有効化します。
+- SPA遷移（History API）をフックし、URLが変化するたびに有効/無効を即座に切り替えます。
 
 ### セレクタ戦略
 - **コンテナ**: `search-snippet`
