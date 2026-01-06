@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.30
+// @version      0.1.31
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -309,7 +309,8 @@
             // Safest is to look for the substring "c_" + [0-9a-f]+
             const jslog = selectedItem.getAttribute('jslog');
             if (jslog) {
-                const match = jslog.match(/c_([0-9a-f]+)/);
+                // Look for strictly 16 hex characters, optionally after c_
+                const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/["']([a-f0-9]{16})["']/);
                 if (match) return match[1];
             }
         }
@@ -416,7 +417,7 @@
     // --- Utility Functions ---
 
     function getConversationIdFromUrl() {
-        const match = window.location.pathname.match(/\/app\/([a-z0-9]+)/);
+        const match = window.location.pathname.match(/\/app\/([a-f0-9]{16})/);
         return match ? match[1] : null;
     }
 
