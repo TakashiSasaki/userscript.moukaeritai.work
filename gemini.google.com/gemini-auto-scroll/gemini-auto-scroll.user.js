@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.23
+// @version      0.1.24
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -437,8 +437,9 @@
             if (mutationObserver) mutationObserver.disconnect();
             mutationObserver = new MutationObserver((mutations) => {
                 if (!isAutoScrollEnabled()) return;
-                // If height changed or nodes added, scroll
-                scrollDown();
+                // Debounce scrolling to avoid slamming the browser/app with events
+                if (_debounceTimer) clearTimeout(_debounceTimer);
+                _debounceTimer = setTimeout(scrollDown, 100);
             });
             mutationObserver.observe(target, { childList: true, subtree: true });
         };
