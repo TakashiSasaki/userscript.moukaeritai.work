@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.22
+// @version      0.1.23
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -70,7 +70,7 @@
     // --- State Management ---
 
     function isAutoScrollEnabled() {
-        return localStorage.getItem(CONSTANTS.STORAGE_KEY) !== 'false'; // Default to true
+        return localStorage.getItem(CONSTANTS.STORAGE_KEY) === 'true'; // Default to false
     }
 
     function toggleAutoScroll() {
