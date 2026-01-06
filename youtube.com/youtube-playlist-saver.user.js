@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.38
+// @version      0.2.39
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -1527,18 +1527,21 @@
     }
 
     function processAllVisible(playlistId, currentSessionSet) {
-        isFiltering = true; // Activating filtering indicator during re-scan/loading
+        // Optimization: Only select items that haven't been processed yet for this playlist
+        // This drastically reduces overhead on large playlists
+        const selector = `ytd-playlist-video-renderer:not([data-saver-processed="${playlistId}"])`;
+        const newItems = document.querySelectorAll(selector);
+
+        if (newItems.length === 0) return;
+
+        isProcessing = true; // Use processing flag instead of filtering flag for background work
         try {
-            const items = document.querySelectorAll('ytd-playlist-video-renderer');
-            items.forEach(item => processItem(item, playlistId, currentSessionSet));
+            newItems.forEach(item => processItem(item, playlistId, currentSessionSet));
             updateResultCount();
         } finally {
-            // Ensure indicator remains visible for 100ms
-            setTimeout(() => {
-                isFiltering = false;
-                updateAboveInfo();
-                updateStatusCounts();
-            }, 100);
+            isProcessing = false;
+            // Update UI counts after processing new batch
+            updateStatusCounts();
         }
     }
 
