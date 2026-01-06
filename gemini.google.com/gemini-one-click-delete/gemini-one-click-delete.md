@@ -2,37 +2,51 @@
 
 ## このユーザースクリプトの目的
 
-GeminiのWeb SPAページでは、会話を削除するために複数回のクリックが必要です。
-明らかに削除したいときもあるので、会話を1クリックで削除できるようにするユーザースクリプトを作成します。
-このユーザースクリプトは Tampermonkey で動作させます。
+GeminiのWeb SPAページにおいて、現在の会話を削除するために複数回のクリック（メニューを開く → 削除を選択 → 確認ダイアログ）が必要です。
+本スクリプトは、これらの手順を自動化し、**1クリック** または **キーボードショートカット** で即座に会話を削除できる機能を追加します。
+Tampermonkey 上で動作することを想定しています。
 
-## ユーザースクリプトに関する追加情報
+## ユーザースクリプト情報
 
-ユーザースクリプトのメタデータの namespaceは https://userscript.moukaeritai.work/ です。
-ユーザースクリプトは  https://gemini.google.com/app/* でマッチするURLで動作します。
+*   **Namespace**: `https://userscript.moukaeritai.work/`
+*   **Match URL**: `https://gemini.google.com/app/*`
+*   **GitHub**: [userscript.moukaeritai.work](https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/gemini.google.com/gemini-one-click-delete)
 
-# DOMのサンプル
+## 機能仕様
 
-sample1.html はデスクトップ表示のDOMのサンプルです。
-sample2.html はモバイル表示のDOMのサンプルです。
+### 1. 1クリック削除ボタンの注入
 
-sample1.md とsample2.md には操作の対象となる候補のHTML断片とセレクタを提供します。
+以下の場所に「ゴミ箱」アイコンの削除ボタンを自動的に追加します。
 
-セレクタはChromeの開発者モードで取得できるDOMツリーから得たものです。
-同じ要素を指定するセレクタには複数の表現方法がありますから、
-私が提供したセレクタよりも安定性を重視してDOMツリーを分析してセレクタを作成してください。
+*   **標準ビュー（デスクトップ/モバイル共通）**:
+    *   画面上部（ヘッダー部分）にある「・・・（オプション）」メニューボタンの隣に配置されます。
+*   **検索結果ビュー（またはヘッダーがない場合）**:
+    *   画面右上に「フローティングボタン」として配置されます。
+    *   このボタンは、現在表示中の会話IDを検知し、サイドバー内の対応する削除メニューを自動的に操作します。
 
-# 注入するボタンの表示箇所
+### 2. キーボードショートカット
 
-## デスクトップ表示の場合
+*   **ショートカット**: `Ctrl + D` （Macの場合は `Meta + D` も可の想定）
+*   **動作**:
+    *   ショートカットキーが押されると、画面上の削除ボタン（標準またはフローティング）をプログラム的にクリックします。
+    *   **安全性**: テキスト入力エリア（`input`, `textarea`, `contenteditable`）での入力中はショートカットを無効化します。
 
-GeminiのWeb SPAの会話の上部に最初から表示されているメニュー表示ボタンの隣。
+### 3. エラーハンドリング
 
-## モバイル表示の場合
+*   **Trusted Types 対応**: `simulateClick` 関数において `MouseEvent` の `view` プロパティを `null` に設定することで、ブラウザのセキュリティポリシー（Trusted Types）によるエラーを回避しています。
+*   **待機ロジック**: メニューパネルや確認ダイアログが表示されるのを動的かつ堅牢に待機します。
 
-GeminiのWeb SPAの会話の上部に最初から表示されているメニュー表示ボタンの隣。
+## 技術的詳細
 
-# リポジトリ
+### DOM操作の流れ（削除フロー）
+ボタン（またはショートカット）が押されると、以下の手順が高速に実行されます：
+1.  トリガーとなる「・・・」メニューボタンをクリック。
+2.  表示されたメニューパネル（`.mat-mdc-menu-panel` / `.mat-bottom-sheet-container`）から「削除（Delete）」ボタンを探索してクリック。
+3.  表示された確認ダイアログ（`mat-dialog-container`）内の「確認（Confirm）」ボタンを待機してクリック。
 
-*   **GitHub**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/gemini.google.com/gemini-one-click-delete](https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/gemini.google.com/gemini-one-click-delete)
-*   **Raw Script**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js](https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js)
+### DOMのサンプル
+開発にあたっては、デスクトップ表示（`sample1.html`）およびモバイル表示（`sample2.html`）のDOM構造を参照しています。
+
+## 更新履歴
+*   **v0.1.10**: `Ctrl + D` ショートカットの実装。フローティングボタンと標準ボタンのどちらもトリガー可能。
+*   **v0.1.9**: `simulateClick` の `TypeError` 修正（Trusted Types対応）。
