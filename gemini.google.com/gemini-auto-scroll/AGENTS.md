@@ -40,3 +40,7 @@ To load more conversations automatically:
     - Re-search for the ID.
 4. Repeat if necessary.
 5. **Giving Up**: If the spinner doesn't appear after scrolling to the bottom, or if we reach a maximum number of scrolls (e.g., 20), stop.
+
+## Version Control
+- **Versioning Rule**: When any code change is made to the userscript, increment at least the **patch level** of the version number (e.g., 0.1.28 -> 0.1.29).
+- **Documentation**: Reflect the version bump and changes in `gemini-auto-scroll.md`.

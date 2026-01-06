@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.28
+// @version      0.1.29
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -285,6 +285,25 @@
         return items.length;
     }
 
+    function findSelectedConversationId() {
+        // Try to find the selected item in the list
+        const selectedItem = document.querySelector('div[data-test-id="conversation"].selected');
+        if (selectedItem) {
+            // Extract ID from jslog
+            // Format: jslog="...;BardVeMetadataKey:[...,&quot;c_ID&quot;,...];..."
+            // We look for the pattern "c_" followed by hex characters.
+            // Since the attribute is HTML-encoded &quot;, we might see plain quotes depending on how browser returns it.
+            // Safest is to look for the substring "c_" + [0-9a-f]+
+            const jslog = selectedItem.getAttribute('jslog');
+            if (jslog) {
+                const match = jslog.match(/c_([0-9a-f]+)/);
+                if (match) return match[1];
+            }
+        }
+        // Fallback: Check URL
+        return getConversationIdFromUrl();
+    }
+
     function updateToggleButtonUI() {
         const btn = document.getElementById('gemini-auto-scroll-toggle');
         if (!btn) return;
@@ -305,6 +324,33 @@
             badge.textContent = count;
             badge.style.display = count > 0 ? 'block' : 'none';
         }
+
+        // Update ID display
+        // We look for a dedicated span, if not create/append it near the button or inside tooltip?
+        // User requested "near the check box". We'll put it in the tooltip for cleaner UI, 
+        // or add a small label next to the button. Let's add a label next to it.
+        let idLabel = document.getElementById('gemini-auto-scroll-id-label');
+        if (!idLabel) {
+            idLabel = document.createElement('span');
+            idLabel.id = 'gemini-auto-scroll-id-label';
+            idLabel.style.cssText = `
+                position: absolute;
+                left: 40px; /* Right of the 32px button */
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 10px;
+                color: #5f6368;
+                font-family: monospace;
+                white-space: nowrap;
+                pointer-events: none;
+                z-index: 999;
+                opacity: 0.7;
+            `;
+            btn.parentElement.appendChild(idLabel);
+        }
+
+        const currentId = findSelectedConversationId();
+        idLabel.textContent = currentId || '';
 
         const tooltip = btn.querySelector('.gtc-tooltip');
         if (tooltip) {
