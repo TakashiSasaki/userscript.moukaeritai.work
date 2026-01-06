@@ -3,81 +3,61 @@
 # 目的
 
 Geminiのウェブアプリケーション（SPA）において、会話の特定のターンまたはキャンバスをGoogle Docsにエクスポートする操作を簡略化する。
-標準機能では複数回のクリック（メニュー展開など）が必要だが、これを「1クリック」で実行できるショートカットボタンを追加する。
+標準機能では複数回のクリック（メニュー展開など）が必要だが、これを「1クリック」または「キーボードショートカット」で実行できる機能を追加する。
 本ユーザースクリプトはTampermonkeyでの利用を想定し、ファイル名は `gemini-export-to-docs.user.js` とする。
 
 # 経緯
-以前作成したスクリプト（`ワンクリック高速エクスポート...`）の課題（DOM要素検出の不安定さ、イベントトリガーの信頼性）を解消するため、ゼロベースで再設計・実装を行う。
+以前作成したスクリプトの課題（DOM要素検出の不安定さ、イベントトリガーの信頼性）を解消するため、ゼロベースで再設計・実装を行う。
 
-# SPAのDOMとセレクタ戦略
-Geminiは動的なSPAであり、DOM構造やクラス名は頻繁に変更される可能性がある。
-そのため、以下の優先順位で要素を特定する。
+# 技術仕様
 
-1.  **data-test-id属性**: Googleがテスト用に付与している不変性の高い属性（例: `data-test-id="more-menu-button"`）。これを最優先で使用する。
-2.  **アイコンフォント名**: ボタンの機能を特定するために `mat-icon` の名前（`docs`, `more_vert` など）を補助的に使用する。
-3.  **DOM階層構造**: 親要素（`response-container`）からの相対位置。
+## 1. セレクタ戦略
+Geminiは動的なSPAであるため、以下の優先順位で要素を特定する。
+1.  **data-test-id属性**: Googleがテスト用に付与している不変性の高い属性（例: `data-test-id="more-menu-button"`）。
+2.  **アイコンフォント**: ボタンを特定できない場合、`mat-icon` の名前（`docs`など）を補助的に使用する。
+3.  **DOM構造**: 親要素（`response-container`）からの相対位置など。
 
-また、レスポンシブデザインにより、ウィンドウ幅に応じて以下の違いがあることに留意する：
-*   **デスクトップ**: 「エクスポート」ボタンはメニュー内の第1階層に直接表示されることが多い。
-*   **モバイル/狭い画面**: 「Export to Docs」は「Export to...」という親メニューの中に隠れている場合がある（サブメニュー構造）。
-
-# 技術的制約と要件
-
-## 1. Trusted Types (セキュリティ)
-Geminiのサイトではセキュリティポリシーにより `innerHTML` への文字列代入が禁止されている（TrustedHTML違反エラーが発生する）。
-*   **対応**:
-    *   `innerHTML` は使用しない。
-    *   SVGアイコンなどの要素生成には `document.createElementNS` を、その他の要素には `document.createElement` を使用し、DOM操作として構築する。
-    *   **重要**: `DOMParser().parseFromString` も `TrustedHTML` ポリシー違反となるため使用しない。
-
-## 2. Content Security Policy (CSP)
-Geminiは厳格なCSPを適用している。
-*   **対応**: 外部フォント（`Google Sans` など）を明示的に指定するとブロックされる場合があるため、`font-family` は指定せず、親要素のスタイルを継承（`inherit`）させる。
-
-## 3. 動的コンテンツの読み込み (Wait処理)
-メニューやダイアログはユーザー操作（クリック）後に非同期でDOMに追加される。
-*   **対応**: 単純な `querySelector` ではなく、要素が出現するまで待機する `waitForElement` のような非同期関数を実装し、タイムアウト処理を含める必要がある。
-
-## 4. 重なり順序 (z-index)
-モバイル表示などでは、透明なオーバーレイ要素がボタンの上に重なり、クリックを妨害する場合がある。
-*   **対応**: 注入するボタンには `z-index` を高く設定し、`pointer-events: auto` を指定してクリックイベントを確実に受け取れるようにする。
-
-## 5. UI操作の信頼性（Reliability）
-メニューの展開アニメーションやDOM構造の微細な変化により、要素が見つからない場合がある。
-*   **対応**:
-    *   **テキストマッチング**: `data-test-id` が欠落している場合（一部のモバイル表示など）に備え、ボタンのテキスト（"Export to Docs"）による検索をフォールバックとして実装する。
-    *   **グローバル探索**: メニューパネルがDOMツリーの予期せぬ場所に挿入される場合があるため、特定のコンテナ内だけでなくドキュメント全体からボタンを探索する。
-    *   **リトライ処理**: ボタンが見つかるまで、一定時間（例：2秒間）繰り返し探索を行う待機ロジックを導入する。
-
-## 6. ユーザーフィードバック
-エクスポート処理はバックグラウンドでのDOM操作（メニュー開閉など）を伴うため、数秒の時間を要する。
-*   **ローディング表示**: 処理中は画面中央にスピナーを含むオーバーレイを表示し、操作中であることを明示する。
-*   **完了通知**: 処理が成功すると、ボタンの色を緑色（`#1e8e3e`）に変更し、アイコンをチェックマークに切り替えて完了を通知する。
-
-# UI仕様
-
-## ボタンの配置
-*   **ターン応答**: 各ターンの応答文ヘッダー付近（「︙」メニューボタンの横など）に配置する。さらにデスクトップ表示においては、各ターンのモデルからの応答文コンテナの右上の両方に配置する。
-    *   **同期**: 同一ターンに対して複数のボタン（上部・下部など）が存在する場合、片方がクリックされると、他方のボタンも「エクスポート済み」状態（緑色・チェックマーク）に同期して変化する。
-*   **キャンバス**: キャンバスを開くためのチップ（「Open」ボタンなど）が表示されている場合、その横に配置する。
-*   **デザイン**: GeminiのUIに馴染むよう、角丸やホバーエフェクトを持たせたシンプルなアイコンボタンとする。
-
-## 処理フロー (自動化ロジック)
+## 2. 自動化ロジックフロー
 
 ### ターンエクスポート
 1.  **トリガー**: スクリプトが「︙」ボタン（`more-menu-button`）をクリック。
-2.  **メニュー待機**: メニューパネル（`.mat-mdc-menu-panel` または `actions-bottom-sheet`）が表示されるのを待つ。
-3.  **ボタン探索 & クリック**:
-    *   **パターンA (PC)**: メニュー内に「Export to Docs」ボタンがあれば即クリック。
-    *   **パターンB (Mobile)**: 「Export to...」ボタンがある場合、それをクリック → 第2メニュー待機 → その中の「Export to Docs」をクリック。
+2.  **メニュー待機**: メニューパネルが表示されるのを待機（`waitForElement`）。
+3.  **エクスポート実行**:
+    *   **PC版**: メニュー内の「Export to Docs」ボタンを即座にクリック。
+    *   **モバイル版**: 「Export to...」ボタンをクリック → サブメニュー待機 → 「Export to Docs」をクリック。
 
 ### キャンバスエクスポート
-1.  **キャンバスオープン**: キャンバスが閉じていれば「Open」ボタンをクリックして開く。
-2.  **共有メニュー**: キャンバス内の「共有（Share）」ボタンをクリック。
-3.  **メニュー待機**: 共有メニューが表示されるのを待つ。
-4.  **ボタン探索 & クリック**: 「Export to Docs」をクリック。
+1.  **オープン**: キャンバスが閉じていれば開く。
+2.  **共有**: キャンバス内の「共有（Share）」ボタンをクリック。
+3.  **エクスポート**: 共有メニュー内の「Export to Docs」をクリック。
+
+## 3. 機能要件
+
+### A. 1クリックボタン（UI注入）
+*   **配置**:
+    *   各レスポンスの下部（フッター）にある「︙」メニューボタンの隣。
+    *   各レスポンスの上部（ヘッダー）にあるコントロールエリア。
+    *   キャンバスの「Open」チップの隣。
+*   **状態同期**: 同一レスポンスに対して複数のボタンがある場合、一つがクリックされると全てが「完了状態（緑色チェック）」に同期される。
+
+### B. キーボードショートカット (`Ctrl + E`)
+*   **機能**: ページ内で **最初に見つかった** 会話のレスポンス（通常は最初のターン）を対象にエクスポートを実行する。
+*   **動作条件**: テキスト入力エリア（`input`, `textarea`, `contenteditable`）にフォーカスがない場合のみ発火する。
+*   **フィードバック**: 通常のボタンクリックと同様、処理中はオーバーレイを表示し、完了後に成功ステータスへ更新する。
+
+## 4. セキュリティと安定性（Reliability）
+
+*   **Trusted Types対応**: `innerHTML` の使用を禁止し、`document.createElementNS` 等でDOMを構築する。
+*   **Trusted Click**: `MouseEvent` の `view` プロパティを `null` に設定することで、ブラウザのセキュリティ制約による `TypeError` を回避する。
+*   **Wait処理**: 非同期DOM更新に対応するため、単純な `querySelector` ではなく、タイムアウト付きのリトライ待機ロジックを実装する。
+
+# UI仕様
+
+*   **ボタンデザイン**:
+    *   初期状態: 薄い緑色の背景 (`#e6f4ea`) にDocsアイコン。
+    *   処理中: 全画面オーバーレイとスピナーを表示。
+    *   完了状態: 濃い緑色 (`#1e8e3e`) に変化し、アイコンがチェックマークになる。
 
 # リポジトリ
 
-*   **GitHub**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/gemini.google.com/gemini-export-to-docs](https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/gemini.google.com/gemini-export-to-docs)
-*   **Raw Script**: [https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js](https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js)
+*   **GitHub**: [userscript.moukaeritai.work](https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/gemini.google.com/gemini-export-to-docs)
