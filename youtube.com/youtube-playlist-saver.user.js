@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.41
+// @version      0.2.42
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -1645,6 +1645,40 @@
         });
     }
 
+    // Fallback: Periodic scan to correct "Above" set in case Observer missed something
+    function forceSyncAboveItems() {
+        const items = document.querySelectorAll('ytd-playlist-video-renderer');
+        let changed = false;
+
+        items.forEach(item => {
+            if (item.style.display === 'none' || item.style.pointerEvents === 'none') {
+                if (itemsAboveSet.has(item)) {
+                    itemsAboveSet.delete(item);
+                    changed = true;
+                }
+                return;
+            }
+
+            const rect = item.getBoundingClientRect();
+            // Consistently use the same threshold as Observer (180px)
+            if (rect.bottom < 180) {
+                if (!itemsAboveSet.has(item)) {
+                    itemsAboveSet.add(item);
+                    changed = true;
+                }
+            } else {
+                if (itemsAboveSet.has(item)) {
+                    itemsAboveSet.delete(item);
+                    changed = true;
+                }
+            }
+        });
+
+        if (changed) {
+            updateAboveInfo();
+        }
+    }
+
     // --- Original Logic Refactored ---
 
     async function run() {
@@ -1673,9 +1707,18 @@
         const initialItems = document.querySelectorAll('ytd-playlist-video-renderer');
         observeVideosForAboveCheck(initialItems);
 
+        let tickCount = 0;
+
         // Start Status Intervals with Panel/Observer Resurrection Logic
         if (statusInterval) clearInterval(statusInterval);
         statusInterval = setInterval(() => {
+            tickCount++;
+
+            // Sync Above items every 2 seconds (4 * 500ms)
+            if (tickCount % 4 === 0) {
+                forceSyncAboveItems();
+            }
+
             // 1. Check if panel is alive
             if (!document.getElementById('yt-saver-filter-panel')) {
                 console.warn('[YouTube Playlist Saver] Panel disappeared, recreating...');
