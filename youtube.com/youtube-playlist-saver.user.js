@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.40
+// @version      0.2.41
 // @description  YouTubeのプレイリストに含まれる動画IDを記録・管理します。gist.githubusercontent.com からのデータインポートに対応しています。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -1357,26 +1357,10 @@
         }
 
         updateMatchedIndicator(item, isFilterActive && isMatched);
+        return isMatched;
     }
 
-    function updateResultCount() {
-        const items = document.querySelectorAll('ytd-playlist-video-renderer');
-        // Count items that are NOT hidden
-        // Note: checking style.display is faster than :not([style*="display: none"]) query in large DOMs usually,
-        // but simple querySelectorAll with :not might be fast enough.
-        // Let's use array filter for safety and clarity if N is large.
-        let visibleCount = 0;
-        for (let i = 0; i < items.length; i++) {
-            if (items[i].style.display !== 'none') {
-                visibleCount++;
-            }
-        }
 
-        const countEl = document.getElementById('yt-saver-filter-count');
-        if (countEl) {
-            countEl.textContent = `Results: ${visibleCount} / ${items.length}`;
-        }
-    }
 
     function updateStatusCounts() {
         const items = document.querySelectorAll('ytd-playlist-video-renderer');
@@ -1413,10 +1397,24 @@
 
     function applyFilters() {
         isFiltering = true;
+        let visibleCount = 0;
+        let totalCount = 0;
+
         try {
             const items = document.querySelectorAll('ytd-playlist-video-renderer');
-            items.forEach(applyFilterToItem);
-            updateResultCount();
+            totalCount = items.length;
+
+            items.forEach(item => {
+                const isVisible = applyFilterToItem(item);
+                if (isVisible) visibleCount++;
+            });
+
+            // Update UI directly without re-scanning
+            const countEl = document.getElementById('yt-saver-filter-count');
+            if (countEl) {
+                countEl.textContent = `Results: ${visibleCount} / ${totalCount}`;
+            }
+
             // Moved updateAboveInfo to setTimeout to ensure layout (getBoundingClientRect) 
             // is calculated AFTER the DOM updates (display: none) have triggered a reflow.
         } finally {
@@ -1537,7 +1535,9 @@
         isProcessing = true; // Use processing flag instead of filtering flag for background work
         try {
             newItems.forEach(item => processItem(item, playlistId, currentSessionSet));
-            updateResultCount();
+            // Optimization: Do not scan all items for count on every chunk load.
+            // If critical, implement incremental counter updating.
+            // For now, removing the heavy updateResultCount() call.
         } finally {
             isProcessing = false;
             // Update UI counts after processing new batch
