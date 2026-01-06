@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.25
+// @version      0.1.26
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app/*
@@ -243,8 +243,29 @@
     function updateConversationIndices() {
         const items = document.querySelectorAll(SELECTORS.CONVERSATION_ITEM);
         items.forEach((item, index) => {
-            // Ensure relative positioning for absolute child
-            if (getComputedStyle(item).position === 'static') {
+            // Optimization: Skip heavy DOM hits if already processed
+            if (item.classList.contains('gtc-processed')) {
+                // Just update the index number if needed (cheap check)
+                // We use a specific selector for the badge to avoid re-querying everything if we stored it,
+                // but querySelector on a small subtree is reasonably fast. 
+                // However, we can trust the badge exists if processed.
+                const badge = item.querySelector('.gtc-conversation-index');
+                if (badge) {
+                    const newText = String(index + 1);
+                    if (badge.textContent !== newText) {
+                        badge.textContent = newText;
+                    }
+                }
+                return;
+            }
+
+            // --- First time initialization for this item ---
+
+            // Avoid getComputedStyle which forces reflow. 
+            // We blindly force relative positioning if not set inline. 
+            // Ideally we'd check computed, but that's too expensive in a loop.
+            // Most conversation items are static divs.
+            if (!item.style.position) {
                 item.style.position = 'relative';
             }
 
@@ -252,9 +273,12 @@
             if (!badge) {
                 badge = document.createElement('span');
                 badge.className = 'gtc-conversation-index';
+                // Optimize: simple text set
+                badge.textContent = index + 1;
                 item.appendChild(badge);
             }
-            badge.textContent = index + 1;
+
+            item.classList.add('gtc-processed');
         });
         return items.length;
     }
