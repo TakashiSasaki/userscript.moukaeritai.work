@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.0
-// @description  YouTubeプレイリストのフィルタリング、状態表示、既知動画の判定（Saver連携）を行います。
+// @version      0.1.1
+// @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
 // @match        https://userscript.moukaeritai.work/*
@@ -41,70 +41,8 @@
 
     let filterState = { title: '', channel: '' };
     let isFiltering = false;
-    let isProcessing = false;
-
-    // We keep a local set of matching IDs to avoid redundant Saver calls
-    // But Saver is the source of truth.
-    // Wait for Saver API
-    let SaverAPI = window.YouTubePlaylistSaver;
-
-    // --- Retry / Connection Logic ---
-    function connectToSaver() {
-        if (window.YouTubePlaylistSaver) {
-            SaverAPI = window.YouTubePlaylistSaver;
-            console.log('[YouTube Playlist Filter] Connected to Saver API.');
-            run(); // Start main logic
-        } else {
-            // Listen for ready event
-            window.addEventListener('YouTubePlaylistSaverReady', (e) => {
-                SaverAPI = e.detail;
-                console.log('[YouTube Playlist Filter] Connected to Saver API (Event).');
-                run();
-            }, { once: true });
-
-            // Fallback polling (in case script load order mess up)
-            setTimeout(() => {
-                if (!SaverAPI && window.YouTubePlaylistSaver) {
-                    SaverAPI = window.YouTubePlaylistSaver;
-                    run();
-                } else if (!SaverAPI) {
-                    console.warn('[YouTube Playlist Filter] Saver API not found. Some features disabled.');
-                    // Still run, but without saving? Or wait? 
-                    // Better to run UI but show warning?
-                    run();
-                }
-            }, 2000);
-        }
-    }
-
-    function getPlaylistId() {
-        const params = new URLSearchParams(window.location.search);
-        return params.get('list');
-    }
-
-    function extractVideoId(element) {
-        const anchor = element.querySelector('a#video-title') || element.querySelector('a#thumbnail');
-        if (anchor) {
-            const href = anchor.getAttribute('href');
-            const match = href && href.match(/[?&]v=([^&]+)/);
-            return match ? match[1] : null;
-        }
-        return null;
-    }
 
     // --- UI Creation ---
-
-    function createIcon(pathData, color = 'grey') {
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('viewBox', '0 0 24 24');
-        svg.setAttribute('width', '24');
-        svg.setAttribute('height', '24');
-        svg.style.fill = color;
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', pathData);
-        svg.appendChild(path);
-        return svg;
-    }
 
     const TRASH_ICON_PATHS = [
         "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
@@ -156,7 +94,7 @@
         let initialLeft, initialTop;
 
         headerRow.addEventListener('mousedown', (e) => {
-            if (e.target.tagName === 'BUTTON') return; // Ignore button clicks
+            if (e.target.tagName === 'BUTTON') return;
             isDragging = true;
             dragStartX = e.clientX;
             dragStartY = e.clientY;
@@ -169,7 +107,6 @@
             panel.style.right = 'auto';
             panel.style.left = `${initialLeft}px`;
             panel.style.top = `${initialTop}px`;
-
             e.preventDefault();
         });
 
@@ -184,18 +121,13 @@
         document.addEventListener('mouseup', () => {
             if (isDragging) {
                 isDragging = false;
-                panelPos = {
-                    top: panel.style.top,
-                    left: panel.style.left,
-                    bottom: '',
-                    right: ''
-                };
+                panelPos = { top: panel.style.top, left: panel.style.left, bottom: '', right: '' };
                 GM_setValue(PANEL_POS_KEY, panelPos);
             }
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.0';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.1';
         titleLabel.textContent = `Playlist Filter v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -207,9 +139,7 @@
         });
 
         const contentContainer = document.createElement('div');
-        Object.assign(contentContainer.style, {
-            display: 'flex', flexDirection: 'column', gap: '8px'
-        });
+        Object.assign(contentContainer.style, { display: 'flex', flexDirection: 'column', gap: '8px' });
 
         // Minimize Logic
         const updatePanelMinState = (min) => {
@@ -284,7 +214,7 @@
         const statusContainer = document.createElement('div');
         Object.assign(statusContainer.style, { fontSize: '11px', color: '#666', display: 'flex', flexDirection: 'column' });
 
-        ['Saver', 'Filtering', 'Processing'].forEach(key => {
+        ['Filtering', 'Processing'].forEach(key => {
             const d = document.createElement('div');
             d.id = `yt-filter-status-${key.toLowerCase()}`;
             d.textContent = `${key}: Idle`;
@@ -316,15 +246,39 @@
         document.body.appendChild(panel);
     }
 
-    // --- Main Logic: Scanning & Indicators & Filtering ---
+    // --- Main Logic: Filtering & Matching Indicator ---
 
-    // Set of IDs fully processed by UI (indicator added, status checked)
-    const processedSet = new Set();
     const itemsAboveSet = new Set();
-    let scrollHandler = null;
+
+    function renderMatchedIndicator(element, isMatched) {
+        let bar = element.querySelector('#engagement-bar') ||
+            element.querySelector('.ytd-video-meta-block') ||
+            element.querySelector('#meta');
+
+        if (!bar) return;
+
+        const oldMatch = bar.querySelector('.yt-filter-matched');
+        if (oldMatch) oldMatch.remove();
+
+        if (isMatched) {
+            const badge = document.createElement('span');
+            badge.className = 'yt-filter-matched';
+            badge.textContent = ' [MATCHED] ';
+            Object.assign(badge.style, {
+                fontSize: '11px', fontWeight: 'bold', marginRight: '8px',
+                color: 'orange', verticalAlign: 'middle'
+            });
+            // We prepend, but if Saver also prepends, they stack.
+            // Saver prepends [NEW]/[SAVED]. Filter prepends [MATCHED].
+            // Order depends on which runs last or how prepend works (LIFO).
+            // If both use prepend, the *last* one executed appears *first*.
+            // Ideally we want [MATCHED] [NEW] or similar.
+            bar.prepend(badge);
+        }
+    }
 
     function applyFilters() {
-        isFiltering = true;
+        isFiltering = (filterState.title || filterState.channel);
         updateStatus('filtering', true);
 
         const items = document.querySelectorAll('ytd-playlist-video-renderer');
@@ -343,11 +297,26 @@
             const matchTitle = !titleLower || title.includes(titleLower);
             const matchChannel = !channelLower || channel.includes(channelLower);
 
-            if (matchTitle && matchChannel) {
+            const isMatched = matchTitle && matchChannel;
+
+            if (isMatched) {
                 item.style.display = '';
                 visible++;
+
+                // Render [MATCHED] badge if filtering is active
+                if (isFiltering) {
+                    renderMatchedIndicator(item, true);
+                } else {
+                    renderMatchedIndicator(item, false); // Clear if no filter
+                }
+
+                // Add to observer for "Above" logic
+                observerForabove.observe(item);
+
             } else {
                 item.style.display = 'none';
+                renderMatchedIndicator(item, false); // Clear
+                observerForabove.unobserve(item);
             }
         });
 
@@ -356,142 +325,13 @@
         if (countEl) countEl.textContent = `Results: ${visible} / ${items.length}`;
 
         updateStatus('filtering', false);
-        // Delay Update Above Info to allow layout reflow
         setTimeout(updateAboveInfo, 100);
-    }
-
-    // Update individual visual indicator
-    function renderIndicator(element, isNew) {
-        // Find metadata bar
-        let bar = element.querySelector('#engagement-bar') ||
-            element.querySelector('.ytd-video-meta-block') ||
-            element.querySelector('#meta');
-
-        if (!bar) return;
-
-        // Clean old
-        const oldInd = bar.querySelector('.yt-filter-indicator');
-        if (oldInd) oldInd.remove();
-        const oldBtn = bar.querySelector('.yt-filter-remove-btn');
-        if (oldBtn) oldBtn.remove();
-
-        // Indicator
-        const indicator = document.createElement('span');
-        indicator.className = 'yt-filter-indicator';
-        indicator.textContent = isNew ? ' [NEW] ' : ' [SAVED] ';
-        Object.assign(indicator.style, {
-            fontSize: '11px', fontWeight: 'bold', marginRight: '8px',
-            color: isNew ? '#3ea6ff' : '#2ba640', verticalAlign: 'middle'
-        });
-
-        // Remove Button
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'yt-filter-remove-btn';
-        removeBtn.title = 'Remove from playlist';
-        Object.assign(removeBtn.style, {
-            background: 'none', border: 'none', cursor: 'pointer', padding: '0',
-            marginLeft: '8px', verticalAlign: 'middle', opacity: '0.7'
-        });
-        removeBtn.appendChild(createIcon('M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z', '#606060'));
-
-        removeBtn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            const success = await attemptRemoveVideo(element);
-            if (success) {
-                element.style.opacity = '0.3';
-                element.style.pointerEvents = 'none';
-            } else {
-                alert('Remove failed. Menu structure might have changed.');
-            }
-        });
-
-        bar.prepend(removeBtn);
-        bar.prepend(indicator);
-    }
-
-    async function attemptRemoveVideo(videoContainer) {
-        const menuBtn = videoContainer.querySelector('#menu button') ||
-            videoContainer.querySelector('button.dropdown-trigger');
-        if (!menuBtn) return false;
-
-        menuBtn.click();
-
-        // Polling for popup
-        const START = Date.now();
-        while (Date.now() - START < 5000) {
-            const popup = document.querySelector('ytd-menu-popup-renderer');
-            if (popup) {
-                // Find "Remove" item
-                const items = Array.from(popup.querySelectorAll('ytd-menu-service-item-renderer'));
-                for (const item of items) {
-                    const text = item.textContent || "";
-                    if (text.includes('Remove from') || text.includes('から削除')) {
-                        item.click();
-                        document.body.click(); // close menu
-                        return true;
-                    }
-                    // Icon check
-                    const path = item.querySelector('path');
-                    if (path && TRASH_ICON_PATHS.includes(path.getAttribute('d'))) {
-                        item.click();
-                        document.body.click();
-                        return true;
-                    }
-                }
-            }
-            await new Promise(r => setTimeout(r, 100));
-        }
-        document.body.click(); // close if fail
-        return false;
-    }
-
-    function scan() {
-        const playlistId = getPlaylistId();
-        if (!playlistId) return;
-
-        // If Saver is not available, we can't determine status accurately.
-        // We will default to "SAVED" visually or just skip marking "NEW" unless we are sure?
-        // Actually if Saver is missing, we can't save. So everything effectively is "New" but unsaveable.
-        // We'll show "??" or just gray.
-        if (!SaverAPI) updateStatus('saver', false); // Idle/Error
-
-        const items = document.querySelectorAll('ytd-playlist-video-renderer');
-
-        items.forEach(item => {
-            if (processedSet.has(item)) return; // Already rendered
-
-            const vid = extractVideoId(item);
-            if (!vid) return;
-
-            // Saver Check
-            let isNew = false;
-            if (SaverAPI) {
-                const title = item.querySelector('#video-title')?.textContent?.trim() || null;
-                const channel = item.querySelector('.ytd-channel-name a')?.textContent?.trim() || null;
-
-                // save() returns true if it WAS new
-                isNew = SaverAPI.save(playlistId, vid, title, channel);
-            }
-
-            renderIndicator(item, isNew);
-            processedSet.add(item);
-
-            // Observe for "Above" logic
-            observerForabove.observe(item);
-        });
-
-        // Update counts occasionally
-        const count = items.length;
-        const visible = document.querySelectorAll('ytd-playlist-video-renderer:not([style*="display: none"])').length;
-        const countEl = document.getElementById('yt-filter-count');
-        if (countEl) countEl.textContent = `Results: ${visible} / ${count}`;
     }
 
     // --- Above Logic ---
     const observerForabove = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             const rect = entry.boundingClientRect;
-            // Rough check for "Above"
             if (!entry.isIntersecting && rect.bottom < 180) {
                 itemsAboveSet.add(entry.target);
             } else {
@@ -504,32 +344,53 @@
     function updateAboveInfo() {
         const div = document.getElementById('yt-filter-above-info');
         if (!div) return;
-
         const aboveCount = itemsAboveSet.size;
         div.textContent = `Above: ${aboveCount} items`;
+    }
+
+    async function attemptRemoveVideo(videoContainer) {
+        const menuBtn = videoContainer.querySelector('#menu button') ||
+            videoContainer.querySelector('button.dropdown-trigger');
+        if (!menuBtn) return false;
+        menuBtn.click();
+
+        const START = Date.now();
+        while (Date.now() - START < 5000) {
+            const popup = document.querySelector('ytd-menu-popup-renderer');
+            if (popup) {
+                const items = Array.from(popup.querySelectorAll('ytd-menu-service-item-renderer'));
+                for (const item of items) {
+                    const text = item.textContent || "";
+                    if (text.includes('Remove from') || text.includes('から削除')) {
+                        item.click(); document.body.click(); return true;
+                    }
+                    const path = item.querySelector('path');
+                    if (path && TRASH_ICON_PATHS.includes(path.getAttribute('d'))) {
+                        item.click(); document.body.click(); return true;
+                    }
+                }
+            }
+            await new Promise(r => setTimeout(r, 100));
+        }
+        document.body.click(); return false;
     }
 
     async function removeAboveItems() {
         if (!confirm('Remove all items currently filtered and scrolled past (Above)?')) return;
 
-        isProcessing = true;
         updateStatus('processing', true);
-
         const itemsToRemove = Array.from(itemsAboveSet).filter(el => el.style.display !== 'none');
 
         for (const item of itemsToRemove) {
             const success = await attemptRemoveVideo(item);
             if (success) {
                 itemsAboveSet.delete(item);
-                item.remove(); // Remove from DOM
+                item.remove();
             }
-            await new Promise(r => setTimeout(r, 500)); // Delay
+            await new Promise(r => setTimeout(r, 500));
         }
 
-        isProcessing = false;
         updateStatus('processing', false);
-        // Reset observer/sets?
-        // itemsAboveSet is monitored live, but since we removed them from DOM, they are gone.
     }
 
     // --- Status Helper ---
@@ -546,26 +407,18 @@
     function run() {
         createPanel();
 
-        // Loop Scan
-        setInterval(scan, 2000); // 2s scan
-        setInterval(applyFilters, 5000); // Re-apply filter periodically to catch new items
-
-        // Scroll Listener for Scan throttling?
-        // We just use Interval for simplicity now, as DOM access is cheap enough.
+        // Loop apply filters (to catch new items from scroll)
+        setInterval(applyFilters, 2000);
 
         console.log('[YouTube Playlist Filter] Running...');
     }
 
     // Navigation Handling
     window.addEventListener('yt-navigate-finish', () => {
-        // Reset state on navigation
-        processedSet.clear();
         itemsAboveSet.clear();
-        // Re-run
         setTimeout(run, 1000);
     });
 
-    // Start
-    connectToSaver();
+    run();
 
 })();
