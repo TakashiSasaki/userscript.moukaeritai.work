@@ -44,11 +44,7 @@
 
     // --- UI Creation ---
 
-    const TRASH_ICON_PATHS = [
-        "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
-        "M11 17H9V8h2v9zm4-9h-2v9h2V8zm4-4v1h-1v16H6V5H5V4h4V3h6v1h4zm-2 1H8v15h10V5z",
-        "M19 3h-4V2a1 1 0 00-1-1h-4a1 1 0 00-1 1v1H5a2 2 0 00-2 2h18a2 2 0 00-2-2ZM6 19V7H4v12a4 4 0 004 4h8a4 4 0 004-4V7h-2v12a2 2 0 01-2 2H8a2 2 0 01-2-2Zm4-11a1 1 0 00-1 1v8a1 1 0 102 0V9a1 1 0 00-1-1Zm4 0a1 1 0 00-1 1v8a1 1 0 002 0V9a1 1 0 00-1-1Z"
-    ];
+    // --- UI Creation ---
 
     function createPanel() {
         if (document.getElementById('yt-filter-panel')) return;
@@ -214,7 +210,7 @@
         const statusContainer = document.createElement('div');
         Object.assign(statusContainer.style, { fontSize: '11px', color: '#666', display: 'flex', flexDirection: 'column' });
 
-        ['Filtering', 'Processing'].forEach(key => {
+        ['Filtering'].forEach(key => {
             const d = document.createElement('div');
             d.id = `yt-filter-status-${key.toLowerCase()}`;
             d.textContent = `${key}: Idle`;
@@ -222,26 +218,14 @@
         });
         contentContainer.appendChild(statusContainer);
 
-        // --- Remove Above ---
-        const removeAboveBtn = document.createElement('button');
-        removeAboveBtn.id = 'yt-filter-remove-above-btn';
-        removeAboveBtn.textContent = 'Remove Above';
-        Object.assign(removeAboveBtn.style, {
-            padding: '4px 8px', fontSize: '11px', backgroundColor: '#d00',
-            color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer'
-        });
-
         const aboveDiv = document.createElement('div');
         aboveDiv.id = 'yt-filter-above-info';
         aboveDiv.textContent = 'Above: None';
         aboveDiv.style.fontSize = '11px';
         aboveDiv.style.marginBottom = '2px';
 
-        removeAboveBtn.addEventListener('click', removeAboveItems);
-
         contentContainer.appendChild(document.createElement('hr'));
         contentContainer.appendChild(aboveDiv);
-        contentContainer.appendChild(removeAboveBtn);
 
         document.body.appendChild(panel);
     }
@@ -381,50 +365,7 @@
         }
     }
 
-    async function attemptRemoveVideo(videoContainer) {
-        const menuBtn = videoContainer.querySelector('#menu button') ||
-            videoContainer.querySelector('button.dropdown-trigger');
-        if (!menuBtn) return false;
-        menuBtn.click();
 
-        const START = Date.now();
-        while (Date.now() - START < 5000) {
-            const popup = document.querySelector('ytd-menu-popup-renderer');
-            if (popup) {
-                const items = Array.from(popup.querySelectorAll('ytd-menu-service-item-renderer'));
-                for (const item of items) {
-                    const text = item.textContent || "";
-                    if (text.includes('Remove from') || text.includes('から削除')) {
-                        item.click(); document.body.click(); return true;
-                    }
-                    const path = item.querySelector('path');
-                    if (path && TRASH_ICON_PATHS.includes(path.getAttribute('d'))) {
-                        item.click(); document.body.click(); return true;
-                    }
-                }
-            }
-            await new Promise(r => setTimeout(r, 100));
-        }
-        document.body.click(); return false;
-    }
-
-    async function removeAboveItems() {
-        if (!confirm('Remove all items currently filtered and scrolled past (Above)?')) return;
-
-        updateStatus('processing', true);
-        const itemsToRemove = Array.from(itemsAboveSet).filter(el => el.style.display !== 'none');
-
-        for (const item of itemsToRemove) {
-            const success = await attemptRemoveVideo(item);
-            if (success) {
-                itemsAboveSet.delete(item);
-                item.remove();
-            }
-            await new Promise(r => setTimeout(r, 500));
-        }
-
-        updateStatus('processing', false);
-    }
 
     // --- Status Helper ---
     function updateStatus(type, isActive) {
