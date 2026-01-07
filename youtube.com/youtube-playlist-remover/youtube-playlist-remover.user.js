@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.1
+// @version      0.1.2
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -47,7 +47,9 @@
     ];
 
     // --- State ---
-    const itemsAboveAndValidSet = new Set(); // Items that are "Above" AND Visible (not filtered out by another script)
+    // Items that are "Above" the viewport (scanned) AND currently Visible (not filtered out).
+    // These are the targets for the "Remove Above" action.
+    const itemsAboveAndValidSet = new Set();
 
     // --- UI Creation ---
     function createPanel() {
@@ -127,7 +129,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.0';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.2';
         titleLabel.textContent = `Remover v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
