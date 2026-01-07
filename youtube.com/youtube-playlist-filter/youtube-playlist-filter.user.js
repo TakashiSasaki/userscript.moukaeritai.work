@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.3
+// @version      0.1.4
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -218,14 +218,14 @@
         });
         contentContainer.appendChild(statusContainer);
 
-        const aboveDiv = document.createElement('div');
-        aboveDiv.id = 'yt-filter-above-info';
-        aboveDiv.textContent = 'Above: None';
-        aboveDiv.style.fontSize = '11px';
-        aboveDiv.style.marginBottom = '2px';
+        const rangeDiv = document.createElement('div');
+        rangeDiv.id = 'yt-filter-range-info';
+        rangeDiv.textContent = 'Range: None';
+        rangeDiv.style.fontSize = '11px';
+        rangeDiv.style.marginBottom = '2px';
 
         contentContainer.appendChild(document.createElement('hr'));
-        contentContainer.appendChild(aboveDiv);
+        contentContainer.appendChild(rangeDiv);
 
         document.body.appendChild(panel);
     }
@@ -295,13 +295,13 @@
                     renderMatchedIndicator(item, false); // Clear if no filter
                 }
 
-                // Add to observer for "Above" logic
-                observerForabove.observe(item);
+                // Add to observer for "Range" logic
+                observerForRange.observe(item);
 
             } else {
                 item.style.display = 'none';
                 renderMatchedIndicator(item, false); // Clear
-                observerForabove.unobserve(item);
+                observerForRange.unobserve(item);
             }
         });
 
@@ -310,11 +310,11 @@
         if (countEl) countEl.textContent = `Results: ${visible} / ${items.length}`;
 
         updateStatus('filtering', false);
-        setTimeout(updateAboveInfo, 100);
+        setTimeout(updateRangeInfo, 100);
     }
 
-    // --- Above Logic ---
-    const observerForabove = new IntersectionObserver((entries) => {
+    // --- Range Logic ---
+    const observerForRange = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             const rect = entry.boundingClientRect;
             if (entry.isIntersecting) {
@@ -329,17 +329,18 @@
                 itemsVisibleSet.delete(entry.target);
             }
         });
-        updateAboveInfo();
+        updateRangeInfo();
     }, { root: null, threshold: 0 });
 
-    function updateAboveInfo() {
-        const div = document.getElementById('yt-filter-above-info');
+    function updateRangeInfo() {
+        const div = document.getElementById('yt-filter-range-info');
         if (!div) return;
 
         let maxIndex = 0;
         let matchCount = 0;
 
         // Combine sets for display calculation
+        // "Range" includes items strictly above AND currently visible items.
         const combined = new Set([...itemsAboveSet, ...itemsVisibleSet]);
 
         combined.forEach(el => {
@@ -359,10 +360,39 @@
         });
 
         if (maxIndex > 0) {
-            div.textContent = `Above: #1-#${maxIndex} (${matchCount} matches)`;
+            div.textContent = `Range: #1-#${maxIndex} (${matchCount} matches)`;
         } else {
-            div.textContent = `Above: None`;
+            div.textContent = `Range: None`;
         }
+    }
+
+    // --- Mutation Observer for Async Loading ---
+    let listObserver = null;
+    function setupMutationObserver() {
+        if (listObserver) return;
+
+        const container = document.querySelector('ytd-playlist-video-list-renderer #contents');
+        if (!container) {
+            setTimeout(setupMutationObserver, 1000);
+            return;
+        }
+
+        listObserver = new MutationObserver((mutations) => {
+            let added = false;
+            for (const m of mutations) {
+                if (m.addedNodes.length > 0) {
+                    added = true;
+                    break;
+                }
+            }
+            if (added) {
+                // Throttle applied via the interval mostly, but we can force a check.
+                // Or just let applyFilters run. 
+                // Let's run applyFilters immediately (debounced if needed, but simple is fine)
+                applyFilters();
+            }
+        });
+        listObserver.observe(container, { childList: true });
     }
 
 
@@ -381,7 +411,10 @@
     function run() {
         createPanel();
 
-        // Loop apply filters (to catch new items from scroll)
+        // Setup MutationObserver to watch for new items
+        setupMutationObserver();
+
+        // Loop apply filters (to catch new items from scroll as backup)
         setInterval(applyFilters, 2000);
 
         console.log('[YouTube Playlist Filter] Running...');
