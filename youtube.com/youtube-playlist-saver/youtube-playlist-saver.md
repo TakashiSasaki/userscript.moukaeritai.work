@@ -48,7 +48,8 @@ URL の `list` パラメータにプレイリスト ID が含まれるページ�
     *   `getAllKnownIds(playlistId)`: 保存済みの全IDを取得。
 
 ### 3.5 補助機能の分離
-*   **フィルタリング・一括削除**: 以前のバージョンに含まれていたUIパネルおよびフィルタリング機能は、**[YouTube Playlist Filter](../youtube-playlist-filter/index.html)** に分離されました。
+*   **フィルタリング**: 以前のバージョンに含まれていたフィルタリング機能は、**[YouTube Playlist Filter](../youtube-playlist-filter/index.html)** に分離されました。
+*   **一括削除**: フィルタ条件やスクロール状態に基づいた一括削除機能は、**[YouTube Playlist Remover](../youtube-playlist-remover/index.html)** に分離されました。
 *   **自動スクロール**: **[YouTube Playlist Scroller](../youtube-playlist-scroller/index.html)** に分離されました。
 
 ## 5. データ構造とバージョニング
