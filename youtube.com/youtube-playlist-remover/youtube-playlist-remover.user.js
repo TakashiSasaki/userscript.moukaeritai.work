@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.2
+// @version      0.1.3
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -175,14 +175,14 @@
 
         // --- Action Button ---
         const removeBtn = document.createElement('button');
-        removeBtn.textContent = 'Remove Above';
+        removeBtn.textContent = 'Remove Range';
         Object.assign(removeBtn.style, {
             padding: '4px 8px', fontSize: '11px', backgroundColor: '#d00',
             color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer',
             fontWeight: 'bold'
         });
 
-        removeBtn.addEventListener('click', removeAboveItems);
+        removeBtn.addEventListener('click', removeRangeItems);
 
         contentContainer.appendChild(removeBtn);
 
@@ -238,11 +238,12 @@
                 return;
             }
 
-            if (!entry.isIntersecting && rect.bottom < 180) {
-                // Above viewport and Visible
+            if (rect.bottom < 180 || entry.isIntersecting) {
+                // "Range" = Above viewport OR Currently Visible in viewport
                 itemsAboveAndValidSet.add(el);
             } else {
-                // In viewport or below
+                // Strictly below viewport (not yet seen/scanned potentially)
+                // Note: This logic assumes we scroll down. 
                 itemsAboveAndValidSet.delete(el);
             }
         });
@@ -293,10 +294,10 @@
         document.body.click(); return false;
     }
 
-    async function removeAboveItems() {
+    async function removeRangeItems() {
         const count = itemsAboveAndValidSet.size;
         if (count === 0) {
-            alert('No items to remove (Visible & Above).');
+            alert('No items to remove (Visible & In Range).');
             return;
         }
 
