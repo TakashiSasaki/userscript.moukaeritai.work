@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.4
+// @version      0.1.5
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -41,6 +41,7 @@
 
     let filterState = { title: '', channel: '' };
     let isFiltering = false;
+    let isInputActive = false; // Flag to pause filtering during input
 
     // --- UI Creation ---
 
@@ -179,14 +180,31 @@
             });
             input.value = filterState[key];
 
-            input.addEventListener('input', () => {
+            // Pause filtering on focus
+            input.addEventListener('focus', () => {
+                isInputActive = true;
+            });
+
+            // Resume and apply on blur
+            input.addEventListener('blur', () => {
+                isInputActive = false;
                 filterState[key] = input.value;
                 applyFilters();
+            });
+
+            // Handle Enter key
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    isInputActive = false; // Temporarily allow filter
+                    filterState[key] = input.value;
+                    input.blur(); // Trigger blur to apply
+                }
             });
 
             clearBtn.addEventListener('click', () => {
                 filterState[key] = '';
                 input.value = '';
+                isInputActive = false;
                 applyFilters();
             });
 
@@ -206,6 +224,20 @@
         countDiv.textContent = 'Results: - / -';
         countDiv.style.fontSize = '12px';
         contentContainer.appendChild(countDiv);
+
+        // Apply Button
+        const applyBtn = document.createElement('button');
+        applyBtn.textContent = 'Apply Filter';
+        Object.assign(applyBtn.style, {
+            width: '100%', padding: '6px', fontSize: '12px', cursor: 'pointer',
+            backgroundColor: '#065fd4', color: 'white', border: 'none', borderRadius: '4px',
+            marginTop: '4px'
+        });
+        applyBtn.addEventListener('click', () => {
+            isInputActive = false;
+            applyFilters();
+        });
+        contentContainer.appendChild(applyBtn);
 
         const statusContainer = document.createElement('div');
         Object.assign(statusContainer.style, { fontSize: '11px', color: '#666', display: 'flex', flexDirection: 'column' });
@@ -263,6 +295,8 @@
     }
 
     function applyFilters() {
+        if (isInputActive) return; // Skip if user is typing
+
         isFiltering = (filterState.title || filterState.channel);
         updateStatus('filtering', true);
 
