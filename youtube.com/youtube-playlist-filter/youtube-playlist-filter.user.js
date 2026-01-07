@@ -249,6 +249,7 @@
     // --- Main Logic: Filtering & Matching Indicator ---
 
     const itemsAboveSet = new Set();
+    const itemsVisibleSet = new Set();
 
     function renderMatchedIndicator(element, isMatched) {
         let bar = element.querySelector('#engagement-bar') ||
@@ -332,10 +333,16 @@
     const observerForabove = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             const rect = entry.boundingClientRect;
-            if (!entry.isIntersecting && rect.bottom < 180) {
-                itemsAboveSet.add(entry.target);
-            } else {
+            if (entry.isIntersecting) {
+                itemsVisibleSet.add(entry.target);
                 itemsAboveSet.delete(entry.target);
+            } else if (rect.bottom < 180) { // Still using 180 as threshold for "Above"
+                itemsAboveSet.add(entry.target);
+                itemsVisibleSet.delete(entry.target);
+            } else {
+                // Below viewport
+                itemsAboveSet.delete(entry.target);
+                itemsVisibleSet.delete(entry.target);
             }
         });
         updateAboveInfo();
@@ -348,7 +355,10 @@
         let maxIndex = 0;
         let matchCount = 0;
 
-        itemsAboveSet.forEach(el => {
+        // Combine sets for display calculation
+        const combined = new Set([...itemsAboveSet, ...itemsVisibleSet]);
+
+        combined.forEach(el => {
             // Check if matched (display != none)
             if (el.style.display !== 'none') {
                 matchCount++;
@@ -439,6 +449,7 @@
     // Navigation Handling
     window.addEventListener('yt-navigate-finish', () => {
         itemsAboveSet.clear();
+        itemsVisibleSet.clear();
         setTimeout(run, 1000);
     });
 
