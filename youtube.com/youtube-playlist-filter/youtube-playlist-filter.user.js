@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.1
+// @version      0.1.2
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -127,7 +127,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.1';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.2';
         titleLabel.textContent = `Playlist Filter v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -344,8 +344,31 @@
     function updateAboveInfo() {
         const div = document.getElementById('yt-filter-above-info');
         if (!div) return;
-        const aboveCount = itemsAboveSet.size;
-        div.textContent = `Above: ${aboveCount} items`;
+
+        let maxIndex = 0;
+        let matchCount = 0;
+
+        itemsAboveSet.forEach(el => {
+            // Check if matched (display != none)
+            if (el.style.display !== 'none') {
+                matchCount++;
+            }
+
+            // Extract Index
+            const indexEl = el.querySelector('#index');
+            if (indexEl) {
+                const idx = parseInt(indexEl.textContent.trim(), 10);
+                if (!isNaN(idx) && idx > maxIndex) {
+                    maxIndex = idx;
+                }
+            }
+        });
+
+        if (maxIndex > 0) {
+            div.textContent = `Above: #1-#${maxIndex} (${matchCount} matches)`;
+        } else {
+            div.textContent = `Above: None`;
+        }
     }
 
     async function attemptRemoveVideo(videoContainer) {
