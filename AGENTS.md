@@ -25,6 +25,7 @@
 -   **@homepageURL**: `https://x.com/TakashiSasaki`
 -   **Published at**: `https://userscript.moukaeritai.work` (README等のドキュメントに記載)
 -   **@version**: `major.minor.patch` (セマンティックバージョニング形式)
+    -   **Strict Rule**: JavaScript（`.user.js`）のコードを1行でも変更した場合は、必ずパッチバージョンをインクリメント（バンプアップ）してください。
     -   機能追加やバグ修正ごとにパッチバージョンをインクリメントしてください。
 -   **@updateURL** / **@downloadURL**:
     -   GitHubのRawファイルURLを指定し、Tampermonkey等のマネージャーが更新を自動検出できるようにします。

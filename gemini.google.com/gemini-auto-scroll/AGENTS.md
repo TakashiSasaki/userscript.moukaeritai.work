@@ -11,11 +11,17 @@ Always re-process snapshots if the cleaning script changes.
 ## Conversation List Analysis
 
 ### 1. Identifying the Current Conversation
-The conversation ID is present in the URL: `https://gemini.google.com/app/<ID>`.
-In the conversation list (sidebar), each item is a `div[data-test-id="conversation"]`.
-The ID is stored within the `jslog` attribute, prefixed with `c_`.
-- **Selector**: `div[data-test-id="conversation"][jslog*="c_<ID>"]`
-- **Verification**: The ID in `jslog` looks like `"c_fef36eb6be619216"`. The URL part is just `fef36eb6be619216`.
+### 1. Identifying the Current Conversation
+The conversation ID is present in the URL: `https://gemini.google.com/app/<ID>` (e.g., `https://gemini.google.com/app/0542fe84f32c367b`).
+
+In the conversation list (sidebar), each item is a `div[role="button"][data-test-id="conversation"]`.
+- **Highlighted/Active Item**: The currently selected conversation has the class `selected`.
+- **ID Extraction**: The ID is stored within the `jslog` attribute string, specifically inside the `BardVeMetadataKey` array, prefixed with `c_`.
+    - Format example: `jslog="...;BardVeMetadataKey:[...,&quot;c_0542fe84f32c367b&quot;,...];mutable:true"`
+    - The ID in the DOM corresponds to the URL ID with a `c_` prefix (e.g., URL ID `0542fe84f32c367b` matches `c_0542fe84f32c367b` in `jslog`).
+- **Selector Strategy**:
+    - To find the element for a specific URL ID: `div[data-test-id="conversation"][jslog*="c_<URL_ID>"]`
+    - To parse the ID from an element: Extract the string starting with `c_` from the `jslog` attribute.
 
 ### 2. Detecting the Loading State
 The conversation list uses infinite scroll. When more items are being fetched:
@@ -34,3 +40,7 @@ To load more conversations automatically:
     - Re-search for the ID.
 4. Repeat if necessary.
 5. **Giving Up**: If the spinner doesn't appear after scrolling to the bottom, or if we reach a maximum number of scrolls (e.g., 20), stop.
+
+## Version Control
+- **Versioning Rule**: When any code change is made to the userscript, increment at least the **patch level** of the version number (e.g., 0.1.28 -> 0.1.29).
+- **Documentation**: Reflect the version bump and changes in `gemini-auto-scroll.md`.

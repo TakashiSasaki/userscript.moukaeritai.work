@@ -5,105 +5,180 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini Auto-Scroll - Documentation</title>
-    <!-- Github Markdown CSS for styling -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Github Markdown CSS for content -->
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
     <style>
+        :root {
+            --primary: #4e95ff;
+            --primary-dark: #3a7bd5;
+            --bg-gradient: linear-gradient(135.2deg, rgba(7, 12, 23, 1) 1.2%, rgba(13, 33, 64, 1) 98.1%);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-dim: #b0b8c4;
+        }
+
         body {
-            box-sizing: border-box;
-            min-width: 200px;
-            max-width: 980px;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 45px;
+            padding: 4rem 2rem;
         }
 
-        @media (max-width: 767px) {
-            body {
-                padding: 15px;
-            }
+        .doc-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
         }
 
-        .home-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #24292e;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            transition: background-color 0.2s;
-            display: flex;
+        .markdown-body {
+            background: transparent !important;
+            color: var(--text-main) !important;
+            font-family: inherit !important;
+        }
+
+        .markdown-body h1,
+        .markdown-body h2,
+        .markdown-body h3 {
+            color: white !important;
+            border-bottom: 1px solid var(--glass-border) !important;
+        }
+
+        .markdown-body code {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: var(--primary) !important;
+            border-radius: 4px;
+        }
+
+        .markdown-body pre {
+            background-color: rgba(0, 0, 0, 0.3) !important;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+        }
+
+        .markdown-body a {
+            color: var(--primary) !important;
+        }
+
+        .top-nav {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            z-index: 10;
+        }
+
+        .top-nav-link {
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
-        }
-
-        .home-button svg {
-            fill: currentColor;
-        }
-
-        .home-button:hover {
-            background-color: #0366d6;
-            color: white;
+            gap: 10px;
             text-decoration: none;
+            color: var(--text-dim);
+            font-weight: 400;
+            padding: 8px 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .top-nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding-bottom: 3rem;
+            color: var(--text-dim);
+            font-weight: 300;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        #content {
+            min-height: 200px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem 1rem;
+            }
+
+            .doc-card {
+                padding: 1.5rem;
+            }
+
+            .top-nav {
+                position: static;
+                margin-bottom: 2rem;
+                display: flex;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 
-<body class="markdown-body">
-    <a href="https://userscript.moukaeritai.work/" class="home-button">
-        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
-            <path
-                d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-        </svg>
-        userscript.moukaeritai.work
-    </a>
-    <div id="content">Loading documentation...</div>
+<body>
+    <div class="container">
+        <nav class="top-nav">
+            <a class="top-nav-link" href="../index.html">
+                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
+                    <path
+                        d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
+                </svg>
+                Back to Home
+            </a>
+        </nav>
 
-    <!-- Marked library for parsing markdown -->
+        <section class="doc-card">
+            <div id="content" class="markdown-body">Loading documentation...</div>
+        </section>
+
+        <footer>
+            <p>
+                <small>Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a> | <a
+                        href="https://userscript.moukaeritai.work/">moukaeritai.work</a></small>
+            </p>
+        </footer>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             fetch('gemini-auto-scroll.md')
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     return response.text();
                 })
                 .then(text => {
                     document.getElementById('content').innerHTML = marked.parse(text);
                 })
                 .catch(err => {
-                    document.getElementById('content').innerHTML = `
-                        <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 1em; border-radius: 4px;">
-                            <h3 style="margin-top: 0;">Error loading document</h3>
-                            <p>${err.message}</p>
-                            <hr>
-                            <p><strong>注意:</strong> このファイルをローカルファイルシステム (file://) から直接開いている場合、ブラウザのセキュリティポリシー(CORS)により外部ファイルの読み込みがブロックされることがあります。</p>
-                            <p>以下のいずれかの方法で閲覧してください：</p>
-                            <ul>
-                                <li>ローカルサーバーを起動してアクセスする (例: <code>python -m http.server</code> や <code>npx http-server</code>)</li>
-                                <li>VSCodeの "Live Server" 拡張機能を使用する</li>
-                            </ul>
-                        </div>
-                    `;
+                    document.getElementById('content').innerHTML = `<h3>Error loading document</h3><p>${err.message}</p>`;
                     console.error('Error fetching markdown:', err);
                 });
         });
     </script>
-    <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
-    <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
-        <p>
-            Hosted on GitHub Pages |
-            <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
-            Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
-        </p>
-    </footer>
 </body>
 
 </html>
