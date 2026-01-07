@@ -390,13 +390,17 @@
                     if (serverVersion && compareVersions(serverVersion, version) > 0) {
                         // Update available
                         btn.innerHTML = `<svg height="18" viewBox="0 0 24 24" width="18"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Update (v${serverVersion})`;
-                        btn.style.boxShadow = '0 0 15px rgba(255, 0, 0, 0.6)'; // Red glow
-                        btn.style.background = '#ff0000';
+                        btn.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.6)'; // Orange glow
+                        btn.style.background = '#f39c12'; // Orange
                         btn.classList.remove('installed');
+                        btn.style.pointerEvents = 'auto';
                     } else {
                         // Installed and up-to-date
                         btn.textContent = `Installed (v${version})`;
                         btn.classList.add('installed');
+                        btn.style.pointerEvents = 'none';
+                        btn.style.background = ''; // Use CSS default for .installed
+                        btn.style.boxShadow = '';
                     }
                 }
             });
