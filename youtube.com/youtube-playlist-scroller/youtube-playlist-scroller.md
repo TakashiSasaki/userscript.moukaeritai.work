@@ -11,11 +11,10 @@
 
 ## インストール
 
-以下のボタンをクリックしてインストールしてください。
+1.  Tampermonkey などの拡張機能がインストールされていることを確認します。
+2.  以下のリンクをクリックしてインストールします。
 
-<a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-scroller/youtube-playlist-scroller.user.js" target="_blank" class="install-button">
-Install YouTube Playlist Scroller
-</a>
+👉 **[Install YouTube Playlist Scroller](youtube-playlist-scroller.user.js)**
 
 ## 使い方
 
@@ -29,7 +28,15 @@ Install YouTube Playlist Scroller
 *   **Step (px)**: 「Scroll to Bottom」がオフの場合の、1回あたりのスクロール量です。
 *   **Interval (sec)**: スクロールを実行する間隔（秒）です。
 
-## 開発者向け情報
+## 併用推奨スクリプト
 
-このスクリプトは [YouTube Playlist Saver](../youtube-playlist-saver/index.html) から機能を分離したものです。
-独立して動作するため、他のツールと併用可能です。
+このスクリプトは以下のツールと組み合わせて使用することで、プレイリストの管理がより便利になります。
+
+*   **[YouTube Playlist Saver](../youtube-playlist-saver/index.html)**: 読み込んだ動画のIDを自動的に保存し、既知か新規かを判別します。
+*   **[YouTube Playlist Filter](../youtube-playlist-filter/index.html)**: 大量の動画から特定のキーワードで絞り込みを行います。
+*   **[YouTube Playlist Remover](../youtube-playlist-remover/index.html)**: 不要な動画を一括で削除します。
+
+## 技術的詳細
+
+*   このスクリプトは [YouTube Playlist Saver](../youtube-playlist-saver/index.html) から機能を分離し、単独での使いやすさを重視して設計されました。
+*   ページ遷移 (`yt-navigate-finish`) を検知し、自動的にコントロールパネルを再初期化します。
