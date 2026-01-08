@@ -44,5 +44,9 @@ To keep the repository clean and manageable, sample HTML files should be preproc
     - Remove extra empty lines.
 4.  **Remove HTML Comments**: Delete all `<!-- ... -->` blocks.
 
+### Environment Compatibility
+
+*   **Tool Preference**: In Windows environments where standard Unix tools like `grep` may be unavailable, **use Python scripts** for text processing, analysis, and transformation tasks.
+
 
 
