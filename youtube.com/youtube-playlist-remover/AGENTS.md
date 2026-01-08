@@ -1,52 +1,47 @@
 # Agent Guidelines for YouTube Playlist Remover
 
-This document outlines specific rules and implementation details for `youtube-playlist-remover.user.js`.
+This document outlines specific rules and implementation details for `youtube-playlist-remover.user.js` to ensure safe and reliable maintenance.
 
-## 1. Core Philosophy: Safe & Fast
+## 1. Core Philosophy: Emulation & Safety
 
-*   **Safety First**: Never delete what the user cannot see.
-    *   **Filter Coexistence**: You **MUST** check if an item is hidden (`display: none`) by the Filter script. If it is hidden, it is **NOT** a candidate for removal, regardless of its position.
-    *   **Viewport**: Only remove items that are "Above" the viewport (scrolled past). Do not remove items currently visible to the user.
-*   **Speed Second**: Use "Optimistic UI" patterns. Provide immediate feedback even for slow backend operations.
+*   **UI Emulation Over Direct DOM Manipulation**:
+    *   **Do NOT** use `.remove()` or `display: none` to "delete" items simply from the view. This breaks YouTube's internal state and playlist logic.
+    *   **MUST** emulate user interactions: Click the "three-dot menu" -> Wait for popup -> Click "Remove from playlist". This ensures YouTube's backend correctly processes the removal.
+*   **Safety First**:
+    *   **Filter Coexistence**: Always respect the Filter script. Do not target hidden items (`display: none`).
+    *   **Visibility**: Prioritize safety by waiting for UI elements to appear and disappear properly.
 
 ## 2. Implementation Details
 
-### Optimistic UI Removal
-When the "Remove Above" action is triggered:
-1.  **Immediate Visual Feedback**: Remove the element from the DOM immediately (`item.remove()`).
-2.  **Background Processing**: Await the actual API interaction (`attemptRemoveVideo`).
-3.  **Rationale**: This allows the user to perceive the action as "instant" and prevents UI blocking during bulk operations.
+### Interaction Logic (Critical)
+The script uses a strict sequence to remove a video. Do NOT change this unless YouTube's UI fundamentally changes:
+1.  **Focus**: Call `.focus()` on the menu button. This helps standardizing the event handling.
+2.  **Click Menu**: Click the three-dot menu button.
+3.  **Wait for Popup**: Poll for the existence of `ytd-menu-popup-renderer`.
+4.  **Identify Target**: Search for the menu item text ("Remove from", "から削除") or the specific trash can icon path.
+5.  **Focus & Click Item**: Call `.focus()` on the menu item, then click it.
+6.  **Close/Confirm**: Click `document.body` to close any lingering menus if needed, or handle confirmation dialogs if they appear.
+
+### Visual Feedback
+Since the operation is asynchronous and takes time (UI interaction speed), providing feedback is essential:
+*   **Status Panel**: Show the current progress (e.g., "Removing #10 (5/20)...").
+*   **Highlighting**: During a batch removal, the target video's index number (`#index`) is highlighted in **Red and Bold** (`color: #d00`, `fontWeight: bold`). This lets the user know exactly which item is currently being processed.
 
 ### UI Design Language
 *   **Distinct Style**: Use a **Reddish** color scheme (Background: `#fff0f0`, Border: `#d00`) for the Remover panel.
 *   **Purpose**: This visual distinction is critical to prevent users from confusing it with the Filter panel (which uses a neutral Grey scheme).
 
 ## 3. Maintenance
-*   **Versioning**: Follow the strict versioning policy defined in the root `AGENTS.md`. Any change requires a patch bump.
 
-## 4. Sample Files for Debugging
+*   **Versioning**: Follow the strict versioning policy. Any change requires a patch bump.
+*   **Selectors**: YouTube frequently changes class names and IDs. If the script breaks, first check:
+    *   The menu button selector (currently `#menu button` or `.dropdown-trigger`).
+    *   The popup menu renderer tag (`ytd-menu-popup-renderer`).
+    *   The menu service item renderer tag (`ytd-menu-service-item-renderer`).
+    *   The text used to identify the remove button (multilingual support is handled by checking both English and Japanese text, plus icon paths).
 
-The following files contain DOM snapshots for debugging and verification. They are located in the `samples/` directory:
+## 4. Debugging Resources
 
-*   **`samples/div-menu.html`**: The structure of the three-dot menu button (`#menu.ytd-playlist-video-renderer`) on a video item.
-*   **`samples/dropdown.html`**: The DOM fragment of the popup menu (`ytd-menu-popup-renderer`) that appears when the three-dot button is clicked.
-*   **`samples/whole-dom-with-dropdown.html`**: A full page snapshot containing both the playlist items and the active dropdown menu.
-
-### Preprocessing Procedure
-
-To keep the repository clean and manageable, sample HTML files should be preprocessed using the following rules:
-
-1.  **Remove Script and Style Tags**: Delete all `<script>` and `<style>` elements and their contents.
-2.  **Clear SVG Content**: Keep `<svg>` tags but remove all child elements (like `<path>`) to drastically reduce file size.
-3.  **Minified Formatting**:
-    - Place each HTML tag on its own line.
-    - Remove all leading whitespace (indentation) from the start of each line.
-    - Remove extra empty lines.
-4.  **Remove HTML Comments**: Delete all `<!-- ... -->` blocks.
-
-### Environment Compatibility
-
-*   **Tool Preference**: In Windows environments where standard Unix tools like `grep` may be unavailable, **use Python scripts** for text processing, analysis, and transformation tasks.
-
-
-
+The `samples/` directory contains HTML snapshots used for analyzing the DOM structure.
+*   **`samples/dropdown.html`**: Structure of the popup menu.
+*   When updating selectors, refer to these samples or create new ones from a live YouTube page.
