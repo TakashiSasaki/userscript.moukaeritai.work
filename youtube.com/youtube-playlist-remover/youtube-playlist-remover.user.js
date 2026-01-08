@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.5
+// @version      0.1.6
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -267,6 +267,30 @@
 
     // --- Removal Logic ---
 
+    async function handlePotentialDialog() {
+        // Wait briefly for a dialog to appear
+        const start = Date.now();
+        while (Date.now() - start < 800) {
+            // Check for standard confirmation dialogs
+            const dialogs = document.querySelectorAll('yt-confirm-dialog-renderer, tp-yt-paper-dialog');
+            for (const dialog of dialogs) {
+                if (dialog.getAttribute('aria-hidden') === 'true' || dialog.style.display === 'none') continue;
+
+                // Look for confirm buttons
+                const buttons = dialog.querySelectorAll('yt-button-renderer, button');
+                for (const btn of buttons) {
+                    const text = btn.textContent.trim();
+                    // "削除" (JP), "Delete" (EN), "Remove" (EN)
+                    if (text === '削除' || text === 'Delete' || text === 'Remove') {
+                        btn.click();
+                        return; // Dialog handled
+                    }
+                }
+            }
+            await new Promise(r => setTimeout(r, 100));
+        }
+    }
+
     async function attemptRemoveVideo(videoContainer) {
         const menuBtn = videoContainer.querySelector('#menu button') ||
             videoContainer.querySelector('button.dropdown-trigger');
@@ -281,11 +305,17 @@
                 for (const item of items) {
                     const text = item.textContent || "";
                     if (text.includes('Remove from') || text.includes('から削除')) {
-                        item.click(); document.body.click(); return true;
+                        item.click();
+                        await handlePotentialDialog();
+                        document.body.click();
+                        return true;
                     }
                     const path = item.querySelector('path');
                     if (path && TRASH_ICON_PATHS.includes(path.getAttribute('d'))) {
-                        item.click(); document.body.click(); return true;
+                        item.click();
+                        await handlePotentialDialog();
+                        document.body.click();
+                        return true;
                     }
                 }
             }

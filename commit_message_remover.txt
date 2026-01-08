@@ -1,5 +1,0 @@
-feat: remove all dialogs from YouTube Playlist Remover
-
-- Remove alert dialog when no items are removable
-- Ensure completely immediate operation without any user interaction
-- Bump version to v0.1.5 in userscript, docs, and index.html
