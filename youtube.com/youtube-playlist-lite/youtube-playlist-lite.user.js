@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.1
+// @version      0.1.2
 // @description  YouTubeプレイリストでサムネイルを非表示にして軽量化するためのツールです。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -48,10 +48,16 @@
     let styleElement = null;
 
     function applySettings() {
+        // Read latest values from storage to be sure
+        isHideThumbnails = GM_getValue(HIDE_THUMB_KEY, false);
+        isForceRemove = GM_getValue(FORCE_REMOVE_KEY, false);
+
+        // CSS Hide Mode
         if (isHideThumbnails) {
-            if (!styleElement) {
+            if (!styleElement || !styleElement.isConnected) {
                 const css = `ytd-playlist-video-renderer ytd-thumbnail { display: none !important; }`;
                 styleElement = document.createElement('style');
+                styleElement.id = 'yt-lite-styles';
                 styleElement.textContent = css;
                 document.head.appendChild(styleElement);
             }
@@ -60,6 +66,7 @@
             styleElement = null;
         }
 
+        // DOM Removal Mode
         if (isForceRemove) {
             startObserver();
             clearExistingThumbnails();
@@ -159,8 +166,8 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.1';
-        titleLabel.textContent = `Lite v${version}`;
+        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.2';
+        titleLabel.textContent = `Lite v${v}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '11px', pointerEvents: 'none' });
 
         const minimizeBtn = document.createElement('button');
@@ -197,14 +204,12 @@
         };
 
         contentContainer.appendChild(createCheckbox('yt-lite-hide-thumb', 'Hide (CSS)', isHideThumbnails, (e) => {
-            isHideThumbnails = e.target.checked;
-            GM_setValue(HIDE_THUMB_KEY, isHideThumbnails);
+            GM_setValue(HIDE_THUMB_KEY, e.target.checked);
             applySettings();
         }));
 
         contentContainer.appendChild(createCheckbox('yt-lite-force-remove', 'Auto Remove (DOM)', isForceRemove, (e) => {
-            isForceRemove = e.target.checked;
-            GM_setValue(FORCE_REMOVE_KEY, isForceRemove);
+            GM_setValue(FORCE_REMOVE_KEY, e.target.checked);
             applySettings();
         }));
 
@@ -219,7 +224,17 @@
         document.body.appendChild(panel);
     }
 
-    createPanel();
-    applySettings();
+    // --- Init & Navigation ---
+    function init() {
+        createPanel();
+        applySettings();
+    }
+
+    window.addEventListener('yt-navigate-finish', () => {
+        setTimeout(init, 500);
+    });
+
+    init();
     console.log('[YouTube Playlist Lite] Running...');
+
 })();
