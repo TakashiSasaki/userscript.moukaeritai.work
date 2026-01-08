@@ -42,5 +42,7 @@ To keep the repository clean and manageable, sample HTML files should be preproc
     - Place each HTML tag on its own line.
     - Remove all leading whitespace (indentation) from the start of each line.
     - Remove extra empty lines.
+4.  **Remove HTML Comments**: Delete all `<!-- ... -->` blocks.
+
 
 
