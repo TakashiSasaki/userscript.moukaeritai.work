@@ -26,9 +26,21 @@ When the "Remove Above" action is triggered:
 
 ## 4. Sample Files for Debugging
 
-The following files contain DOM snapshots for debugging and verification:
+The following files contain DOM snapshots for debugging and verification. They are located in the `samples/` directory:
 
-*   **`div-menu.html`**: The structure of the three-dot menu button (`#menu.ytd-playlist-video-renderer`) on a video item.
-*   **`dropdown.html`**: The DOM fragment of the popup menu (`ytd-menu-popup-renderer`) that appears when the three-dot button is clicked.
-*   **`whole-dom-with-dropdown.html`**: A full page snapshot containing both the playlist items and the active dropdown menu.
+*   **`samples/div-menu.html`**: The structure of the three-dot menu button (`#menu.ytd-playlist-video-renderer`) on a video item.
+*   **`samples/dropdown.html`**: The DOM fragment of the popup menu (`ytd-menu-popup-renderer`) that appears when the three-dot button is clicked.
+*   **`samples/whole-dom-with-dropdown.html`**: A full page snapshot containing both the playlist items and the active dropdown menu.
+
+### Preprocessing Procedure
+
+To keep the repository clean and manageable, sample HTML files should be preprocessed using the following rules:
+
+1.  **Remove Script and Style Tags**: Delete all `<script>` and `<style>` elements and their contents.
+2.  **Clear SVG Content**: Keep `<svg>` tags but remove all child elements (like `<path>`) to drastically reduce file size.
+3.  **Minified Formatting**:
+    - Place each HTML tag on its own line.
+    - Remove all leading whitespace (indentation) from the start of each line.
+    - Remove extra empty lines.
+
 
