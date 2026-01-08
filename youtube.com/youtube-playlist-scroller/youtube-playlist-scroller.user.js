@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.2
+// @version      0.1.3
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -387,8 +387,19 @@
     }
 
     function checkLoadingState() {
-        const spinner = document.querySelector('ytd-playlist-video-list-renderer #spinner-container tp-yt-paper-spinner-lite');
-        const isLoading = spinner && (spinner.getAttribute('aria-hidden') !== 'true' && window.getComputedStyle(spinner).display !== 'none');
+        // Broad check for any spinner in the list renderer
+        const spinners = document.querySelectorAll('ytd-playlist-video-list-renderer tp-yt-paper-spinner, ytd-playlist-video-list-renderer tp-yt-paper-spinner-lite');
+        let isLoading = false;
+
+        for (const spinner of spinners) {
+            // Check if active (attribute) or not hidden (aria) AND visible in layout
+            const isActive = spinner.hasAttribute('active') || spinner.getAttribute('aria-hidden') !== 'true';
+            const isVisible = window.getComputedStyle(spinner).display !== 'none';
+            if (isActive && isVisible) {
+                isLoading = true;
+                break;
+            }
+        }
 
         updatePanelLoadingState(isLoading);
     }
