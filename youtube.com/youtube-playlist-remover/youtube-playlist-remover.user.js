@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.12
+// @version      0.1.13
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -298,6 +298,9 @@
     }
 
     async function attemptRemoveVideo(videoContainer) {
+        // Shift focus to the container itself first
+        videoContainer.focus();
+
         // 1. Identify the menu button (prefer aria-label for stability)
         const menuBtn = videoContainer.querySelector('#menu button[aria-label="操作メニュー"]') ||
             videoContainer.querySelector('#menu button') ||
