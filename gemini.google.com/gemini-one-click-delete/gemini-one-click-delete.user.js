@@ -91,13 +91,11 @@
      */
     function simulateClick(element) {
         if (!element) return;
-        ['mousedown', 'mouseup', 'click'].forEach(eventType => {
-            element.dispatchEvent(new MouseEvent(eventType, {
-                view: null,
-                bubbles: true,
-                cancelable: true
-            }));
-        });
+        element.dispatchEvent(new MouseEvent('click', {
+            view: null,
+            bubbles: true,
+            cancelable: true
+        }));
     }
 
     /**
@@ -193,6 +191,23 @@
                 border-color: #ccc;
                 color: #aaa;
                 cursor: help; /* Show help cursor to indicate tooltip */
+            }
+            @media (prefers-color-scheme: dark) {
+                .gemini-quick-delete-btn {
+                    background-color: #4a1a1a; /* Dark red background */
+                    border-color: #662222; /* Dark red border */
+                    color: #e8eaed; /* Light text */
+                }
+                .gemini-quick-delete-btn:hover {
+                    background-color: #662222;
+                    border-color: #d93025;
+                    color: #ff8a80; /* Lighter red text on hover */
+                }
+                .gemini-quick-delete-btn:disabled {
+                    background-color: #3c4043;
+                    border-color: #5f6368;
+                    color: #80868b;
+                }
             }
             @keyframes pulse-red {
                 0% { opacity: 1; }
