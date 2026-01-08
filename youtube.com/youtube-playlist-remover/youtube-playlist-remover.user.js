@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.13
+// @version      0.1.14
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -374,9 +374,10 @@
         let removedCount = 0;
         const total = finalTargets.length;
 
-        for (const item of finalTargets) {
+        for (let i = 0; i < total; i++) {
+            const item = finalTargets[i];
             const indexVal = item.querySelector('#index')?.textContent?.trim() || '?';
-            updateStatus(`Removing #${indexVal} (${removedCount + 1}/${total})...`, true);
+            updateStatus(`Removing #${indexVal} (${i + 1}/${total})...`, true);
 
             const success = await attemptRemoveVideo(item);
             if (success) {
