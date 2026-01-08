@@ -1,0 +1,35 @@
+# YouTube Playlist Scroller - Developer Notes
+
+このドキュメントは、`youtube-playlist-scroller.user.js` の開発・保守を行うAIエージェントおよび開発者のための技術的なメモです。
+
+## コアロジック
+
+### スクロール制御
+ユーザーの利用シーンに応じて2つのモードを実装しています。
+1.  **Scroll to Bottom**:
+    -   `window.scrollTo(0, document.documentElement.scrollHeight)` を使用。
+    -   「後で見る」のような数千件あるリストを一気に読み込ませたい場合に最適です。
+2.  **Step Scroll**:
+    -   `window.scrollBy(0, step)` を使用。
+    -   少しずつ読み込みたい場合や、読み込み具合を目視確認したい場合に使用します。
+
+### 読み込み状態の検知 (Loading Indicator)
+-   スクロールしても、通信環境やYouTube側の負荷により次の動画がロードされないことがあります。
+-   **実装**: `MutationObserver` を使用して `ytd-playlist-video-list-renderer` 内のスピナー要素 (`tp-yt-paper-spinner`, `tp-yt-paper-spinner-lite`) を監視しています。
+-   **判定基準**: スピナー要素が存在し、かつ `active` 属性があるか、`aria-hidden="true"` でない、かつ `display: none` でない場合に「ロード中」と判定します。
+
+## UI 実装
+
+### フローティングパネル
+-   **ドラッグ＆ドロップ**: ヘッダー部分 (`cursor: move`) を掴んで画面上の好きな位置に移動できます。
+-   **位置の保存**: ドロップ時に `GM_setValue` で位置座標を保存し、次回起動時に復元します。
+-   **最小化**: コンテンツエリアを非表示にし、ヘッダーのみにする機能を備えています。
+
+## 注意事項
+
+### ブラウザのバックグラウンド制限
+-   最近のブラウザはバックグラウンドタブの `setInterval` や `setTimeout` の実行頻度を極端に落とす（スロットリング）傾向があります。
+-   現状の実装でも、1秒以上の間隔であれば比較的動作しますが、もし動作が不安定になる場合は Web Worker の利用などを検討する必要があります（現状は未実装）。
+
+### SPA遷移
+-   他のスクリプト同様、`yt-navigate-finish` イベントでパネルを再生成・再初期化しています。プレイリスト以外のページに移動した場合はパネルを破棄 (`remove()`) し、Observerを切断 (`disconnect()`) するロジックが含まれています。
