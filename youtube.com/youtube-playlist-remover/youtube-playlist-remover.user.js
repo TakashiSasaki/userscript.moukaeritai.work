@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.6
+// @version      0.1.7
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -270,21 +270,26 @@
     async function handlePotentialDialog() {
         // Wait briefly for a dialog to appear
         const start = Date.now();
-        while (Date.now() - start < 800) {
+        while (Date.now() - start < 1000) {
             // Check for standard confirmation dialogs
-            const dialogs = document.querySelectorAll('yt-confirm-dialog-renderer, tp-yt-paper-dialog');
-            for (const dialog of dialogs) {
-                if (dialog.getAttribute('aria-hidden') === 'true' || dialog.style.display === 'none') continue;
+            const dialog = document.querySelector('yt-confirm-dialog-renderer, tp-yt-paper-dialog');
+            if (dialog) {
+                if (dialog.getAttribute('aria-hidden') === 'true' || dialog.style.display === 'none') {
+                    await new Promise(r => setTimeout(r, 50));
+                    continue;
+                }
 
-                // Look for confirm buttons
-                const buttons = dialog.querySelectorAll('yt-button-renderer, button');
-                for (const btn of buttons) {
-                    const text = btn.textContent.trim();
-                    // "削除" (JP), "Delete" (EN), "Remove" (EN)
-                    if (text === '削除' || text === 'Delete' || text === 'Remove') {
-                        btn.click();
-                        return; // Dialog handled
-                    }
+                // Look for confirm buttons: ID priority first, then text
+                const confirmBtn = dialog.querySelector('#confirm-button') ||
+                    Array.from(dialog.querySelectorAll('yt-button-renderer, button'))
+                        .find(btn => {
+                            const text = btn.textContent.trim();
+                            return text === '削除' || text === 'Delete' || text === 'Remove';
+                        });
+
+                if (confirmBtn) {
+                    confirmBtn.click();
+                    return true; // Dialog handled
                 }
             }
             await new Promise(r => setTimeout(r, 100));
@@ -292,36 +297,44 @@
     }
 
     async function attemptRemoveVideo(videoContainer) {
-        const menuBtn = videoContainer.querySelector('#menu button') ||
+        // 1. Identify the menu button (prefer aria-label for stability)
+        const menuBtn = videoContainer.querySelector('#menu button[aria-label="操作メニュー"]') ||
+            videoContainer.querySelector('#menu button') ||
             videoContainer.querySelector('button.dropdown-trigger');
+
         if (!menuBtn) return false;
         menuBtn.click();
 
         const START = Date.now();
-        while (Date.now() - START < 5000) {
+        while (Date.now() - START < 3000) {
             const popup = document.querySelector('ytd-menu-popup-renderer');
             if (popup) {
-                const items = Array.from(popup.querySelectorAll('ytd-menu-service-item-renderer'));
+                // 2. Select all menu items using role="menuitem" for better coverage
+                const items = Array.from(popup.querySelectorAll('[role="menuitem"]'));
                 for (const item of items) {
                     const text = item.textContent || "";
-                    if (text.includes('Remove from') || text.includes('から削除')) {
-                        item.click();
-                        await handlePotentialDialog();
-                        document.body.click();
-                        return true;
-                    }
+                    // Check text in multiple languages
+                    const isRemove = text.includes('から削除') || text.includes('Remove from');
+
+                    // 3. Or check icon path (trash can)
                     const path = item.querySelector('path');
-                    if (path && TRASH_ICON_PATHS.includes(path.getAttribute('d'))) {
-                        item.click();
+                    const isTrash = path && TRASH_ICON_PATHS.includes(path.getAttribute('d'));
+
+                    if (isRemove || isTrash) {
+                        // 4. Click tp-yt-paper-item inside for better emulation if it exists
+                        const target = item.querySelector('tp-yt-paper-item') || item;
+                        target.click();
+
                         await handlePotentialDialog();
-                        document.body.click();
+                        document.body.click(); // Close menu
                         return true;
                     }
                 }
             }
             await new Promise(r => setTimeout(r, 100));
         }
-        document.body.click(); return false;
+        document.body.click();
+        return false;
     }
 
     async function removeRangeItems() {
