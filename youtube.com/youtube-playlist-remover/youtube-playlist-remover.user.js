@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.10
+// @version      0.1.11
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -364,13 +364,20 @@
             .filter(el => itemsAboveAndValidSet.has(el) && el.isConnected && el.style.display !== 'none')
             .reverse();
 
+        let removedCount = 0;
+        const total = finalTargets.length;
+
         for (const item of finalTargets) {
+            const indexVal = item.querySelector('#index')?.textContent?.trim() || '?';
+            updateStatus(`Removing #${indexVal} (${removedCount + 1}/${total})...`, true);
+
             const success = await attemptRemoveVideo(item);
             if (success) {
                 // Wait for the item to actually disappear from the list (removed by YouTube)
                 const disappeared = await waitForItemDisappearance(item, 8000); // Wait up to 8s
                 if (disappeared) {
                     itemsAboveAndValidSet.delete(item);
+                    removedCount++;
                 } else {
                     console.warn('[YouTube Playlist Remover] Item removal timed out:', item);
                     // Do not force remove. If YouTube didn't remove it, something might be wrong.
