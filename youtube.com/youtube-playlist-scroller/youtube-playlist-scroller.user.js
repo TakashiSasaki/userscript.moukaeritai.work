@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.1
+// @version      0.1.2
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -238,8 +238,15 @@
         });
 
         const statusLabel = document.createElement('div');
-        statusLabel.textContent = 'Status:';
+        statusLabel.textContent = 'Status: ';
         statusLabel.style.fontSize = '12px';
+
+        const loadingStatus = document.createElement('span');
+        loadingStatus.id = 'yt-scroller-loading-status';
+        loadingStatus.textContent = 'Idle';
+        loadingStatus.style.color = '#888';
+        loadingStatus.style.marginLeft = '4px';
+        statusLabel.appendChild(loadingStatus);
 
         const toggleBtn = document.createElement('button');
         toggleBtn.id = 'yt-scroller-toggle-btn';
@@ -345,12 +352,61 @@
         setInterval(() => {
             if (window.location.pathname === '/playlist') {
                 checkAndInit();
+                setupLoadingObserver(); // Ensure observer is attached
             } else {
                 const p = document.getElementById('yt-scroller-panel');
                 if (p) p.remove();
+                if (loadingObserver) {
+                    loadingObserver.disconnect();
+                    loadingObserver = null;
+                }
             }
         }, 2000);
     };
+
+    // --- Loading Indicator Logic ---
+    let loadingObserver = null;
+
+    function setupLoadingObserver() {
+        if (loadingObserver) return; // Already setup
+
+        const container = document.querySelector('ytd-playlist-video-list-renderer');
+        if (!container) return; // Not ready yet
+
+        loadingObserver = new MutationObserver(() => {
+            checkLoadingState();
+        });
+
+        loadingObserver.observe(container, {
+            childList: true,
+            subtree: true // Need subtree because spinner might be nested in #spinner-container
+        });
+
+        // Initial check
+        checkLoadingState();
+    }
+
+    function checkLoadingState() {
+        const spinner = document.querySelector('ytd-playlist-video-list-renderer #spinner-container tp-yt-paper-spinner-lite');
+        const isLoading = spinner && (spinner.getAttribute('aria-hidden') !== 'true' && window.getComputedStyle(spinner).display !== 'none');
+
+        updatePanelLoadingState(isLoading);
+    }
+
+    function updatePanelLoadingState(isLoading) {
+        const statusEl = document.getElementById('yt-scroller-loading-status');
+        if (!statusEl) return;
+
+        if (isLoading) {
+            statusEl.textContent = 'Loading...';
+            statusEl.style.color = '#ff0000';
+            statusEl.style.fontWeight = 'bold';
+        } else {
+            statusEl.textContent = 'Idle';
+            statusEl.style.color = '#888';
+            statusEl.style.fontWeight = 'normal';
+        }
+    }
 
     // Navigation handling
     window.addEventListener('yt-navigate-finish', run);
