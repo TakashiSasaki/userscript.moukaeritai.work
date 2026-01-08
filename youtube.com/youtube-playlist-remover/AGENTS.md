@@ -23,3 +23,12 @@ When the "Remove Above" action is triggered:
 
 ## 3. Maintenance
 *   **Versioning**: Follow the strict versioning policy defined in the root `AGENTS.md`. Any change requires a patch bump.
+
+## 4. Sample Files for Debugging
+
+The following files contain DOM snapshots for debugging and verification:
+
+*   **`div-menu.html`**: The structure of the three-dot menu button (`#menu.ytd-playlist-video-renderer`) on a video item.
+*   **`dropdown.html`**: The DOM fragment of the popup menu (`ytd-menu-popup-renderer`) that appears when the three-dot button is clicked.
+*   **`whole-dom-with-dropdown.html`**: A full page snapshot containing both the playlist items and the active dropdown menu.
+
