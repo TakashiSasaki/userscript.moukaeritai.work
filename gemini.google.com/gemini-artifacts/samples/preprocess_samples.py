@@ -1,7 +1,7 @@
 import os
 import glob
 import re
-from bs4 import BeautifulSoup, Comment
+from bs4 import BeautifulSoup, Comment, NavigableString
 
 # Target directory
 TARGET_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -45,6 +45,12 @@ def process_html_file(file_path):
             # Handle list-valued attributes (like class) if they are empty lists (though soup usually handles this)
             elif isinstance(value, list) and len(value) == 0:
                 del tag[attr]
+
+    # Truncate text nodes
+    for text_node in soup.find_all(string=True):
+        if isinstance(text_node, NavigableString) and not isinstance(text_node, Comment):
+            if len(text_node) > 999:
+                text_node.replace_with(text_node[:999] + "... [truncated]")
         
     # Get the string representation of the cleaned HTML
     cleaned_html = str(soup)
