@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.7
+// @version      0.1.8
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -127,54 +127,83 @@
         log(`Processing: ${title}`);
         chip.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
-        // Click the inner container which likely has the event listener
+        // 0. Ensure no panel is currently open
+        if (document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
+            log('Panel already open? Closing first...');
+            const existingCloseBtn = document.querySelector(SELECTORS.PANEL_CLOSE_BUTTON);
+            if (existingCloseBtn) existingCloseBtn.click();
+            await sleep(1000);
+        }
+
+        // 1. Click to open
         const clickable = chip.querySelector(SELECTORS.CHIP_CONTAINER) || chip;
         clickable.click();
 
+        // 2. Wait for panel to appear AND load title
         try {
-            await sleep(1000); 
+            await sleep(1000); // Initial wait for animation start
             
+            // Wait for panel existence
+            let panelRetries = 0;
+            while (panelRetries < 20 && !document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
+                await sleep(200);
+                panelRetries++;
+            }
+            if (!document.querySelector(SELECTORS.IMMERSIVE_PANEL)) throw new Error("Panel did not open");
+
+            // Wait for title match
             let retries = 0;
+            let matched = false;
             while (retries < 20) {
                 const panelTitleEl = document.querySelector(SELECTORS.PANEL_TITLE);
                 if (panelTitleEl && panelTitleEl.textContent.trim() === title) {
+                    matched = true;
                     break;
                 }
                 await sleep(500);
                 retries++;
             }
-            if (retries >= 20) throw new Error("Timeout waiting for panel title match");
+            if (!matched) throw new Error(`Timeout waiting for panel title match. Expected: "${title}"`);
 
-            log('Panel loaded.');
+            log('Panel loaded and title matched.');
 
+            // 3. Click Share
             const shareBtn = await waitForElement(SELECTORS.SHARE_BUTTON, document.querySelector(SELECTORS.IMMERSIVE_PANEL));
             shareBtn.click();
             log('Clicked Share.');
 
+            // 4. Click Export to Docs
             const exportBtn = await waitForElement(SELECTORS.EXPORT_BUTTON);
             exportBtn.click();
             log('Clicked Export to Docs.');
 
-            await sleep(3000);
+            // 5. Wait for completion (Extended timeout)
+            await sleep(5000);
 
-            // Close Panel logic
+            // 6. Close Panel
             const closeBtn = document.querySelector(SELECTORS.PANEL_CLOSE_BUTTON);
             if (closeBtn) {
                 closeBtn.click();
-                log('Closing panel.');
+                log('Closing panel...');
+                // Wait for panel removal
                 let closeRetries = 0;
-                while (closeRetries < 10 && document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
+                while (closeRetries < 20 && document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
                     await sleep(500);
                     closeRetries++;
                 }
+                log('Panel closed.');
             }
 
+            // 7. Mark as exported
             saveExportedSignature(convId, signature);
             chip.style.opacity = '0.5';
             chip.querySelector(SELECTORS.CHIP_TITLE).textContent = `✅ ${title}`;
 
         } catch (e) {
             log(`Error processing ${title}: ${e.message}`);
+            // Attempt cleanup if failed
+            const closeBtn = document.querySelector(SELECTORS.PANEL_CLOSE_BUTTON);
+            if (closeBtn) closeBtn.click();
         }
     }
 
@@ -224,9 +253,15 @@
 
         if (!confirm(confirmMsg)) return;
 
+        // Ensure clean state
+        if (document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
+             document.querySelector(SELECTORS.PANEL_CLOSE_BUTTON)?.click();
+             await sleep(1000);
+        }
+
         for (const chip of articleChips) {
             await processArtifact(chip, force);
-            await sleep(1000);
+            await sleep(2000); // Increased cooldown between items
         }
 
         alert('Batch export completed.');
