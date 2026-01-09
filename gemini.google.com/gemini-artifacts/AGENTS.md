@@ -57,22 +57,33 @@ Run this script whenever adding new HTML samples.
     - Example: `BardVeMetadataKey:[...,["c_d2d2e9935f45dd9a_heart_sutra.md",...]]`
     - This can be used to uniquely identify which artifact is currently being viewed or interacted with.
 
-## Proposed Userscript Workflow: Batch Export to Docs
+## Implemented Userscript: Batch Export to Docs
 
+**Current Version**: `0.1.10`
 **Goal**: Export all "Article" (text) type artifacts to Google Docs.
 
-**Steps:**
+**Features:**
+*   **Batch Processing**: Automatically iterates through all article chips in the sidebar.
+*   **Duplicate Prevention**: Uses `GM_setValue` to store signatures (ConversationID + Title + Timestamp) of exported items.
+*   **Force Export**: "Force Export All" button allows re-exporting already processed items.
+*   **SPA Support**: Detects URL changes via polling (`setInterval`) to inject UI buttons only on conversation pages.
+*   **Robustness**:
+    *   Re-queries DOM elements before interaction to avoid Stale Element Reference errors.
+    *   Implements retry logic for clicks and waits for panel state changes (open/close).
+    *   Explicitly closes the panel after each export to ensure a clean state for the next item.
+
+**Workflow:**
 1.  **Open Sidebar**: Click `button[data-test-id="studio-sidebar-button"]` (verify if sidebar `context-sidebar` is present first).
 2.  **Iterate Items**: Find all `sidebar-immersive-chip` elements within `context-sidebar`.
 3.  **Filter**: Select chips where the inner icon is `article` (`mat-icon[fonticon="article"]`).
 4.  **Process Each Item (Sequential)**:
-    *   **Click Chip**: Click the chip element to load the artifact into the `immersive-panel`.
-    *   **Wait**: Wait for the `immersive-panel` title (`h2.title-text`) to match the chip's title, ensuring load completion.
+    *   **Click Chip**: Click the `.container` element inside the chip to load the artifact.
+    *   **Wait**: Wait for the `immersive-panel` to appear and for its title (`h2.title-text`) to match the chip's title.
     *   **Click Share**: Click `button[data-test-id="share-button"]` located in the `immersive-panel` toolbar.
     *   **Wait for Menu**: Wait for `.mat-mdc-menu-panel` containing `button[data-test-id="export-to-docs-button"]` to appear.
     *   **Click Export**: Click `button[data-test-id="export-to-docs-button"]`.
-    *   **Wait**: Wait for the "Exported to Docs" toast/notification or a reasonable timeout.
-    *   **Close Panel**: Click `button[data-test-id="close-button"]` within the `immersive-panel` to return to the chat view.
+    *   **Wait**: Wait for 5 seconds (approximate time for export request).
+    *   **Close Panel**: Click `button[data-test-id="close-button"]` within the `immersive-panel`.
     *   **Wait**: Wait for the panel to disappear before proceeding to the next item.
 
 ## Duplicate Prevention Strategy
@@ -107,8 +118,10 @@ Gemini is an SPA where URL changes (e.g., switching between conversations) often
 3.  **UI State Management**: Show the "Export All Docs" trigger button only when on a conversation page. Hide it on the home page or search pages.
 
 ## Development Strategy
-1. **Selector Stability**: Gemini uses Angular/Material. Many classes are generated (`_ngcontent-ng-...`). Rely on `data-test-id` or stable semantic tags (`action-card`, `message-content`) where possible.
-2. **SPA Handling**: Like other Gemini userscripts, expect dynamic URL changes and content loading. Use `MutationObserver` or polling for element detection.
+1. **Preprocessing**: The `samples/whole-dom-with-html.html` is very large (~2.4MB). A `preprocess_samples.py` script is now available to strip script/style tags and reformat the HTML for better analysis.
+2. **Selector Stability**: Gemini uses Angular/Material. Many classes are generated (`_ngcontent-ng-...`). Rely on `data-test-id` or stable semantic tags (`action-card`, `message-content`) where possible.
+3. **SPA Handling**: Like other Gemini userscripts, expect dynamic URL changes and content loading. Use `MutationObserver` or polling for element detection.
+4. **Debugging**: Due to the asynchronous nature of the artifact canvas, verbose logging with timestamps is essential for identifying timing issues or misaligned selectors during batch processing.
 
 ## Planned/Future Scripts
 - **Artifact Extractor**: Extract content directly from artifact panels.
