@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.4
+// @version      0.1.5
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -30,7 +30,74 @@
         MENU_PANEL: '.mat-mdc-menu-panel'
     };
 
-    // ... (omitted) ...
+    const EXPORTED_KEY = 'exported_artifacts';
+
+    // --- Helper Functions ---
+
+    function log(msg) {
+        console.log(`[Gemini Artifact Exporter] ${msg}`);
+    }
+
+    function isConversationPage() {
+        return /\/app\/[a-z0-9]+/.test(window.location.pathname);
+    }
+
+    function getConversationId() {
+        const match = window.location.pathname.match(/\/app\/([a-z0-9]+)/);
+        return match ? match[1] : null;
+    }
+
+    function getExportedSignatures(convId) {
+        const allData = GM_getValue(EXPORTED_KEY, {});
+        return new Set(allData[convId] || []);
+    }
+
+    function saveExportedSignature(convId, signature) {
+        const allData = GM_getValue(EXPORTED_KEY, {});
+        if (!allData[convId]) {
+            allData[convId] = [];
+        }
+        if (!allData[convId].includes(signature)) {
+            allData[convId].push(signature);
+            GM_setValue(EXPORTED_KEY, allData);
+            log(`Saved signature: ${signature}`);
+        }
+    }
+
+    function generateSignature(title, subtitle) {
+        const convId = getConversationId();
+        if (!convId) return null;
+        return `${convId}|${title}|${subtitle}`;
+    }
+
+    function waitForElement(selector, context = document, timeout = 5000) {
+        return new Promise((resolve, reject) => {
+            const el = context.querySelector(selector);
+            if (el) return resolve(el);
+
+            const observer = new MutationObserver(() => {
+                const el = context.querySelector(selector);
+                if (el) {
+                    observer.disconnect();
+                    resolve(el);
+                }
+            });
+
+            observer.observe(context === document ? document.body : context, {
+                childList: true,
+                subtree: true
+            });
+
+            setTimeout(() => {
+                observer.disconnect();
+                reject(new Error(`Timeout waiting for ${selector}`));
+            }, timeout);
+        });
+    }
+
+    async function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
     // --- Core Logic ---
 
@@ -65,8 +132,6 @@
 
         // 2. Wait for panel to load (check title match)
         try {
-
-            // Wait a bit for the click to register and panel to start updating
             await sleep(1000); 
             
             // Wait for title to match.
@@ -231,25 +296,7 @@
 
     // --- SPA Navigation Handling ---
 
-    function patchHistory() {
-        const pushState = history.pushState;
-        history.pushState = function() {
-            pushState.apply(history, arguments);
-            updateButtonVisibility();
-        };
-
-        const replaceState = history.replaceState;
-        history.replaceState = function() {
-            replaceState.apply(history, arguments);
-            updateButtonVisibility();
-        };
-
-        window.addEventListener('popstate', updateButtonVisibility);
-    }
-
-    // Initialize
-    patchHistory();
-    // Initial check after a short delay to ensure DOM is ready
-    setTimeout(updateButtonVisibility, 2000);
+    // Replace monkey-patching with polling to avoid conflicts and errors
+    setInterval(updateButtonVisibility, 500);
 
 })();
