@@ -22,6 +22,11 @@ def process_html_file(file_path):
     for element in soup(["script", "style"]):
         element.decompose()
         
+    # Remove meta and link elements within head
+    if soup.head:
+        for element in soup.head(["meta", "link"]):
+            element.decompose()
+        
     # Remove comment nodes
     for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
         comment.extract()

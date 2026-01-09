@@ -9,8 +9,9 @@ A `preprocess_samples.py` script has been implemented to clean and standardize D
 Run this script whenever adding new HTML samples.
 
 **Logic Applied:**
-1.  **Removal**: `<script>`, `<style>` tags, and HTML comment nodes are completely removed to reduce noise.
-2.  **Reformatting**: HTML is reformatted to a flat structure.
+1.  **Removal**: `<script>`, `<style>` tags, and HTML comment nodes are completely removed.
+2.  **Head Cleanup**: `<meta>` and `<link>` tags within the `<head>` element are removed.
+3.  **Reformatting**: HTML is reformatted to a flat structure.
     -   **One tag/text node per line**.
     -   **No indentation** (to facilitate easier diffing and searching).
 
