@@ -52,6 +52,7 @@ JavaScript（`.user.js`）のコードを変更した後は、必ずESLintを実
 
 -   **Command**: `npx eslint path/to/script.user.js`
 -   **Requirement**: コミット前にすべてのエラーを解消し、警告も可能な限り修正してください。
+-   **Reminder**: 変更が小さくてもESLintの実行を省略しないこと。
 
 ## Repository Information (リポジトリ情報)
 

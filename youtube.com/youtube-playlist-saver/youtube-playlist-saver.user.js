@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.46
+// @version      0.2.47
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
@@ -56,6 +56,191 @@
         path.setAttribute('d', pathData);
         svg.appendChild(path);
         return svg;
+    }
+
+    const PANEL_POS_KEY = 'yt_saver_panel_position';
+    const PANEL_MIN_KEY = 'yt_saver_panel_minimized';
+
+    let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '70px', right: '20px' });
+    let isPanelMinimized = GM_getValue(PANEL_MIN_KEY, false);
+    const panelElements = {
+        totalSaved: null,
+        savedVisible: null,
+        newVisible: null,
+        storageStatus: null
+    };
+
+    function createPanel() {
+        if (document.getElementById('yt-saver-panel')) return;
+
+        const panel = document.createElement('div');
+        panel.id = 'yt-saver-panel';
+
+        Object.assign(panel.style, {
+            position: 'fixed',
+            zIndex: 9999,
+            backgroundColor: '#f4f4f4',
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            padding: '12px',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+            display: 'flex',
+            flexDirection: 'column',
+            width: '220px',
+            color: '#333',
+            fontFamily: 'Roboto, Arial, sans-serif'
+        });
+
+        if (panelPos.top) panel.style.top = panelPos.top;
+        if (panelPos.left) panel.style.left = panelPos.left;
+        if (panelPos.bottom) panel.style.bottom = panelPos.bottom;
+        if (panelPos.right) panel.style.right = panelPos.right;
+
+        const headerRow = document.createElement('div');
+        Object.assign(headerRow.style, {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '6px',
+            cursor: 'move'
+        });
+
+        let isDragging = false;
+        let dragStartX, dragStartY;
+        let initialLeft, initialTop;
+
+        headerRow.addEventListener('mousedown', (e) => {
+            if (e.target.tagName === 'BUTTON') return;
+            isDragging = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+
+            const rect = panel.getBoundingClientRect();
+            initialLeft = rect.left;
+            initialTop = rect.top;
+
+            panel.style.bottom = 'auto';
+            panel.style.right = 'auto';
+            panel.style.left = `${initialLeft}px`;
+            panel.style.top = `${initialTop}px`;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - dragStartX;
+            const dy = e.clientY - dragStartY;
+            panel.style.left = `${initialLeft + dx}px`;
+            panel.style.top = `${initialTop + dy}px`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                panelPos = { top: panel.style.top, left: panel.style.left, bottom: '', right: '' };
+                GM_setValue(PANEL_POS_KEY, panelPos);
+            }
+        });
+
+        const titleLabel = document.createElement('span');
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.47';
+        titleLabel.textContent = `Playlist Saver v${version}`;
+        Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
+
+        const minimizeBtn = document.createElement('button');
+        minimizeBtn.textContent = '-';
+        Object.assign(minimizeBtn.style, {
+            cursor: 'pointer',
+            background: 'none',
+            border: 'none',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            padding: '0 4px',
+            color: '#666'
+        });
+
+        const contentContainer = document.createElement('div');
+        Object.assign(contentContainer.style, { display: 'flex', flexDirection: 'column', gap: '6px' });
+
+        const updatePanelMinState = (min) => {
+            contentContainer.style.display = min ? 'none' : 'flex';
+            minimizeBtn.textContent = min ? '+' : '-';
+            isPanelMinimized = min;
+            GM_setValue(PANEL_MIN_KEY, min);
+        };
+        minimizeBtn.addEventListener('click', () => updatePanelMinState(!isPanelMinimized));
+        updatePanelMinState(isPanelMinimized);
+
+        headerRow.appendChild(titleLabel);
+        headerRow.appendChild(minimizeBtn);
+        panel.appendChild(headerRow);
+        panel.appendChild(contentContainer);
+
+        const createStatRow = (labelText) => {
+            const row = document.createElement('div');
+            Object.assign(row.style, {
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontSize: '12px'
+            });
+
+            const label = document.createElement('span');
+            label.textContent = labelText;
+            label.style.color = '#555';
+
+            const value = document.createElement('span');
+            value.textContent = '-';
+            value.style.fontWeight = 'bold';
+
+            row.appendChild(label);
+            row.appendChild(value);
+            contentContainer.appendChild(row);
+            return value;
+        };
+
+        panelElements.totalSaved = createStatRow('Saved IDs (Total)');
+        panelElements.savedVisible = createStatRow('SAVED in List');
+        panelElements.newVisible = createStatRow('NEW in List');
+        panelElements.storageStatus = createStatRow('Storage');
+
+        document.body.appendChild(panel);
+    }
+
+    function updatePanelStats({
+        playlistId,
+        totalSaved,
+        savedVisible,
+        newVisible
+    }) {
+        if (!panelElements.totalSaved) return;
+
+        panelElements.totalSaved.textContent = Number.isFinite(totalSaved) ? String(totalSaved) : '-';
+        panelElements.savedVisible.textContent = Number.isFinite(savedVisible) ? String(savedVisible) : '-';
+        panelElements.newVisible.textContent = Number.isFinite(newVisible) ? String(newVisible) : '-';
+
+        if (!panelElements.storageStatus) return;
+
+        let storageText = 'Unknown';
+        let storageColor = '#999';
+
+        if (playlistId) {
+            if (Number.isFinite(totalSaved) && totalSaved > 0) {
+                if (pendingSaveTimeout) {
+                    storageText = 'Saving...';
+                    storageColor = '#d9822b';
+                } else {
+                    storageText = 'Saved';
+                    storageColor = '#2ba640';
+                }
+            } else {
+                storageText = 'Not saved';
+                storageColor = '#999';
+            }
+        }
+
+        panelElements.storageStatus.textContent = storageText;
+        panelElements.storageStatus.style.color = storageColor;
     }
 
     // --- Core Data Storage ---
@@ -213,11 +398,15 @@
 
     function scanAndRender() {
         const playlistId = getPlaylistId();
-        if (!playlistId) return;
+        if (!playlistId) {
+            updatePanelStats({ playlistId: null, totalSaved: NaN, savedVisible: NaN, newVisible: NaN });
+            return;
+        }
+
+        const data = loadStorage();
 
         // Init Session Data once per page load/nav
         if (!isSessionInitialized) {
-            const data = loadStorage();
             if (data[playlistId]) {
                 currentSessionKnownIds = new Set(Object.keys(data[playlistId]));
             } else {
@@ -227,11 +416,19 @@
         }
 
         const items = document.querySelectorAll('ytd-playlist-video-renderer');
+        let savedVisibleCount = 0;
+        let newVisibleCount = 0;
         items.forEach(item => {
-            if (processedSet.has(item)) return;
-
             const vid = extractVideoId(item);
             if (!vid) return;
+
+            const isHidden = item.style.display === 'none' || window.getComputedStyle(item).display === 'none';
+            if (!isHidden) {
+                if (currentSessionKnownIds.has(vid)) savedVisibleCount++;
+                else newVisibleCount++;
+            }
+
+            if (processedSet.has(item)) return;
 
             // Determine Status based on SESSION start time
             // If it was in DB at start => SAVED
@@ -247,11 +444,21 @@
             renderIndicator(item, isNew);
             processedSet.add(item);
         });
+
+        const totalSavedCount = Object.keys(data[playlistId] || {}).length;
+        updatePanelStats({
+            playlistId,
+            totalSaved: totalSavedCount,
+            savedVisible: savedVisibleCount,
+            newVisible: newVisibleCount
+        });
     }
 
     // --- Main Logic ---
 
     function run() {
+        createPanel();
+        scanAndRender();
         // Observers
         setInterval(scanAndRender, 2000); // 2s polling
 
