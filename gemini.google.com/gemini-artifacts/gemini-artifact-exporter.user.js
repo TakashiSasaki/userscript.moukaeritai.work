@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.9
+// @version      0.1.10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -31,9 +31,8 @@
         MENU_PANEL: '.mat-mdc-menu-panel'
     };
 
+    // ... (helper functions omitted) ...
     const EXPORTED_KEY = 'exported_artifacts';
-
-    // --- Helper Functions ---
 
     function log(msg) {
         const timestamp = new Date().toISOString().split('T')[1].split('Z')[0];
@@ -109,15 +108,27 @@
 
     // --- Core Logic ---
 
-    async function processArtifact(chip, force = false) {
-        const titleEl = chip.querySelector(SELECTORS.CHIP_TITLE);
-        const subtitleEl = chip.querySelector(SELECTORS.CHIP_SUBTITLE);
+    // Find a fresh reference to the chip in the DOM based on its title
+    function findChipByTitle(title) {
+        const chips = Array.from(document.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
+        return chips.find(chip => {
+            const t = chip.querySelector(SELECTORS.CHIP_TITLE);
+            return t && t.textContent.trim() === title;
+        });
+    }
+
+    async function processArtifact(targetTitle, force = false) {
+        // Always re-query the chip to avoid stale element references
+        let chip = findChipByTitle(targetTitle);
         
-        if (!titleEl || !subtitleEl) {
-            log('ERROR: Skipping chip - Title or subtitle element not found in chip DOM.');
+        if (!chip) {
+            log(`ERROR: Chip with title "${targetTitle}" not found in DOM. Skipping.`);
             return;
         }
 
+        const titleEl = chip.querySelector(SELECTORS.CHIP_TITLE);
+        const subtitleEl = chip.querySelector(SELECTORS.CHIP_SUBTITLE);
+        
         const title = titleEl.textContent.trim();
         const subtitle = subtitleEl.textContent.trim();
         const convId = getConversationId();
@@ -132,40 +143,69 @@
             return;
         }
 
-        chip.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        await sleep(500);
-        
         // 0. Ensure no panel is currently open
         if (document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
             log('Cleanup: Closing existing panel before opening next one.');
             const existingCloseBtn = document.querySelector(SELECTORS.PANEL_CLOSE_BUTTON);
-            if (existingCloseBtn) existingCloseBtn.click();
-            await sleep(1500);
+            if (existingCloseBtn) {
+                existingCloseBtn.click();
+                await sleep(1500); // Wait for close animation
+            }
         }
 
-        // 1. Click to open
-        log(`Triggering click on chip: "${title}"`);
-        const clickable = chip.querySelector(SELECTORS.CHIP_CONTAINER) || chip;
-        clickable.click();
-
-        // 2. Wait for panel to appear AND load title
-        try {
-            log('Waiting for panel to appear...');
-            let panelRetries = 0;
-            while (panelRetries < 25 && !document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
-                await sleep(200);
-                panelRetries++;
+        // 1. Click to open with Retry Logic
+        let panelOpened = false;
+        let clickAttempts = 0;
+        
+        while (!panelOpened && clickAttempts < 3) {
+            clickAttempts++;
+            log(`Attempt ${clickAttempts}: Clicking chip "${title}"...`);
+            
+            // Re-find chip in case of DOM updates during wait
+            chip = findChipByTitle(targetTitle);
+            if (!chip) {
+                log('Error: Chip lost from DOM during retry.');
+                return;
             }
-            if (!document.querySelector(SELECTORS.IMMERSIVE_PANEL)) throw new Error("Panel element never appeared in DOM.");
-            log('Panel element detected.');
+            
+            chip.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            await sleep(500);
 
+            const clickable = chip.querySelector(SELECTORS.CHIP_CONTAINER) || chip;
+            clickable.click();
+
+            // Wait for panel to appear
+            let panelWait = 0;
+            while (panelWait < 15 && !document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
+                await sleep(200);
+                panelWait++;
+            }
+
+            if (document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
+                panelOpened = true;
+                log('Panel element detected.');
+            } else {
+                log('Panel did not appear after click. Retrying...');
+                await sleep(1000);
+            }
+        }
+
+        if (!panelOpened) {
+            log(`CRITICAL ERROR: Failed to open panel for "${title}" after ${clickAttempts} clicks.`);
+            return; // Skip this item
+        }
+
+        // 2. Wait for Title Match
+        try {
             log(`Waiting for title match. Target: "${title}"`);
             let retries = 0;
             let matched = false;
             while (retries < 30) {
                 const panelTitleEl = document.querySelector(SELECTORS.PANEL_TITLE);
                 const currentPanelTitle = panelTitleEl ? panelTitleEl.textContent.trim() : '(null)';
-                if (currentPanelTitle === title) {
+                
+                // Allow exact match or if current title contains the target (sometimes titles are truncated/formatted)
+                if (currentPanelTitle === title || currentPanelTitle.includes(title)) {
                     matched = true;
                     log(`Success: Title matched after ${retries} retries.`);
                     break;
@@ -206,13 +246,17 @@
 
             // 7. Mark as exported
             saveExportedSignature(convId, signature);
-            chip.style.border = '2px solid green';
-            chip.querySelector(SELECTORS.CHIP_TITLE).textContent = `✅ ${title}`;
+            
+            // Re-find chip one last time to update UI
+            const finalChip = findChipByTitle(title);
+            if (finalChip) {
+                finalChip.style.border = '2px solid green';
+                finalChip.querySelector(SELECTORS.CHIP_TITLE).textContent = `✅ ${title}`;
+            }
             log(`--- Finished processing: "${title}" ---`);
 
         } catch (e) {
             log(`CRITICAL ERROR during processing "${title}": ${e.message}`);
-            // Attempt emergency cleanup
             const closeBtn = document.querySelector(SELECTORS.PANEL_CLOSE_BUTTON);
             if (closeBtn) closeBtn.click();
         }
@@ -225,65 +269,59 @@
             return;
         }
 
-        const convId = getConversationId();
-        log(`Conversation ID: ${convId}`);
-
+        // Open Sidebar... (omitted detailed sidebar open logic, assuming mostly same)
         let sidebar = document.querySelector(SELECTORS.SIDEBAR);
         if (!sidebar) {
-            log('Sidebar not found. Attempting to open...');
             const toggleBtn = document.querySelector(SELECTORS.SIDEBAR_BUTTON);
             if (toggleBtn) {
                 toggleBtn.click();
                 try {
                     sidebar = await waitForElement(SELECTORS.SIDEBAR, document, 3000);
-                    log('Sidebar opened successfully.');
                 } catch (e) {
-                    log('Abort: Could not open sidebar.');
                     alert('Could not open sidebar.');
                     return;
                 }
             } else {
-                log('Abort: Sidebar toggle button not found.');
                 alert('Sidebar toggle button not found.');
                 return;
             }
         }
 
         const chips = Array.from(sidebar.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
-        log(`Total chips found in sidebar: ${chips.length}`);
         
-        const articleChips = chips.filter(chip => {
+        // Collect TITLES of target chips first. 
+        // We will query them by title during the loop to ensure we get fresh elements.
+        const articleTitles = [];
+        chips.forEach(chip => {
             const icon = chip.querySelector(SELECTORS.CHIP_ICON_CONTAINER);
-            const isArticle = icon && icon.getAttribute('fonticon') === 'article';
-            return isArticle;
+            const titleEl = chip.querySelector(SELECTORS.CHIP_TITLE);
+            if (icon && icon.getAttribute('fonticon') === 'article' && titleEl) {
+                articleTitles.push(titleEl.textContent.trim());
+            }
         });
 
-        log(`Filter result: ${articleChips.length} articles out of ${chips.length} chips.`);
+        log(`Found ${articleTitles.length} article artifacts.`);
 
-        if (articleChips.length === 0) {
+        if (articleTitles.length === 0) {
             alert('No article artifacts found.');
             return;
         }
 
         const confirmMsg = force 
-            ? `Found ${articleChips.length} articles. FORCE EXPORT all of them?`
-            : `Found ${articleChips.length} articles. Start export (skipping duplicates)?`;
+            ? `Found ${articleTitles.length} articles. FORCE EXPORT all of them?`
+            : `Found ${articleTitles.length} articles. Start export (skipping duplicates)?`;
 
-        if (!confirm(confirmMsg)) {
-            log('User cancelled batch export.');
-            return;
-        }
+        if (!confirm(confirmMsg)) return;
 
-        // Clean start
+        // Cleanup before starting
         if (document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
-             log('Initial cleanup: Closing open panel.');
              document.querySelector(SELECTORS.PANEL_CLOSE_BUTTON)?.click();
              await sleep(1500);
         }
 
-        for (let i = 0; i < articleChips.length; i++) {
-            log(`Processing item ${i + 1}/${articleChips.length}`);
-            await processArtifact(articleChips[i], force);
+        for (let i = 0; i < articleTitles.length; i++) {
+            log(`Processing item ${i + 1}/${articleTitles.length}: ${articleTitles[i]}`);
+            await processArtifact(articleTitles[i], force);
             log(`Cooldown before next item (2s)...`);
             await sleep(2000);
         }
@@ -292,25 +330,23 @@
         alert('Batch export completed.');
     }
 
+    // ... (rest of the script) ...
     // --- UI Injection & Control ---
 
     function updateButtonVisibility() {
-        const isPage = isConversationPage();
         const container = document.getElementById('gemini-batch-export-container');
-        
         if (!container) {
-            if (isPage) {
+            if (isConversationPage()) {
                 createTriggerButtons();
             }
             return;
         }
-        container.style.display = isPage ? 'flex' : 'none';
+        container.style.display = isConversationPage() ? 'flex' : 'none';
     }
 
     function createTriggerButtons() {
         if (document.getElementById('gemini-batch-export-container')) return;
 
-        log('Injecting trigger buttons into page.');
         const container = document.createElement('div');
         container.id = 'gemini-batch-export-container';
         container.style.cssText = `
@@ -322,6 +358,7 @@
             flex-direction: column;
             gap: 10px;
             align-items: flex-end;
+            display: ${isConversationPage() ? 'flex' : 'none'};
         `;
 
         const btn = document.createElement('button');
@@ -342,7 +379,7 @@
         forceBtn.textContent = 'Force Export All';
         forceBtn.style.cssText = `
             padding: 8px 12px;
-            background-color: #d93025;
+            background-color: #d93025; /* Red for force action */
             color: white;
             border: none;
             border-radius: 24px;
@@ -358,7 +395,7 @@
         document.body.appendChild(container);
     }
 
-    log('Gemini Artifact Exporter loaded. Polling for URL context...');
-    setInterval(updateButtonVisibility, 1000);
+    setInterval(updateButtonVisibility, 500);
 
 })();
+
