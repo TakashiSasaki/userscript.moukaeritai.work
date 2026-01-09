@@ -40,6 +40,7 @@ Run this script whenever adding new HTML samples.
 
 #### 3. Context Sidebar (File List)
 - **Selector**: `context-sidebar`
+- **Dynamic Presence**: Based on analysis of "whole DOM" snapshots, this element is **NOT** present in the DOM when closed. It is dynamically inserted/removed when toggled via the Studio Sidebar button.
 - **File Items**: `sidebar-immersive-chip`
     - `.immersive-title`: Name of the file/artifact.
     - `.immersive-subtitle`: Creation/update timestamp.
