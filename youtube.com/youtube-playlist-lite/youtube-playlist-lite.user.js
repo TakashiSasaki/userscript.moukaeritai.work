@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.3
-// @description  YouTubeプレイリストでサムネイルを非表示にして軽量化するためのツールです。
+// @version      0.1.4
+// @description  YouTubeプレイリストや再生履歴でサムネイルを非表示にして軽量化するためのツールです。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
+// @match        *://www.youtube.com/feed/history*
 // @match        https://userscript.moukaeritai.work/*
 // @match        http://127.0.0.1:5500/*
 // @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
@@ -44,24 +45,47 @@
     let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '260px', right: '20px' });
     let isHideThumbnails = GM_getValue(HIDE_THUMB_KEY, false);
     let isForceRemove = GM_getValue(FORCE_REMOVE_KEY, false);
+    const PAGE_CONFIG = {
+        playlist: {
+            thumbSelector: 'ytd-playlist-video-renderer ytd-thumbnail',
+            matchSelector: 'ytd-thumbnail',
+            ancestorSelector: 'ytd-playlist-video-renderer',
+            observerRootSelector: 'ytd-playlist-video-list-renderer #contents'
+        },
+        history: {
+            thumbSelector: 'ytd-item-section-renderer a.yt-lockup-view-model__content-image, ytd-item-section-renderer yt-thumbnail-view-model',
+            matchSelector: 'a.yt-lockup-view-model__content-image, yt-thumbnail-view-model',
+            ancestorSelector: 'ytd-item-section-renderer',
+            observerRootSelector: 'ytd-section-list-renderer #contents'
+        }
+    };
+
+    function getPageConfig() {
+        if (location.pathname === '/playlist') return PAGE_CONFIG.playlist;
+        if (location.pathname.startsWith('/feed/history')) return PAGE_CONFIG.history;
+        return null;
+    }
 
     // --- Core Logic ---
     let styleElement = null;
 
     function applySettings() {
+        const pageConfig = getPageConfig();
+        if (!pageConfig) return;
+
         // Read latest values from storage to be sure
         isHideThumbnails = GM_getValue(HIDE_THUMB_KEY, false);
         isForceRemove = GM_getValue(FORCE_REMOVE_KEY, false);
 
         // CSS Hide Mode
         if (isHideThumbnails) {
+            const css = `${pageConfig.thumbSelector} { display: none !important; }`;
             if (!styleElement || !styleElement.isConnected) {
-                const css = `ytd-playlist-video-renderer ytd-thumbnail { display: none !important; }`;
                 styleElement = document.createElement('style');
                 styleElement.id = 'yt-lite-styles';
-                styleElement.textContent = css;
                 document.head.appendChild(styleElement);
             }
+            styleElement.textContent = css;
         } else if (styleElement) {
             styleElement.remove();
             styleElement = null;
@@ -69,15 +93,17 @@
 
         // DOM Removal Mode
         if (isForceRemove) {
+            stopObserver();
             startObserver();
-            clearExistingThumbnails();
+            clearExistingThumbnails(pageConfig);
         } else {
             stopObserver();
         }
     }
 
-    function clearExistingThumbnails() {
-        const thumbs = document.querySelectorAll('ytd-playlist-video-renderer ytd-thumbnail');
+    function clearExistingThumbnails(pageConfig) {
+        if (!pageConfig) return;
+        const thumbs = document.querySelectorAll(pageConfig.thumbSelector);
         thumbs.forEach(el => el.remove());
         if (thumbs.length > 0) {
             console.log(`[YouTube Playlist Lite] Removed ${thumbs.length} thumbnails.`);
@@ -87,19 +113,33 @@
     let observer = null;
     function startObserver() {
         if (observer) return;
+        if (!GM_getValue(FORCE_REMOVE_KEY, false)) return;
+        const pageConfig = getPageConfig();
+        if (!pageConfig) return;
+        const root = document.querySelector(pageConfig.observerRootSelector);
+        if (!root) {
+            setTimeout(startObserver, 1000);
+            return;
+        }
         observer = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
                 mutation.addedNodes.forEach(node => {
                     if (node.nodeType === Node.ELEMENT_NODE) {
-                        const target = node.matches('ytd-thumbnail') ? node : node.querySelector('ytd-thumbnail');
-                        if (target && target.closest('ytd-playlist-video-renderer')) {
-                            target.remove();
+                        const element = node;
+                        if (element.matches(pageConfig.matchSelector) && element.closest(pageConfig.ancestorSelector)) {
+                            element.remove();
                         }
+                        const targets = element.querySelectorAll(pageConfig.thumbSelector);
+                        targets.forEach(target => {
+                            if (target.closest(pageConfig.ancestorSelector)) {
+                                target.remove();
+                            }
+                        });
                     }
                 });
             }
         });
-        observer.observe(document.body, { childList: true, subtree: true });
+        observer.observe(root, { childList: true, subtree: true });
     }
 
     function stopObserver() {
@@ -167,7 +207,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.2';
+        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.4';
         titleLabel.textContent = `Lite v${v}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '11px', pointerEvents: 'none' });
 
@@ -227,6 +267,17 @@
 
     // --- Init & Navigation ---
     function init() {
+        const pageConfig = getPageConfig();
+        if (!pageConfig) {
+            stopObserver();
+            if (styleElement) {
+                styleElement.remove();
+                styleElement = null;
+            }
+            const panel = document.getElementById('yt-lite-panel');
+            if (panel) panel.remove();
+            return;
+        }
         createPanel();
         applySettings();
     }
