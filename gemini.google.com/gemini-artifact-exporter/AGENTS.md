@@ -1,4 +1,4 @@
-# AGENTS.md (gemini-artifacts)
+# AGENTS.md (gemini-artifact-exporter)
 
 ## Overview
 This directory is dedicated to the development of userscripts related to **Gemini Artifacts**. 
