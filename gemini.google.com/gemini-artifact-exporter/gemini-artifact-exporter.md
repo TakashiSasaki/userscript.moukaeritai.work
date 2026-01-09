@@ -28,3 +28,7 @@ Google Gemini のサイドバーに表示される「Article」タイプのア�
 -   エクスポートは Gemini の標準 UI（Share → Export to Docs）を自動操作します。Google Docs への権限やログイン状態に依存します。
 -   アーティファクト数が多い場合、完了まで時間がかかります。
 
+## 作者
+
+-   **Name**: Takashi Sasaki
+-   **URL**: https://x.com/TakashiSasaki
