@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.1
+// @version      0.1.2
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -35,6 +35,10 @@
 
     function log(msg) {
         console.log(`[Gemini Artifact Exporter] ${msg}`);
+    }
+
+    function isConversationPage() {
+        return /\/app\/[a-z0-9]+/.test(window.location.pathname);
     }
 
     function getConversationId() {
@@ -128,8 +132,7 @@
             // Wait a bit for the click to register and panel to start updating
             await sleep(1000); 
             
-            // Wait for title to match. This is tricky because the panel might already exist with old content.
-            // A simple approach is to poll the title text.
+            // Wait for title to match.
             let retries = 0;
             while (retries < 20) {
                 const panelTitleEl = document.querySelector(SELECTORS.PANEL_TITLE);
@@ -153,8 +156,7 @@
             exportBtn.click();
             log('Clicked Export to Docs.');
 
-            // 5. Wait for completion (Simple timeout for now, ideally watch for toast)
-            // Assuming 3 seconds is enough for the request to be sent
+            // 5. Wait for completion
             await sleep(3000);
 
             // 6. Mark as exported
@@ -162,15 +164,14 @@
             chip.style.opacity = '0.5';
             chip.querySelector(SELECTORS.CHIP_TITLE).textContent = `✅ ${title}`;
 
-            // Close menu if still open (usually closes on click, but just in case)
-            // Clicking body might help, or just proceeding.
-
         } catch (e) {
             log(`Error processing ${title}: ${e.message}`);
         }
     }
 
     async function runBatchExport() {
+        if (!isConversationPage()) return;
+
         const convId = getConversationId();
         if (!convId) {
             alert('Please open a conversation first.');
@@ -221,7 +222,18 @@
         alert('Batch export completed.');
     }
 
-    // --- UI Injection ---
+    // --- UI Injection & Control ---
+
+    function updateButtonVisibility() {
+        const btn = document.getElementById('gemini-batch-export-btn');
+        if (!btn) {
+            if (isConversationPage()) {
+                createTriggerButton();
+            }
+            return;
+        }
+        btn.style.display = isConversationPage() ? 'block' : 'none';
+    }
 
     function createTriggerButton() {
         if (document.getElementById('gemini-batch-export-btn')) return;
@@ -242,14 +254,33 @@
             cursor: pointer;
             font-family: 'Google Sans', sans-serif;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            display: ${isConversationPage() ? 'block' : 'none'};
         `;
         btn.onclick = runBatchExport;
         document.body.appendChild(btn);
     }
 
+    // --- SPA Navigation Handling ---
+
+    function patchHistory() {
+        const pushState = history.pushState;
+        history.pushState = function() {
+            pushState.apply(history, arguments);
+            updateButtonVisibility();
+        };
+
+        const replaceState = history.replaceState;
+        history.replaceState = function() {
+            replaceState.apply(history, arguments);
+            updateButtonVisibility();
+        };
+
+        window.addEventListener('popstate', updateButtonVisibility);
+    }
+
     // Initialize
-    window.addEventListener('load', () => {
-        setTimeout(createTriggerButton, 2000);
-    });
+    patchHistory();
+    // Initial check after a short delay to ensure DOM is ready
+    setTimeout(updateButtonVisibility, 2000);
 
 })();

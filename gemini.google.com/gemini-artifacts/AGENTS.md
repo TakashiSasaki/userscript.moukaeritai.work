@@ -94,10 +94,18 @@ Since the `context-sidebar` is dynamic (removed from DOM when closed), purely re
 *   **Action**: The export script should skip any chip with `data-exported="true"`.
 *   **On Success**: After a successful export, add the signature to storage and update the DOM element immediately.
 
+## SPA Navigation Handling
+
+Gemini is an SPA where URL changes (e.g., switching between conversations) often occur without a full page reload. Standard `popstate` events may not reliably capture all transitions.
+
+**Implementation Strategy:**
+1.  **History API Hook**: Monkey-patch `history.pushState` and `history.replaceState` to detect URL changes immediately.
+2.  **Context Verification**: Use a guard function `isConversationPage()` to check if the current pathname matches `app/<id>`.
+3.  **UI State Management**: Show the "Export All Docs" trigger button only when on a conversation page. Hide it on the home page or search pages.
+
 ## Development Strategy
-1. **Preprocessing**: The `samples/whole-dom-with-html.html` is very large (~2.4MB). A `preprocess_samples.py` script is now available to strip script/style tags and reformat the HTML for better analysis.
-2. **Selector Stability**: Gemini uses Angular/Material. Many classes are generated (`_ngcontent-ng-...`). Rely on `data-test-id` or stable semantic tags (`action-card`, `message-content`) where possible.
-3. **SPA Handling**: Like other Gemini userscripts, expect dynamic URL changes and content loading. Use `MutationObserver` or polling for element detection.
+1. **Selector Stability**: Gemini uses Angular/Material. Many classes are generated (`_ngcontent-ng-...`). Rely on `data-test-id` or stable semantic tags (`action-card`, `message-content`) where possible.
+2. **SPA Handling**: Like other Gemini userscripts, expect dynamic URL changes and content loading. Use `MutationObserver` or polling for element detection.
 
 ## Planned/Future Scripts
 - **Artifact Extractor**: Extract content directly from artifact panels.
