@@ -1,12 +1,10 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.1.19
+// @version      0.1.21
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
-// @match        https://gemini.google.com/app
-// @match        https://gemini.google.com/app/
-// @include      /^https:\/\/gemini\.google\.com\/app\/[a-f0-9]{16}(\?.*)?$/
+// @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @match        http://127.0.0.1:5500/*
 // @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
@@ -31,6 +29,7 @@
         document.addEventListener('userscript-ping', report);
         return;
     }
+    if (!/^\/app\/[a-f0-9]{16}/.test(location.pathname)) return;
 
     // svg icons
     // svg icons
@@ -546,7 +545,7 @@
         document.addEventListener('keydown', handleKeyboardShortcut);
 
         // Observe for new turns / dynamic content
-        const observer = new MutationObserver((mutations) => {
+        const observer = new MutationObserver((_mutations) => {
             // Debounce or just run? For simplicity, we run.
             // Optimally we check if relevant nodes were added.
             processNodes();

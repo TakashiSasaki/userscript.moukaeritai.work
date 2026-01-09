@@ -1,13 +1,11 @@
 // ==UserScript==
 // @name         Gemini Profile Badge
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.5
+// @version      0.1.7
 // @description  Add a custom text/emoji badge to the user profile area on Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
-// @match        https://gemini.google.com/app
-// @match        https://gemini.google.com/app/
-// @include      /^https:\/\/gemini\.google\.com\/app\/[a-f0-9]{16}(\?.*)?$/
+// @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @match        http://127.0.0.1:5500/*
 // @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
@@ -35,6 +33,7 @@
         document.addEventListener('userscript-ping', report);
         return;
     }
+    if (!/^\/app(\/[a-f0-9]{16})?\/?$/.test(location.pathname)) return;
 
     // Constants
     const BADGE_STORAGE_KEY = 'gemini_profile_badge_text';
@@ -126,7 +125,7 @@
 
     // Observer to handle SPA navigation and dynamic loading
     function startObserver() {
-        const observer = new MutationObserver((mutations) => {
+        const observer = new MutationObserver((_mutations) => {
             // Check if badge is missing but required
             const badgeText = GM_getValue(BADGE_STORAGE_KEY, BADGE_DEFAULT_TEXT);
             if (badgeText) {

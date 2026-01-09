@@ -1,12 +1,10 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.1.13
+// @version      0.1.15
 // @description  Adds a 1-click button to delete the current Gemini conversation.
 // @author       Takashi Sasaki
-// @match        https://gemini.google.com/app
-// @match        https://gemini.google.com/app/
-// @include      /^https:\/\/gemini\.google\.com\/app\/[a-f0-9]{16}(\?.*)?$/
+// @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @match        http://127.0.0.1:5500/*
 // @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
@@ -31,12 +29,7 @@
         document.addEventListener('userscript-ping', report);
         return;
     }
-
-    // SVG Icon for Delete (Trash Can)
-    const DELETE_ICON_SVG = `
-    <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
-        <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/>
-    </svg>`;
+    if (!/^\/app\/[a-f0-9]{16}/.test(location.pathname)) return;
 
     const SELECTORS = {
         // Trigger button (Conversation Options)

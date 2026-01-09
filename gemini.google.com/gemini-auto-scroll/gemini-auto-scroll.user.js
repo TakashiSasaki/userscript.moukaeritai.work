@@ -1,12 +1,10 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.35
+// @version      0.1.37
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
-// @match        https://gemini.google.com/app
-// @match        https://gemini.google.com/app/
-// @include      /^https:\/\/gemini\.google\.com\/app\/[a-f0-9]{16}(\?.*)?$/
+// @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @match        http://127.0.0.1:5500/*
 // @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
@@ -32,6 +30,7 @@
         document.addEventListener('userscript-ping', report);
         return;
     }
+    if (!/^\/app\/[a-f0-9]{16}/.test(location.pathname)) return;
 
     // --- Tampermonkey Menu ---
     if (typeof GM_registerMenuCommand !== 'undefined') {
@@ -85,7 +84,6 @@
 
     let isProcessing = false;
     let lastSelectedIndex = -1;
-    let isNavigatingAfterDelete = false;
 
     // --- State Management ---
 
@@ -433,10 +431,6 @@
         return match ? match[1] : null;
     }
 
-    function findConversationElement(id) {
-        return document.querySelector(`${SELECTORS.CONVERSATION_ITEM}[jslog*="c_${id}"]`);
-    }
-
     function findScrollableParent(element) {
         let parent = element.parentElement;
         while (parent) {
@@ -549,7 +543,7 @@
 
         const attachObserver = (target) => {
             if (mutationObserver) mutationObserver.disconnect();
-            mutationObserver = new MutationObserver((mutations) => {
+            mutationObserver = new MutationObserver((_mutations) => {
                 if (!isAutoScrollEnabled()) return;
                 // Debounce scrolling to avoid slamming the browser/app with events
                 if (scrollDebounceTimer) clearTimeout(scrollDebounceTimer);
@@ -625,7 +619,6 @@
 
                     if (isConversation && wasSelected && lastSelectedIndex !== -1) {
                         console.log('[GeminiAutoScroll] Selected conversation deleted. Selecting next at index:', lastSelectedIndex);
-                        isNavigatingAfterDelete = true;
                         // Execute selection in next tick to allow DOM to settle
                         setTimeout(selectNextConversation, 50);
                     }
@@ -643,7 +636,6 @@
     function selectNextConversation() {
         const items = document.querySelectorAll(SELECTORS.CONVERSATION_ITEM);
         if (items.length === 0) {
-            isNavigatingAfterDelete = false;
             return;
         }
 
@@ -661,7 +653,6 @@
             }
             document.body.focus();
         }
-        isNavigatingAfterDelete = false;
     }
 
     uiObserver.observe(document.body, { childList: true, subtree: true });

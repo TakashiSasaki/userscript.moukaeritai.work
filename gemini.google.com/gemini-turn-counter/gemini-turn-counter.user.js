@@ -1,12 +1,10 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.14
+// @version      0.1.16
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
-// @match        https://gemini.google.com/app
-// @match        https://gemini.google.com/app/
-// @include      /^https:\/\/gemini\.google\.com\/app\/[a-f0-9]{16}(\?.*)?$/
+// @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @match        http://127.0.0.1:5500/*
 // @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
@@ -32,6 +30,7 @@
         document.addEventListener('userscript-ping', report);
         return;
     }
+    if (!/^\/app\/[a-f0-9]{16}/.test(location.pathname)) return;
 
     // Settings
     const SELECTORS = {
@@ -378,7 +377,6 @@
                     // Use Promise-based ClipboardItem construction to prevent "Document is not focused" error
                     const clipboardPromise = (async () => {
                         try {
-                            const imgTags = [];
                             let processedCount = 0;
 
                             const promises = collectedImages.map(async (url) => {
@@ -426,7 +424,7 @@
         }
     };
 
-    const observer = new MutationObserver((mutations) => {
+    const observer = new MutationObserver((_mutations) => {
         // Simple debounce could be added here
         updateStats();
     });
