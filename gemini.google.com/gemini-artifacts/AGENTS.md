@@ -50,6 +50,7 @@ Run this script whenever adding new HTML samples.
         - `fonticon="article"`: Document/Text
         - `fonticon="code_blocks"`: Code/App
     - **Images**: Located in `generated-images-container` > `generated-image` (structure differs from text/code chips).
+- **Interaction**: The `click` event listener seems to be attached to the inner `.container` element, not the `<sidebar-immersive-chip>` host element itself. Scripts should target `.container` for clicks.
 
 ### Important Attributes
 - **`jslog`**: Contains metadata that often includes conversation IDs and artifact IDs.
