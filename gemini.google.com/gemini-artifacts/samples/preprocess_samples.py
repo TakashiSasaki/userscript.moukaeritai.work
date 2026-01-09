@@ -1,7 +1,7 @@
 import os
 import glob
 import re
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 
 # Target directory
 TARGET_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -13,7 +13,6 @@ def process_html_file(file_path):
         content = f.read()
     
     # Parse HTML
-    # using 'lxml' for speed and leniency, or 'html.parser' if lxml fails
     try:
         soup = BeautifulSoup(content, 'lxml')
     except Exception:
@@ -23,11 +22,14 @@ def process_html_file(file_path):
     for element in soup(["script", "style"]):
         element.decompose()
         
+    # Remove comment nodes
+    for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
+        comment.extract()
+        
     # Get the string representation of the cleaned HTML
     cleaned_html = str(soup)
     
     # Reformat: No indentation, one tag per line
-    # Normalize newlines first
     cleaned_html = cleaned_html.replace("\r\n", "\n").replace("\r", "\n")
     
     # Split by tags
@@ -37,7 +39,6 @@ def process_html_file(file_path):
     for token in tokens:
         if not token:
             continue
-        # Strip whitespace from each token (tag or text)
         stripped = token.strip()
         if stripped:
             final_output.append(stripped)
@@ -50,6 +51,8 @@ def process_html_file(file_path):
 def main():
     html_files = glob.glob(os.path.join(TARGET_DIR, "*.html"))
     for html_file in html_files:
+        if os.path.basename(html_file) == "preprocess_samples.py":
+            continue
         process_html_file(html_file)
 
 if __name__ == "__main__":
