@@ -72,6 +72,28 @@ Run this script whenever adding new HTML samples.
     *   **Click Export**: Click `button[data-test-id="export-to-docs-button"]`.
     *   **Wait**: Wait for the "Exported to Docs" toast/notification or a reasonable timeout before proceeding to the next item.
 
+## Duplicate Prevention Strategy
+
+To avoid exporting the same artifact multiple times (even across sessions), we will use a hybrid approach of **Persistent Storage** and **DOM Marking**.
+
+### 1. Persistence (Tampermonkey Storage)
+Since the `context-sidebar` is dynamic (removed from DOM when closed), purely relying on DOM attributes is insufficient.
+*   **Method**: Use `GM_setValue` / `GM_getValue`.
+*   **Data Structure**: A list or Set of "Exported Signatures".
+*   **Signature Generation**: Since explicit IDs might not always be visible on the chip, use a combination of:
+    *   **Conversation ID**: Extracted from the URL (e.g., `app/d2d2e99...`).
+    *   **Artifact Title**: From `.immersive-title`.
+    *   **Timestamp**: From `.immersive-subtitle`.
+    *   *Format*: `${ConversationID}|${Title}|${Timestamp}`
+
+### 2. UI Feedback (DOM Marking)
+*   **Logic**: When the sidebar loads (and before processing), generate the signature for each chip.
+*   **Check**: If the signature exists in storage:
+    1.  Add a visual indicator to the chip (e.g., a green checkmark icon, or change background color).
+    2.  Add a data attribute (e.g., `data-exported="true"`) to the `sidebar-immersive-chip`.
+*   **Action**: The export script should skip any chip with `data-exported="true"`.
+*   **On Success**: After a successful export, add the signature to storage and update the DOM element immediately.
+
 ## Development Strategy
 1. **Preprocessing**: The `samples/whole-dom-with-html.html` is very large (~2.4MB). A `preprocess_samples.py` script is now available to strip script/style tags and reformat the HTML for better analysis.
 2. **Selector Stability**: Gemini uses Angular/Material. Many classes are generated (`_ngcontent-ng-...`). Rely on `data-test-id` or stable semantic tags (`action-card`, `message-content`) where possible.
