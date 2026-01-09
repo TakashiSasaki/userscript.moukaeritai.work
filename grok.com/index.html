@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Grok Userscripts - Moukaeritai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://userscript.moukaeritai.work/grok.com/index.html" rel="canonical" />
+    <style>
+        :root {
+            --primary: #ff7a00;
+            --primary-dark: #e06600;
+            --bg-gradient: radial-gradient(circle at 10% 20%, #1b120b 0%, #0b0a09 55%, #050505 100%);
+            --glass: rgba(255, 255, 255, 0.06);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --text-main: #f8f3ee;
+            --text-dim: #cbbfb4;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            margin: 0;
+            padding: 2em;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 4em;
+            padding-top: 2em;
+        }
+
+        h1 {
+            font-weight: 600;
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #ff7a00, #ffd29a);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .header-desc {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .top-nav {
+            position: absolute;
+            top: 2em;
+            left: 2em;
+            z-index: 10;
+        }
+
+        .top-nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-dim);
+            font-weight: 500;
+            padding: 8px 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .top-nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
+        }
+
+        .project-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .project-item {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(15px);
+            overflow: hidden;
+            min-height: 260px;
+        }
+
+        .project-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .project-item:hover {
+            transform: translateY(-10px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .project-item:hover::before {
+            transform: translateX(100%);
+        }
+
+        .project-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 0 0 1.2rem 0;
+        }
+
+        .project-title img {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: white;
+            padding: 2px;
+        }
+
+        .project-title a {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 1.25rem;
+            transition: color 0.2s;
+        }
+
+        .project-title a:hover {
+            color: var(--primary);
+        }
+
+        .project-desc {
+            flex-grow: 1;
+            color: var(--text-dim);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            font-weight: 400;
+        }
+
+        .install-button {
+            position: absolute;
+            bottom: 2rem;
+            right: 2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 122, 0, 0.35);
+        }
+
+        .install-button:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 6px 20px rgba(255, 122, 0, 0.6);
+            transform: scale(1.05);
+        }
+
+        .install-button svg {
+            fill: currentColor;
+        }
+
+        .install-button.installed {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: var(--text-dim) !important;
+            border: 1px solid var(--glass-border);
+            box-shadow: none !important;
+            pointer-events: none;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 6em;
+            padding-bottom: 3em;
+            color: var(--text-dim);
+            font-weight: 400;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .social-icon {
+            color: var(--text-dim);
+            transition: color 0.3s ease;
+        }
+
+        .social-icon:hover {
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            .top-nav {
+                position: static;
+                margin-bottom: 2em;
+                display: flex;
+                justify-content: center;
+            }
+
+            body {
+                padding: 1em;
+            }
+
+            .project-item {
+                min-height: 0;
+                padding-bottom: 5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <nav class="top-nav">
+            <a class="top-nav-link" href="../index.html">
+                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
+                    <path
+                        d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
+                </svg>
+                Home
+            </a>
+        </nav>
+
+        <header>
+            <h1>Grok Utilities</h1>
+            <p class="header-desc">
+                Grok の会話管理やナビゲーションを高速化するユーザースクリプト集。ショートカットや一括コピーなど、軽快な操作性を重視しています。
+            </p>
+        </header>
+
+        <ul class="project-list">
+            <li class="project-item">
+                <div class="project-title">
+                    <img alt="Grok" src="https://www.google.com/s2/favicons?domain=grok.com&sz=64" />
+                    <a href="grok-copy-all/index.html">Conversation Copy 📋</a>
+                </div>
+                <p class="project-desc">
+                    会話ページ内の全てのコピーボタンを順に押し、全文を一括でクリップボードへ保存します。
+                </p>
+                <a class="install-button" data-script-name="Grok Conversation Copy"
+                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-copy-all/grok-copy-all.user.js"
+                    target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install (v1.3.6)
+                </a>
+            </li>
+
+            <li class="project-item">
+                <div class="project-title">
+                    <img alt="Grok" src="https://www.google.com/s2/favicons?domain=grok.com&sz=64" />
+                    <a href="grok-chat-history-shortcut/index.html">Chat History Shortcut ⌨️</a>
+                </div>
+                <p class="project-desc">
+                    履歴パネルを開いて対象要素を強調表示。深い階層のリンクへ素早くフォーカスします。
+                </p>
+                <a class="install-button" data-script-name="Grok Chat History Shortcut"
+                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-chat-history-shortcut/grok-chat-history-shortcut.user.js"
+                    target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install (v0.13)
+                </a>
+            </li>
+
+            <li class="project-item">
+                <div class="project-title">
+                    <img alt="X" src="https://www.google.com/s2/favicons?domain=x.com&sz=64" />
+                    <a href="grok-conversation-highlighter/index.html">Conversation Highlighter 🎯</a>
+                </div>
+                <p class="project-desc">
+                    X上のGrok会話で対象アイテムを自動検出し、「もっと見る」ボタンを目立たせて操作を補助します。
+                </p>
+                <a class="install-button" data-script-name="Grok Conversation Highlighter with Dynamic Selection"
+                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-conversation-highlighter/Grok%20Conversation%20Highlighter%20with%20Dynamic%20Selection-1.20.user.js"
+                    target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install (v1.20)
+                </a>
+            </li>
+        </ul>
+
+        <footer>
+            <div class="social-links">
+                <a class="social-icon" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work"
+                    target="_blank">
+                    <svg fill="currentColor" height="24" viewBox="0 0 16 16" width="24">
+                        <path
+                            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                    </svg>
+                </a>
+            </div>
+            <p>
+                <small>Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a> | <a
+                        href="https://userscript.moukaeritai.work/">moukaeritai.work</a></small>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('userscript-check-installed', (event) => {
+            const { name, version } = event.detail;
+            const buttons = document.querySelectorAll('.install-button');
+
+            const compareVersions = (v1, v2) => {
+                if (!v1 || !v2) return 0;
+                const parts1 = v1.split('.').map(Number);
+                const parts2 = v2.split('.').map(Number);
+                for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+                    const p1 = parts1[i] || 0;
+                    const p2 = parts2[i] || 0;
+                    if (p1 > p2) return 1;
+                    if (p1 < p2) return -1;
+                }
+                return 0;
+            };
+
+            buttons.forEach(btn => {
+                if (btn.getAttribute('data-script-name') === name) {
+                    const match = btn.textContent.match(/v(\d+\.\d+\.\d+)/);
+                    const serverVersion = match ? match[1] : null;
+
+                    if (serverVersion && compareVersions(serverVersion, version) > 0) {
+                        btn.innerHTML = `<svg height="18" viewBox="0 0 24 24" width="18"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Update (v${serverVersion})`;
+                        btn.style.boxShadow = '0 0 15px rgba(255, 140, 0, 0.6)';
+                        btn.style.background = '#ff8c00';
+                        btn.classList.remove('installed');
+                        btn.style.pointerEvents = 'auto';
+                    } else {
+                        btn.textContent = `Installed (v${version})`;
+                        btn.classList.add('installed');
+                        btn.style.pointerEvents = 'none';
+                        btn.style.background = '';
+                        btn.style.boxShadow = '';
+                    }
+                }
+            });
+        });
+
+        window.addEventListener('load', () => {
+            document.dispatchEvent(new CustomEvent('userscript-ping'));
+        });
+    </script>
+</body>
+
+</html>
