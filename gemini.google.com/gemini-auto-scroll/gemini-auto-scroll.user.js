@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.34
+// @version      0.1.35
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app
@@ -9,6 +9,7 @@
 // @include      /^https:\/\/gemini\.google\.com\/app\/[a-f0-9]{16}(\?.*)?$/
 // @match        https://userscript.moukaeritai.work/*
 // @match        http://127.0.0.1:5500/*
+// @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js
 // @grant        GM_info
@@ -18,7 +19,7 @@
 (function () {
     'use strict';
 
-    if (location.hostname === 'userscript.moukaeritai.work' || location.hostname === '127.0.0.1') {
+    if (location.hostname === 'userscript.moukaeritai.work' || location.hostname === '127.0.0.1' || location.hostname === 'fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev') {
         const report = () => {
             document.dispatchEvent(new CustomEvent('userscript-check-installed', {
                 detail: {

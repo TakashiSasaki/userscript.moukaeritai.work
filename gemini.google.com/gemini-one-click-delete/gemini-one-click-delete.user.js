@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.1.12
+// @version      0.1.13
 // @description  Adds a 1-click button to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/app
@@ -9,6 +9,7 @@
 // @include      /^https:\/\/gemini\.google\.com\/app\/[a-f0-9]{16}(\?.*)?$/
 // @match        https://userscript.moukaeritai.work/*
 // @match        http://127.0.0.1:5500/*
+// @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
 // @grant        GM_info
@@ -17,7 +18,7 @@
 (function () {
     'use strict';
 
-    if (location.hostname === 'userscript.moukaeritai.work' || location.hostname === '127.0.0.1') {
+    if (location.hostname === 'userscript.moukaeritai.work' || location.hostname === '127.0.0.1' || location.hostname === 'fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev') {
         const report = () => {
             document.dispatchEvent(new CustomEvent('userscript-check-installed', {
                 detail: {

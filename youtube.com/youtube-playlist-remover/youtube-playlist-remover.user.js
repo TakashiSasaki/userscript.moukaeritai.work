@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.15
+// @version      0.1.16
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/playlist?*
 // @match        https://userscript.moukaeritai.work/*
 // @match        http://127.0.0.1:5500/*
+// @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=youtube.com
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -18,7 +19,7 @@
 (function () {
     'use strict';
 
-    if (location.hostname === 'userscript.moukaeritai.work' || location.hostname === '127.0.0.1') {
+    if (location.hostname === 'userscript.moukaeritai.work' || location.hostname === '127.0.0.1' || location.hostname === 'fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev') {
         const report = () => {
             document.dispatchEvent(new CustomEvent('userscript-check-installed', {
                 detail: {

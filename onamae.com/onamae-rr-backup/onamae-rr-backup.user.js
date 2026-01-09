@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         お名前.com DNSレコードバックアップ
 // @namespace    userscript.moukaeritai.work
-// @version      0.0.5
+// @version      0.0.6
 // @description  お名前.comのDNSレコード設定画面を表示するたびに、レコード情報を自動的にバックアップします。
 // @author       Takashi Sasaki
 // @homepage     https://x.com/TakashiSasaki
 // @match        https://navi.onamae.com/domain/setting/dns/control/input
 // @match        https://userscript.moukaeritai.work/*
 // @match        http://127.0.0.1:5500/*
+// @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_info
@@ -18,7 +19,7 @@
 (function () {
     'use strict';
 
-    if (location.hostname === 'userscript.moukaeritai.work' || location.hostname === '127.0.0.1') {
+    if (location.hostname === 'userscript.moukaeritai.work' || location.hostname === '127.0.0.1' || location.hostname === 'fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev') {
         const report = () => {
             document.dispatchEvent(new CustomEvent('userscript-check-installed', {
                 detail: {
