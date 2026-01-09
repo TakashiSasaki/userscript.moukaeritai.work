@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.0
+// @version      0.1.1
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
+// @homepageURL  https://x.com/TakashiSasaki
 // @match        https://gemini.google.com/*
 // @grant        GM_setValue
 // @grant        GM_getValue
