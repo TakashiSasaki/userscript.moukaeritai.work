@@ -30,6 +30,10 @@ def process_html_file(file_path):
     # Remove comment nodes
     for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
         comment.extract()
+
+    # Empty SVG elements (keep the tag, remove children)
+    for svg in soup.find_all("svg"):
+        svg.clear()
         
     # Get the string representation of the cleaned HTML
     cleaned_html = str(soup)
