@@ -41,10 +41,15 @@ Run this script whenever adding new HTML samples.
 #### 3. Context Sidebar (File List)
 - **Selector**: `context-sidebar`
 - **Dynamic Presence**: Based on analysis of "whole DOM" snapshots, this element is **NOT** present in the DOM when closed. It is dynamically inserted/removed when toggled via the Studio Sidebar button.
-- **File Items**: `sidebar-immersive-chip`
-    - `.immersive-title`: Name of the file/artifact.
-    - `.immersive-subtitle`: Creation/update timestamp.
 - **Close Button**: `button[data-test-id="close-button"]` within `context-sidebar`.
+- **Item Structure**:
+    - **Container**: `sidebar-immersive-chip` (for text/code artifacts)
+    - **Title**: `.immersive-title` (e.g., "般若心経")
+    - **Subtitle**: `.immersive-subtitle` (e.g., "Jan 9, 3:58 PM")
+    - **Type Indicator**: `mat-icon` inside `.icon-container`
+        - `fonticon="article"`: Document/Text
+        - `fonticon="code_blocks"`: Code/App
+    - **Images**: Located in `generated-images-container` > `generated-image` (structure differs from text/code chips).
 
 ### Important Attributes
 - **`jslog`**: Contains metadata that often includes conversation IDs and artifact IDs.
