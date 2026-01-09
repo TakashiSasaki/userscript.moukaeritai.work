@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.5
+// @version      0.1.6
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -25,79 +25,13 @@
         CHIP_ICON_CONTAINER: '.icon-container mat-icon',
         IMMERSIVE_PANEL: 'immersive-panel',
         PANEL_TITLE: 'immersive-panel h2.title-text',
+        PANEL_CLOSE_BUTTON: 'immersive-panel button[data-test-id="close-button"]',
         SHARE_BUTTON: 'button[data-test-id="share-button"]',
         EXPORT_BUTTON: 'button[data-test-id="export-to-docs-button"]',
         MENU_PANEL: '.mat-mdc-menu-panel'
     };
 
-    const EXPORTED_KEY = 'exported_artifacts';
-
-    // --- Helper Functions ---
-
-    function log(msg) {
-        console.log(`[Gemini Artifact Exporter] ${msg}`);
-    }
-
-    function isConversationPage() {
-        return /\/app\/[a-z0-9]+/.test(window.location.pathname);
-    }
-
-    function getConversationId() {
-        const match = window.location.pathname.match(/\/app\/([a-z0-9]+)/);
-        return match ? match[1] : null;
-    }
-
-    function getExportedSignatures(convId) {
-        const allData = GM_getValue(EXPORTED_KEY, {});
-        return new Set(allData[convId] || []);
-    }
-
-    function saveExportedSignature(convId, signature) {
-        const allData = GM_getValue(EXPORTED_KEY, {});
-        if (!allData[convId]) {
-            allData[convId] = [];
-        }
-        if (!allData[convId].includes(signature)) {
-            allData[convId].push(signature);
-            GM_setValue(EXPORTED_KEY, allData);
-            log(`Saved signature: ${signature}`);
-        }
-    }
-
-    function generateSignature(title, subtitle) {
-        const convId = getConversationId();
-        if (!convId) return null;
-        return `${convId}|${title}|${subtitle}`;
-    }
-
-    function waitForElement(selector, context = document, timeout = 5000) {
-        return new Promise((resolve, reject) => {
-            const el = context.querySelector(selector);
-            if (el) return resolve(el);
-
-            const observer = new MutationObserver(() => {
-                const el = context.querySelector(selector);
-                if (el) {
-                    observer.disconnect();
-                    resolve(el);
-                }
-            });
-
-            observer.observe(context === document ? document.body : context, {
-                childList: true,
-                subtree: true
-            });
-
-            setTimeout(() => {
-                observer.disconnect();
-                reject(new Error(`Timeout waiting for ${selector}`));
-            }, timeout);
-        });
-    }
-
-    async function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+    // ... (omitted helper functions) ...
 
     // --- Core Logic ---
 
@@ -126,15 +60,13 @@
         chip.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
         // 1. Click to open
-        // Click the inner container which likely has the event listener
         const clickable = chip.querySelector(SELECTORS.CHIP_CONTAINER) || chip;
         clickable.click();
 
-        // 2. Wait for panel to load (check title match)
+        // 2. Wait for panel to load
         try {
             await sleep(1000); 
             
-            // Wait for title to match.
             let retries = 0;
             while (retries < 20) {
                 const panelTitleEl = document.querySelector(SELECTORS.PANEL_TITLE);
@@ -161,7 +93,20 @@
             // 5. Wait for completion
             await sleep(3000);
 
-            // 6. Mark as exported
+            // 6. Close Panel
+            const closeBtn = document.querySelector(SELECTORS.PANEL_CLOSE_BUTTON);
+            if (closeBtn) {
+                closeBtn.click();
+                log('Closing panel.');
+                // Wait for panel removal
+                let closeRetries = 0;
+                while (closeRetries < 10 && document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
+                    await sleep(500);
+                    closeRetries++;
+                }
+            }
+
+            // 7. Mark as exported
             saveExportedSignature(convId, signature);
             chip.style.opacity = '0.5';
             chip.querySelector(SELECTORS.CHIP_TITLE).textContent = `✅ ${title}`;
@@ -170,6 +115,7 @@
             log(`Error processing ${title}: ${e.message}`);
         }
     }
+
 
     async function runBatchExport(force = false) {
         if (!isConversationPage()) return;

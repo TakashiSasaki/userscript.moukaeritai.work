@@ -71,7 +71,9 @@ Run this script whenever adding new HTML samples.
     *   **Click Share**: Click `button[data-test-id="share-button"]` located in the `immersive-panel` toolbar.
     *   **Wait for Menu**: Wait for `.mat-mdc-menu-panel` containing `button[data-test-id="export-to-docs-button"]` to appear.
     *   **Click Export**: Click `button[data-test-id="export-to-docs-button"]`.
-    *   **Wait**: Wait for the "Exported to Docs" toast/notification or a reasonable timeout before proceeding to the next item.
+    *   **Wait**: Wait for the "Exported to Docs" toast/notification or a reasonable timeout.
+    *   **Close Panel**: Click `button[data-test-id="close-button"]` within the `immersive-panel` to return to the chat view.
+    *   **Wait**: Wait for the panel to disappear before proceeding to the next item.
 
 ## Duplicate Prevention Strategy
 
