@@ -34,6 +34,17 @@ def process_html_file(file_path):
     # Empty SVG elements (keep the tag, remove children)
     for svg in soup.find_all("svg"):
         svg.clear()
+
+    # Remove attributes with empty string values
+    for tag in soup.find_all(True):
+        # We need to iterate over a copy of the items because we are modifying the dictionary
+        attrs = list(tag.attrs.items())
+        for attr, value in attrs:
+            if value == "":
+                del tag[attr]
+            # Handle list-valued attributes (like class) if they are empty lists (though soup usually handles this)
+            elif isinstance(value, list) and len(value) == 0:
+                del tag[attr]
         
     # Get the string representation of the cleaned HTML
     cleaned_html = str(soup)

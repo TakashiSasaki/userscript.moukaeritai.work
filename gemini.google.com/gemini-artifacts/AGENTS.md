@@ -12,7 +12,8 @@ Run this script whenever adding new HTML samples.
 1.  **Removal**: `<script>`, `<style>` tags, and HTML comment nodes are completely removed.
 2.  **Head Cleanup**: `<meta>` and `<link>` tags within the `<head>` element are removed.
 3.  **SVG Cleanup**: `<svg>` tags are kept, but all their child nodes are removed to reduce file size.
-4.  **Reformatting**: HTML is reformatted to a flat structure.
+4.  **Attribute Cleanup**: Attributes with empty string values (e.g., `style=""`) are removed.
+5.  **Reformatting**: HTML is reformatted to a flat structure.
     -   **One tag/text node per line**.
     -   **No indentation** (to facilitate easier diffing and searching).
 
