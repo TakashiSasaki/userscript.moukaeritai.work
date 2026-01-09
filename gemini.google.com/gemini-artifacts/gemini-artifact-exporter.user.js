@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.3
+// @version      0.1.4
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -19,6 +19,7 @@
         SIDEBAR_BUTTON: 'button[data-test-id="studio-sidebar-button"]',
         SIDEBAR: 'context-sidebar',
         SIDEBAR_CHIP: 'sidebar-immersive-chip',
+        CHIP_CONTAINER: '.container',
         CHIP_TITLE: '.immersive-title',
         CHIP_SUBTITLE: '.immersive-subtitle',
         CHIP_ICON_CONTAINER: '.icon-container mat-icon',
@@ -29,74 +30,7 @@
         MENU_PANEL: '.mat-mdc-menu-panel'
     };
 
-    const EXPORTED_KEY = 'exported_artifacts';
-
-    // --- Helper Functions ---
-
-    function log(msg) {
-        console.log(`[Gemini Artifact Exporter] ${msg}`);
-    }
-
-    function isConversationPage() {
-        return /\/app\/[a-z0-9]+/.test(window.location.pathname);
-    }
-
-    function getConversationId() {
-        const match = window.location.pathname.match(/\/app\/([a-z0-9]+)/);
-        return match ? match[1] : null;
-    }
-
-    function getExportedSignatures(convId) {
-        const allData = GM_getValue(EXPORTED_KEY, {});
-        return new Set(allData[convId] || []);
-    }
-
-    function saveExportedSignature(convId, signature) {
-        const allData = GM_getValue(EXPORTED_KEY, {});
-        if (!allData[convId]) {
-            allData[convId] = [];
-        }
-        if (!allData[convId].includes(signature)) {
-            allData[convId].push(signature);
-            GM_setValue(EXPORTED_KEY, allData);
-            log(`Saved signature: ${signature}`);
-        }
-    }
-
-    function generateSignature(title, subtitle) {
-        const convId = getConversationId();
-        if (!convId) return null;
-        return `${convId}|${title}|${subtitle}`;
-    }
-
-    function waitForElement(selector, context = document, timeout = 5000) {
-        return new Promise((resolve, reject) => {
-            const el = context.querySelector(selector);
-            if (el) return resolve(el);
-
-            const observer = new MutationObserver(() => {
-                const el = context.querySelector(selector);
-                if (el) {
-                    observer.disconnect();
-                    resolve(el);
-                }
-            });
-
-            observer.observe(context === document ? document.body : context, {
-                childList: true,
-                subtree: true
-            });
-
-            setTimeout(() => {
-                observer.disconnect();
-                reject(new Error(`Timeout waiting for ${selector}`));
-            }, timeout);
-        });
-    }
-
-    async function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+    // ... (omitted) ...
 
     // --- Core Logic ---
 
@@ -125,10 +59,13 @@
         chip.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
         // 1. Click to open
-        chip.click();
+        // Click the inner container which likely has the event listener
+        const clickable = chip.querySelector(SELECTORS.CHIP_CONTAINER) || chip;
+        clickable.click();
 
         // 2. Wait for panel to load (check title match)
         try {
+
             // Wait a bit for the click to register and panel to start updating
             await sleep(1000); 
             
