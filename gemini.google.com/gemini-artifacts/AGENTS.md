@@ -18,25 +18,37 @@ Run this script whenever adding new HTML samples.
     -   **One tag/text node per line**.
     -   **No indentation** (to facilitate easier diffing and searching).
 
-## Analysis of `samples/whole-dom-with-html.html`
+## DOM Analysis Findings
 
-### Context
-- **Date**: 2026-01-09
-- **Platform**: gemini.google.com
-- **Content**: A conversation involving data analysis and academic research funding (University of Ehime / Yamagata University context).
-- **Features Detected**: 
-    - Google Keep extension integration (`action-card`).
-    - Multi-turn conversation with complex layouts.
+### Key UI Components
 
-### Key Selectors & DOM Observations
-- **Message Content**: `message-content` components contain the actual text.
-- **Extensions / Action Cards**: 
-    - `action-card`: Used for displaying content from integrated services like Google Keep.
-    - `action`: Individual items within an `action-card`.
-    - `.secondary-text.gds-body-m`: Often contains the bulk of the content in action cards.
-- **Layout**: 
-    - `chat-app`: Root container for the application.
-    - `structured-content-container`: Container for responses that might include specialized formatting.
+#### 1. Files in this Chat (Studio Sidebar) Button
+- **Selector**: `button[data-test-id="studio-sidebar-button"]`
+- **Attributes**:
+    - `aria-label="Toggle studio sidebar"`
+    - `mattooltip="Files in this chat"`
+- **Function**: Toggles the visibility of the `context-sidebar`.
+
+#### 2. Immersive Panel (Artifact Canvas)
+- **Selector**: `immersive-panel`
+- **Internal Structure**:
+    - `extended-response-panel`: Main container for the response.
+    - `toolbar.extended-response-toolbar`: Contains the title and action buttons.
+    - `h2.title-text`: The title of the artifact.
+    - `versioning-buttons`: Contains undo/redo buttons.
+    - `button[data-test-id="close-button"]`: Closes the panel.
+
+#### 3. Context Sidebar (File List)
+- **Selector**: `context-sidebar`
+- **File Items**: `sidebar-immersive-chip`
+    - `.immersive-title`: Name of the file/artifact.
+    - `.immersive-subtitle`: Creation/update timestamp.
+- **Close Button**: `button[data-test-id="close-button"]` within `context-sidebar`.
+
+### Important Attributes
+- **`jslog`**: Contains metadata that often includes conversation IDs and artifact IDs.
+    - Example: `BardVeMetadataKey:[...,["c_d2d2e9935f45dd9a_heart_sutra.md",...]]`
+    - This can be used to uniquely identify which artifact is currently being viewed or interacted with.
 
 ## Development Strategy
 1. **Preprocessing**: The `samples/whole-dom-with-html.html` is very large (~2.4MB). A `preprocess_samples.py` script is now available to strip script/style tags and reformat the HTML for better analysis.
