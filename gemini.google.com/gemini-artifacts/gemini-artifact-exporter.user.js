@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.2
+// @version      0.1.3
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -100,7 +100,7 @@
 
     // --- Core Logic ---
 
-    async function processArtifact(chip) {
+    async function processArtifact(chip, force = false) {
         const titleEl = chip.querySelector(SELECTORS.CHIP_TITLE);
         const subtitleEl = chip.querySelector(SELECTORS.CHIP_SUBTITLE);
         
@@ -114,7 +114,7 @@
         const convId = getConversationId();
         const signature = generateSignature(title, subtitle);
 
-        if (getExportedSignatures(convId).has(signature)) {
+        if (!force && getExportedSignatures(convId).has(signature)) {
             log(`Skipping already exported: ${title}`);
             chip.style.opacity = '0.5';
             chip.title = 'Already exported';
@@ -169,7 +169,7 @@
         }
     }
 
-    async function runBatchExport() {
+    async function runBatchExport(force = false) {
         if (!isConversationPage()) return;
 
         const convId = getConversationId();
@@ -211,11 +211,15 @@
             return;
         }
 
-        if (!confirm(`Found ${articleChips.length} articles. Start export?`)) return;
+        const confirmMsg = force 
+            ? `Found ${articleChips.length} articles. FORCE EXPORT all of them?`
+            : `Found ${articleChips.length} articles. Start export (skipping duplicates)?`;
+
+        if (!confirm(confirmMsg)) return;
 
         // 3. Process
         for (const chip of articleChips) {
-            await processArtifact(chip);
+            await processArtifact(chip, force);
             await sleep(1000); // Cooldown between items
         }
 
@@ -225,27 +229,37 @@
     // --- UI Injection & Control ---
 
     function updateButtonVisibility() {
-        const btn = document.getElementById('gemini-batch-export-btn');
-        if (!btn) {
+        const container = document.getElementById('gemini-batch-export-container');
+        if (!container) {
             if (isConversationPage()) {
-                createTriggerButton();
+                createTriggerButtons();
             }
             return;
         }
-        btn.style.display = isConversationPage() ? 'block' : 'none';
+        container.style.display = isConversationPage() ? 'flex' : 'none';
     }
 
-    function createTriggerButton() {
-        if (document.getElementById('gemini-batch-export-btn')) return;
+    function createTriggerButtons() {
+        if (document.getElementById('gemini-batch-export-container')) return;
 
-        const btn = document.createElement('button');
-        btn.id = 'gemini-batch-export-btn';
-        btn.textContent = 'Export All Docs';
-        btn.style.cssText = `
+        const container = document.createElement('div');
+        container.id = 'gemini-batch-export-container';
+        container.style.cssText = `
             position: fixed;
             bottom: 20px;
             right: 20px;
             z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-end;
+            display: ${isConversationPage() ? 'flex' : 'none'};
+        `;
+
+        // Standard Export Button
+        const btn = document.createElement('button');
+        btn.textContent = 'Export All Docs';
+        btn.style.cssText = `
             padding: 10px 16px;
             background-color: #1a73e8;
             color: white;
@@ -254,10 +268,28 @@
             cursor: pointer;
             font-family: 'Google Sans', sans-serif;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            display: ${isConversationPage() ? 'block' : 'none'};
         `;
-        btn.onclick = runBatchExport;
-        document.body.appendChild(btn);
+        btn.onclick = () => runBatchExport(false);
+
+        // Force Export Button
+        const forceBtn = document.createElement('button');
+        forceBtn.textContent = 'Force Export All';
+        forceBtn.style.cssText = `
+            padding: 8px 12px;
+            background-color: #d93025; /* Red for force action */
+            color: white;
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            font-family: 'Google Sans', sans-serif;
+            font-size: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        `;
+        forceBtn.onclick = () => runBatchExport(true);
+
+        container.appendChild(forceBtn);
+        container.appendChild(btn);
+        document.body.appendChild(container);
     }
 
     // --- SPA Navigation Handling ---
