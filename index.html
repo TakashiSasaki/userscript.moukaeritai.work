@@ -37,6 +37,37 @@
             text-decoration: underline;
         }
 
+        /* Tabs Styles */
+        .tab-nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: white;
+            border: 1px solid #dee2e6;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #495057;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .tab-btn:hover {
+            background-color: #e9ecef;
+        }
+
+        .tab-btn.active {
+            background-color: #0056b3;
+            color: white;
+            border-color: #0056b3;
+        }
+
         .project-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -61,6 +92,10 @@
         .project-item:hover {
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
             transform: translateY(-2px);
+        }
+        
+        .project-item.hidden {
+            display: none;
         }
 
         .project-title {
@@ -138,8 +173,18 @@
         moukaeritai.work
     </a>
     <h1>Moukaeritai Userscripts</h1>
+
+    <div class="tab-nav">
+        <button class="tab-btn active" data-filter="all">All</button>
+        <button class="tab-btn" data-filter="onamae">onamae.com</button>
+        <button class="tab-btn" data-filter="openai">OpenAI</button>
+        <button class="tab-btn" data-filter="gemini">Gemini</button>
+        <button class="tab-btn" data-filter="grok">Grok</button>
+        <button class="tab-btn" data-filter="youtube">YouTube</button>
+    </div>
+
     <ul class="project-list">
-        <li class="project-item">
+        <li class="project-item" data-category="onamae">
             <h3 class="project-title">
                 <img alt="onamae.com" class="project-icon"
                     src="https://www.google.com/s2/favicons?domain=onamae.com&amp;sz=32" />
@@ -157,7 +202,7 @@
                 Install (v0.0.5)
             </a>
         </li>
-        <li class="project-item">
+        <li class="project-item" data-category="onamae">
             <h3 class="project-title">
                 <img alt="onamae.com" class="project-icon"
                     src="https://www.google.com/s2/favicons?domain=onamae.com&amp;sz=32" />
@@ -176,7 +221,7 @@
             </a>
         </li>
 
-        <li class="project-item">
+        <li class="project-item" data-category="openai">
             <h3 class="project-title">
                 <img alt="openai.com" class="project-icon"
                     src="https://www.google.com/s2/favicons?domain=openai.com&amp;sz=32" />
@@ -194,7 +239,7 @@
                 Install (v0.2.7)
             </a>
         </li>
-        <li class="project-item">
+        <li class="project-item" data-category="openai">
             <h3 class="project-title">
                 <img alt="openai.com" class="project-icon"
                     src="https://www.google.com/s2/favicons?domain=openai.com&amp;sz=32" />
@@ -212,7 +257,7 @@
                 Install (v0.2.5)
             </a>
         </li>
-        <li class="project-item">
+        <li class="project-item" data-category="gemini">
             <h3 class="project-title">
                 <img alt="gemini.google.com" class="project-icon"
                     src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
@@ -230,7 +275,7 @@
                 Install (v0.1.4)
             </a>
         </li>
-        <li class="project-item">
+        <li class="project-item" data-category="grok">
             <h3 class="project-title">
                 <img alt="grok.com" class="project-icon"
                     src="https://www.google.com/s2/favicons?domain=grok.com&amp;sz=32" />
@@ -248,7 +293,7 @@
                 Install (v1.3.5)
             </a>
         </li>
-        <li class="project-item">
+        <li class="project-item" data-category="gemini">
             <h3 class="project-title">
                 <img alt="gemini.google.com" class="project-icon"
                     src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
@@ -266,7 +311,7 @@
                 Install (v0.1.12)
             </a>
         </li>
-        <li class="project-item">
+        <li class="project-item" data-category="gemini">
             <h3 class="project-title">
                 <img alt="gemini.google.com" class="project-icon"
                     src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
@@ -284,7 +329,7 @@
                 Install (v0.1.18)
             </a>
         </li>
-        <li class="project-item">
+        <li class="project-item" data-category="gemini">
             <h3 class="project-title">
                 <img alt="gemini.google.com" class="project-icon"
                     src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
@@ -302,7 +347,7 @@
                 Install (v0.1.34)
             </a>
         </li>
-        <li class="project-item">
+        <li class="project-item" data-category="gemini">
             <h3 class="project-title">
                 <img alt="gemini.google.com" class="project-icon"
                     src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
@@ -320,7 +365,7 @@
                 Install (v0.1.13)
             </a>
         </li>
-        <li class="project-item">
+        <li class="project-item" data-category="gemini">
             <h3 class="project-title">
                 <img alt="gemini.google.com" class="project-icon"
                     src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
@@ -340,7 +385,7 @@
         </li>
 
 
-        <li class="project-item">
+        <li class="project-item" data-category="youtube">
             <h3 class="project-title">
                 <img alt="youtube.com" class="project-icon"
                     src="https://www.google.com/s2/favicons?domain=youtube.com&amp;sz=32" />
@@ -359,7 +404,7 @@
             </a>
         </li>
 
-        <li class="project-item">
+        <li class="project-item" data-category="youtube">
             <h3 class="project-title">
                 <img alt="youtube.com" class="project-icon"
                     src="https://www.google.com/s2/favicons?domain=youtube.com&amp;sz=32" />
@@ -378,7 +423,7 @@
             </a>
         </li>
 
-        <li class="project-item">
+        <li class="project-item" data-category="youtube">
             <h3 class="project-title">
                 <img alt="youtube.com" class="project-icon"
                     src="https://www.google.com/s2/favicons?domain=youtube.com&amp;sz=32" />
@@ -396,7 +441,7 @@
                 Install (v0.1.5)
             </a>
         </li>
-        <li class="project-item">
+        <li class="project-item" data-category="youtube">
             <h3 class="project-title">
                 <img alt="youtube.com" class="project-icon"
                     src="https://www.google.com/s2/favicons?domain=youtube.com&amp;sz=32" />
@@ -414,7 +459,7 @@
                 Install (v0.1.15)
             </a>
         </li>
-        <li class="project-item">
+        <li class="project-item" data-category="youtube">
             <h3 class="project-title">
                 <img alt="youtube.com" class="project-icon"
                     src="https://www.google.com/s2/favicons?domain=youtube.com&amp;sz=32" />
@@ -450,6 +495,30 @@
         </p>
     </footer>
     <script>
+        // Tab switching logic
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const projectItems = document.querySelectorAll('.project-item');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons
+                tabBtns.forEach(b => b.classList.remove('active'));
+                // Add active class to clicked button
+                btn.classList.add('active');
+
+                const filter = btn.getAttribute('data-filter');
+
+                projectItems.forEach(item => {
+                    const category = item.getAttribute('data-category');
+                    if (filter === 'all' || filter === category) {
+                        item.classList.remove('hidden');
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
         document.addEventListener('userscript-check-installed', (event) => {
             const { name, version } = event.detail;
             const buttons = document.querySelectorAll('.install-button');
