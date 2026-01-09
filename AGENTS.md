@@ -54,6 +54,13 @@ JavaScript（`.user.js`）のコードを変更した後は、必ずESLintを実
 -   **Requirement**: コミット前にすべてのエラーを解消し、警告も可能な限り修正してください。
 -   **Reminder**: 変更が小さくてもESLintの実行を省略しないこと。
 
+### Portal API Guard (インストール検知APIのガード)
+最上位の `index.html` からリンクされているユーザースクリプトは、以下の3つの `@match` を持ち、該当ドメインでは**メイン機能を動かさず**「インストール検知APIのみ」を実行するガードを必ず入れてください。
+-   `https://userscript.moukaeritai.work/*`
+-   `http://127.0.0.1:5500/*`
+-   `https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*`
+-   **ガード内容**: `userscript-check-installed` を `dispatchEvent` し、`userscript-ping` を監視して応答した後、早期 `return` すること。
+
 ## Repository Information (リポジトリ情報)
 
 -   **Remote URL**: `https://github.com/TakashiSasaki/userscript.moukaeritai.work`
