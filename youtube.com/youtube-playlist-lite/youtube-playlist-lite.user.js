@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.5
+// @version      0.1.6
 // @description  YouTubeプレイリストや再生履歴でサムネイルを非表示にして軽量化するためのツールです。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -36,11 +36,9 @@
 
     // --- Configuration ---
     const PANEL_POS_KEY = 'yt_lite_panel_position';
-    const PANEL_MIN_KEY = 'yt_lite_panel_minimized';
     const HIDE_THUMB_KEY = 'yt_lite_hide_thumbnails';
     const FORCE_REMOVE_KEY = 'yt_lite_force_remove';
 
-    let isMinimized = GM_getValue(PANEL_MIN_KEY, false);
     let isAutoMinimized = false;
     let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '260px', right: '20px' });
     let isHideThumbnails = GM_getValue(HIDE_THUMB_KEY, false);
@@ -70,21 +68,11 @@
     let styleElement = null;
     let panel = null;
     let contentContainer = null;
-    let minimizeBtn = null;
 
     function updatePanelVisibility() {
-        if (!contentContainer || !minimizeBtn) return;
-        const shouldMinimize = isAutoMinimized || isMinimized;
+        if (!contentContainer) return;
+        const shouldMinimize = isAutoMinimized;
         contentContainer.style.display = shouldMinimize ? 'none' : 'flex';
-        minimizeBtn.textContent = shouldMinimize ? '+' : '−';
-    }
-
-    function setPanelMinimized(nextMinimized, { persist = true } = {}) {
-        isMinimized = nextMinimized;
-        if (persist) {
-            GM_setValue(PANEL_MIN_KEY, isMinimized);
-        }
-        updatePanelVisibility();
     }
 
     function applySettings() {
@@ -225,24 +213,14 @@
         });
 
         const titleLabel = document.createElement('span');
-        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.5';
+        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.6';
         titleLabel.textContent = `Lite v${v}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '11px', pointerEvents: 'none' });
 
-        minimizeBtn = document.createElement('button');
-        minimizeBtn.textContent = isMinimized ? '+' : '−';
-        Object.assign(minimizeBtn.style, { cursor: 'pointer', background: 'none', border: 'none', fontSize: '16px', fontWeight: 'bold', padding: '0 4px', color: '#666' });
-
         contentContainer = document.createElement('div');
-        Object.assign(contentContainer.style, { display: isMinimized ? 'none' : 'flex', flexDirection: 'column', gap: '8px' });
-
-        minimizeBtn.addEventListener('click', () => {
-            if (isAutoMinimized) return;
-            setPanelMinimized(!isMinimized);
-        });
+        Object.assign(contentContainer.style, { display: 'flex', flexDirection: 'column', gap: '8px' });
 
         headerRow.appendChild(titleLabel);
-        headerRow.appendChild(minimizeBtn);
         panel.appendChild(headerRow);
         panel.appendChild(contentContainer);
 
@@ -303,7 +281,7 @@
         }
 
         isAutoMinimized = false;
-        setPanelMinimized(false);
+        updatePanelVisibility();
         applySettings();
     }
 
