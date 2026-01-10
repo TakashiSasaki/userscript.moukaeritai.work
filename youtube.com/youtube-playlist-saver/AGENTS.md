@@ -38,3 +38,8 @@ Saverは他のスクリプト（Filter, Scrollerなど）に対して「バッ�
 ## パフォーマンス
 
 -   **バッチ保存**: `requestSave()` 関数によるデバウンス処理（2秒待機）を行っています。スクロールによって大量の動画が一気に検出された際、`GM_setValue` が頻発してフリーズするのを防ぐためです。この待機時間を短くしすぎないでください。
+
+## インストール/バージョン検知API
+- `index.html` は `userscript-ping` を送信し、各ユーザースクリプトが `userscript-check-installed` を `dispatchEvent` して応答することで検知します。
+- 受信側は `data-script-name` と `@name` の一致で対象ボタンを特定します。
+- `Install (vX.Y.Z)` の表記からバージョンを抽出し、セマンティックバージョン比較で `Update` / `Installed` を切り替えます。

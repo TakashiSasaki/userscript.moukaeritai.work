@@ -27,5 +27,10 @@ YouTube は SPA (Single Page Application) であり、コンテンツは動的�
 - **YouTube Playlist Saver**: 動画の既知/新規ステータス情報を共有します。
 - **YouTube Playlist Remover**: フィルタリングされた結果（表示されている動画）に対して一括削除を実行する機能が Remover 側にあります。
 
+## インストール/バージョン検知API
+- `index.html` は `userscript-ping` を送信し、各ユーザースクリプトが `userscript-check-installed` を `dispatchEvent` して応答することで検知します。
+- 受信側は `data-script-name` と `@name` の一致で対象ボタンを特定します。
+- `Install (vX.Y.Z)` の表記からバージョンを抽出し、セマンティックバージョン比較で `Update` / `Installed` を切り替えます。
+
 ### DOM構造への配慮
 - `ytd-playlist-video-renderer` の構造はYouTube側のアップデートで頻繁に変更されます。セレクタ（`#video-title` など）が機能しなくなった場合は、Chrome DevTools で最新のDOM構造を確認し、速やかにセレクタを更新してください。
