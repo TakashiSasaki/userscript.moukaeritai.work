@@ -32,7 +32,7 @@ YouTube プレイリストの管理を効率化するユーザースクリプト
 
 ## インストール
 
-このスクリプトは [YouTube Playlist Saver](../youtube-playlist-saver/index.html) との併用を強く推奨します。
+このスクリプトは [YouTube Playlist Saver](../youtube-playlist-saver/index.html) との併用を強く推奨します。インストール対象は YouTube 全体ですが、**主要機能が有効になるのはプレイリストページのみ**です。
 
 1.  Tampermonkey などの拡張機能がインストールされていることを確認します。
 2.  以下のリンクをクリックしてインストールします。
@@ -42,6 +42,8 @@ YouTube プレイリストの管理を効率化するユーザースクリプト
 ## 技術的詳細
 
 *   **自動更新**:
-    *   **MutationObserver**: プレイリストへの新しい動画の読み込み（Infinite Scroll）を検知し、即座にフィルタを適用します。
+    *   **MutationObserver**: プレイリストの `#contents` に追加された動画を検知し、即座にフィルタを適用します。
     *   **定期実行**: 念のため、定期的に（2秒毎）フィルタを再適用して整合性を保ちます。
-*   **同期**: ページ遷移 (`yt-navigate-finish`) を検知し、状態をリセットして自動的に再起動します。
+*   **SPAのページ遷移対応**:
+    *   YouTube全体にインストールし、`/playlist?*` の間だけ主要機能を有効化します。
+    *   `yt-navigate-start/finish` を検知し、プレイリスト以外のページでは監視・タイマー・UIを停止します。
