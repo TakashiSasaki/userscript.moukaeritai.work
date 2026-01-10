@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.4
+// @version      0.1.5
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
-// @match        *://www.youtube.com/playlist?*
+// @match        *://www.youtube.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @match        http://127.0.0.1:5500/*
 // @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
@@ -33,8 +33,8 @@
         return;
     }
 
+    const PLAYLIST_PATH = '/playlist';
     const SETTINGS_KEY = 'yt_scroller_settings';
-    const PANEL_STATE_KEY = 'yt_scroller_panel_minimized';
     const PANEL_POS_KEY = 'yt_scroller_panel_position';
 
     let settings = GM_getValue(SETTINGS_KEY, {
@@ -42,59 +42,77 @@
         step: 300,
         interval: 5.0
     });
-    let isMinimized = GM_getValue(PANEL_STATE_KEY, false);
     let panelPos = GM_getValue(PANEL_POS_KEY, { top: '', left: '', bottom: '300px', right: '20px' });
     let scrollInterval = null;
+    let isAutoScrollEnabled = false;
+    let isActive = false;
+    let loadingObserver = null;
+    let loadingObserverTimerId = null;
 
     function saveSettings() {
         GM_setValue(SETTINGS_KEY, settings);
     }
 
-    function toggleAutoScroll(btn) {
-        if (!btn) btn = document.getElementById('yt-scroller-toggle-btn');
-        if (!btn) return;
+    function isPlaylistPage() {
+        return location.hostname === 'www.youtube.com' &&
+            location.pathname === PLAYLIST_PATH &&
+            location.search.length > 1;
+    }
 
+    function updateToggleButtonState(btn, enabled) {
+        if (!btn) return;
+        btn.textContent = enabled ? 'ON' : 'OFF';
+        btn.style.backgroundColor = enabled ? '#2ba640' : '#ccc';
+        btn.style.color = enabled ? '#fff' : '#000';
+    }
+
+    function startAutoScroll() {
+        stopAutoScroll();
+
+        const intervalMs = Math.max(100, (settings.interval || 5) * 1000);
+        const runScroll = () => {
+            if (settings.scrollToBottom) {
+                window.scrollTo(0, document.documentElement.scrollHeight);
+            } else {
+                window.scrollBy(0, settings.step || 300);
+            }
+        };
+
+        runScroll();
+        scrollInterval = setInterval(runScroll, intervalMs);
+    }
+
+    function stopAutoScroll() {
         if (scrollInterval) {
             clearInterval(scrollInterval);
             scrollInterval = null;
-            btn.textContent = 'OFF';
-            btn.style.backgroundColor = '#ccc';
-            btn.style.color = '#000';
-        } else {
-            btn.textContent = 'ON';
-            btn.style.backgroundColor = '#2ba640';
-            btn.style.color = '#fff';
-
-            const intervalMs = Math.max(100, (settings.interval || 5) * 1000);
-            const runScroll = () => {
-                if (settings.scrollToBottom) {
-                    window.scrollTo(0, document.documentElement.scrollHeight);
-                } else {
-                    window.scrollBy(0, settings.step || 300);
-                }
-            };
-
-            // Run immediately once
-            runScroll();
-            scrollInterval = setInterval(runScroll, intervalMs);
         }
     }
 
-    function restartAutoScrollIfActive() {
-        if (scrollInterval) {
-            clearInterval(scrollInterval);
-            const intervalMs = Math.max(100, (settings.interval || 5) * 1000);
+    function applyAutoScrollState() {
+        const btn = document.getElementById('yt-scroller-toggle-btn');
+        updateToggleButtonState(btn, isAutoScrollEnabled);
 
-            const runScroll = () => {
-                if (settings.scrollToBottom) {
-                    window.scrollTo(0, document.documentElement.scrollHeight);
-                } else {
-                    window.scrollBy(0, settings.step || 300);
-                }
-            };
-
-            scrollInterval = setInterval(runScroll, intervalMs);
+        if (!isActive || !isPlaylistPage()) {
+            stopAutoScroll();
+            return;
         }
+
+        if (isAutoScrollEnabled) {
+            startAutoScroll();
+        } else {
+            stopAutoScroll();
+        }
+    }
+
+    function toggleAutoScroll() {
+        isAutoScrollEnabled = !isAutoScrollEnabled;
+        applyAutoScrollState();
+    }
+
+    function restartAutoScrollIfActive() {
+        if (!isAutoScrollEnabled || !isActive || !isPlaylistPage()) return;
+        startAutoScroll();
     }
 
     function createPanel() {
@@ -142,9 +160,7 @@
         let initialLeft, initialTop;
 
         headerRow.addEventListener('mousedown', (e) => {
-            // Prevent dragging if clicking the minimize button
-            if (e.target === minimizeBtn) return;
-
+            if (e.target.tagName === 'BUTTON') return;
             isDragging = true;
             dragStartX = e.clientX;
             dragStartY = e.clientY;
@@ -187,45 +203,32 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.1';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.5';
         titleLabel.textContent = `Auto Scroller v${version}`;
-        Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' }); // pointerEvents none to ensure click goes to header
+        Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
-        const minimizeBtn = document.createElement('button');
-        minimizeBtn.textContent = '−';
-        Object.assign(minimizeBtn.style, {
-            cursor: 'pointer',
-            background: 'none',
-            border: 'none',
-            fontSize: '16px',
+        const activeLabel = document.createElement('span');
+        activeLabel.id = 'yt-scroller-active-indicator';
+        activeLabel.textContent = 'Inactive';
+        Object.assign(activeLabel.style, {
+            fontSize: '11px',
             fontWeight: 'bold',
-            padding: '0 4px',
-            lineHeight: '1',
+            padding: '2px 6px',
+            borderRadius: '10px',
+            backgroundColor: '#e0e0e0',
             color: '#666'
         });
 
         const contentContainer = document.createElement('div');
+        contentContainer.id = 'yt-scroller-panel-content';
         Object.assign(contentContainer.style, {
             display: 'flex',
             flexDirection: 'column',
             gap: '8px'
         });
 
-        const updatePanelMinState = (min) => {
-            contentContainer.style.display = min ? 'none' : 'flex';
-            minimizeBtn.textContent = min ? '+' : '−';
-            isMinimized = min;
-            GM_setValue(PANEL_STATE_KEY, min);
-        };
-
-        minimizeBtn.addEventListener('click', () => {
-            updatePanelMinState(!isMinimized);
-        });
-
-        updatePanelMinState(isMinimized);
-
         headerRow.appendChild(titleLabel);
-        headerRow.appendChild(minimizeBtn);
+        headerRow.appendChild(activeLabel);
         panel.appendChild(headerRow);
         panel.appendChild(contentContainer);
 
@@ -262,7 +265,7 @@
             cursor: 'pointer',
             fontWeight: 'bold'
         });
-        toggleBtn.addEventListener('click', () => toggleAutoScroll(toggleBtn));
+        toggleBtn.addEventListener('click', toggleAutoScroll);
 
         controlsHeader.appendChild(statusLabel);
         controlsHeader.appendChild(toggleBtn);
@@ -338,41 +341,69 @@
         document.body.appendChild(panel);
     }
 
-    function checkAndInit() {
-        if (!document.getElementById('yt-scroller-panel')) {
-            createPanel();
-        }
+    function setPanelActiveState(active) {
+        const label = document.getElementById('yt-scroller-active-indicator');
+        const content = document.getElementById('yt-scroller-panel-content');
+        const panel = document.getElementById('yt-scroller-panel');
+        if (!label || !content || !panel) return;
+
+        label.textContent = active ? 'Active' : 'Inactive';
+        label.style.backgroundColor = active ? '#e6f4ea' : '#e0e0e0';
+        label.style.color = active ? '#188038' : '#666';
+
+        content.style.display = active ? 'flex' : 'none';
+        panel.style.opacity = active ? '1' : '0.85';
     }
 
-    // Initialize
-    const run = () => {
-        // Initial delay to let page load slightly
-        setTimeout(checkAndInit, 1000);
+    function showPanel() {
+        const panel = document.getElementById('yt-scroller-panel');
+        if (panel) panel.style.display = 'flex';
+    }
 
-        // Keepalive
-        setInterval(() => {
-            if (window.location.pathname === '/playlist') {
-                checkAndInit();
-                setupLoadingObserver(); // Ensure observer is attached
-            } else {
-                const p = document.getElementById('yt-scroller-panel');
-                if (p) p.remove();
-                if (loadingObserver) {
-                    loadingObserver.disconnect();
-                    loadingObserver = null;
-                }
-            }
-        }, 2000);
-    };
+    function startMain() {
+        if (isActive || !isPlaylistPage()) return;
+        isActive = true;
+
+        createPanel();
+        showPanel();
+        setPanelActiveState(true);
+        applyAutoScrollState();
+        ensureLoadingObserver();
+    }
+
+    function stopMain() {
+        if (!isActive) return;
+        isActive = false;
+
+        stopAutoScroll();
+
+        if (loadingObserverTimerId) {
+            clearTimeout(loadingObserverTimerId);
+            loadingObserverTimerId = null;
+        }
+
+        if (loadingObserver) {
+            loadingObserver.disconnect();
+            loadingObserver = null;
+        }
+
+        showPanel();
+        setPanelActiveState(false);
+    }
 
     // --- Loading Indicator Logic ---
-    let loadingObserver = null;
 
-    function setupLoadingObserver() {
-        if (loadingObserver) return; // Already setup
+    function ensureLoadingObserver() {
+        if (!isActive || loadingObserver || loadingObserverTimerId) return;
 
         const container = document.querySelector('ytd-playlist-video-list-renderer');
-        if (!container) return; // Not ready yet
+        if (!container) {
+            loadingObserverTimerId = window.setTimeout(() => {
+                loadingObserverTimerId = null;
+                ensureLoadingObserver();
+            }, 1000);
+            return;
+        }
 
         loadingObserver = new MutationObserver(() => {
             checkLoadingState();
@@ -388,6 +419,7 @@
     }
 
     function checkLoadingState() {
+        if (!isActive || !isPlaylistPage()) return;
         // Broad check for any spinner in the list renderer
         const spinners = document.querySelectorAll('ytd-playlist-video-list-renderer tp-yt-paper-spinner, ytd-playlist-video-list-renderer tp-yt-paper-spinner-lite');
         let isLoading = false;
@@ -421,7 +453,17 @@
     }
 
     // Navigation handling
-    window.addEventListener('yt-navigate-finish', run);
-    run();
+    window.addEventListener('yt-navigate-start', stopMain);
+    window.addEventListener('yt-navigate-finish', () => {
+        if (isPlaylistPage()) {
+            startMain();
+        } else {
+            stopMain();
+        }
+    });
+
+    if (isPlaylistPage()) {
+        startMain();
+    }
 
 })();
