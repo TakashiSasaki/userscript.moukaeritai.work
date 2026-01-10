@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.21
+// @version      0.1.22
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -138,7 +138,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.21';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.22';
         titleLabel.textContent = `Remover v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -313,6 +313,17 @@
         element.style.outlineOffset = '2px';
     }
 
+    function isElementVisible(element) {
+        if (!element || !element.isConnected) return false;
+        if (element.getAttribute('aria-hidden') === 'true') return false;
+        const style = window.getComputedStyle(element);
+        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+            return false;
+        }
+        const rect = element.getBoundingClientRect();
+        return rect.width > 0 || rect.height > 0;
+    }
+
     async function attemptRemoveVideo(videoContainer) {
         // Shift focus to the container itself first
         videoContainer.focus();
@@ -335,7 +346,7 @@
         let waitedForMenu = false;
         while (Date.now() - START < 3000) {
             const popup = document.querySelector('ytd-menu-popup-renderer');
-            if (popup) {
+            if (popup && isElementVisible(popup)) {
                 highlightOutline(popup);
                 if (!waitedForMenu) {
                     await new Promise(r => setTimeout(r, 500));
