@@ -29,6 +29,15 @@ YouTubeはSPA（シングルページアプリケーション）であるため�
 -   **パネル位置**: ドラッグ＆ドロップで移動した位置 (`top`, `left`) を保存し、次回ロード時にその位置に復元します。これはユーザー体験にとって重要です。
 -   **パネル表示**: 手動での最小化は廃止し、対象ページ以外では自動的に内容を閉じる運用にしています。
 
+## UIパネルのアクティブインジケーター
+
+他のYouTube系スクリプト（`youtube-playlist-filter` / `youtube-playlist-remover` / `youtube-playlist-scroller`）と統一感を持たせるため、右上に `Active/Inactive` 表示を追加する場合は以下の方針に沿ってください。
+-   **配置**: ヘッダー行に `span` を追加し、タイトル左・インジケーター右のレイアウトにする。
+-   **表示文字**: 初期値は `Inactive`。対象ページ判定で `Active` に切り替える。
+-   **色**: `Active` は `background: #e6f4ea` + `color: #188038`、`Inactive` は `background: #e0e0e0` + `color: #666` を踏襲する。
+-   **挙動**: `getPageConfig()` が `null` の時は `Inactive` にして内容を閉じる。対象ページでは `Active` にして内容を表示する。既存の `isAutoMinimized` と二重管理にならないよう、状態更新は一箇所に集約する。
+-   **実装ID**: ラベルは `yt-lite-active-indicator`、内容コンテナは `yt-lite-panel-content`。`setPanelActiveState()` でラベルと表示状態を同期する。
+
 ## サンプルHTMLの前処理
 
 `samples/` 配下のDOMスナップショットは、他プロジェクトと同様の前処理を必ず実施してください。
