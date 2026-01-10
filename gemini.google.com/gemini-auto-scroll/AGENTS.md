@@ -1,5 +1,17 @@
 # Gemini Auto-Scroll Development Guidelines
 
+## Install Detection API
+The userscript includes the install-detection guard required by the portal index and only injects this API on the following hosts:
+
+- `userscript.moukaeritai.work`
+- `127.0.0.1`
+- `fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev`
+
+Behavior on those hosts:
+
+- **Dispatch**: `userscript-check-installed` is dispatched on page load.
+- **Listener**: `userscript-ping` is listened for and replied to, then the script returns early.
+
 ## Cross-Platform Compatibility
 - Use Python scripts for file processing, searching, and analysis tasks when possible.
 - Avoid OS-specific shell commands (like `grep`, `ls`, `cat`) to ensure workflows run smoothly on both Windows and Linux environments.
