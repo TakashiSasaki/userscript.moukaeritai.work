@@ -22,10 +22,20 @@ This document outlines specific rules and implementation details for `youtube-pl
 The script uses a strict sequence to remove a video. Do NOT change this unless YouTube's UI fundamentally changes:
 1.  **Focus**: Call `.focus()` on the menu button. This helps standardizing the event handling.
 2.  **Click Menu**: Click the three-dot menu button.
-3.  **Wait for Popup**: Poll for the existence of `ytd-menu-popup-renderer`.
-4.  **Identify Target**: Search for the menu item text ("Remove from", "から削除") or the specific trash can icon path.
-5.  **Focus & Click Item**: Call `.focus()` on the menu item, then click it.
+3.  **Wait for Popup**: Poll for the existence of `ytd-menu-popup-renderer` and confirm it is visible.
+4.  **Delay After Visible**: Once visible, wait at least 0.5s before scanning menu items.
+5.  **Identify Target**: Search for the menu item text ("Remove from", "から削除") or the specific trash can icon path.
+6.  **Focus & Click Item**: Call `.focus()` on the menu item, click it, then outline the clicked element.
 6.  **Close/Confirm**: Click `document.body` to close any lingering menus if needed, or handle confirmation dialogs if they appear.
+
+### Timing & Polling (Do Not Over-tighten)
+*   **Polling Interval**: Menu detection, dialog checks, and item disappearance use 500ms polling. Do not reduce without performance testing.
+*   **Item Existence Guard**: Before clicking the menu button, confirm the video item is still connected/visible to avoid acting on removed nodes.
+*   **Visible Popup Only**: Treat a popup as ready only when it is visible (not just present in the DOM).
+
+### Visual Feedback (Menu Phase)
+*   When the menu becomes visible, outline the popup in red (`2px`).
+*   After clicking a menu item, outline the clicked element in red (`2px`).
 
 ### Visual Feedback
 Since the operation is asynchronous and takes time (UI interaction speed), providing feedback is essential:

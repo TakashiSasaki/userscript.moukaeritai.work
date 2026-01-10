@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.10
+// @version      0.1.11
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -135,7 +135,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.10';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.11';
         titleLabel.textContent = `Playlist Filter v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -189,20 +189,18 @@
 
             // Pause filtering on focus
             input.addEventListener('focus', () => {
-                isInputActive = true;
+                pauseFilteringForInput();
             });
 
             // Resume and apply on blur
             input.addEventListener('blur', () => {
-                isInputActive = false;
                 filterState[key] = input.value;
-                applyFilters();
+                resumeFilteringAfterInput();
             });
 
             // Handle Enter key
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
-                    isInputActive = false; // Temporarily allow filter
                     filterState[key] = input.value;
                     input.blur(); // Trigger blur to apply
                 }
@@ -211,8 +209,11 @@
             clearBtn.addEventListener('click', () => {
                 filterState[key] = '';
                 input.value = '';
-                isInputActive = false;
-                applyFilters();
+                if (isInputActive) {
+                    resumeFilteringAfterInput();
+                } else {
+                    applyFilters();
+                }
             });
 
             row.appendChild(lbl);
@@ -241,8 +242,11 @@
             marginTop: '4px'
         });
         applyBtn.addEventListener('click', () => {
-            isInputActive = false;
-            applyFilters();
+            if (isInputActive) {
+                resumeFilteringAfterInput();
+            } else {
+                applyFilters();
+            }
         });
         contentContainer.appendChild(applyBtn);
 
@@ -463,6 +467,56 @@
         if (panel) panel.style.display = 'flex';
     }
 
+    function stopBackgroundWork() {
+        if (observerInitTimerId) {
+            clearTimeout(observerInitTimerId);
+            observerInitTimerId = null;
+        }
+
+        if (listObserver) {
+            listObserver.disconnect();
+            listObserver = null;
+        }
+
+        if (observerForRange) {
+            observerForRange.disconnect();
+            observerForRange = null;
+        }
+
+        if (filterIntervalId) {
+            clearInterval(filterIntervalId);
+            filterIntervalId = null;
+        }
+    }
+
+    function startBackgroundWork({ applyNow = true } = {}) {
+        setupMutationObserver();
+        if (applyNow) {
+            applyFilters();
+        }
+
+        if (!filterIntervalId) {
+            filterIntervalId = window.setInterval(applyFilters, 2000);
+        }
+    }
+
+    function pauseFilteringForInput() {
+        if (isInputActive) return;
+        isInputActive = true;
+        if (!isActive) return;
+        stopBackgroundWork();
+    }
+
+    function resumeFilteringAfterInput() {
+        if (!isInputActive) return;
+        isInputActive = false;
+        if (!isActive || !isPlaylistPage()) return;
+
+        itemsAboveSet.clear();
+        itemsVisibleSet.clear();
+        startBackgroundWork({ applyNow: true });
+    }
+
     // --- Status Helper ---
     function updateStatus(type, isActive) {
         const el = document.getElementById(`yt-filter-status-${type}`);
@@ -484,13 +538,7 @@
         itemsAboveSet.clear();
         itemsVisibleSet.clear();
 
-        setupMutationObserver();
-        applyFilters();
-
-        if (!filterIntervalId) {
-            // Loop apply filters (to catch new items from scroll as backup)
-            filterIntervalId = window.setInterval(applyFilters, 2000);
-        }
+        startBackgroundWork({ applyNow: true });
 
         console.log('[YouTube Playlist Filter] Running...');
     }
@@ -498,26 +546,9 @@
     function stopMain() {
         if (!isActive) return;
         isActive = false;
+        isInputActive = false;
 
-        if (observerInitTimerId) {
-            clearTimeout(observerInitTimerId);
-            observerInitTimerId = null;
-        }
-
-        if (listObserver) {
-            listObserver.disconnect();
-            listObserver = null;
-        }
-
-        if (observerForRange) {
-            observerForRange.disconnect();
-            observerForRange = null;
-        }
-
-        if (filterIntervalId) {
-            clearInterval(filterIntervalId);
-            filterIntervalId = null;
-        }
+        stopBackgroundWork();
 
         itemsAboveSet.clear();
         itemsVisibleSet.clear();
