@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.27
+// @version      0.1.28
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -141,7 +141,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.27';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.28';
         titleLabel.textContent = `Remover v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -402,8 +402,15 @@
     async function waitForItemDisappearance(item, timeout = 5000) {
         const start = Date.now();
         while (Date.now() - start < timeout) {
+            const style = window.getComputedStyle(item);
             // Check if removed from DOM or hidden
-            if (!item.isConnected || item.style.display === 'none' || item.hidden) {
+            if (!item.isConnected || item.style.display === 'none' || item.hidden || style.display === 'none' || style.visibility === 'hidden') {
+                await new Promise(r => setTimeout(r, 500));
+                return true;
+            }
+            const rect = item.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) {
+                await new Promise(r => setTimeout(r, 500));
                 return true;
             }
             await new Promise(r => setTimeout(r, 500));
