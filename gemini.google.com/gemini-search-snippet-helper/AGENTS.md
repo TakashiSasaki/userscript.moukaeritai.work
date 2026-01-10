@@ -3,6 +3,18 @@
 このファイルは、AIエージェントが本プロジェクト (`gemini-search-snippet-helper`) を保守・拡張する際に参照すべき技術的な要点をまとめたものです。
 `gemini-search-snippet-helper.md` は人間向けの機能説明ですが、ここは実装上の勘所を記録します。
 
+## Install Detection API
+The userscript includes the install-detection guard required by the portal index and only injects this API on the following hosts:
+
+- `userscript.moukaeritai.work`
+- `127.0.0.1`
+- `fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev`
+
+Behavior on those hosts:
+
+- **Dispatch**: `userscript-check-installed` is dispatched on page load.
+- **Listener**: `userscript-ping` is listened for and replied to, then the script returns early.
+
 ## 1. SPA遷移とHistory APIのフック
 GeminiはSPA（Single Page Application）であり、VueやAngularのようなフレームワーク動作による画面遷移（特に `/app` から `/search` への移動など）において、ブラウザ標準の `popstate` イベントが発火しないケースが多々あります。
 
