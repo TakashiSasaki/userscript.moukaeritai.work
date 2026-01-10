@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.19
+// @version      0.1.20
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -138,7 +138,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.19';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.20';
         titleLabel.textContent = `Remover v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -285,7 +285,7 @@
             const dialog = document.querySelector('yt-confirm-dialog-renderer, tp-yt-paper-dialog');
             if (dialog) {
                 if (dialog.getAttribute('aria-hidden') === 'true' || dialog.style.display === 'none') {
-                    await new Promise(r => setTimeout(r, 50));
+                    await new Promise(r => setTimeout(r, 500));
                     continue;
                 }
 
@@ -303,7 +303,7 @@
                     return true; // Dialog handled
                 }
             }
-            await new Promise(r => setTimeout(r, 100));
+            await new Promise(r => setTimeout(r, 500));
         }
     }
 
@@ -357,7 +357,7 @@
                     }
                 }
             }
-            await new Promise(r => setTimeout(r, 100));
+            await new Promise(r => setTimeout(r, 500));
         }
         document.body.click();
         return false;
@@ -370,7 +370,7 @@
             if (!item.isConnected || item.style.display === 'none' || item.hidden) {
                 return true;
             }
-            await new Promise(r => setTimeout(r, 200));
+            await new Promise(r => setTimeout(r, 500));
         }
         return false;
     }
