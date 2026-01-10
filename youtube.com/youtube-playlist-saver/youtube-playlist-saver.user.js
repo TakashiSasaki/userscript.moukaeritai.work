@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.50
+// @version      0.2.51
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -40,6 +40,7 @@
     const PLAYLIST_PATH = '/playlist';
     const DATA_KEY = 'yt_playlist_data';
     const DATA_VERSION = 2;
+    const INIT_DELAY_RANGE_MS = { min: 1000, max: 3000 };
     // Helper to create trash icon
     const TRASH_ICON_PATHS = [
         "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
@@ -150,7 +151,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.50';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.51';
         titleLabel.textContent = `Playlist Saver v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -513,15 +514,26 @@
     }
 
     // Navigation Handling
-    window.addEventListener('yt-navigate-start', stopMain);
-    window.addEventListener('yt-navigate-finish', () => {
+    function init() {
+        window.addEventListener('yt-navigate-start', stopMain);
+        window.addEventListener('yt-navigate-finish', () => {
+            if (isPlaylistPage()) {
+                startMain();
+            } else {
+                stopMain();
+            }
+        });
+
+        // Start Logic
         if (isPlaylistPage()) {
             startMain();
-        } else {
-            stopMain();
         }
-    });
+    }
 
+    function getRandomInitDelayMs() {
+        const span = INIT_DELAY_RANGE_MS.max - INIT_DELAY_RANGE_MS.min;
+        return INIT_DELAY_RANGE_MS.min + Math.floor(Math.random() * (span + 1));
+    }
 
     // --- Public API Integration ---
     const SaverAPI = {
@@ -667,9 +679,6 @@
         GM_registerMenuCommand("Export Data to File", exportDataToFile);
     }
 
-    // Start Logic
-    if (isPlaylistPage()) {
-        startMain();
-    }
+    setTimeout(init, getRandomInitDelayMs());
 
 })();
