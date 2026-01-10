@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.7
+// @version      0.1.9
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -36,13 +36,9 @@
     // --- Config & State ---
     const PLAYLIST_PATH = '/playlist';
     const PANEL_POS_KEY = 'yt_filter_panel_position';
-    const PANEL_MIN_KEY = 'yt_filter_panel_minimized';
-
     let isActive = false;
     let filterIntervalId = null;
     let observerInitTimerId = null;
-
-    let isMinimized = GM_getValue(PANEL_MIN_KEY, false);
     let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '70px', right: '20px' });
 
     let filterState = { title: '', channel: '' };
@@ -139,32 +135,28 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.7';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.9';
         titleLabel.textContent = `Playlist Filter v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
-        const minimizeBtn = document.createElement('button');
-        minimizeBtn.textContent = '−';
-        Object.assign(minimizeBtn.style, {
-            cursor: 'pointer', background: 'none', border: 'none',
-            fontSize: '16px', fontWeight: 'bold', padding: '0 4px', color: '#666'
+        const statusLabel = document.createElement('span');
+        statusLabel.id = 'yt-filter-active-indicator';
+        statusLabel.textContent = 'Inactive';
+        Object.assign(statusLabel.style, {
+            fontSize: '11px',
+            fontWeight: 'bold',
+            padding: '2px 6px',
+            borderRadius: '10px',
+            backgroundColor: '#e0e0e0',
+            color: '#666'
         });
 
         const contentContainer = document.createElement('div');
+        contentContainer.id = 'yt-filter-panel-content';
         Object.assign(contentContainer.style, { display: 'flex', flexDirection: 'column', gap: '8px' });
 
-        // Minimize Logic
-        const updatePanelMinState = (min) => {
-            contentContainer.style.display = min ? 'none' : 'flex';
-            minimizeBtn.textContent = min ? '+' : '−';
-            isMinimized = min;
-            GM_setValue(PANEL_MIN_KEY, min);
-        };
-        minimizeBtn.addEventListener('click', () => updatePanelMinState(!isMinimized));
-        updatePanelMinState(isMinimized);
-
         headerRow.appendChild(titleLabel);
-        headerRow.appendChild(minimizeBtn);
+        headerRow.appendChild(statusLabel);
         panel.appendChild(headerRow);
         panel.appendChild(contentContainer);
 
@@ -452,14 +444,23 @@
         listObserver.observe(container, { childList: true });
     }
 
+    function setPanelActiveState(active) {
+        const label = document.getElementById('yt-filter-active-indicator');
+        const content = document.getElementById('yt-filter-panel-content');
+        const panel = document.getElementById('yt-filter-panel');
+        if (!label || !content || !panel) return;
+
+        label.textContent = active ? 'Active' : 'Inactive';
+        label.style.backgroundColor = active ? '#e6f4ea' : '#e0e0e0';
+        label.style.color = active ? '#188038' : '#666';
+
+        content.style.display = active ? 'flex' : 'none';
+        panel.style.opacity = active ? '1' : '0.85';
+    }
+
     function showPanel() {
         const panel = document.getElementById('yt-filter-panel');
         if (panel) panel.style.display = 'flex';
-    }
-
-    function hidePanel() {
-        const panel = document.getElementById('yt-filter-panel');
-        if (panel) panel.style.display = 'none';
     }
 
     // --- Status Helper ---
@@ -479,6 +480,7 @@
 
         createPanel();
         showPanel();
+        setPanelActiveState(true);
         itemsAboveSet.clear();
         itemsVisibleSet.clear();
 
@@ -519,7 +521,8 @@
 
         itemsAboveSet.clear();
         itemsVisibleSet.clear();
-        hidePanel();
+        showPanel();
+        setPanelActiveState(false);
     }
 
     // Navigation Handling
