@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.7
+// @version      0.1.8
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -36,6 +36,7 @@
     const PLAYLIST_PATH = '/playlist';
     const SETTINGS_KEY = 'yt_scroller_settings';
     const PANEL_POS_KEY = 'yt_scroller_panel_position';
+    const INIT_DELAY_RANGE_MS = { min: 1000, max: 3000 };
 
     let settings = GM_getValue(SETTINGS_KEY, {
         scrollToBottom: true,
@@ -203,7 +204,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.7';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.8';
         titleLabel.textContent = `Auto Scroller v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -453,17 +454,26 @@
     }
 
     // Navigation handling
-    window.addEventListener('yt-navigate-start', stopMain);
-    window.addEventListener('yt-navigate-finish', () => {
+    function init() {
+        window.addEventListener('yt-navigate-start', stopMain);
+        window.addEventListener('yt-navigate-finish', () => {
+            if (isPlaylistPage()) {
+                startMain();
+            } else {
+                stopMain();
+            }
+        });
+
         if (isPlaylistPage()) {
             startMain();
-        } else {
-            stopMain();
         }
-    });
-
-    if (isPlaylistPage()) {
-        startMain();
     }
+
+    function getRandomInitDelayMs() {
+        const span = INIT_DELAY_RANGE_MS.max - INIT_DELAY_RANGE_MS.min;
+        return INIT_DELAY_RANGE_MS.min + Math.floor(Math.random() * (span + 1));
+    }
+
+    setTimeout(init, getRandomInitDelayMs());
 
 })();

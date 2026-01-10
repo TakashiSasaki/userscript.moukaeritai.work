@@ -34,6 +34,7 @@
 ### SPA遷移
 -   `@match` は YouTube 全体に広げ、主要機能は `/playlist?*` の間だけ有効化します。
 -   `yt-navigate-start/finish` で URL 変化を検知し、プレイリスト以外ではスクロールや監視を停止し、パネル内容を閉じます。
+-   **初期化ディレイ**: 初回注入時は 1-3 秒のランダムディレイ後に `init()` を実行し、同時起動による負荷集中を避けます。
 
 ## インストール/バージョン検知API
 - `index.html` は `userscript-ping` を送信し、各ユーザースクリプトが `userscript-check-installed` を `dispatchEvent` して応答することで検知します。
