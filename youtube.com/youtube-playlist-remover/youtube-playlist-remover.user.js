@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.23
+// @version      0.1.24
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -40,6 +40,7 @@
     let isActive = false;
     let refreshIntervalId = null;
     let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '150px', right: '20px' });
+    let removeButton = null;
 
     // --- Constants ---
     const TRASH_ICON_PATHS = [
@@ -138,7 +139,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.23';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.24';
         titleLabel.textContent = `Remover v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -187,6 +188,7 @@
             fontWeight: 'bold'
         });
 
+        removeButton = removeBtn;
         removeBtn.addEventListener('click', removeRangeItems);
 
         contentContainer.appendChild(removeBtn);
@@ -313,6 +315,11 @@
         element.style.outlineOffset = '2px';
     }
 
+    function updateRemoveButtonLabel(text) {
+        if (!removeButton) return;
+        removeButton.textContent = text;
+    }
+
     function isElementVisible(element) {
         if (!element || !element.isConnected) return false;
         if (element.getAttribute('aria-hidden') === 'true') return false;
@@ -369,6 +376,12 @@
                         target.focus(); // Shift focus before clicking
                         target.click();
                         highlightOutline(target);
+                        const indexVal = videoContainer.querySelector('#index')?.textContent?.trim();
+                        if (indexVal) {
+                            updateRemoveButtonLabel(`Removing #${indexVal}`);
+                        } else {
+                            updateRemoveButtonLabel('Removing...');
+                        }
 
                         await handlePotentialDialog();
                         document.body.click(); // Close menu
@@ -398,6 +411,7 @@
         if (!isActive || !isPlaylistPage()) return;
         const count = itemsAboveAndValidSet.size;
         if (count === 0) {
+            updateRemoveButtonLabel('Remove Range');
             return;
         }
 
@@ -443,6 +457,7 @@
         }
 
         updateStatus('Idle');
+        updateRemoveButtonLabel('Remove Range');
         updateCandidatesInfo();
     }
 
