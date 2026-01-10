@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.24
+// @version      0.1.26
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -41,6 +41,8 @@
     let refreshIntervalId = null;
     let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '150px', right: '20px' });
     let removeButton = null;
+    let isRemoving = false;
+    let cancelRequested = false;
 
     // --- Constants ---
     const TRASH_ICON_PATHS = [
@@ -139,7 +141,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.24';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.26';
         titleLabel.textContent = `Remover v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -315,8 +317,9 @@
         element.style.outlineOffset = '2px';
     }
 
-    function updateRemoveButtonLabel(text) {
+    function updateRemoveButtonLabel(text, { force = false } = {}) {
         if (!removeButton) return;
+        if (cancelRequested && !force) return;
         removeButton.textContent = text;
     }
 
@@ -375,12 +378,13 @@
                         const target = item.querySelector('tp-yt-paper-item') || item;
                         target.focus(); // Shift focus before clicking
                         target.click();
-                        highlightOutline(target);
-                        const indexVal = videoContainer.querySelector('#index')?.textContent?.trim();
-                        if (indexVal) {
-                            updateRemoveButtonLabel(`Removing #${indexVal}`);
-                        } else {
-                            updateRemoveButtonLabel('Removing...');
+                        if (!cancelRequested) {
+                            const indexVal = videoContainer.querySelector('#index')?.textContent?.trim();
+                            if (indexVal) {
+                                updateRemoveButtonLabel(`Removing #${indexVal}`);
+                            } else {
+                                updateRemoveButtonLabel('Removing...');
+                            }
                         }
 
                         await handlePotentialDialog();
@@ -409,13 +413,24 @@
 
     async function removeRangeItems() {
         if (!isActive || !isPlaylistPage()) return;
-        const count = itemsAboveAndValidSet.size;
-        if (count === 0) {
-            updateRemoveButtonLabel('Remove Range');
+        if (isRemoving) {
+            cancelRequested = true;
+            updateStatus('Stopping...', true);
+            updateRemoveButtonLabel('Stopping...', { force: true });
             return;
         }
 
+        const count = itemsAboveAndValidSet.size;
+        if (count === 0) {
+            updateRemoveButtonLabel('Remove Range', { force: true });
+            return;
+        }
+
+        isRemoving = true;
+        cancelRequested = false;
+
         updateStatus('Removing...', true);
+        updateRemoveButtonLabel('Removing...', { force: true });
 
         // Sort targets based on current DOM order and reverse to delete from bottom to top
         // This prevents UI shifting from affecting unprocessed items.
@@ -436,14 +451,17 @@
         });
 
         for (let i = 0; i < total; i++) {
+            if (cancelRequested) break;
             const item = finalTargets[i];
             const indexVal = item.querySelector('#index')?.textContent?.trim() || '?';
             updateStatus(`Removing #${indexVal} (${i + 1}/${total})...`, true);
 
             const success = await attemptRemoveVideo(item);
+            if (cancelRequested) break;
             if (success) {
                 // Wait for the item to actually disappear from the list (removed by YouTube)
                 const disappeared = await waitForItemDisappearance(item, 8000); // Wait up to 8s
+                if (cancelRequested) break;
                 if (disappeared) {
                     itemsAboveAndValidSet.delete(item);
                 } else {
@@ -456,8 +474,14 @@
             await new Promise(r => setTimeout(r, 500));
         }
 
-        updateStatus('Idle');
-        updateRemoveButtonLabel('Remove Range');
+        if (cancelRequested) {
+            updateStatus('Canceled');
+        } else {
+            updateStatus('Idle');
+        }
+        updateRemoveButtonLabel('Remove Range', { force: true });
+        cancelRequested = false;
+        isRemoving = false;
         updateCandidatesInfo();
     }
 
@@ -514,6 +538,9 @@
         }
 
         itemsAboveAndValidSet.clear();
+        isRemoving = false;
+        cancelRequested = false;
+        updateRemoveButtonLabel('Remove Range', { force: true });
         showPanel();
         setPanelActiveState(false);
     }

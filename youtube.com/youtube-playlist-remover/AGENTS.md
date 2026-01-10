@@ -28,6 +28,10 @@ The script uses a strict sequence to remove a video. Do NOT change this unless Y
 6.  **Focus & Click Item**: Call `.focus()` on the menu item, click it, then outline the clicked element.
 6.  **Close/Confirm**: Click `document.body` to close any lingering menus if needed, or handle confirmation dialogs if they appear.
 
+### Removal Concurrency
+*   **Single-run Only**: The batch removal must not run in parallel. Re-clicking the button while running should request cancellation, not start a second run.
+*   **Cancel Behavior**: A cancel request stops after the current item finishes; reset UI labels and state afterward.
+
 ### Timing & Polling (Do Not Over-tighten)
 *   **Polling Interval**: Menu detection, dialog checks, and item disappearance use 500ms polling. Do not reduce without performance testing.
 *   **Item Existence Guard**: Before clicking the menu button, confirm the video item is still connected/visible to avoid acting on removed nodes.
@@ -35,7 +39,6 @@ The script uses a strict sequence to remove a video. Do NOT change this unless Y
 
 ### Visual Feedback (Menu Phase)
 *   When the menu becomes visible, outline the popup in red (`2px`).
-*   After clicking a menu item, outline the clicked element in red (`2px`).
 
 ### Visual Feedback
 Since the operation is asynchronous and takes time (UI interaction speed), providing feedback is essential:
