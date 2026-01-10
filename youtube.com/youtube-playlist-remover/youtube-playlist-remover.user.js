@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.30
+// @version      0.1.31
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -44,6 +44,8 @@
     let removeButton = null;
     let isRemoving = false;
     let cancelRequested = false;
+    let filterListenerBound = false;
+    const filterInputValues = new WeakMap();
 
     // --- Constants ---
     const TRASH_ICON_PATHS = [
@@ -142,7 +144,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.30';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.31';
         titleLabel.textContent = `Remover v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -230,6 +232,46 @@
         }
     }
 
+    function isItemHiddenByFilter(element, rect = null) {
+        if (!element || !element.isConnected) return true;
+        if (element.hidden || element.getAttribute('aria-hidden') === 'true') return true;
+        if (rect) {
+            return rect.width === 0 && rect.height === 0;
+        }
+        return element.offsetParent === null;
+    }
+
+    function isPlaylistFilterInput(target) {
+        if (!(target instanceof HTMLInputElement)) return false;
+        if (target.closest('ytd-masthead')) return false;
+        const container = target.closest('ytd-playlist-video-list-renderer, ytd-playlist-header-renderer, ytd-playlist-sidebar-primary-info-renderer, ytd-playlist-search-box-renderer');
+        if (!container) return false;
+        const type = (target.getAttribute('type') || '').toLowerCase();
+        if (type === 'search') return true;
+        const label = (target.getAttribute('aria-label') || target.getAttribute('placeholder') || '').toLowerCase();
+        const name = (target.getAttribute('name') || target.getAttribute('id') || '').toLowerCase();
+        return label.includes('search') || label.includes('filter') || label.includes('検索') || name.includes('search') || name.includes('filter');
+    }
+
+    function handleFilterInputEvent(event) {
+        if (!isActive || !isPlaylistPage() || isRemoving) return;
+        const target = event.target;
+        if (!isPlaylistFilterInput(target)) return;
+        const value = target.value || '';
+        const lastValue = filterInputValues.get(target);
+        if (lastValue === value) return;
+        filterInputValues.set(target, value);
+        itemsAboveAndValidSet.clear();
+        updateCandidatesInfo();
+    }
+
+    function ensureFilterListeners() {
+        if (filterListenerBound) return;
+        document.addEventListener('input', handleFilterInputEvent, true);
+        document.addEventListener('change', handleFilterInputEvent, true);
+        filterListenerBound = true;
+    }
+
     // --- Observer Logic ---
     // We only want to delete items that are:
     // 1. Above the viewport.
@@ -241,10 +283,7 @@
                 const rect = entry.boundingClientRect;
                 const el = entry.target;
 
-                // Check if element is effectively visible (not filtered out)
-                const isVisible = (el.style.display !== 'none');
-
-                if (!isVisible) {
+                if (isItemHiddenByFilter(el, rect)) {
                     // If hidden, remove from set immediately to be safe
                     itemsAboveAndValidSet.delete(el);
                     return;
@@ -273,7 +312,7 @@
         });
         // Also clean up set if items were removed from DOM or became hidden
         itemsAboveAndValidSet.forEach(item => {
-            if (!item.isConnected || item.style.display === 'none') {
+            if (isItemHiddenByFilter(item)) {
                 itemsAboveAndValidSet.delete(item);
             }
         });
@@ -450,7 +489,7 @@
         // This prevents UI shifting from affecting unprocessed items.
         const allItemsInDom = Array.from(document.querySelectorAll('ytd-playlist-video-renderer'));
         const finalTargets = allItemsInDom
-            .filter(el => itemsAboveAndValidSet.has(el) && el.isConnected && el.style.display !== 'none')
+            .filter(el => itemsAboveAndValidSet.has(el) && el.isConnected && !isItemHiddenByFilter(el))
             .reverse();
 
         const total = finalTargets.length;
@@ -565,6 +604,7 @@
     }
 
     function init() {
+        ensureFilterListeners();
         window.addEventListener('yt-navigate-start', stopMain);
         window.addEventListener('yt-navigate-finish', () => {
             if (isPlaylistPage()) {
