@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.6
+// @version      0.1.8
 // @description  YouTubeプレイリストや再生履歴でサムネイルを非表示にして軽量化するためのツールです。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -38,6 +38,7 @@
     const PANEL_POS_KEY = 'yt_lite_panel_position';
     const HIDE_THUMB_KEY = 'yt_lite_hide_thumbnails';
     const FORCE_REMOVE_KEY = 'yt_lite_force_remove';
+    const INIT_DELAY_RANGE_MS = { min: 1000, max: 3000 };
 
     let isAutoMinimized = false;
     let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '260px', right: '20px' });
@@ -213,7 +214,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.6';
+        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.8';
         titleLabel.textContent = `Lite v${v}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '11px', pointerEvents: 'none' });
 
@@ -285,12 +286,21 @@
         applySettings();
     }
 
-    window.addEventListener('yt-navigate-start', cleanupFeatures);
-    window.addEventListener('yt-navigate-finish', () => {
-        setTimeout(refreshForLocation, 500);
-    });
+    function init() {
+        window.addEventListener('yt-navigate-start', cleanupFeatures);
+        window.addEventListener('yt-navigate-finish', () => {
+            setTimeout(refreshForLocation, 500);
+        });
 
-    refreshForLocation();
-    console.log('[YouTube Playlist Lite] Running...');
+        refreshForLocation();
+        console.log('[YouTube Playlist Lite] Running...');
+    }
+
+    function getRandomInitDelayMs() {
+        const span = INIT_DELAY_RANGE_MS.max - INIT_DELAY_RANGE_MS.min;
+        return INIT_DELAY_RANGE_MS.min + Math.floor(Math.random() * (span + 1));
+    }
+
+    setTimeout(init, getRandomInitDelayMs());
 
 })();
