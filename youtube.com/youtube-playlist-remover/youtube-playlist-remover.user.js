@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.28
+// @version      0.1.29
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -141,7 +141,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.28';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.29';
         titleLabel.textContent = `Remover v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -317,6 +317,12 @@
         element.style.outlineOffset = '2px';
     }
 
+    function clearOutline(element) {
+        if (!element) return;
+        element.style.outline = '';
+        element.style.outlineOffset = '';
+    }
+
     function updateRemoveButtonLabel(text, { force = false } = {}) {
         if (!removeButton) return;
         if (cancelRequested && !force) return;
@@ -462,6 +468,8 @@
             const item = finalTargets[i];
             const indexVal = item.querySelector('#index')?.textContent?.trim() || '?';
             updateStatus(`Removing #${indexVal} (${i + 1}/${total})...`, true);
+            item.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+            highlightOutline(item);
 
             const success = await attemptRemoveVideo(item);
             if (cancelRequested) break;
@@ -476,6 +484,9 @@
                     // Do not force remove. If YouTube didn't remove it, something might be wrong.
                     // We continue to the next item, but this item remains in the list.
                 }
+            }
+            if (item.isConnected) {
+                clearOutline(item);
             }
             // Small buffer between items
             await new Promise(r => setTimeout(r, 500));

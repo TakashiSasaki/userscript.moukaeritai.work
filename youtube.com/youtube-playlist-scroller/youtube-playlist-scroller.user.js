@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.6
+// @version      0.1.7
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -40,7 +40,7 @@
     let settings = GM_getValue(SETTINGS_KEY, {
         scrollToBottom: true,
         step: 300,
-        interval: 5.0
+        interval: 20.0
     });
     let panelPos = GM_getValue(PANEL_POS_KEY, { top: '', left: '', bottom: '300px', right: '20px' });
     let scrollInterval = null;
@@ -203,7 +203,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.6';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.7';
         titleLabel.textContent = `Auto Scroller v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -313,7 +313,7 @@
         };
 
         const stepInputObj = createScrollInput('Step (px):', 'step', '300');
-        const intervalInputObj = createScrollInput('Interval (sec):', 'interval', '5');
+        const intervalInputObj = createScrollInput('Interval (sec):', 'interval', '20');
 
         asCheckbox.addEventListener('change', () => {
             settings.scrollToBottom = asCheckbox.checked;
