@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.6
+// @version      0.1.7
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @author       Takashi Sasaki
-// @match        *://www.youtube.com/playlist?*
+// @match        *://www.youtube.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @match        http://127.0.0.1:5500/*
 // @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
@@ -34,8 +34,13 @@
     }
 
     // --- Config & State ---
+    const PLAYLIST_PATH = '/playlist';
     const PANEL_POS_KEY = 'yt_filter_panel_position';
     const PANEL_MIN_KEY = 'yt_filter_panel_minimized';
+
+    let isActive = false;
+    let filterIntervalId = null;
+    let observerInitTimerId = null;
 
     let isMinimized = GM_getValue(PANEL_MIN_KEY, false);
     let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '70px', right: '20px' });
@@ -43,6 +48,15 @@
     let filterState = { title: '', channel: '' };
     let isFiltering = false;
     let isInputActive = false; // Flag to pause filtering during input
+
+    let listObserver = null;
+    let observerForRange = null;
+
+    function isPlaylistPage() {
+        return location.hostname === 'www.youtube.com' &&
+            location.pathname === PLAYLIST_PATH &&
+            location.search.length > 1;
+    }
 
     // --- UI Creation ---
 
@@ -125,7 +139,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.2';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.7';
         titleLabel.textContent = `Playlist Filter v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -295,10 +309,34 @@
         }
     }
 
-    function applyFilters() {
-        if (isInputActive) return; // Skip if user is typing
+    function ensureRangeObserver() {
+        if (observerForRange) return;
 
-        isFiltering = (filterState.title || filterState.channel);
+        observerForRange = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const rect = entry.boundingClientRect;
+                if (entry.isIntersecting) {
+                    itemsVisibleSet.add(entry.target);
+                    itemsAboveSet.delete(entry.target);
+                } else if (rect.bottom < 180) { // Still using 180 as threshold for "Above"
+                    itemsAboveSet.add(entry.target);
+                    itemsVisibleSet.delete(entry.target);
+                } else {
+                    // Below viewport
+                    itemsAboveSet.delete(entry.target);
+                    itemsVisibleSet.delete(entry.target);
+                }
+            });
+            updateRangeInfo();
+        }, { root: null, threshold: 0 });
+    }
+
+    function applyFilters() {
+        if (!isActive || !isPlaylistPage()) return;
+        if (isInputActive) return; // Skip if user is typing
+        ensureRangeObserver();
+
+        isFiltering = Boolean(filterState.title || filterState.channel);
         updateStatus('filtering', true);
 
         const items = document.querySelectorAll('ytd-playlist-video-renderer');
@@ -349,24 +387,6 @@
     }
 
     // --- Range Logic ---
-    const observerForRange = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            const rect = entry.boundingClientRect;
-            if (entry.isIntersecting) {
-                itemsVisibleSet.add(entry.target);
-                itemsAboveSet.delete(entry.target);
-            } else if (rect.bottom < 180) { // Still using 180 as threshold for "Above"
-                itemsAboveSet.add(entry.target);
-                itemsVisibleSet.delete(entry.target);
-            } else {
-                // Below viewport
-                itemsAboveSet.delete(entry.target);
-                itemsVisibleSet.delete(entry.target);
-            }
-        });
-        updateRangeInfo();
-    }, { root: null, threshold: 0 });
-
     function updateRangeInfo() {
         const div = document.getElementById('yt-filter-range-info');
         if (!div) return;
@@ -402,13 +422,15 @@
     }
 
     // --- Mutation Observer for Async Loading ---
-    let listObserver = null;
     function setupMutationObserver() {
-        if (listObserver) return;
+        if (!isActive || listObserver || observerInitTimerId) return;
 
         const container = document.querySelector('ytd-playlist-video-list-renderer #contents');
         if (!container) {
-            setTimeout(setupMutationObserver, 1000);
+            observerInitTimerId = window.setTimeout(() => {
+                observerInitTimerId = null;
+                setupMutationObserver();
+            }, 1000);
             return;
         }
 
@@ -430,7 +452,15 @@
         listObserver.observe(container, { childList: true });
     }
 
+    function showPanel() {
+        const panel = document.getElementById('yt-filter-panel');
+        if (panel) panel.style.display = 'flex';
+    }
 
+    function hidePanel() {
+        const panel = document.getElementById('yt-filter-panel');
+        if (panel) panel.style.display = 'none';
+    }
 
     // --- Status Helper ---
     function updateStatus(type, isActive) {
@@ -443,25 +473,67 @@
 
     // --- Initialization ---
 
-    function run() {
+    function startMain() {
+        if (isActive || !isPlaylistPage()) return;
+        isActive = true;
+
         createPanel();
+        showPanel();
+        itemsAboveSet.clear();
+        itemsVisibleSet.clear();
 
-        // Setup MutationObserver to watch for new items
         setupMutationObserver();
+        applyFilters();
 
-        // Loop apply filters (to catch new items from scroll as backup)
-        setInterval(applyFilters, 2000);
+        if (!filterIntervalId) {
+            // Loop apply filters (to catch new items from scroll as backup)
+            filterIntervalId = window.setInterval(applyFilters, 2000);
+        }
 
         console.log('[YouTube Playlist Filter] Running...');
     }
 
-    // Navigation Handling
-    window.addEventListener('yt-navigate-finish', () => {
+    function stopMain() {
+        if (!isActive) return;
+        isActive = false;
+
+        if (observerInitTimerId) {
+            clearTimeout(observerInitTimerId);
+            observerInitTimerId = null;
+        }
+
+        if (listObserver) {
+            listObserver.disconnect();
+            listObserver = null;
+        }
+
+        if (observerForRange) {
+            observerForRange.disconnect();
+            observerForRange = null;
+        }
+
+        if (filterIntervalId) {
+            clearInterval(filterIntervalId);
+            filterIntervalId = null;
+        }
+
         itemsAboveSet.clear();
         itemsVisibleSet.clear();
-        setTimeout(run, 1000);
+        hidePanel();
+    }
+
+    // Navigation Handling
+    window.addEventListener('yt-navigate-start', stopMain);
+    window.addEventListener('yt-navigate-finish', () => {
+        if (isPlaylistPage()) {
+            startMain();
+        } else {
+            stopMain();
+        }
     });
 
-    run();
+    if (isPlaylistPage()) {
+        startMain();
+    }
 
 })();
