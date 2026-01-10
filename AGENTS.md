@@ -124,6 +124,11 @@ Recent learnings from YouTube userscript development:
 -   **Avoid `innerHTML`**: Modern sites (like YouTube) enforce Trusted Types security policies that block assignments to `innerHTML`.
 -   **Use DOM Methods**: Always use `document.createElement()`, `textContent`, `setAttribute()`, and `appendChild()` to build UI elements safely.
 
+### 5. Panel State Coupled to Activity
+-   **Active/Inactive Sync**: If a script has a UI panel, tie its open/closed state to the script's active context rather than manual toggles.
+-   **Active State**: Show the panel contents and display `Active`.
+-   **Inactive State**: Collapse the panel contents and display `Inactive` (keep the header visible).
+
 ## ユーザー固有の好み (User-Specific Preferences)
 
 -   **User Name**: Takashi Sasaki
