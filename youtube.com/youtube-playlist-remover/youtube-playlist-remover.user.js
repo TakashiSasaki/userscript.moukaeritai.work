@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.16
+// @version      0.1.17
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
-// @match        *://www.youtube.com/playlist?*
+// @match        *://www.youtube.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @match        http://127.0.0.1:5500/*
 // @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
@@ -34,10 +34,11 @@
     }
 
     // --- Configuration ---
+    const PLAYLIST_PATH = '/playlist';
     const PANEL_POS_KEY = 'yt_remover_panel_position';
-    const PANEL_MIN_KEY = 'yt_remover_panel_minimized';
 
-    let isMinimized = GM_getValue(PANEL_MIN_KEY, false);
+    let isActive = false;
+    let refreshIntervalId = null;
     let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '150px', right: '20px' });
 
     // --- Constants ---
@@ -51,6 +52,13 @@
     // Items that are "Above" the viewport (scanned) AND currently Visible (not filtered out).
     // These are the targets for the "Remove Above" action.
     const itemsAboveAndValidSet = new Set();
+    let observer = null;
+
+    function isPlaylistPage() {
+        return location.hostname === 'www.youtube.com' &&
+            location.pathname === PLAYLIST_PATH &&
+            location.search.length > 1;
+    }
 
     // --- UI Creation ---
     function createPanel() {
@@ -130,32 +138,28 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.2';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.17';
         titleLabel.textContent = `Remover v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
-        const minimizeBtn = document.createElement('button');
-        minimizeBtn.textContent = '−';
-        Object.assign(minimizeBtn.style, {
-            cursor: 'pointer', background: 'none', border: 'none',
-            fontSize: '16px', fontWeight: 'bold', padding: '0 4px', color: '#666'
+        const statusLabel = document.createElement('span');
+        statusLabel.id = 'yt-remover-active-indicator';
+        statusLabel.textContent = 'Inactive';
+        Object.assign(statusLabel.style, {
+            fontSize: '11px',
+            fontWeight: 'bold',
+            padding: '2px 6px',
+            borderRadius: '10px',
+            backgroundColor: '#e0e0e0',
+            color: '#666'
         });
 
         const contentContainer = document.createElement('div');
+        contentContainer.id = 'yt-remover-panel-content';
         Object.assign(contentContainer.style, { display: 'flex', flexDirection: 'column', gap: '8px' });
 
-        // Minimize Logic
-        const updatePanelMinState = (min) => {
-            contentContainer.style.display = min ? 'none' : 'flex';
-            minimizeBtn.textContent = min ? '+' : '−';
-            isMinimized = min;
-            GM_setValue(PANEL_MIN_KEY, min);
-        };
-        minimizeBtn.addEventListener('click', () => updatePanelMinState(!isMinimized));
-        updatePanelMinState(isMinimized);
-
         headerRow.appendChild(titleLabel);
-        headerRow.appendChild(minimizeBtn);
+        headerRow.appendChild(statusLabel);
         panel.appendChild(headerRow);
         panel.appendChild(contentContainer);
 
@@ -225,34 +229,39 @@
     // We only want to delete items that are:
     // 1. Above the viewport.
     // 2. Visible (display != none). If Filter script hides them, we must NOT delete them.
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            const rect = entry.boundingClientRect;
-            const el = entry.target;
+    function ensureObserver() {
+        if (observer) return;
+        observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const rect = entry.boundingClientRect;
+                const el = entry.target;
 
-            // Check if element is effectively visible (not filtered out)
-            const isVisible = (el.style.display !== 'none');
+                // Check if element is effectively visible (not filtered out)
+                const isVisible = (el.style.display !== 'none');
 
-            if (!isVisible) {
-                // If hidden, remove from set immediately to be safe
-                itemsAboveAndValidSet.delete(el);
-                return;
-            }
+                if (!isVisible) {
+                    // If hidden, remove from set immediately to be safe
+                    itemsAboveAndValidSet.delete(el);
+                    return;
+                }
 
-            if (rect.bottom < 180 || entry.isIntersecting) {
-                // "Range" = Above viewport OR Currently Visible in viewport
-                itemsAboveAndValidSet.add(el);
-            } else {
-                // Strictly below viewport (not yet seen/scanned potentially)
-                // Note: This logic assumes we scroll down. 
-                itemsAboveAndValidSet.delete(el);
-            }
-        });
-        updateCandidatesInfo();
-    }, { root: null, threshold: 0 });
+                if (rect.bottom < 180 || entry.isIntersecting) {
+                    // "Range" = Above viewport OR Currently Visible in viewport
+                    itemsAboveAndValidSet.add(el);
+                } else {
+                    // Strictly below viewport (not yet seen/scanned potentially)
+                    // Note: This logic assumes we scroll down. 
+                    itemsAboveAndValidSet.delete(el);
+                }
+            });
+            updateCandidatesInfo();
+        }, { root: null, threshold: 0 });
+    }
 
 
     function refreshObserver() {
+        if (!isActive || !isPlaylistPage()) return;
+        ensureObserver();
         const items = document.querySelectorAll('ytd-playlist-video-renderer');
         items.forEach(item => {
             observer.observe(item);
@@ -358,6 +367,7 @@
     }
 
     async function removeRangeItems() {
+        if (!isActive || !isPlaylistPage()) return;
         const count = itemsAboveAndValidSet.size;
         if (count === 0) {
             return;
@@ -372,7 +382,6 @@
             .filter(el => itemsAboveAndValidSet.has(el) && el.isConnected && el.style.display !== 'none')
             .reverse();
 
-        let removedCount = 0;
         const total = finalTargets.length;
 
         // Visual Feedback: Highlight target indexes
@@ -395,7 +404,6 @@
                 const disappeared = await waitForItemDisappearance(item, 8000); // Wait up to 8s
                 if (disappeared) {
                     itemsAboveAndValidSet.delete(item);
-                    removedCount++;
                 } else {
                     console.warn('[YouTube Playlist Remover] Item removal timed out:', item);
                     // Do not force remove. If YouTube didn't remove it, something might be wrong.
@@ -411,18 +419,73 @@
     }
 
 
+    function setPanelActiveState(active) {
+        const label = document.getElementById('yt-remover-active-indicator');
+        const content = document.getElementById('yt-remover-panel-content');
+        const panel = document.getElementById('yt-remover-panel');
+        if (!label || !content || !panel) return;
+
+        label.textContent = active ? 'Active' : 'Inactive';
+        label.style.backgroundColor = active ? '#e6f4ea' : '#e0e0e0';
+        label.style.color = active ? '#188038' : '#666';
+
+        content.style.display = active ? 'flex' : 'none';
+        panel.style.opacity = active ? '1' : '0.85';
+    }
+
+    function showPanel() {
+        const panel = document.getElementById('yt-remover-panel');
+        if (panel) panel.style.display = 'flex';
+    }
+
     // --- Init ---
-    function run() {
+    function startMain() {
+        if (isActive || !isPlaylistPage()) return;
+        isActive = true;
+
         createPanel();
-        setInterval(refreshObserver, 2000); // Periodically refresh to catch new items and visibility changes
+        showPanel();
+        setPanelActiveState(true);
+        itemsAboveAndValidSet.clear();
+        refreshObserver();
+
+        if (!refreshIntervalId) {
+            refreshIntervalId = window.setInterval(refreshObserver, 2000);
+        }
+
         console.log('[YouTube Playlist Remover] Running...');
     }
 
-    window.addEventListener('yt-navigate-finish', () => {
+    function stopMain() {
+        if (!isActive) return;
+        isActive = false;
+
+        if (refreshIntervalId) {
+            clearInterval(refreshIntervalId);
+            refreshIntervalId = null;
+        }
+
+        if (observer) {
+            observer.disconnect();
+            observer = null;
+        }
+
         itemsAboveAndValidSet.clear();
-        setTimeout(run, 1000);
+        showPanel();
+        setPanelActiveState(false);
+    }
+
+    window.addEventListener('yt-navigate-start', stopMain);
+    window.addEventListener('yt-navigate-finish', () => {
+        if (isPlaylistPage()) {
+            startMain();
+        } else {
+            stopMain();
+        }
     });
 
-    run();
+    if (isPlaylistPage()) {
+        startMain();
+    }
 
 })();

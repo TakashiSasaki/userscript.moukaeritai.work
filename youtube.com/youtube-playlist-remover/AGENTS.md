@@ -13,6 +13,11 @@ This document outlines specific rules and implementation details for `youtube-pl
 
 ## 2. Implementation Details
 
+### SPA Activation & Panel State
+*   **Wide Install, Narrow Activation**: Use a broad `@match` (e.g. `*://www.youtube.com/*`) to keep the script installed, but gate the main logic to `/playlist?*` only.
+*   **Lifecycle**: Listen to `yt-navigate-start/finish` and start/stop observers, intervals, and UI only while the playlist URL is active.
+*   **Panel Coupling**: The panel must follow the active state automatically. Show content and `Active` when enabled, collapse content and show `Inactive` when disabled (header stays visible).
+
 ### Interaction Logic (Critical)
 The script uses a strict sequence to remove a video. Do NOT change this unless YouTube's UI fundamentally changes:
 1.  **Focus**: Call `.focus()` on the menu button. This helps standardizing the event handling.
