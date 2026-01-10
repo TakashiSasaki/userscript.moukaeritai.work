@@ -4,6 +4,18 @@
 
 以下の内容は `gemini-export-to-docs.md` の以前のバージョンに含まれていましたが、文書更新に伴い削除されました。今後のメンテナンスやリファクタリングにおいて重要となる技術的な制約や戦略が含まれているため、ここに記録します。
 
+## Install Detection API
+The userscript includes the install-detection guard required by the portal index and only injects this API on the following hosts:
+
+- `userscript.moukaeritai.work`
+- `127.0.0.1`
+- `fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev`
+
+Behavior on those hosts:
+
+- **Dispatch**: `userscript-check-installed` is dispatched on page load.
+- **Listener**: `userscript-ping` is listened for and replied to, then the script returns early.
+
 ### セキュリティ制約 (Trusted Types & CSP)
 > **Trusted Types (セキュリティ)**
 > Geminiのサイトではセキュリティポリシーにより `innerHTML` への文字列代入が禁止されている（TrustedHTML違反エラーが発生する）。

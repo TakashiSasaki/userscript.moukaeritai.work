@@ -4,6 +4,18 @@
 
 以下の内容は `gemini-one-click-delete.md` の以前のバージョンに含まれていましたが、文書更新に伴い削除されました。エージェントが開発を行う上で重要となりうる指示が含まれているため、ここに記録します。
 
+## Install Detection API
+The userscript includes the install-detection guard required by the portal index and only injects this API on the following hosts:
+
+- `userscript.moukaeritai.work`
+- `127.0.0.1`
+- `fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev`
+
+Behavior on those hosts:
+
+- **Dispatch**: `userscript-check-installed` is dispatched on page load.
+- **Listener**: `userscript-ping` is listened for and replied to, then the script returns early.
+
 ### DOMセレクタの取得に関する指示
 > セレクタはChromeの開発者モードで取得できるDOMツリーから得たものです。
 > 同じ要素を指定するセレクタには複数の表現方法がありますから、
