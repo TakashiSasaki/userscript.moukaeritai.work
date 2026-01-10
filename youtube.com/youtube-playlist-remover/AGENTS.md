@@ -18,6 +18,10 @@ This document outlines specific rules and implementation details for `youtube-pl
 *   **Lifecycle**: Listen to `yt-navigate-start/finish` and start/stop observers, intervals, and UI only while the playlist URL is active.
 *   **Panel Coupling**: The panel must follow the active state automatically. Show content and `Active` when enabled, collapse content and show `Inactive` when disabled (header stays visible).
 
+### Initialization Delay
+*   **Randomized Start**: Add a 1-3s random delay before first initialization to avoid multiple userscripts starting at the same time.
+*   **Implementation**: Use `INIT_DELAY_RANGE_MS`, `getRandomInitDelayMs()`, and `setTimeout(init, ...)`. Do not revert to a fixed delay.
+
 ### Interaction Logic (Critical)
 The script uses a strict sequence to remove a video. Do NOT change this unless YouTube's UI fundamentally changes:
 1.  **Focus**: Call `.focus()` on the menu button. This helps standardizing the event handling.

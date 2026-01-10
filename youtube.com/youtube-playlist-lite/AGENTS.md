@@ -38,6 +38,13 @@ YouTubeはSPA（シングルページアプリケーション）であるため�
 -   **挙動**: `getPageConfig()` が `null` の時は `Inactive` にして内容を閉じる。対象ページでは `Active` にして内容を表示する。既存の `isAutoMinimized` と二重管理にならないよう、状態更新は一箇所に集約する。
 -   **実装ID**: ラベルは `yt-lite-active-indicator`、内容コンテナは `yt-lite-panel-content`。`setPanelActiveState()` でラベルと表示状態を同期する。
 
+## 初期化ディレイの注意点
+
+他のユーザースクリプトと同時に起動してページ初期描画を阻害しないよう、初期化は 1〜3 秒のランダムディレイを必ず入れています。
+-   **範囲**: `INIT_DELAY_RANGE_MS = { min: 1000, max: 3000 }` の一様分布。
+-   **目的**: 複数スクリプトの同時注入を避け、初回ロードの競合や重い MutationObserver の集中起動を緩和する。
+-   **実装**: `getRandomInitDelayMs()` で乱数を生成し、`setTimeout(init, ...)` を使用する。固定値に戻さないこと。
+
 ## サンプルHTMLの前処理
 
 `samples/` 配下のDOMスナップショットは、他プロジェクトと同様の前処理を必ず実施してください。

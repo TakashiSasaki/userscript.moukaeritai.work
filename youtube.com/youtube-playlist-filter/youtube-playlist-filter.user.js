@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.12
+// @version      0.1.13
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -36,6 +36,7 @@
     // --- Config & State ---
     const PLAYLIST_PATH = '/playlist';
     const PANEL_POS_KEY = 'yt_filter_panel_position';
+    const INIT_DELAY_RANGE_MS = { min: 1000, max: 3000 };
     let isActive = false;
     let filterIntervalId = null;
     let observerInitTimerId = null;
@@ -136,7 +137,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.12';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.13';
         titleLabel.textContent = `Playlist Filter v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -580,18 +581,27 @@
         setPanelActiveState(false);
     }
 
-    // Navigation Handling
-    window.addEventListener('yt-navigate-start', stopMain);
-    window.addEventListener('yt-navigate-finish', () => {
+    function init() {
+        // Navigation Handling
+        window.addEventListener('yt-navigate-start', stopMain);
+        window.addEventListener('yt-navigate-finish', () => {
+            if (isPlaylistPage()) {
+                startMain();
+            } else {
+                stopMain();
+            }
+        });
+
         if (isPlaylistPage()) {
             startMain();
-        } else {
-            stopMain();
         }
-    });
-
-    if (isPlaylistPage()) {
-        startMain();
     }
+
+    function getRandomInitDelayMs() {
+        const span = INIT_DELAY_RANGE_MS.max - INIT_DELAY_RANGE_MS.min;
+        return INIT_DELAY_RANGE_MS.min + Math.floor(Math.random() * (span + 1));
+    }
+
+    setTimeout(init, getRandomInitDelayMs());
 
 })();

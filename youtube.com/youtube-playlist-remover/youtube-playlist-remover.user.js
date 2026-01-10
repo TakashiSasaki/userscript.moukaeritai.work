@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.29
+// @version      0.1.30
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -36,6 +36,7 @@
     // --- Configuration ---
     const PLAYLIST_PATH = '/playlist';
     const PANEL_POS_KEY = 'yt_remover_panel_position';
+    const INIT_DELAY_RANGE_MS = { min: 1000, max: 3000 };
 
     let isActive = false;
     let refreshIntervalId = null;
@@ -141,7 +142,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.29';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.30';
         titleLabel.textContent = `Remover v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -563,17 +564,26 @@
         setPanelActiveState(false);
     }
 
-    window.addEventListener('yt-navigate-start', stopMain);
-    window.addEventListener('yt-navigate-finish', () => {
+    function init() {
+        window.addEventListener('yt-navigate-start', stopMain);
+        window.addEventListener('yt-navigate-finish', () => {
+            if (isPlaylistPage()) {
+                startMain();
+            } else {
+                stopMain();
+            }
+        });
+
         if (isPlaylistPage()) {
             startMain();
-        } else {
-            stopMain();
         }
-    });
-
-    if (isPlaylistPage()) {
-        startMain();
     }
+
+    function getRandomInitDelayMs() {
+        const span = INIT_DELAY_RANGE_MS.max - INIT_DELAY_RANGE_MS.min;
+        return INIT_DELAY_RANGE_MS.min + Math.floor(Math.random() * (span + 1));
+    }
+
+    setTimeout(init, getRandomInitDelayMs());
 
 })();
