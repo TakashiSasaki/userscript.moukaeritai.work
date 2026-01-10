@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.9
+// @version      0.1.10
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -68,7 +68,7 @@
         Object.assign(panel.style, {
             position: 'fixed',
             zIndex: 9999,
-            backgroundColor: '#f4f4f4',
+            backgroundColor: '#fff4e5',
             border: '1px solid #ccc',
             borderRadius: '8px',
             padding: '12px',
@@ -135,7 +135,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.9';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.10';
         titleLabel.textContent = `Playlist Filter v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 

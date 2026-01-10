@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.5
+// @version      0.1.6
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -125,7 +125,7 @@
         Object.assign(panel.style, {
             position: 'fixed',
             zIndex: 9999,
-            backgroundColor: '#f4f4f4',
+            backgroundColor: '#fffde7',
             border: '1px solid #ccc',
             borderRadius: '8px',
             padding: '12px',
@@ -203,7 +203,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.5';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.6';
         titleLabel.textContent = `Auto Scroller v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.49
+// @version      0.2.50
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -86,7 +86,7 @@
         Object.assign(panel.style, {
             position: 'fixed',
             zIndex: 9999,
-            backgroundColor: '#fff4e5',
+            backgroundColor: '#f1f8e9',
             border: '1px solid #ccc',
             borderRadius: '8px',
             padding: '12px',
@@ -150,7 +150,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.49';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.50';
         titleLabel.textContent = `Playlist Saver v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
