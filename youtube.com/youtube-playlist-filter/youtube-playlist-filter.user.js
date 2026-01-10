@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.11
+// @version      0.1.12
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -44,6 +44,7 @@
     let filterState = { title: '', channel: '' };
     let isFiltering = false;
     let isInputActive = false; // Flag to pause filtering during input
+    let resumeTimerId = null;
 
     let listObserver = null;
     let observerForRange = null;
@@ -135,7 +136,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.11';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.12';
         titleLabel.textContent = `Playlist Filter v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -195,7 +196,7 @@
             // Resume and apply on blur
             input.addEventListener('blur', () => {
                 filterState[key] = input.value;
-                resumeFilteringAfterInput();
+                scheduleResumeAfterInput();
             });
 
             // Handle Enter key
@@ -210,7 +211,7 @@
                 filterState[key] = '';
                 input.value = '';
                 if (isInputActive) {
-                    resumeFilteringAfterInput();
+                    scheduleResumeAfterInput();
                 } else {
                     applyFilters();
                 }
@@ -243,7 +244,7 @@
         });
         applyBtn.addEventListener('click', () => {
             if (isInputActive) {
-                resumeFilteringAfterInput();
+                scheduleResumeAfterInput();
             } else {
                 applyFilters();
             }
@@ -503,12 +504,31 @@
     function pauseFilteringForInput() {
         if (isInputActive) return;
         isInputActive = true;
+        if (resumeTimerId) {
+            clearTimeout(resumeTimerId);
+            resumeTimerId = null;
+        }
         if (!isActive) return;
         stopBackgroundWork();
     }
 
+    function scheduleResumeAfterInput() {
+        if (!isInputActive) return;
+        if (resumeTimerId) {
+            clearTimeout(resumeTimerId);
+        }
+        resumeTimerId = window.setTimeout(() => {
+            resumeTimerId = null;
+            resumeFilteringAfterInput();
+        }, 500);
+    }
+
     function resumeFilteringAfterInput() {
         if (!isInputActive) return;
+        if (resumeTimerId) {
+            clearTimeout(resumeTimerId);
+            resumeTimerId = null;
+        }
         isInputActive = false;
         if (!isActive || !isPlaylistPage()) return;
 
@@ -547,6 +567,10 @@
         if (!isActive) return;
         isActive = false;
         isInputActive = false;
+        if (resumeTimerId) {
+            clearTimeout(resumeTimerId);
+            resumeTimerId = null;
+        }
 
         stopBackgroundWork();
 
