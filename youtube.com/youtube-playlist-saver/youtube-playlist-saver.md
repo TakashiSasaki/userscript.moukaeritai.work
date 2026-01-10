@@ -17,6 +17,7 @@ URL の `list` パラメータにプレイリスト ID が含まれるページ�
 *   **後で見る (Watch Later)**: `https://www.youtube.com/playlist?list=WL`
 *   **高く評価した動画 (Liked Videos)**: `https://www.youtube.com/playlist?list=LL`
 *   **一般のプレイリスト**: `https://www.youtube.com/playlist?list=[PLAYLIST_ID]`
+*   **インストール範囲**: YouTube 全体にインストールされますが、主要機能がアクティブになるのはプレイリストページのみです。
 
 ## 3. ユーザースクリプトの機能
 
@@ -41,13 +42,17 @@ URL の `list` パラメータにプレイリスト ID が含まれるページ�
     *   クリックすると確認ダイアログが表示され、OKを押すと YouTube のメニューを自動操作して削除します。
     *   削除後は動画行が半透明化されます。
 
-### 3.4 API機能 (開発者向け)
+### 3.4 ステータスパネル
+*   右下のパネルで保存数や保存状態を表示します。
+*   **アクティブ状態に連動**: プレイリストページでは `Active` と表示し内容を展開、非プレイリストでは `Inactive` 表示で内容を閉じます。
+
+### 3.5 API機能 (開発者向け)
 *   **`window.YouTubePlaylistSaver`**: 他のスクリプトからデータを利用するためのAPIを公開しています。
     *   `isSaved(playlistId, videoId)`: 動画が保存済みかチェック。
     *   `save(playlistId, ...)`: 動画を強制的に保存し、新規かどうかの結果を返す。
     *   `getAllKnownIds(playlistId)`: 保存済みの全IDを取得。
 
-### 3.5 補助機能の分離
+### 3.6 補助機能の分離
 *   **フィルタリング**: 以前のバージョンに含まれていたフィルタリング機能は、**[YouTube Playlist Filter](../youtube-playlist-filter/index.html)** に分離されました。
 *   **一括削除**: フィルタ条件やスクロール状態に基づいた一括削除機能は、**[YouTube Playlist Remover](../youtube-playlist-remover/index.html)** に分離されました。
 *   **自動スクロール**: **[YouTube Playlist Scroller](../youtube-playlist-scroller/index.html)** に分離されました。
@@ -96,7 +101,7 @@ URL の `list` パラメータにプレイリスト ID が含まれるページ�
 *   更新ルール: スクリプトファイルが少しでも変更された場合は、`patch` レベルを更新します。
 
 ### 5.2 現在バージョン
-`0.2.45`
+`0.2.48`
 
 ### 5.3 メタデータ定義
 *   **作者**: Takashi Sasaki (x.com/TakashiSasaki)

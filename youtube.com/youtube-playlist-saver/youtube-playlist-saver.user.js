@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.47
+// @version      0.2.48
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @author       Takashi Sasaki
-// @match        *://www.youtube.com/playlist?*
+// @match        *://www.youtube.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @match        http://127.0.0.1:5500/*
 // @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
@@ -37,6 +37,7 @@
         return;
     }
 
+    const PLAYLIST_PATH = '/playlist';
     const DATA_KEY = 'yt_playlist_data';
     const DATA_VERSION = 2;
     // Helper to create trash icon
@@ -58,11 +59,17 @@
         return svg;
     }
 
+    function isPlaylistPage() {
+        return location.hostname === 'www.youtube.com' &&
+            location.pathname === PLAYLIST_PATH &&
+            location.search.length > 1;
+    }
+
     const PANEL_POS_KEY = 'yt_saver_panel_position';
-    const PANEL_MIN_KEY = 'yt_saver_panel_minimized';
+    let isActive = false;
+    let scanIntervalId = null;
 
     let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '70px', right: '20px' });
-    let isPanelMinimized = GM_getValue(PANEL_MIN_KEY, false);
     const panelElements = {
         totalSaved: null,
         savedVisible: null,
@@ -143,36 +150,28 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.47';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.48';
         titleLabel.textContent = `Playlist Saver v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
-        const minimizeBtn = document.createElement('button');
-        minimizeBtn.textContent = '-';
-        Object.assign(minimizeBtn.style, {
-            cursor: 'pointer',
-            background: 'none',
-            border: 'none',
-            fontSize: '16px',
+        const statusLabel = document.createElement('span');
+        statusLabel.id = 'yt-saver-active-indicator';
+        statusLabel.textContent = 'Inactive';
+        Object.assign(statusLabel.style, {
+            fontSize: '11px',
             fontWeight: 'bold',
-            padding: '0 4px',
+            padding: '2px 6px',
+            borderRadius: '10px',
+            backgroundColor: '#e0e0e0',
             color: '#666'
         });
 
         const contentContainer = document.createElement('div');
+        contentContainer.id = 'yt-saver-panel-content';
         Object.assign(contentContainer.style, { display: 'flex', flexDirection: 'column', gap: '6px' });
 
-        const updatePanelMinState = (min) => {
-            contentContainer.style.display = min ? 'none' : 'flex';
-            minimizeBtn.textContent = min ? '+' : '-';
-            isPanelMinimized = min;
-            GM_setValue(PANEL_MIN_KEY, min);
-        };
-        minimizeBtn.addEventListener('click', () => updatePanelMinState(!isPanelMinimized));
-        updatePanelMinState(isPanelMinimized);
-
         headerRow.appendChild(titleLabel);
-        headerRow.appendChild(minimizeBtn);
+        headerRow.appendChild(statusLabel);
         panel.appendChild(headerRow);
         panel.appendChild(contentContainer);
 
@@ -241,6 +240,25 @@
 
         panelElements.storageStatus.textContent = storageText;
         panelElements.storageStatus.style.color = storageColor;
+    }
+
+    function setPanelActiveState(active) {
+        const label = document.getElementById('yt-saver-active-indicator');
+        const content = document.getElementById('yt-saver-panel-content');
+        const panel = document.getElementById('yt-saver-panel');
+        if (!label || !content || !panel) return;
+
+        label.textContent = active ? 'Active' : 'Inactive';
+        label.style.backgroundColor = active ? '#e6f4ea' : '#e0e0e0';
+        label.style.color = active ? '#188038' : '#666';
+
+        content.style.display = active ? 'flex' : 'none';
+        panel.style.opacity = active ? '1' : '0.85';
+    }
+
+    function showPanel() {
+        const panel = document.getElementById('yt-saver-panel');
+        if (panel) panel.style.display = 'flex';
     }
 
     // --- Core Data Storage ---
@@ -397,6 +415,7 @@
     let isSessionInitialized = false;
 
     function scanAndRender() {
+        if (!isActive || !isPlaylistPage()) return;
         const playlistId = getPlaylistId();
         if (!playlistId) {
             updatePanelStats({ playlistId: null, totalSaved: NaN, savedVisible: NaN, newVisible: NaN });
@@ -456,21 +475,51 @@
 
     // --- Main Logic ---
 
-    function run() {
+    function resetSessionState() {
+        processedSet.clear();
+        isSessionInitialized = false; // Reset session knowledge on nav
+        currentSessionKnownIds.clear();
+    }
+
+    function startMain() {
+        if (isActive || !isPlaylistPage()) return;
+        isActive = true;
+
         createPanel();
+        showPanel();
+        setPanelActiveState(true);
+        resetSessionState();
         scanAndRender();
-        // Observers
-        setInterval(scanAndRender, 2000); // 2s polling
+
+        if (!scanIntervalId) {
+            scanIntervalId = window.setInterval(scanAndRender, 2000); // 2s polling
+        }
 
         console.log('[YouTube Playlist Saver] Backend & Status Service Running...');
     }
 
+    function stopMain() {
+        if (!isActive) return;
+        isActive = false;
+
+        if (scanIntervalId) {
+            clearInterval(scanIntervalId);
+            scanIntervalId = null;
+        }
+
+        resetSessionState();
+        showPanel();
+        setPanelActiveState(false);
+    }
+
     // Navigation Handling
+    window.addEventListener('yt-navigate-start', stopMain);
     window.addEventListener('yt-navigate-finish', () => {
-        processedSet.clear();
-        isSessionInitialized = false; // Reset session knowledge on nav
-        currentSessionKnownIds.clear();
-        setTimeout(run, 1000);
+        if (isPlaylistPage()) {
+            startMain();
+        } else {
+            stopMain();
+        }
     });
 
 
@@ -619,6 +668,8 @@
     }
 
     // Start Logic
-    run();
+    if (isPlaylistPage()) {
+        startMain();
+    }
 
 })();
