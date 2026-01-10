@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.17
+// @version      0.1.18
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -138,7 +138,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.17';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.18';
         titleLabel.textContent = `Remover v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -322,9 +322,14 @@
         menuBtn.click();
 
         const START = Date.now();
+        let waitedForMenu = false;
         while (Date.now() - START < 3000) {
             const popup = document.querySelector('ytd-menu-popup-renderer');
             if (popup) {
+                if (!waitedForMenu) {
+                    await new Promise(r => setTimeout(r, 500));
+                    waitedForMenu = true;
+                }
                 // 2. Select all menu items using role="menuitem" for better coverage
                 const items = Array.from(popup.querySelectorAll('[role="menuitem"]'));
                 for (const item of items) {
