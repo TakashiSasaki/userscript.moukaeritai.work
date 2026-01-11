@@ -1,17 +1,39 @@
 // ==UserScript==
 // @name         ChatGPT Auto Scroll
-// @namespace    https://moukaeritai.work/chatgpt-auto-scroll
-// @version      1.0.0
+// @namespace    userscript.moukaeritai.work
+// @version      1.0.3
 // @description  Automatically scrolls the conversation list to load all items.
 // @author       Takashi SASAKI (https://twitter.com/TakashiSasaki)
 // @match        https://chatgpt.com/*
+// @match        https://userscript.moukaeritai.work/*
+// @match        http://127.0.0.1:5500/*
+// @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=openai.com
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-auto-scroll/chatgpt-auto-scroll.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-auto-scroll/chatgpt-auto-scroll.user.js
 // @grant        GM_registerMenuCommand
+// @grant        GM_info
+// @grant        GM_xmlhttpRequest
 // @license      MIT
 // ==/UserScript==
 
 (function() {
     'use strict';
+
+    // Portal API Guard
+    if (location.hostname === 'userscript.moukaeritai.work' || location.hostname === '127.0.0.1' || location.hostname === 'fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev') {
+        const report = () => {
+            document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+                detail: {
+                    name: GM_info.script.name,
+                    version: GM_info.script.version
+                }
+            }));
+        };
+        report();
+        document.addEventListener('userscript-ping', report);
+        return;
+    }
 
     const CONVERSATION_LIST_SELECTORS = [
         "nav div.overflow-y-auto",
@@ -22,6 +44,7 @@
     ];
 
     const ERROR_MESSAGE_LIST_NOT_FOUND = "Unable to retrieve the conversation list. This may be due to changes in the DOM structure of ChatGPT.";
+    const UPDATE_URL = "https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-auto-scroll/chatgpt-auto-scroll.user.js";
 
     let scrollObserver = null;
     let lastScrollTop = 0;
@@ -60,6 +83,38 @@
         }
     }
 
+    function isNewerVersion(current, remote) {
+        const cParts = current.split('.').map(Number);
+        const rParts = remote.split('.').map(Number);
+        for (let i = 0; i < Math.max(cParts.length, rParts.length); i++) {
+            const c = cParts[i] || 0;
+            const r = rParts[i] || 0;
+            if (r > c) return true;
+            if (r < c) return false;
+        }
+        return false;
+    }
+
+    function checkForUpdates() {
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: UPDATE_URL,
+            onload: (response) => {
+                const match = response.responseText.match(/@version\s+([\d.]+)/);
+                if (match) {
+                    const remoteVersion = match[1];
+                    if (isNewerVersion(GM_info.script.version, remoteVersion)) {
+                        if (confirm(`New version ${remoteVersion} is available. Update now?`)) {
+                            window.location.href = UPDATE_URL;
+                        }
+                    } else {
+                        alert("You are using the latest version.");
+                    }
+                }
+            }
+        });
+    }
+
     function createFloatingPanel() {
         const panelId = 'chatgpt-auto-scroll-panel';
         if (document.getElementById(panelId)) return;
@@ -94,6 +149,16 @@
         `;
         btn.onclick = handleContinuousScrolling;
         content.appendChild(btn);
+
+        const updateBtn = document.createElement('button');
+        updateBtn.innerText = 'Check Updates';
+        updateBtn.style.cssText = `
+            width: 100%; padding: 8px; background: #6c757d; color: white;
+            border: none; border-radius: 4px; cursor: pointer; font-weight: bold;
+            margin-top: 10px;
+        `;
+        updateBtn.onclick = checkForUpdates;
+        content.appendChild(updateBtn);
 
         document.body.appendChild(panel);
 
