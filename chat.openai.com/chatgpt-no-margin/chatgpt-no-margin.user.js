@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Remove margin around messages in ChatGPT Conversation View
+// @name         ChatGPT No Margin
 // @namespace    userscript.moukaeritai.work
-// @version      1.2.2
+// @version      1.2.3
 // @description  This script customizes the ChatGPT interface by reducing the margin around each message in the conversation view. It aims to create a tighter layout, thereby making the interface cleaner and allowing more content to be visible at once.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
