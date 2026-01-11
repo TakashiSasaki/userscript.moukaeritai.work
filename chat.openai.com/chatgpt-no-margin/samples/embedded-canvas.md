@@ -31,8 +31,9 @@ This document analyzes the "Embedded Canvas" (or Canvas Card), which is the docu
 ### Content Body
 *   **Selector:** `div.ProseMirror` (found deeper in the structure)
     *   This is the rich text editor area containing the actual document text.
-    *   **Wrapper Hierarchy:**
-        `section.popover` -> `section.relative` -> `div.block` -> `div.h-full` -> `div.flex.justify-center` -> `div.z-0` -> `div.ProseMirror`
+    *   **Classes:** `markdown prose dark:prose-invert ... ProseMirror`
+    *   **Inline Style:** Often has a fixed pixel width (e.g., `width: 1811px`) calculated by JS.
+    *   **Typography:** Uses Tailwind's `prose` class, which applies a default `max-width` (typically `65ch`) to ensure readability.
 
 ## 3. Detection & Observation
 
@@ -46,17 +47,15 @@ This document analyzes the "Embedded Canvas" (or Canvas Card), which is the docu
 ## 4. Key CSS Variables for "No Margin"
 *   **`--thread-content-max-width`**: This variable (defined on the parent `article` or wrapper) constrains the width of this card.
     *   The card itself has `w-full`, so expanding the parent `article`'s max-width will automatically expand this card.
-*   **`--canvas-bg`**: Controls the background color, useful if visual customization is needed.
 
 ## 5. Selection Strategy
 *   **Card Container:** `article div.popover.rounded-3xl`
-*   **Download Button:** `article div.popover.rounded-3xl button[aria-haspopup="menu"]`
 *   **Editor Content:** `article div.popover.rounded-3xl .ProseMirror`
 
-## 6. Interaction Emulation
-*   **Download:** Click the download button (see `canvas-download-button.md` and `canvas-download-format-menu.md`).
-*   **Edit:** Clicking "編集する" likely toggles the `contenteditable` state of the `.ProseMirror` div or swaps it with an active editor.
-
-## 7. Known Issues & Fixes
-*   **Edge Contact:** When expanding the chat to 100% width, the rounded corners of this card (`rounded-3xl`) can touch the screen edges, looking unpolished.
-*   **Fix:** Apply a calculated width (e.g., `calc(100% - 3rem)`) and auto margins to center it, ensuring visual separation from the viewport edges.
+## 6. Known Issues & Fixes
+*   **Edge Contact:** When expanding the chat to 100% width, the rounded corners of this card (`rounded-3xl`) can touch the screen edges.
+    *   **Fix:** Apply `width: calc(100% - 3rem)` and auto margins to the card.
+*   **Typography & Layout:**
+    *   The `.ProseMirror` element has an inline `width` (e.g., `1811px`) that causes overflow if not overridden.
+    *   **Crucial:** While `width: 100%` is needed to contain the element, applying `max-width: 100%` (as done for the Main Canvas) can break the layout of internal elements like `h1` (which rely on `prose`'s `max-width` for proper centering or line wrapping).
+    *   **Fix:** For Embedded Canvas, override `width` to `100%` but **do not** override `max-width` (letting `prose` control it, or set it to `65ch`). This results in a wide card with a centered, readable text column.
