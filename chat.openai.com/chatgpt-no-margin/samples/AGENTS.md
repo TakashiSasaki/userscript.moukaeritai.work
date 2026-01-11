@@ -27,7 +27,30 @@ When capturing a new DOM fragment (e.g., a new button, a changed message layout)
 -   **Popovers**: Menus (like the 3-dot menu) are often rendered at the end of the `<body>` in a `div[data-radix-popper-content-wrapper]`, not adjacent to their trigger button.
 -   **Icons**: Icons are almost always SVGs. For analysis, the specific path data is irrelevant; identifying the `svg` tag is sufficient.
 
-## 3. File Structure
+## 3. Analysis Requirements (MANDATORY)
+
+When analyzing a DOM fragment and creating its corresponding `.md` file, you **must** address the following points to ensure the analysis is actionable for UserScript development:
+
+1.  **Context & Location**:
+    *   Where does this fragment appear in the overall DOM structure? (e.g., "Inside the main chat container," "Appended to `<body>` as a portal").
+    *   Is it always present, or does it appear dynamically?
+
+2.  **Detection & Observation**:
+    *   If the element is dynamic (e.g., a dropdown menu, a modal), what `MutationObserver` strategy should be used to detect it?
+        *   **Target Node**: Which parent node should be observed? (e.g., `document.body` for portals, specific container for chat messages).
+        *   **Observer Config**: What options are needed? (e.g., `{ childList: true, subtree: true }`).
+    *   Are there specific attributes or classes that uniquely identify the element when it appears? (e.g., `data-radix-popper-content-wrapper`).
+
+3.  **Selection Strategy**:
+    *   What is the most robust CSS Selector to find this element?
+    *   Avoid brittle classes (like randomized Tailwind strings) if possible. Prefer semantic roles (`role="menuitem"`), data attributes (`data-testid`), or structure (`div > button`).
+    *   If text matching is required, specify the logic (e.g., "Find element where textContent includes 'Markdown'").
+
+4.  **Interaction Emulation**:
+    *   What events need to be dispatched to emulate user interaction? (e.g., `click`, `mousedown`, `input`).
+    *   Are there specific timing requirements? (e.g., "Wait for the menu animation to finish").
+
+## 4. File Structure
 -   `*.html`: The DOM fragment (preprocessed).
 -   `*.md`: Analysis of the fragment.
 -   `whole-dom*.html`: Large-scale snapshots of the page structure (Standard view vs Canvas view).
