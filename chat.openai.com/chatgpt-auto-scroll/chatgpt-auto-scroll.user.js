@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Auto Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.6
+// @version      1.0.7
 // @description  Automatically scrolls the conversation list to load all items.
 // @author       Takashi SASAKI (https://twitter.com/TakashiSasaki)
 // @match        https://chatgpt.com/*
@@ -13,6 +13,8 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-auto-scroll/chatgpt-auto-scroll.user.js
 // @grant        GM_registerMenuCommand
 // @grant        GM_info
+// @grant        GM_setValue
+// @grant        GM_getValue
 // @license      MIT
 // ==/UserScript==
 
@@ -88,9 +90,17 @@
         if (document.getElementById(panelId)) return;
 
         const panel = document.createElement('div');
+
+        const savedTop = GM_getValue('panelTop', '10px');
+        const savedLeft = GM_getValue('panelLeft', null);
+        let positionStyle = 'top: 10px; right: 10px;';
+        if (savedLeft !== null) {
+            positionStyle = `top: ${savedTop}; left: ${savedLeft}; right: auto;`;
+        }
+
         panel.id = panelId;
         panel.style.cssText = `
-            position: fixed; top: 10px; right: 10px; width: 140px;
+            position: fixed; ${positionStyle} width: 140px;
             background: white; border: 1px solid #ccc; border-radius: 4px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10000;
             font-family: sans-serif; font-size: 11px; color: #333;
@@ -140,7 +150,11 @@
         });
 
         document.addEventListener('mouseup', () => {
-            isDragging = false;
+            if (isDragging) {
+                isDragging = false;
+                GM_setValue('panelTop', panel.style.top);
+                GM_setValue('panelLeft', panel.style.left);
+            }
         });
     }
 
