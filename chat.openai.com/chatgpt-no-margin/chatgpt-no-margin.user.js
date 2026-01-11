@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Remove margin around messages in ChatGPT Conversation View
 // @namespace    userscript.moukaeritai.work
-// @version      1.1.0
+// @version      1.2.0
 // @description  This script customizes the ChatGPT interface by reducing the margin around each message in the conversation view. It aims to create a tighter layout, thereby making the interface cleaner and allowing more content to be visible at once.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -45,66 +45,53 @@
         return;
     }
 
-    // Main Logic
-    function widen(element) {
-        if (element.nodeType !== Node.ELEMENT_NODE) return;
+    // Main Logic: Inject CSS
+    const style = document.createElement('style');
+    style.textContent = `
+        /* --- Chat View --- */
 
-        // Target the inner message container (often has flex and mx-auto)
-        // In recent ChatGPT, it might be: class="... mx-auto max-w-(--thread-content-max-width) flex-1 ... flex ..."
-        if (element.matches("div.flex.mx-auto")) {
-            element.style.marginLeft = "0px";
-            element.style.marginRight = "0px";
-            element.style.maxWidth = "100%";
+        /* 1. Override the max-width variable used by ChatGPT's layout system */
+        :root, [class*="[--thread-content-max-width"] {
+            --thread-content-max-width: 100% !important;
+            --thread-content-margin: 0px !important;
         }
 
-        // Target the outer message wrapper (often has text-base and mx-auto)
-        // In recent ChatGPT: class="text-base my-auto mx-auto ... px-(--thread-content-margin)"
-        if (element.matches("div.text-base.mx-auto")) {
-            element.style.marginLeft = "0px";
-            element.style.marginRight = "0px";
-            element.style.maxWidth = "100%";
-            // Optional: Reduce side padding if desired, but user asked for "no margin" specifically.
-            // Keeping some padding is usually good for readability, but we can minimize it if needed.
-            // element.style.paddingLeft = "1rem";
-            // element.style.paddingRight = "1rem";
+        /* 2. Force the outer message wrapper to use full width and remove auto margins */
+        .text-base.mx-auto {
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
         }
 
-        // Also try to override the CSS variable specifically if it exists in style
-        // This targets the specific Tailwind arbitrary property class usage pattern if accessible
-        if (element.style.getPropertyValue('--thread-content-max-width')) {
-             element.style.setProperty('--thread-content-max-width', '100%');
+        /* 3. Ensure the inner container respects the variable override */
+        div[class*="max-w-[var(--thread-content-max-width)]"],
+        div[class*="max-w-(--thread-content-max-width)"] {
+            max-width: 100% !important;
         }
-    }
 
-    const observer = new MutationObserver(mutations => {
-        mutations.forEach(mutation => {
-            if (mutation.type === "childList") {
-                mutation.addedNodes.forEach(node => {
-                    if (node.nodeType === Node.ELEMENT_NODE) {
-                        widen(node);
-                        // Search for targets inside the added node
-                        node.querySelectorAll("div.flex.mx-auto, div.text-base.mx-auto").forEach(widen);
-                    }
-                });
-            } else if (mutation.type === "attributes") {
-                widen(mutation.target);
-            }
-        });
-    });
+        /* --- Canvas View --- */
 
-    // Start observing after a delay to ensure the page has loaded initial content
-    setTimeout(() => {
-        const presentation = document.querySelector("main div[role='presentation']") || document.body;
+        /* 4. Canvas Content: Remove fixed width from the ProseMirror editor */
+        .ProseMirror {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
 
-        observer.observe(presentation, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['class', 'style']
-        });
+        /* 5. Canvas Wrapper: Remove fixed margins from the container holding the editor */
+        /* Targeting the flex container inside the scrollable area */
+        div.flex.h-full.justify-center[style*="margin"] {
+            margin-left: 1rem !important; /* Keep a tiny padding for aesthetics */
+            margin-right: 1rem !important;
+        }
+        
+        /* Generic fallback for Canvas flex containers if specific style selector fails */
+        section.popover .react-scroll-to-bottom--css-vrzkg-1n7m0yu > div > div > div {
+             margin-left: 0 !important;
+             margin-right: 0 !important;
+             width: 100% !important;
+        }
+    `;
+    document.head.appendChild(style);
+    console.log("ChatGPT No Margin: CSS styles injected.");
 
-        // Initial application
-        document.querySelectorAll("div.flex.mx-auto, div.text-base.mx-auto").forEach(widen);
-        console.log("ChatGPT No Margin script activated.");
-    }, 1500);
 })();
