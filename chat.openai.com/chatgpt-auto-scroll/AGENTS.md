@@ -20,3 +20,8 @@
 - **Dispatch**: `userscript-check-installed` on page load.
 - **Listener**: Listen for `userscript-ping` and reply.
 - ポータルサイト向けのインストール検知機能を実装してください。指定ドメインでのみ有効化し、`userscript-check-installed` の発火と `userscript-ping` への応答を行ってください。
+
+## SPA UI Persistence / SPAでのUI永続化
+- Use `setInterval` instead of `setTimeout` to ensure UI elements persist across route changes or DOM updates.
+- Check for the existence of the UI panel periodically and re-inject if missing.
+- SPA（React等）のDOM再構築に対応するため、`setInterval` を使用してUI要素の存在を定期的に確認し、消えている場合は再生成してください。

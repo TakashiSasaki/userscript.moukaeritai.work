@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Auto Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.4
+// @version      1.0.5
 // @description  Automatically scrolls the conversation list to load all items.
 // @author       Takashi SASAKI (https://twitter.com/TakashiSasaki)
 // @match        https://chatgpt.com/*
@@ -90,7 +90,7 @@
         panel.style.cssText = `
             position: fixed; top: 10px; right: 10px; width: 140px;
             background: white; border: 1px solid #ccc; border-radius: 4px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 9999;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10000;
             font-family: sans-serif; font-size: 11px; color: #333;
         `;
 
@@ -142,7 +142,7 @@
         });
     }
 
-    setTimeout(createFloatingPanel, 1000);
+    setInterval(createFloatingPanel, 1000);
 
     GM_registerMenuCommand("Start Auto Scroll", handleContinuousScrolling);
 })();
