@@ -50,7 +50,30 @@ When analyzing a DOM fragment and creating its corresponding `.md` file, you **m
     *   What events need to be dispatched to emulate user interaction? (e.g., `click`, `mousedown`, `input`).
     *   Are there specific timing requirements? (e.g., "Wait for the menu animation to finish").
 
-## 4. File Structure
--   `*.html`: The DOM fragment (preprocessed).
--   `*.md`: Analysis of the fragment.
--   `whole-dom*.html`: Large-scale snapshots of the page structure (Standard view vs Canvas view).
+## 4. Existing Sample Files
+
+The following files represent specific DOM components analyzed for this project. Use them as references for structure and selectors.
+
+### Core Structure
+*   `whole-dom.html`: Snapshot of the entire ChatGPT interface (Standard view).
+*   `whole-dom-viewing-canvas.html`: Snapshot of the interface when the Canvas side-panel is open.
+
+### User & Model Turns
+*   `user-message-1.html`: A standard user message bubble. Analyzes `data-turn="user"` and layout variables.
+*   `user-message-2.html`: A user message with additional context (e.g., replying to a Canvas document).
+*   `model-response-1.html`: A standard text response from ChatGPT.
+*   `model-response-2.html`: A model response containing an **embedded Canvas card**. Critical for detecting the "Canvas" feature in the stream.
+
+### Canvas (Standalone & Embedded)
+*   `embedded-canvas.html`: The card component representing a Canvas document within the chat stream.
+*   `embedded-canvas-download-button.html`: The download trigger button on the embedded Canvas card.
+*   `embedded-canvas-markdown-button.html`: The Markdown option within the download menu for embedded Canvas.
+*   `single-canvas-button.html`: A standalone button related to Canvas operations (possibly the toggle or open button).
+
+### Canvas Menus & Popovers
+*   `canvas-3dot-button.html`: The "..." menu trigger button.
+*   `canvas-3dot-menu.html`: The opened menu content (Popper) resulting from the 3-dot button.
+*   `canvas-close-button.html`: The "X" button to close the Canvas view.
+*   `canvas-download-button.html`: The download button in the full-screen/side-panel Canvas header.
+*   `canvas-download-format-menu.html`: The format selection menu (PDF, Word, Markdown) that appears after clicking download.
+*   `canvas-markdown-button.html`: The specific menu item for "Markdown" in the format menu.
