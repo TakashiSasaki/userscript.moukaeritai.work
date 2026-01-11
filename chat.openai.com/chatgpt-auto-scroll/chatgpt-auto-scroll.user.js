@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Auto Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.8
+// @version      1.0.9
 // @description  Automatically scrolls the conversation list to load all items.
 // @author       Takashi SASAKI (https://twitter.com/TakashiSasaki)
 // @match        https://chatgpt.com/*
@@ -52,6 +52,7 @@
     let lastScrollTop = 0;
     let isScrolling = false;
     let scrollCount = 0;
+    let scrollTimeout = null;
 
     function getConversationListElement() {
         for (const selector of CONVERSATION_LIST_SELECTORS) {
@@ -79,6 +80,10 @@
                 scrollObserver.disconnect();
                 scrollObserver = null;
             }
+            if (scrollTimeout) {
+                clearTimeout(scrollTimeout);
+                scrollTimeout = null;
+            }
             isScrolling = false;
             updateUI();
         } else {
@@ -95,12 +100,15 @@
                 updateUI();
 
                 scrollObserver = new MutationObserver(() => {
-                    if (lastScrollTop !== div.scrollTop) {
-                        lastScrollTop = div.scrollTop;
-                        scrollCount++;
-                        updateUI();
-                        setTimeout(() => { if (isScrolling) div.scrollTop = div.scrollHeight; }, 500);
-                    }
+                    if (scrollTimeout) clearTimeout(scrollTimeout);
+                    scrollTimeout = setTimeout(() => {
+                        if (isScrolling) {
+                            div.scrollTop = div.scrollHeight;
+                            lastScrollTop = div.scrollTop;
+                            scrollCount++;
+                            updateUI();
+                        }
+                    }, 1000);
                 });
                 scrollObserver.observe(div, { childList: true, subtree: true, attributes: true });
                 div.scrollTop = div.scrollHeight;
