@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT No Margin
 // @namespace    userscript.moukaeritai.work
-// @version      1.2.3
+// @version      1.2.4
 // @description  This script customizes the ChatGPT interface by reducing the margin around each message in the conversation view. It aims to create a tighter layout, thereby making the interface cleaner and allowing more content to be visible at once.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -71,17 +71,12 @@
 
         /* --- Canvas View --- */
 
-        /* 4. Canvas Content: Remove fixed width from the ProseMirror editor (Main Canvas) */
-        /* Note: For Embedded Canvas (inside article), we do NOT force max-width 100%, 
-           allowing the 'prose' class to maintain readable line lengths. */
-        :not(article) .ProseMirror {
+        /* 4. Canvas Content: Force full width on editor containers */
+        /* Override 'prose' max-width (65ch) to fill the screen/card */
+        .ProseMirror, 
+        #prosemirror-editor-container {
             width: 100% !important;
             max-width: 100% !important;
-        }
-        
-        /* Ensure Embedded Canvas ProseMirror takes width but respects prose max-width */
-        article .ProseMirror {
-            width: 100% !important;
         }
 
         /* 5. Canvas Wrapper: Remove fixed margins from the container holding the editor */
