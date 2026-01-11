@@ -32,7 +32,7 @@ The page structure follows a typical full-screen application layout using Flexbo
 Each message in the conversation is wrapped in an `<article>` element.
 
 ```html
-<article class="text-token-text-primary w-full focus:outline-none ..." ...>
+<article class="text-token-text-primary w-full focus:outline-none ..." data-turn="user|assistant" data-testid="conversation-turn-N">
     <h5 class="sr-only">あなた:</h5> <!-- or ChatGPT -->
     
     <!-- Outer Wrapper: Controls vertical alignment and horizontal margins -->
@@ -43,12 +43,15 @@ Each message in the conversation is wrapped in an `<article>` element.
             
             <!-- Message Content -->
             <div class="flex max-w-full flex-col grow">
-                <div class="min-h-8 text-message relative flex w-full flex-col ...">
+                <!-- For simple models: Single message block -->
+                <!-- For complex models (e.g., Thinking models): Multiple blocks may exist -->
+                <div class="min-h-8 text-message relative flex w-full flex-col ..." data-message-model-slug="...">
                     ...
                 </div>
+                <!-- Action buttons (e.g. "Added comments") may also appear here -->
             </div>
             
-            <!-- Action Buttons (Copy, Edit, etc.) -->
+            <!-- Interaction Buttons (Copy, Edit, Rate, Share) -->
             <div class="z-0 flex justify-end"> ... </div>
         </div>
     </div>
@@ -70,7 +73,8 @@ To remove margins and widen the view:
 2.  Override `max-width` to `100%`.
 3.  Target the Outer Wrapper.
 4.  Remove `margin-left` / `margin-right` (set to `0`).
-5.  Optionally override the `--thread-content-max-width` CSS variable on the element style to `100%`.
+5.  Override the `--thread-content-max-width` CSS variable on the element style or via global CSS to `100%`.
+6.  Override the `--thread-content-margin` CSS variable to `0px`.
 
 ## 3. Sidebar
 *   **Selector**: `div#stage-slideover-sidebar`
