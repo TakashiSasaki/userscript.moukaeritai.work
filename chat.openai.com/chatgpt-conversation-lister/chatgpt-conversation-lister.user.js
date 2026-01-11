@@ -31,11 +31,6 @@
     const SEARCH_ICON_SVG = "https://moukaeritai-static.glitch.me/svg/search-in-title-icon.svg";
     const NEW_CHAT_BUTTON_SELECTOR = "nav a.flex";
 
-    // --- State Variables ---
-
-    let scrollObserver = null;
-    let lastScrollTop = 0;
-
     // --- UI Setup ---
 
     const hostDiv = document.createElement('div');
@@ -145,36 +140,6 @@
     // --- Tampermonkey Menu Commands ---
 
     /**
-     * Starts continuously scrolling the conversation list to load all items.
-     */
-    function handleContinuousScrolling() {
-        const div = getConversationListElement();
-        if (!div) {
-            alert(ERROR_MESSAGE_LIST_NOT_FOUND);
-            return;
-        }
-
-        const style = window.getComputedStyle(div);
-        if (style.overflowY === 'auto' || style.overflowY === 'visible' || style.overflowY === 'scroll') {
-            if (!scrollObserver) {
-                scrollObserver = new MutationObserver(() => {
-                    if (lastScrollTop !== div.scrollTop) {
-                        lastScrollTop = div.scrollTop;
-                        // Keep scrolling to the bottom to trigger loading more items
-                        setTimeout(() => { div.scrollTop = div.scrollHeight }, 500);
-                        updateConversationList();
-                    }
-                });
-            }
-            scrollObserver.observe(div, { childList: true, subtree: true, attributes: true });
-
-            // Initial scroll to trigger loading
-            div.scrollTop = div.scrollHeight;
-            console.log("Continuous scrolling started. Scroll the list manually a bit if it doesn't start automatically.");
-        }
-    }
-
-    /**
      * Displays a search dialog to filter conversations by title.
      */
     function handleSearch() {
@@ -271,7 +236,6 @@
 
     GM_registerMenuCommand("Search Conversations", handleSearch);
     GM_registerMenuCommand("List Conversations (TSV)", handleListTSV);
-    GM_registerMenuCommand("Load All Conversations (Scroll)", handleContinuousScrolling);
 
     // Inject UI elements after a delay to ensure the page is loaded.
     // Use a MutationObserver for a more robust solution.
