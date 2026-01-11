@@ -4,7 +4,7 @@
 This document analyzes the "Embedded Canvas" (or Canvas Card), which is the document editing interface embedded directly within the chat stream.
 
 ## 1. Context & Location
-*   **Location:** Inside an `article` element (a conversation turn), specifically within `div.flex.flex-col.gap-2`.
+*   **Location:** Inside an `article` element (a conversation turn), specifically nested within `div.flex.flex-col.gap-2`.
 *   **Role:** Represents a document or code artifact that the model is working on or has generated.
 
 ## 2. Structure Hierarchy
@@ -12,10 +12,11 @@ This document analyzes the "Embedded Canvas" (or Canvas Card), which is the docu
 ### Container (The Card)
 *   **Tag:** `div`
 *   **Selector:** `div.popover.rounded-3xl`
-    *   *Note:* The ID (e.g., `textdoc-message-...`) is likely dynamic/UUID-based.
+    *   *Note:* The ID (e.g., `textdoc-message-...`) is likely dynamic.
 *   **Key Attributes:**
     *   `class`: `popover bg-token-bg-primary ... rounded-3xl w-full`
     *   `style`: `margin-bottom: 16px; height: auto; ...`
+*   **Dimensions:** It has `w-full`, meaning it takes the full width of its parent container.
 
 ### Header (Sticky Top)
 *   **Selector:** `div.sticky.top-(--header-height)`
@@ -29,8 +30,9 @@ This document analyzes the "Embedded Canvas" (or Canvas Card), which is the docu
 
 ### Content Body
 *   **Selector:** `div.ProseMirror` (found deeper in the structure)
-    *   This is the rich text editor area containing the actual document text (headings, paragraphs, lists).
-    *   It's wrapped in `section.popover` -> `section.relative` containers.
+    *   This is the rich text editor area containing the actual document text.
+    *   **Wrapper Hierarchy:**
+        `section.popover` -> `section.relative` -> `div.block` -> `div.h-full` -> `div.flex.justify-center` -> `div.z-0` -> `div.ProseMirror`
 
 ## 3. Detection & Observation
 
@@ -54,3 +56,7 @@ This document analyzes the "Embedded Canvas" (or Canvas Card), which is the docu
 ## 6. Interaction Emulation
 *   **Download:** Click the download button (see `canvas-download-button.md` and `canvas-download-format-menu.md`).
 *   **Edit:** Clicking "編集する" likely toggles the `contenteditable` state of the `.ProseMirror` div or swaps it with an active editor.
+
+## 7. Known Issues & Fixes
+*   **Edge Contact:** When expanding the chat to 100% width, the rounded corners of this card (`rounded-3xl`) can touch the screen edges, looking unpolished.
+*   **Fix:** Apply a calculated width (e.g., `calc(100% - 3rem)`) and auto margins to center it, ensuring visual separation from the viewport edges.
