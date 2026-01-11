@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Auto Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.5
+// @version      1.0.6
 // @description  Automatically scrolls the conversation list to load all items.
 // @author       Takashi SASAKI (https://twitter.com/TakashiSasaki)
 // @match        https://chatgpt.com/*
@@ -35,6 +35,8 @@
     }
 
     const CONVERSATION_LIST_SELECTORS = [
+        "nav.overflow-y-auto",
+        "#stage-slideover-sidebar nav",
         "nav div.overflow-y-auto",
         "#__next > div.overflow-hidden.w-full.h-full > div > div > div > div > nav > div.overflow-y-auto",
         "#__next > div > div > div.overflow-hidden.w-full.h-full.relative.flex.z-0 > div > div > div > div > nav > div.flex-col.overflow-y-auto",
