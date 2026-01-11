@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Remove margin around messages in ChatGPT Conversation View
 // @namespace    userscript.moukaeritai.work
-// @version      1.2.0
+// @version      1.2.1
 // @description  This script customizes the ChatGPT interface by reducing the margin around each message in the conversation view. It aims to create a tighter layout, thereby making the interface cleaner and allowing more content to be visible at once.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -89,6 +89,13 @@
              margin-left: 0 !important;
              margin-right: 0 !important;
              width: 100% !important;
+        }
+
+        /* 6. Embedded Canvas Card: Ensure it has some margin and doesn't touch the screen edges */
+        article .popover.rounded-3xl {
+             width: calc(100% - 3rem) !important;
+             margin-left: auto !important;
+             margin-right: auto !important;
         }
     `;
     document.head.appendChild(style);
