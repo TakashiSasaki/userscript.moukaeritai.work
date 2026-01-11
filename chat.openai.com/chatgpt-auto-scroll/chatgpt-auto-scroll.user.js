@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Auto Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.9
+// @version      1.0.11
 // @description  Automatically scrolls the conversation list to load all items.
 // @author       Takashi SASAKI (https://twitter.com/TakashiSasaki)
 // @match        https://chatgpt.com/*
@@ -11,7 +11,6 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=openai.com
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-auto-scroll/chatgpt-auto-scroll.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-auto-scroll/chatgpt-auto-scroll.user.js
-// @grant        GM_registerMenuCommand
 // @grant        GM_info
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -53,6 +52,7 @@
     let isScrolling = false;
     let scrollCount = 0;
     let scrollTimeout = null;
+    let isCooldown = false;
 
     function getConversationListElement() {
         for (const selector of CONVERSATION_LIST_SELECTORS) {
@@ -66,7 +66,11 @@
         const statusEl = document.getElementById('chatgpt-auto-scroll-status');
         const btnEl = document.getElementById('chatgpt-auto-scroll-button');
         if (statusEl) {
-            statusEl.innerHTML = `State: ${isScrolling ? 'Running' : 'Idle'}<br>Scrolls: ${scrollCount}<br>Top: ${Math.floor(lastScrollTop)}`;
+            let stateText = 'Idle';
+            if (isScrolling) {
+                stateText = isCooldown ? 'Cooldown' : 'Running';
+            }
+            statusEl.innerHTML = `State: ${stateText}<br>Scrolls: ${scrollCount}<br>Top: ${Math.floor(lastScrollTop)}`;
         }
         if (btnEl) {
             btnEl.innerText = isScrolling ? 'Stop Scroll' : 'Start Scroll';
@@ -85,6 +89,7 @@
                 scrollTimeout = null;
             }
             isScrolling = false;
+            isCooldown = false;
             updateUI();
         } else {
             const div = getConversationListElement();
@@ -96,16 +101,24 @@
             const style = window.getComputedStyle(div);
             if (style.overflowY === 'auto' || style.overflowY === 'visible' || style.overflowY === 'scroll') {
                 isScrolling = true;
+                isCooldown = false;
                 scrollCount = 0;
                 updateUI();
 
                 scrollObserver = new MutationObserver(() => {
                     if (scrollTimeout) clearTimeout(scrollTimeout);
+
+                    if (!isCooldown) {
+                        isCooldown = true;
+                        updateUI();
+                    }
+
                     scrollTimeout = setTimeout(() => {
                         if (isScrolling) {
                             div.scrollTop = div.scrollHeight;
                             lastScrollTop = div.scrollTop;
                             scrollCount++;
+                            isCooldown = false;
                             updateUI();
                         }
                     }, 1000);
@@ -198,5 +211,4 @@
 
     setInterval(createFloatingPanel, 1000);
 
-    GM_registerMenuCommand("Toggle Auto Scroll", toggleScrolling);
 })();
