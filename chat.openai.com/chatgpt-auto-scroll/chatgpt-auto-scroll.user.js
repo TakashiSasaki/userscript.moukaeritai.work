@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Auto Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.3
+// @version      1.0.4
 // @description  Automatically scrolls the conversation list to load all items.
 // @author       Takashi SASAKI (https://twitter.com/TakashiSasaki)
 // @match        https://chatgpt.com/*
@@ -13,7 +13,6 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-auto-scroll/chatgpt-auto-scroll.user.js
 // @grant        GM_registerMenuCommand
 // @grant        GM_info
-// @grant        GM_xmlhttpRequest
 // @license      MIT
 // ==/UserScript==
 
@@ -44,7 +43,6 @@
     ];
 
     const ERROR_MESSAGE_LIST_NOT_FOUND = "Unable to retrieve the conversation list. This may be due to changes in the DOM structure of ChatGPT.";
-    const UPDATE_URL = "https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-auto-scroll/chatgpt-auto-scroll.user.js";
 
     let scrollObserver = null;
     let lastScrollTop = 0;
@@ -83,38 +81,6 @@
         }
     }
 
-    function isNewerVersion(current, remote) {
-        const cParts = current.split('.').map(Number);
-        const rParts = remote.split('.').map(Number);
-        for (let i = 0; i < Math.max(cParts.length, rParts.length); i++) {
-            const c = cParts[i] || 0;
-            const r = rParts[i] || 0;
-            if (r > c) return true;
-            if (r < c) return false;
-        }
-        return false;
-    }
-
-    function checkForUpdates() {
-        GM_xmlhttpRequest({
-            method: "GET",
-            url: UPDATE_URL,
-            onload: (response) => {
-                const match = response.responseText.match(/@version\s+([\d.]+)/);
-                if (match) {
-                    const remoteVersion = match[1];
-                    if (isNewerVersion(GM_info.script.version, remoteVersion)) {
-                        if (confirm(`New version ${remoteVersion} is available. Update now?`)) {
-                            window.location.href = UPDATE_URL;
-                        }
-                    } else {
-                        alert("You are using the latest version.");
-                    }
-                }
-            }
-        });
-    }
-
     function createFloatingPanel() {
         const panelId = 'chatgpt-auto-scroll-panel';
         if (document.getElementById(panelId)) return;
@@ -122,43 +88,34 @@
         const panel = document.createElement('div');
         panel.id = panelId;
         panel.style.cssText = `
-            position: fixed; top: 20px; right: 20px; width: 220px;
-            background: white; border: 1px solid #ccc; border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 9999;
-            font-family: sans-serif; font-size: 14px; color: #333;
+            position: fixed; top: 10px; right: 10px; width: 140px;
+            background: white; border: 1px solid #ccc; border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 9999;
+            font-family: sans-serif; font-size: 11px; color: #333;
         `;
 
         const header = document.createElement('div');
         header.innerText = `Auto Scroll v${GM_info.script.version}`;
         header.style.cssText = `
-            background: #f7f7f8; padding: 10px; border-bottom: 1px solid #ccc;
-            border-radius: 8px 8px 0 0; cursor: move; font-weight: bold;
-            user-select: none; display: flex; justify-content: space-between;
+            background: #f0f0f0; padding: 4px; border-bottom: 1px solid #ccc;
+            border-radius: 4px 4px 0 0; cursor: move; font-weight: bold;
+            user-select: none; text-align: center;
         `;
         panel.appendChild(header);
 
         const content = document.createElement('div');
-        content.style.padding = '15px';
+        content.style.padding = '6px';
         panel.appendChild(content);
 
         const btn = document.createElement('button');
-        btn.innerText = 'Start Auto Scroll';
+        btn.innerText = 'Start Scroll';
         btn.style.cssText = `
-            width: 100%; padding: 8px; background: #10a37f; color: white;
-            border: none; border-radius: 4px; cursor: pointer; font-weight: bold;
+            width: 100%; padding: 4px; background: #10a37f; color: white;
+            border: none; border-radius: 3px; cursor: pointer; font-weight: bold;
+            font-size: 11px;
         `;
         btn.onclick = handleContinuousScrolling;
         content.appendChild(btn);
-
-        const updateBtn = document.createElement('button');
-        updateBtn.innerText = 'Check Updates';
-        updateBtn.style.cssText = `
-            width: 100%; padding: 8px; background: #6c757d; color: white;
-            border: none; border-radius: 4px; cursor: pointer; font-weight: bold;
-            margin-top: 10px;
-        `;
-        updateBtn.onclick = checkForUpdates;
-        content.appendChild(updateBtn);
 
         document.body.appendChild(panel);
 
