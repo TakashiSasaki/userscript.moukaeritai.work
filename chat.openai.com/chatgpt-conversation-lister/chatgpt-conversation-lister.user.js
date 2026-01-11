@@ -1,11 +1,10 @@
 // ==UserScript==
 // @name         ChatGPT Conversation Lister (Unified)
 // @namespace    https://moukaeritai.work/chatgpt-conversation-lister
-// @version      1.0.0
+// @version      1.0.1
 // @description  Retrieves, searches, and exports conversations in ChatGPT's web interface.
 // @author       Takashi SASAKI (https://twitter.com/TakashiSasaki)
-// @match        https://chat.openai.com/
-// @match        https://chat.openai.com/c/*
+// @match        https://chatgpt.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=openai.com
 // @grant        GM_registerMenuCommand
 // @grant        GM_setValue
