@@ -50,6 +50,8 @@
 
     let scrollObserver = null;
     let lastScrollTop = 0;
+    let isScrolling = false;
+    let scrollCount = 0;
 
     function getConversationListElement() {
         for (const selector of CONVERSATION_LIST_SELECTORS) {
@@ -59,29 +61,50 @@
         return null;
     }
 
-    function handleContinuousScrolling() {
-        const div = getConversationListElement();
-        if (!div) {
-            alert(ERROR_MESSAGE_LIST_NOT_FOUND);
-            return;
+    function updateUI() {
+        const statusEl = document.getElementById('chatgpt-auto-scroll-status');
+        const btnEl = document.getElementById('chatgpt-auto-scroll-button');
+        if (statusEl) {
+            statusEl.innerHTML = `State: ${isScrolling ? 'Running' : 'Idle'}<br>Scrolls: ${scrollCount}<br>Top: ${Math.floor(lastScrollTop)}`;
         }
+        if (btnEl) {
+            btnEl.innerText = isScrolling ? 'Stop Scroll' : 'Start Scroll';
+            btnEl.style.background = isScrolling ? '#ef4146' : '#10a37f';
+        }
+    }
 
-        const style = window.getComputedStyle(div);
-        if (style.overflowY === 'auto' || style.overflowY === 'visible' || style.overflowY === 'scroll') {
-            if (!scrollObserver) {
+    function toggleScrolling() {
+        if (isScrolling) {
+            if (scrollObserver) {
+                scrollObserver.disconnect();
+                scrollObserver = null;
+            }
+            isScrolling = false;
+            updateUI();
+        } else {
+            const div = getConversationListElement();
+            if (!div) {
+                alert(ERROR_MESSAGE_LIST_NOT_FOUND);
+                return;
+            }
+
+            const style = window.getComputedStyle(div);
+            if (style.overflowY === 'auto' || style.overflowY === 'visible' || style.overflowY === 'scroll') {
+                isScrolling = true;
+                scrollCount = 0;
+                updateUI();
+
                 scrollObserver = new MutationObserver(() => {
                     if (lastScrollTop !== div.scrollTop) {
                         lastScrollTop = div.scrollTop;
-                        // Keep scrolling to the bottom to trigger loading more items
-                        setTimeout(() => { div.scrollTop = div.scrollHeight }, 500);
+                        scrollCount++;
+                        updateUI();
+                        setTimeout(() => { if (isScrolling) div.scrollTop = div.scrollHeight; }, 500);
                     }
                 });
+                scrollObserver.observe(div, { childList: true, subtree: true, attributes: true });
+                div.scrollTop = div.scrollHeight;
             }
-            scrollObserver.observe(div, { childList: true, subtree: true, attributes: true });
-
-            // Initial scroll to trigger loading
-            div.scrollTop = div.scrollHeight;
-            console.log("Continuous scrolling started.");
         }
     }
 
@@ -119,14 +142,20 @@
         content.style.padding = '6px';
         panel.appendChild(content);
 
+        const status = document.createElement('div');
+        status.id = 'chatgpt-auto-scroll-status';
+        status.style.cssText = 'margin-bottom: 8px; font-size: 10px; line-height: 1.4; color: #555;';
+        content.appendChild(status);
+
         const btn = document.createElement('button');
+        btn.id = 'chatgpt-auto-scroll-button';
         btn.innerText = 'Start Scroll';
         btn.style.cssText = `
             width: 100%; padding: 4px; background: #10a37f; color: white;
             border: none; border-radius: 3px; cursor: pointer; font-weight: bold;
             font-size: 11px;
         `;
-        btn.onclick = handleContinuousScrolling;
+        btn.onclick = toggleScrolling;
         content.appendChild(btn);
 
         document.body.appendChild(panel);
@@ -156,9 +185,10 @@
                 GM_setValue('panelLeft', panel.style.left);
             }
         });
+        updateUI();
     }
 
     setInterval(createFloatingPanel, 1000);
 
-    GM_registerMenuCommand("Start Auto Scroll", handleContinuousScrolling);
+    GM_registerMenuCommand("Toggle Auto Scroll", toggleScrolling);
 })();
