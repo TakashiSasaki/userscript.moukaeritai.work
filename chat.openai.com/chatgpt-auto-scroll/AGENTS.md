@@ -25,3 +25,8 @@
 - Use `setInterval` instead of `setTimeout` to ensure UI elements persist across route changes or DOM updates.
 - Check for the existence of the UI panel periodically and re-inject if missing.
 - SPA（React等）のDOM再構築に対応するため、`setInterval` を使用してUI要素の存在を定期的に確認し、消えている場合は再生成してください。
+
+## UI State Persistence / UI状態の永続化
+- Use `GM_setValue` and `GM_getValue` to save and restore the UI panel's position (top/left).
+- Ensure the panel stays in the user's preferred location across page reloads.
+- UIパネルの位置（top/left）を保存・復元するために `GM_setValue` と `GM_getValue` を使用してください。ページリロード後もユーザーが配置した場所にパネルが表示されるようにしてください。
