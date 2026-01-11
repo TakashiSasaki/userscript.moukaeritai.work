@@ -43,3 +43,15 @@ The script includes the standard Portal API Guard to interact with `userscript.m
 ## 5. Build & Verification
 -   **Linting**: Run `npx eslint chat.openai.com/chatgpt-no-margin/chatgpt-no-margin.user.js` before committing.
 -   **Version**: Follow semantic versioning. Current: `1.1.0`.
+
+## 6. HTML Sample Preprocessing
+When capturing HTML samples from ChatGPT for analysis, specific preprocessing steps are required to reduce file size and remove noise while preserving the structural integrity relevant to the userscript.
+
+**Preprocessing Steps:**
+1.  **Remove `<script>` and `<style>` tags**: Javascript and CSS blocks are unnecessary for structural DOM analysis and consume significant token space.
+2.  **Remove `<link>` tags**: External stylesheets and preloads in the `<head>` are not needed.
+3.  **Clean `<svg>` elements**: Retain the `<svg>` tag itself (to identify icons/buttons) but remove all its child elements (paths, defs, etc.) to save lines.
+4.  **Truncate Text**: Long text content within messages can be truncated, but the container structure must remain intact.
+
+**Helper Scripts:**
+-   Python scripts (e.g., `remove_link_elements.py`, `remove_svg_children.py`) in the `samples/` directory were used to automate this cleanup. Future agents should use similar logic when adding new samples.
