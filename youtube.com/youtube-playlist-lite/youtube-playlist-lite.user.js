@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.10
+// @version      0.1.11
 // @description  YouTubeプレイリストや再生履歴でサムネイルを非表示にして軽量化するためのツールです。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -229,7 +229,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.10';
+        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.11';
         titleLabel.textContent = `Lite v${v}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '11px', pointerEvents: 'none' });
 
