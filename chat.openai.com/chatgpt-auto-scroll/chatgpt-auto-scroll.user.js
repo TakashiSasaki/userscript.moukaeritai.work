@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Auto Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.11
+// @version      1.0.12
 // @description  Automatically scrolls the conversation list to load all items.
 // @author       Takashi SASAKI (https://twitter.com/TakashiSasaki)
 // @match        https://chatgpt.com/*
@@ -166,7 +166,7 @@
 
         const status = document.createElement('div');
         status.id = 'chatgpt-auto-scroll-status';
-        status.style.cssText = 'margin-bottom: 8px; font-size: 10px; line-height: 1.4; color: #555; user-select: none;';
+        status.style.cssText = 'margin-bottom: 8px; font-size: 10px; line-height: 1.4; color: #555; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;';
         content.appendChild(status);
 
         const btn = document.createElement('button');
