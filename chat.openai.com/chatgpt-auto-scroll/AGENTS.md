@@ -12,7 +12,9 @@
 ## Commit Messages / コミットメッセージ
 - Use Conventional Commits format.
 - Explicitly mention UI or selector changes in the body.
+- Write commit messages in English.
 - Conventional Commits形式を使用し、UIやセレクタの変更について具体的に言及してください。
+- コミットメッセージは英語で記述してください。
 
 ## Install Detection API / インストール検知API
 - Implement the install-detection guard for the portal index.
