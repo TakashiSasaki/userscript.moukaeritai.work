@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Auto Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.12
+// @version      1.0.13
 // @description  Automatically scrolls the conversation list to load all items.
 // @author       Takashi SASAKI (https://twitter.com/TakashiSasaki)
 // @match        https://chatgpt.com/*
@@ -49,10 +49,12 @@
 
     let scrollObserver = null;
     let lastScrollTop = 0;
+    let lastScrollHeight = 0;
     let isScrolling = false;
     let scrollCount = 0;
     let scrollTimeout = null;
     let isCooldown = false;
+    let scrollInterval = GM_getValue('scrollInterval', 1000);
 
     function getConversationListElement() {
         for (const selector of CONVERSATION_LIST_SELECTORS) {
@@ -65,16 +67,21 @@
     function updateUI() {
         const statusEl = document.getElementById('chatgpt-auto-scroll-status');
         const btnEl = document.getElementById('chatgpt-auto-scroll-button');
+        const intervalInput = document.getElementById('chatgpt-auto-scroll-interval');
+
         if (statusEl) {
             let stateText = 'Idle';
             if (isScrolling) {
                 stateText = isCooldown ? 'Cooldown' : 'Running';
             }
-            statusEl.innerHTML = `State: ${stateText}<br>Scrolls: ${scrollCount}<br>Top: ${Math.floor(lastScrollTop)}`;
+            statusEl.innerHTML = `State: ${stateText}<br>Scrolls: ${scrollCount}<br>Top: ${Math.floor(lastScrollTop)}<br>Height: ${lastScrollHeight}`;
         }
         if (btnEl) {
             btnEl.innerText = isScrolling ? 'Stop Scroll' : 'Start Scroll';
             btnEl.style.background = isScrolling ? '#ef4146' : '#10a37f';
+        }
+        if (intervalInput && document.activeElement !== intervalInput) {
+             intervalInput.value = scrollInterval;
         }
     }
 
@@ -103,6 +110,7 @@
                 isScrolling = true;
                 isCooldown = false;
                 scrollCount = 0;
+                lastScrollHeight = div.scrollHeight;
                 updateUI();
 
                 scrollObserver = new MutationObserver(() => {
@@ -117,11 +125,12 @@
                         if (isScrolling) {
                             div.scrollTop = div.scrollHeight;
                             lastScrollTop = div.scrollTop;
+                            lastScrollHeight = div.scrollHeight;
                             scrollCount++;
                             isCooldown = false;
                             updateUI();
                         }
-                    }, 1000);
+                    }, scrollInterval);
                 });
                 scrollObserver.observe(div, { childList: true, subtree: true, attributes: true });
                 div.scrollTop = div.scrollHeight;
@@ -144,7 +153,7 @@
 
         panel.id = panelId;
         panel.style.cssText = `
-            position: fixed; ${positionStyle} width: 140px;
+            position: fixed; ${positionStyle} width: 150px;
             background: white; border: 1px solid #ccc; border-radius: 4px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10000;
             font-family: sans-serif; font-size: 11px; color: #333;
@@ -169,6 +178,34 @@
         status.style.cssText = 'margin-bottom: 8px; font-size: 10px; line-height: 1.4; color: #555; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;';
         content.appendChild(status);
 
+        // Interval Input
+        const intervalContainer = document.createElement('div');
+        intervalContainer.style.marginBottom = '8px';
+        intervalContainer.style.display = 'flex';
+        intervalContainer.style.alignItems = 'center';
+        intervalContainer.style.justifyContent = 'space-between';
+
+        const intervalLabel = document.createElement('span');
+        intervalLabel.innerText = 'Interval (ms):';
+        intervalLabel.style.fontSize = '10px';
+        intervalContainer.appendChild(intervalLabel);
+
+        const intervalInput = document.createElement('input');
+        intervalInput.id = 'chatgpt-auto-scroll-interval';
+        intervalInput.type = 'number';
+        intervalInput.value = scrollInterval;
+        intervalInput.min = '100';
+        intervalInput.step = '100';
+        intervalInput.style.cssText = 'width: 60px; font-size: 10px; padding: 2px;';
+        intervalInput.addEventListener('change', (e) => {
+            let val = parseInt(e.target.value, 10);
+            if (isNaN(val) || val < 100) val = 100;
+            scrollInterval = val;
+            GM_setValue('scrollInterval', val);
+        });
+        intervalContainer.appendChild(intervalInput);
+        content.appendChild(intervalContainer);
+
         const btn = document.createElement('button');
         btn.id = 'chatgpt-auto-scroll-button';
         btn.innerText = 'Start Scroll';
@@ -187,7 +224,7 @@
         let offsetX, offsetY;
 
         panel.addEventListener('mousedown', (e) => {
-            if (e.target === btn) return;
+            if (e.target === btn || e.target === intervalInput) return;
             isDragging = true;
             offsetX = e.clientX - panel.getBoundingClientRect().left;
             offsetY = e.clientY - panel.getBoundingClientRect().top;
@@ -212,5 +249,6 @@
     }
 
     setInterval(createFloatingPanel, 1000);
+
 
 })();
