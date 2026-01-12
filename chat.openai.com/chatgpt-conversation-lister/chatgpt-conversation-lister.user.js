@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Conversation Lister
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.9
+// @version      1.0.10
 // @description  Retrieves, searches, and exports conversations in ChatGPT's web interface.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -272,7 +272,7 @@
     }
 
     function refreshConversationCount(visibleCount = null) {
-        const count = GM_listValues().length;
+        const count = GM_listValues().filter(key => key !== PANEL_POSITION_KEY).length;
         countValue.textContent = count.toString();
         if (visibleCount !== null) {
             visibleValue.textContent = visibleCount.toString();
@@ -370,6 +370,31 @@
             });
         }
         refreshConversationCount(visibleCount);
+        observeConversationList(listElement);
+    }
+
+    let listObserver = null;
+    let listObserverTarget = null;
+    let listObserverQueued = false;
+
+    function observeConversationList(listElement = null) {
+        const target = listElement || getConversationListElement();
+        if (!target || target === listObserverTarget) {
+            return;
+        }
+        if (listObserver) {
+            listObserver.disconnect();
+        }
+        listObserverTarget = target;
+        listObserver = new MutationObserver(() => {
+            if (listObserverQueued) return;
+            listObserverQueued = true;
+            requestAnimationFrame(() => {
+                listObserverQueued = false;
+                updateConversationList();
+            });
+        });
+        listObserver.observe(target, { childList: true });
     }
 
     // --- UI Actions ---
@@ -564,5 +589,6 @@
     bodyObserver.observe(document.body, { childList: true, subtree: true });
 
     applySavedPanelPosition();
+    observeConversationList();
 
 })();
