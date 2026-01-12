@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Conversation Lister (Unified)
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.3
+// @version      1.0.4
 // @description  Retrieves, searches, and exports conversations in ChatGPT's web interface.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -25,6 +25,7 @@
     const SCRIPT_VERSION = GM_info.script.version;
     const CONVERSATION_LIST_SELECTORS = [
         // Add new selectors at the top. The script will use the first one that matches.
+        "#history", // 2025-02-01
         "nav div.overflow-y-auto", // Selector as of late 2023
         "#__next > div.overflow-hidden.w-full.h-full > div > div > div > div > nav > div.overflow-y-auto", // 2023-08-29
         "#__next > div > div > div.overflow-hidden.w-full.h-full.relative.flex.z-0 > div > div > div > div > nav > div.flex-col.overflow-y-auto", // 2023-08-28
@@ -34,7 +35,7 @@
 
     const ERROR_MESSAGE_LIST_NOT_FOUND = "Unable to retrieve the conversation list. This may be due to changes in the DOM structure of ChatGPT. Please await updates to the script.";
     const SEARCH_ICON_SVG = "https://moukaeritai-static.glitch.me/svg/search-in-title-icon.svg";
-    const NEW_CHAT_BUTTON_SELECTOR = "nav a.flex";
+    const NEW_CHAT_BUTTON_SELECTOR = "a[data-testid='create-new-chat-button'], nav a.flex";
 
     // --- UI Setup ---
 
@@ -224,6 +225,33 @@
         countValue.textContent = count.toString();
     }
 
+    function getConversationIdFromHref(href) {
+        const match = href.match(/^\/c\/([^/?#]+)/);
+        return match ? match[1] : null;
+    }
+
+    function updateConversationListFromLinks(listElement) {
+        const conversationLinks = listElement.querySelectorAll("a[href^='/c/']");
+        if (!conversationLinks.length) {
+            return false;
+        }
+
+        conversationLinks.forEach((link, index) => {
+            const href = link.getAttribute("href");
+            const id = href ? getConversationIdFromHref(href) : null;
+            const titleElement = link.querySelector(".truncate");
+            const titleText = titleElement ? (titleElement.getAttribute("title") || titleElement.textContent) : "";
+            const title = titleText.trim();
+            const projectionId = link.dataset.projectionId || String(conversationLinks.length - index);
+
+            if (id && title) {
+                GM_setValue(id, { id, title, projectionId });
+            }
+        });
+
+        return true;
+    }
+
     /**
      * Scans the currently visible conversation list and saves items to GM storage.
      */
@@ -235,26 +263,28 @@
             return;
         }
 
-        const liNodes = listElement.querySelectorAll("li");
-        liNodes.forEach((li) => {
-            for (const key in li) {
-                if (key.startsWith('__reactProps')) {
-                    try {
-                        const props = li[key].children.props;
-                        const id = props.id;
-                        const title = props.title;
-                        const projectionId = li.dataset.projectionId;
+        if (!updateConversationListFromLinks(listElement)) {
+            const liNodes = listElement.querySelectorAll("li");
+            liNodes.forEach((li) => {
+                for (const key in li) {
+                    if (key.startsWith('__reactProps')) {
+                        try {
+                            const props = li[key].children.props;
+                            const id = props.id;
+                            const title = props.title;
+                            const projectionId = li.dataset.projectionId;
 
-                        if (id && title) {
-                            GM_setValue(id, { id, title, projectionId });
+                            if (id && title) {
+                                GM_setValue(id, { id, title, projectionId });
+                            }
+                        } catch {
+                            // Ignore errors if props structure changes
                         }
-                    } catch {
-                        // Ignore errors if props structure changes
+                        break; // Found the props, no need to check other keys
                     }
-                    break; // Found the props, no need to check other keys
                 }
-            }
-        });
+            });
+        }
         refreshConversationCount();
     }
 
