@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Conversation Lister (Unified)
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.7
+// @version      1.0.8
 // @description  Retrieves, searches, and exports conversations in ChatGPT's web interface.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -82,26 +82,26 @@
             z-index: 10002;
         }
         #ccl-panel-header {
-            padding: 8px 10px;
+            padding: 6px 8px;
             background: #f3f5f7;
             border-bottom: 1px solid #e1e5ea;
             border-radius: 12px 12px 0 0;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             cursor: move;
             user-select: none;
         }
         #ccl-panel-body {
-            padding: 10px;
+            padding: 8px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 6px;
         }
         .ccl-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 12px;
+            font-size: 11px;
             color: #3f4a56;
         }
         #ccl-count-value {
@@ -111,14 +111,14 @@
         .ccl-button-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 6px;
+            gap: 4px;
         }
         .ccl-button {
-            padding: 6px 8px;
+            padding: 4px 6px;
             border: 1px solid #c9d1da;
             border-radius: 8px;
             background: #f7f9fb;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
             transition: background 0.2s ease;
         }
@@ -335,6 +335,21 @@
     function handleSearch() {
         updateConversationList();
         const dialogDiv = createDialogDiv();
+        const closeButton = document.createElement("button");
+        closeButton.type = "button";
+        closeButton.textContent = "Close";
+        closeButton.style.cssText = `
+            align-self: flex-end;
+            padding: 6px 10px;
+            border: 1px solid #c9d1da;
+            border-radius: 8px;
+            background: #f7f9fb;
+            cursor: pointer;
+        `;
+        closeButton.addEventListener("click", () => {
+            containerDiv.replaceChildren();
+        });
+        dialogDiv.appendChild(closeButton);
         const searchStyle = document.createElement("style");
         searchStyle.textContent = `
             #ccl-search-results a {
@@ -360,7 +375,10 @@
         resultsDiv.style.overflowY = "auto";
         dialogDiv.appendChild(resultsDiv);
 
-        const conversations = GM_listValues().map(id => GM_getValue(id));
+        const conversations = GM_listValues()
+            .filter(key => key !== PANEL_POSITION_KEY)
+            .map(id => GM_getValue(id))
+            .filter(conv => conv && typeof conv.title === "string" && conv.title.trim());
         conversations.sort((a, b) => (b.projectionId || 0) - (a.projectionId || 0)); // Newest first
 
         const renderResults = (filter = "") => {
@@ -377,7 +395,7 @@
                 });
         };
 
-        input.addEventListener("keyup", () => renderResults(input.value));
+        input.addEventListener("input", () => renderResults(input.value));
         renderResults(); // Initial render
         input.focus();
     }
@@ -388,7 +406,10 @@
     function handleListTSV() {
         updateConversationList();
         const textarea = createTextarea();
-        const conversations = GM_listValues().map(id => GM_getValue(id));
+        const conversations = GM_listValues()
+            .filter(key => key !== PANEL_POSITION_KEY)
+            .map(id => GM_getValue(id))
+            .filter(conv => conv && typeof conv.title === "string" && conv.title.trim());
 
         // Sort by projectionId (internal order), which might be a string number
         conversations.sort((a, b) => {
