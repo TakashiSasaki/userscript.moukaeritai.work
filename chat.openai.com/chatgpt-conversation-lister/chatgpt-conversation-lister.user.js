@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         ChatGPT Conversation Lister (Unified)
-// @namespace    https://moukaeritai.work/chatgpt-conversation-lister
-// @version      1.0.1
+// @namespace    userscript.moukaeritai.work
+// @version      1.0.2
 // @description  Retrieves, searches, and exports conversations in ChatGPT's web interface.
-// @author       Takashi SASAKI (https://twitter.com/TakashiSasaki)
+// @author       Takashi Sasaki
+// @homepageURL  https://x.com/TakashiSasaki
 // @match        https://chatgpt.com/*
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-conversation-lister/chatgpt-conversation-lister.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-conversation-lister/chatgpt-conversation-lister.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=openai.com
-// @grant        GM_registerMenuCommand
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_listValues
@@ -18,6 +20,8 @@
 
     // --- Constants and Configuration ---
 
+    const SCRIPT_NAME = "ChatGPT Conversation Lister (Unified)";
+    const SCRIPT_VERSION = "1.0.2";
     const CONVERSATION_LIST_SELECTORS = [
         // Add new selectors at the top. The script will use the first one that matches.
         "nav div.overflow-y-auto", // Selector as of late 2023
@@ -36,6 +40,115 @@
     const hostDiv = document.createElement('div');
     document.body.appendChild(hostDiv);
     const shadowRoot = hostDiv.attachShadow({ mode: 'open' });
+    const styleTag = document.createElement("style");
+    styleTag.textContent = `
+        #ccl-panel {
+            position: fixed;
+            top: 120px;
+            right: 20px;
+            width: 260px;
+            background: #ffffff;
+            color: #1f2933;
+            border: 1px solid #d6dbe0;
+            border-radius: 12px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            z-index: 10002;
+        }
+        #ccl-panel-header {
+            padding: 8px 10px;
+            background: #f3f5f7;
+            border-bottom: 1px solid #e1e5ea;
+            border-radius: 12px 12px 0 0;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: move;
+            user-select: none;
+        }
+        #ccl-panel-body {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .ccl-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #3f4a56;
+        }
+        #ccl-count-value {
+            font-weight: 600;
+            color: #1f2933;
+        }
+        .ccl-button-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+        .ccl-button {
+            padding: 6px 8px;
+            border: 1px solid #c9d1da;
+            border-radius: 8px;
+            background: #f7f9fb;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        .ccl-button:hover {
+            background: #e7edf4;
+        }
+        .ccl-button-wide {
+            grid-column: 1 / -1;
+        }
+    `;
+    shadowRoot.appendChild(styleTag);
+
+    const panelDiv = document.createElement("div");
+    panelDiv.id = "ccl-panel";
+
+    const panelHeader = document.createElement("div");
+    panelHeader.id = "ccl-panel-header";
+    panelHeader.textContent = `${SCRIPT_NAME} v${SCRIPT_VERSION}`;
+    panelDiv.appendChild(panelHeader);
+
+    const panelBody = document.createElement("div");
+    panelBody.id = "ccl-panel-body";
+    panelDiv.appendChild(panelBody);
+
+    const countRow = document.createElement("div");
+    countRow.className = "ccl-row";
+    const countLabel = document.createElement("span");
+    countLabel.textContent = "Detected conversations";
+    const countValue = document.createElement("span");
+    countValue.id = "ccl-count-value";
+    countValue.textContent = "0";
+    countRow.appendChild(countLabel);
+    countRow.appendChild(countValue);
+    panelBody.appendChild(countRow);
+
+    const buttonRow = document.createElement("div");
+    buttonRow.className = "ccl-button-row";
+    const searchButton = document.createElement("button");
+    searchButton.type = "button";
+    searchButton.className = "ccl-button";
+    searchButton.textContent = "Search";
+    const tsvButton = document.createElement("button");
+    tsvButton.type = "button";
+    tsvButton.className = "ccl-button";
+    tsvButton.textContent = "List TSV";
+    const scanButton = document.createElement("button");
+    scanButton.type = "button";
+    scanButton.className = "ccl-button ccl-button-wide";
+    scanButton.textContent = "Scan List";
+    buttonRow.appendChild(searchButton);
+    buttonRow.appendChild(tsvButton);
+    buttonRow.appendChild(scanButton);
+    panelBody.appendChild(buttonRow);
+
+    shadowRoot.appendChild(panelDiv);
+
     const containerDiv = document.createElement("div");
     containerDiv.id = "ccl-container";
     shadowRoot.appendChild(containerDiv);
@@ -43,7 +156,7 @@
     // Close dialog on Escape key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            containerDiv.innerHTML = ''; // Clear any open dialog
+            containerDiv.replaceChildren(); // Clear any open dialog
         }
     });
 
@@ -52,7 +165,7 @@
      * @returns {HTMLDivElement} The created dialog element.
      */
     function createDialogDiv() {
-        containerDiv.innerHTML = ''; // Clear previous dialog
+        containerDiv.replaceChildren(); // Clear previous dialog
         const dialogDiv = document.createElement('div');
         dialogDiv.id = "ccl-dialog";
         dialogDiv.style.cssText = `
@@ -62,7 +175,7 @@
             overflow: auto; display: flex; flex-direction: column; gap: 10px;
             box-sizing: border-box;
         `;
-        shadowRoot.appendChild(dialogDiv);
+        containerDiv.appendChild(dialogDiv);
         return dialogDiv;
     }
 
@@ -105,6 +218,11 @@
         return null;
     }
 
+    function refreshConversationCount() {
+        const count = GM_listValues().length;
+        countValue.textContent = count.toString();
+    }
+
     /**
      * Scans the currently visible conversation list and saves items to GM storage.
      */
@@ -112,6 +230,7 @@
         const listElement = getConversationListElement();
         if (!listElement) {
             console.warn(ERROR_MESSAGE_LIST_NOT_FOUND);
+            refreshConversationCount();
             return;
         }
 
@@ -128,16 +247,17 @@
                         if (id && title) {
                             GM_setValue(id, { id, title, projectionId });
                         }
-                    } catch (e) {
+                    } catch {
                         // Ignore errors if props structure changes
                     }
                     break; // Found the props, no need to check other keys
                 }
             }
         });
+        refreshConversationCount();
     }
 
-    // --- Tampermonkey Menu Commands ---
+    // --- UI Actions ---
 
     /**
      * Displays a search dialog to filter conversations by title.
@@ -145,7 +265,8 @@
     function handleSearch() {
         updateConversationList();
         const dialogDiv = createDialogDiv();
-        dialogDiv.innerHTML = `<style>
+        const searchStyle = document.createElement("style");
+        searchStyle.textContent = `
             #ccl-search-results a {
                 display: block; padding: 8px 12px; text-decoration: none; color: #333;
                 border-radius: 6px; margin-bottom: 5px; background-color: #f0f0f0;
@@ -156,7 +277,8 @@
                 width: 100%; padding: 10px; font-size: 16px; border: 1px solid #ccc;
                 border-radius: 8px; box-sizing: border-box; margin-bottom: 10px;
             }
-        </style>`;
+        `;
+        dialogDiv.appendChild(searchStyle);
 
         const input = document.createElement("input");
         input.id = "ccl-search-input";
@@ -172,7 +294,7 @@
         conversations.sort((a, b) => (b.projectionId || 0) - (a.projectionId || 0)); // Newest first
 
         const renderResults = (filter = "") => {
-            resultsDiv.innerHTML = '';
+            resultsDiv.replaceChildren();
             const filterLower = filter.toLowerCase();
             conversations
                 .filter(conv => conv.title.toLowerCase().includes(filterLower))
@@ -234,14 +356,60 @@
 
     // --- Initialization ---
 
-    GM_registerMenuCommand("Search Conversations", handleSearch);
-    GM_registerMenuCommand("List Conversations (TSV)", handleListTSV);
+    searchButton.addEventListener("click", handleSearch);
+    tsvButton.addEventListener("click", handleListTSV);
+    scanButton.addEventListener("click", () => updateConversationList());
+
+    refreshConversationCount();
+
+    const clampToViewport = (value, max) => Math.min(Math.max(0, value), Math.max(0, max));
+    const enablePanelDrag = (panel, handle) => {
+        let isDragging = false;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        const onPointerMove = (event) => {
+            if (!isDragging) return;
+            const maxLeft = window.innerWidth - panel.offsetWidth;
+            const maxTop = window.innerHeight - panel.offsetHeight;
+            const nextLeft = clampToViewport(event.clientX - offsetX, maxLeft);
+            const nextTop = clampToViewport(event.clientY - offsetY, maxTop);
+            panel.style.left = `${nextLeft}px`;
+            panel.style.top = `${nextTop}px`;
+            panel.style.right = "auto";
+            panel.style.bottom = "auto";
+        };
+
+        const stopDragging = (event) => {
+            if (!isDragging) return;
+            isDragging = false;
+            window.removeEventListener("pointermove", onPointerMove);
+            window.removeEventListener("pointerup", stopDragging);
+            if (event && handle.hasPointerCapture(event.pointerId)) {
+                handle.releasePointerCapture(event.pointerId);
+            }
+        };
+
+        handle.addEventListener("pointerdown", (event) => {
+            if (event.button !== 0) return;
+            const rect = panel.getBoundingClientRect();
+            offsetX = event.clientX - rect.left;
+            offsetY = event.clientY - rect.top;
+            isDragging = true;
+            handle.setPointerCapture(event.pointerId);
+            window.addEventListener("pointermove", onPointerMove);
+            window.addEventListener("pointerup", stopDragging);
+        });
+    };
+
+    enablePanelDrag(panelDiv, panelHeader);
 
     // Inject UI elements after a delay to ensure the page is loaded.
     // Use a MutationObserver for a more robust solution.
     const bodyObserver = new MutationObserver((mutations, observer) => {
         if (document.querySelector(NEW_CHAT_BUTTON_SELECTOR)) {
             injectSearchButton();
+            updateConversationList();
             observer.disconnect(); // Stop observing once the button is injected
         }
     });
