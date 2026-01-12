@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Conversation Lister (Unified)
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.8
+// @version      1.0.9
 // @description  Retrieves, searches, and exports conversations in ChatGPT's web interface.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -80,6 +80,8 @@
             box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             z-index: 10002;
+            cursor: move;
+            user-select: none;
         }
         #ccl-panel-header {
             padding: 6px 8px;
@@ -88,7 +90,6 @@
             border-radius: 12px 12px 0 0;
             font-size: 11px;
             font-weight: 600;
-            cursor: move;
             user-select: none;
         }
         #ccl-panel-body {
@@ -454,10 +455,11 @@
     refreshConversationCount();
 
     const clampToViewport = (value, max) => Math.min(Math.max(0, value), Math.max(0, max));
-    const enablePanelDrag = (panel, handle, onPositionChange) => {
+    const enablePanelDrag = (panel, onPositionChange) => {
         let isDragging = false;
         let offsetX = 0;
         let offsetY = 0;
+        const isInteractiveTarget = (target) => Boolean(target.closest("button, input, textarea, a"));
 
         const onPointerMove = (event) => {
             if (!isDragging) return;
@@ -483,24 +485,25 @@
                     top: Math.round(rect.top)
                 });
             }
-            if (event && handle.hasPointerCapture(event.pointerId)) {
-                handle.releasePointerCapture(event.pointerId);
+            if (event && panel.hasPointerCapture(event.pointerId)) {
+                panel.releasePointerCapture(event.pointerId);
             }
         };
 
-        handle.addEventListener("pointerdown", (event) => {
+        panel.addEventListener("pointerdown", (event) => {
             if (event.button !== 0) return;
+            if (isInteractiveTarget(event.target)) return;
             const rect = panel.getBoundingClientRect();
             offsetX = event.clientX - rect.left;
             offsetY = event.clientY - rect.top;
             isDragging = true;
-            handle.setPointerCapture(event.pointerId);
+            panel.setPointerCapture(event.pointerId);
             window.addEventListener("pointermove", onPointerMove);
             window.addEventListener("pointerup", stopDragging);
         });
     };
 
-    enablePanelDrag(panelDiv, panelHeader, (position) => {
+    enablePanelDrag(panelDiv, (position) => {
         GM_setValue(PANEL_POSITION_KEY, position);
     });
 
