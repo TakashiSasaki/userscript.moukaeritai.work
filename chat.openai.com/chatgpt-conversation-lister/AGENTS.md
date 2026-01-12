@@ -42,5 +42,16 @@ ChatGPTのサイドバー構造は頻繁に変更されるため、`CONVERSATION
 2.  **リストが空**: `CONVERSATION_LIST_SELECTORS` のいずれかが現在のDOMにマッチしているか確認してください。
 3.  **タイトルが取得できない**: `li` 要素内の React Props の構造が変わっていないか、ブラウザのコンソールで `dir(liElement)` を実行して確認してください。
 
+## 7. UI変更のガイドライン (v1.0.9追記)
+
+- **会話リストへの番号付与**:
+    - サイドバーの各会話アイテム（`<a>` または `<li>`）に対し、`.ccl-index-number` クラスを持つ `<span>` 要素を動的に注入して連番を表示しています。
+    - DOM更新ロジック (`updateConversationListFromLinks` 等) を変更する際は、この番号要素が重複して追加されないか、適切な位置（`absolute` positioning）に配置されているか確認してください。
+- **パネル表示項目**:
+    - **Detected conversations**: `GM_listValues` で保存されている全会話データの総数です。
+    - **Visible in list**: 現在DOM上にレンダリングされている（取得可能な）会話アイテムの数です。スクロールや展開状況によって変動します。
+- **スタイル**:
+    - パネルに行を追加する場合は、既存の `.ccl-row` クラスを使用し、左右にラベルと値を配置するレイアウトを維持してください。
+
 ---
-**Baseline Version:** 1.0.0
+**Baseline Version:** 1.0.9
