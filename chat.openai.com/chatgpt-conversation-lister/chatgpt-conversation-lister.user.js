@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Conversation Lister
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.11
+// @version      1.0.12
 // @description  Retrieves, searches, and exports conversations in ChatGPT's web interface.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -72,7 +72,7 @@
             position: fixed;
             top: 120px;
             right: 20px;
-            width: 200px;
+            width: 180px;
             background: #ffffff;
             color: #1f2933;
             border: 1px solid #d6dbe0;
@@ -147,7 +147,7 @@
     const countRow = document.createElement("div");
     countRow.className = "ccl-row";
     const countLabel = document.createElement("span");
-    countLabel.textContent = "Detected conversations";
+    countLabel.textContent = "Saved";
     const countValue = document.createElement("span");
     countValue.id = "ccl-count-value";
     countValue.textContent = "0";
@@ -158,7 +158,7 @@
     const visibleRow = document.createElement("div");
     visibleRow.className = "ccl-row";
     const visibleLabel = document.createElement("span");
-    visibleLabel.textContent = "Visible in list";
+    visibleLabel.textContent = "Visible";
     const visibleValue = document.createElement("span");
     visibleValue.id = "ccl-visible-count-value";
     visibleValue.textContent = "-";
