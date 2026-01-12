@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Conversation Lister (Unified)
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.2
+// @version      1.0.3
 // @description  Retrieves, searches, and exports conversations in ChatGPT's web interface.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -12,6 +12,7 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_listValues
+// @grant        GM_info
 // @license      MIT
 // ==/UserScript==
 
@@ -21,7 +22,7 @@
     // --- Constants and Configuration ---
 
     const SCRIPT_NAME = "ChatGPT Conversation Lister (Unified)";
-    const SCRIPT_VERSION = "1.0.2";
+    const SCRIPT_VERSION = GM_info.script.version;
     const CONVERSATION_LIST_SELECTORS = [
         // Add new selectors at the top. The script will use the first one that matches.
         "nav div.overflow-y-auto", // Selector as of late 2023
