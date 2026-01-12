@@ -148,6 +148,7 @@
             background: white; border: 1px solid #ccc; border-radius: 4px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10000;
             font-family: sans-serif; font-size: 11px; color: #333;
+            cursor: move;
         `;
 
         const header = document.createElement('div');
@@ -165,7 +166,7 @@
 
         const status = document.createElement('div');
         status.id = 'chatgpt-auto-scroll-status';
-        status.style.cssText = 'margin-bottom: 8px; font-size: 10px; line-height: 1.4; color: #555;';
+        status.style.cssText = 'margin-bottom: 8px; font-size: 10px; line-height: 1.4; color: #555; user-select: none;';
         content.appendChild(status);
 
         const btn = document.createElement('button');
@@ -185,7 +186,8 @@
         let isDragging = false;
         let offsetX, offsetY;
 
-        header.addEventListener('mousedown', (e) => {
+        panel.addEventListener('mousedown', (e) => {
+            if (e.target === btn) return;
             isDragging = true;
             offsetX = e.clientX - panel.getBoundingClientRect().left;
             offsetY = e.clientY - panel.getBoundingClientRect().top;
