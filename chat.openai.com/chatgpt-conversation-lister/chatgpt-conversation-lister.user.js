@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Conversation Lister
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.14
+// @version      1.0.15
 // @description  Retrieves, searches, and exports conversations in ChatGPT's web interface.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -165,6 +165,17 @@
     visibleRow.appendChild(visibleLabel);
     visibleRow.appendChild(visibleValue);
     panelBody.appendChild(visibleRow);
+
+    const statusRow = document.createElement("div");
+    statusRow.className = "ccl-row";
+    const statusLabel = document.createElement("span");
+    statusLabel.textContent = "Status";
+    const statusValue = document.createElement("span");
+    statusValue.id = "ccl-status-value";
+    statusValue.textContent = "Idle";
+    statusRow.appendChild(statusLabel);
+    statusRow.appendChild(statusValue);
+    panelBody.appendChild(statusRow);
 
     const buttonRow = document.createElement("div");
     buttonRow.className = "ccl-button-row";
@@ -390,10 +401,18 @@
             return;
         }
         isUpdatingConversationList = true;
+        statusValue.textContent = "Scanning...";
+        statusValue.style.color = "#d97706";
         try {
             updateConversationList();
         } finally {
             isUpdatingConversationList = false;
+            setTimeout(() => {
+                if (!isUpdatingConversationList) {
+                    statusValue.textContent = "Idle";
+                    statusValue.style.color = "#1f2933";
+                }
+            }, 500);
             if (pendingObserverScan) {
                 pendingObserverScan = false;
                 queueObserverScan();
