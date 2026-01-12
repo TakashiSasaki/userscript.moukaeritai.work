@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         ChatGPT Conversation Lister (Unified)
+// @name         ChatGPT Conversation Lister
 // @namespace    userscript.moukaeritai.work
 // @version      1.0.9
 // @description  Retrieves, searches, and exports conversations in ChatGPT's web interface.
@@ -21,7 +21,7 @@
 
     // --- Constants and Configuration ---
 
-    const SCRIPT_NAME = "ChatGPT Conversation Lister (Unified)";
+    const SCRIPT_NAME = "ChatGPT Conversation Lister";
     const SCRIPT_VERSION = GM_info.script.version;
     const CONVERSATION_LIST_SELECTORS = [
         // Add new selectors at the top. The script will use the first one that matches.
