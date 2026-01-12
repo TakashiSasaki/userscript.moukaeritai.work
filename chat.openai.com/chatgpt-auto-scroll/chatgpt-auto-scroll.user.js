@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Auto Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.13
+// @version      1.0.14
 // @description  Automatically scrolls the conversation list to load all items.
 // @author       Takashi SASAKI (https://twitter.com/TakashiSasaki)
 // @match        https://chatgpt.com/*
@@ -54,7 +54,7 @@
     let scrollCount = 0;
     let scrollTimeout = null;
     let isCooldown = false;
-    let scrollInterval = GM_getValue('scrollInterval', 1000);
+    let scrollInterval = GM_getValue('scrollInterval', 10000);
 
     function getConversationListElement() {
         for (const selector of CONVERSATION_LIST_SELECTORS) {
