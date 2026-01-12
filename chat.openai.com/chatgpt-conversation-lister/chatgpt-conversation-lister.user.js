@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Conversation Lister
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.12
+// @version      1.0.14
 // @description  Retrieves, searches, and exports conversations in ChatGPT's web interface.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -176,13 +176,8 @@
     tsvButton.type = "button";
     tsvButton.className = "ccl-button";
     tsvButton.textContent = "List TSV";
-    const scanButton = document.createElement("button");
-    scanButton.type = "button";
-    scanButton.className = "ccl-button ccl-button-wide";
-    scanButton.textContent = "Scan List";
     buttonRow.appendChild(searchButton);
     buttonRow.appendChild(tsvButton);
-    buttonRow.appendChild(scanButton);
     panelBody.appendChild(buttonRow);
 
     shadowRoot.appendChild(panelDiv);
@@ -375,7 +370,36 @@
 
     let listObserver = null;
     let listObserverTarget = null;
-    let listObserverQueued = false;
+    let listObserverTimerId = null;
+    let isUpdatingConversationList = false;
+    let pendingObserverScan = false;
+
+    function queueObserverScan() {
+        if (listObserverTimerId !== null) {
+            return;
+        }
+        listObserverTimerId = window.setTimeout(() => {
+            listObserverTimerId = null;
+            runUpdateConversationList();
+        }, 1000);
+    }
+
+    function runUpdateConversationList() {
+        if (isUpdatingConversationList) {
+            pendingObserverScan = true;
+            return;
+        }
+        isUpdatingConversationList = true;
+        try {
+            updateConversationList();
+        } finally {
+            isUpdatingConversationList = false;
+            if (pendingObserverScan) {
+                pendingObserverScan = false;
+                queueObserverScan();
+            }
+        }
+    }
 
     function observeConversationList(listElement = null) {
         const target = listElement || getConversationListElement();
@@ -387,14 +411,26 @@
         }
         listObserverTarget = target;
         listObserver = new MutationObserver(() => {
-            if (listObserverQueued) return;
-            listObserverQueued = true;
-            requestAnimationFrame(() => {
-                listObserverQueued = false;
-                updateConversationList();
-            });
+            queueObserverScan();
         });
         listObserver.observe(target, { childList: true });
+    }
+
+    let autoScanIntervalId = null;
+
+    function startAutoScan() {
+        if (autoScanIntervalId !== null) {
+            return;
+        }
+        autoScanIntervalId = window.setInterval(() => {
+            const listElement = getConversationListElement();
+            if (!listElement) {
+                return;
+            }
+            if (listObserverTarget !== listElement) {
+                runUpdateConversationList();
+            }
+        }, 10000);
     }
 
     // --- UI Actions ---
@@ -403,7 +439,7 @@
      * Displays a search dialog to filter conversations by title.
      */
     function handleSearch() {
-        updateConversationList();
+        runUpdateConversationList();
         const dialogDiv = createDialogDiv();
         const closeButton = document.createElement("button");
         closeButton.type = "button";
@@ -474,7 +510,7 @@
      * Lists all stored conversations in TSV format.
      */
     function handleListTSV() {
-        updateConversationList();
+        runUpdateConversationList();
         const textarea = createTextarea();
         const conversations = GM_listValues()
             .filter(key => key !== PANEL_POSITION_KEY)
@@ -519,9 +555,9 @@
 
     searchButton.addEventListener("click", handleSearch);
     tsvButton.addEventListener("click", handleListTSV);
-    scanButton.addEventListener("click", () => updateConversationList());
 
     refreshConversationCount();
+    startAutoScan();
 
     const clampToViewport = (value, max) => Math.min(Math.max(0, value), Math.max(0, max));
     const enablePanelDrag = (panel, onPositionChange) => {
