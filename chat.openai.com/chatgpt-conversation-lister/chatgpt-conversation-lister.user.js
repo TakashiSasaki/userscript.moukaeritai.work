@@ -155,6 +155,17 @@
     countRow.appendChild(countValue);
     panelBody.appendChild(countRow);
 
+    const visibleRow = document.createElement("div");
+    visibleRow.className = "ccl-row";
+    const visibleLabel = document.createElement("span");
+    visibleLabel.textContent = "Visible in list";
+    const visibleValue = document.createElement("span");
+    visibleValue.id = "ccl-visible-count-value";
+    visibleValue.textContent = "-";
+    visibleRow.appendChild(visibleLabel);
+    visibleRow.appendChild(visibleValue);
+    panelBody.appendChild(visibleRow);
+
     const buttonRow = document.createElement("div");
     buttonRow.className = "ccl-button-row";
     const searchButton = document.createElement("button");
@@ -260,9 +271,12 @@
         return null;
     }
 
-    function refreshConversationCount() {
+    function refreshConversationCount(visibleCount = null) {
         const count = GM_listValues().length;
         countValue.textContent = count.toString();
+        if (visibleCount !== null) {
+            visibleValue.textContent = visibleCount.toString();
+        }
     }
 
     function getConversationIdFromHref(href) {
@@ -287,9 +301,22 @@
             if (id && title) {
                 GM_setValue(id, { id, title, projectionId });
             }
+
+            // Inject index number
+            let indexSpan = link.querySelector(".ccl-index-number");
+            if (!indexSpan) {
+                indexSpan = document.createElement("span");
+                indexSpan.className = "ccl-index-number";
+                indexSpan.style.cssText = "position: absolute; top: 2px; left: 2px; font-size: 8px; color: #888; z-index: 10; pointer-events: none; font-family: monospace;";
+                if (window.getComputedStyle(link).position === 'static') {
+                    link.style.position = "relative";
+                }
+                link.appendChild(indexSpan);
+            }
+            indexSpan.textContent = String(index + 1);
         });
 
-        return true;
+        return conversationLinks.length;
     }
 
     /**
@@ -303,9 +330,26 @@
             return;
         }
 
-        if (!updateConversationListFromLinks(listElement)) {
+        const linkCount = updateConversationListFromLinks(listElement);
+        let visibleCount = typeof linkCount === 'number' ? linkCount : 0;
+
+        if (linkCount === false) {
             const liNodes = listElement.querySelectorAll("li");
-            liNodes.forEach((li) => {
+            visibleCount = liNodes.length;
+            liNodes.forEach((li, index) => {
+                // Try to inject number into li if possible
+                let indexSpan = li.querySelector(".ccl-index-number");
+                if (!indexSpan) {
+                    indexSpan = document.createElement("span");
+                    indexSpan.className = "ccl-index-number";
+                    indexSpan.style.cssText = "position: absolute; top: 2px; left: 2px; font-size: 8px; color: #888; z-index: 10; pointer-events: none; font-family: monospace;";
+                    if (window.getComputedStyle(li).position === 'static') {
+                         li.style.position = "relative";
+                    }
+                    li.appendChild(indexSpan);
+                }
+                indexSpan.textContent = String(index + 1);
+
                 for (const key in li) {
                     if (key.startsWith('__reactProps')) {
                         try {
@@ -325,7 +369,7 @@
                 }
             });
         }
-        refreshConversationCount();
+        refreshConversationCount(visibleCount);
     }
 
     // --- UI Actions ---
