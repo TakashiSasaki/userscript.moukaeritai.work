@@ -46,9 +46,9 @@
     let isForceRemove = GM_getValue(FORCE_REMOVE_KEY, false);
     const PAGE_CONFIG = {
         playlist: {
-            thumbSelector: 'ytd-playlist-video-renderer ytd-thumbnail',
-            matchSelector: 'ytd-thumbnail',
-            ancestorSelector: 'ytd-playlist-video-renderer',
+            thumbSelector: 'ytd-playlist-video-renderer ytd-thumbnail, ytd-playlist-header-renderer ytd-hero-playlist-thumbnail-renderer',
+            matchSelector: 'ytd-thumbnail, ytd-hero-playlist-thumbnail-renderer',
+            ancestorSelector: 'ytd-playlist-video-renderer, ytd-playlist-header-renderer',
             observerRootSelector: 'ytd-playlist-video-list-renderer #contents'
         },
         history: {
