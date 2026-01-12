@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Conversation Lister (Unified)
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.4
+// @version      1.0.7
 // @description  Retrieves, searches, and exports conversations in ChatGPT's web interface.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -36,12 +36,36 @@
     const ERROR_MESSAGE_LIST_NOT_FOUND = "Unable to retrieve the conversation list. This may be due to changes in the DOM structure of ChatGPT. Please await updates to the script.";
     const SEARCH_ICON_SVG = "https://moukaeritai-static.glitch.me/svg/search-in-title-icon.svg";
     const NEW_CHAT_BUTTON_SELECTOR = "a[data-testid='create-new-chat-button'], nav a.flex";
+    const PANEL_HOST_ID = "ccl-panel-host";
+    const PANEL_POSITION_KEY = "ccl-panel-position";
 
     // --- UI Setup ---
 
     const hostDiv = document.createElement('div');
-    document.body.appendChild(hostDiv);
+    hostDiv.id = PANEL_HOST_ID;
+    hostDiv.style.position = "fixed";
+    hostDiv.style.top = "0";
+    hostDiv.style.left = "0";
+    hostDiv.style.width = "0";
+    hostDiv.style.height = "0";
     const shadowRoot = hostDiv.attachShadow({ mode: 'open' });
+    const mountPanelHost = () => {
+        if (hostDiv.isConnected) {
+            return;
+        }
+        const mountTarget = document.body || document.documentElement;
+        if (!mountTarget) {
+            return;
+        }
+        mountTarget.appendChild(hostDiv);
+    };
+    const panelMountObserver = new MutationObserver(() => {
+        if (!hostDiv.isConnected) {
+            mountPanelHost();
+        }
+    });
+    panelMountObserver.observe(document.documentElement, { childList: true, subtree: true });
+    mountPanelHost();
     const styleTag = document.createElement("style");
     styleTag.textContent = `
         #ccl-panel {
@@ -150,6 +174,21 @@
     panelBody.appendChild(buttonRow);
 
     shadowRoot.appendChild(panelDiv);
+
+    const applySavedPanelPosition = () => {
+        const savedPosition = GM_getValue(PANEL_POSITION_KEY, null);
+        if (!savedPosition) {
+            return;
+        }
+        const left = Number(savedPosition.left);
+        const top = Number(savedPosition.top);
+        if (Number.isFinite(left) && Number.isFinite(top)) {
+            panelDiv.style.left = `${left}px`;
+            panelDiv.style.top = `${top}px`;
+            panelDiv.style.right = "auto";
+            panelDiv.style.bottom = "auto";
+        }
+    };
 
     const containerDiv = document.createElement("div");
     containerDiv.id = "ccl-container";
@@ -394,7 +433,7 @@
     refreshConversationCount();
 
     const clampToViewport = (value, max) => Math.min(Math.max(0, value), Math.max(0, max));
-    const enablePanelDrag = (panel, handle) => {
+    const enablePanelDrag = (panel, handle, onPositionChange) => {
         let isDragging = false;
         let offsetX = 0;
         let offsetY = 0;
@@ -416,6 +455,13 @@
             isDragging = false;
             window.removeEventListener("pointermove", onPointerMove);
             window.removeEventListener("pointerup", stopDragging);
+            if (typeof onPositionChange === "function") {
+                const rect = panel.getBoundingClientRect();
+                onPositionChange({
+                    left: Math.round(rect.left),
+                    top: Math.round(rect.top)
+                });
+            }
             if (event && handle.hasPointerCapture(event.pointerId)) {
                 handle.releasePointerCapture(event.pointerId);
             }
@@ -433,7 +479,9 @@
         });
     };
 
-    enablePanelDrag(panelDiv, panelHeader);
+    enablePanelDrag(panelDiv, panelHeader, (position) => {
+        GM_setValue(PANEL_POSITION_KEY, position);
+    });
 
     // Inject UI elements after a delay to ensure the page is loaded.
     // Use a MutationObserver for a more robust solution.
@@ -446,5 +494,7 @@
     });
 
     bodyObserver.observe(document.body, { childList: true, subtree: true });
+
+    applySavedPanelPosition();
 
 })();
