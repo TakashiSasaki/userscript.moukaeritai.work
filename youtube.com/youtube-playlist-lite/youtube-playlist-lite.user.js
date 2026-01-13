@@ -38,12 +38,16 @@
     const PANEL_POS_KEY = 'yt_lite_panel_position';
     const HIDE_THUMB_KEY = 'yt_lite_hide_thumbnails';
     const FORCE_REMOVE_KEY = 'yt_lite_force_remove';
+    const HIDE_MINIPLAYER_KEY = 'yt_lite_hide_miniplayer';
+    const REMOVE_MINIPLAYER_KEY = 'yt_lite_remove_miniplayer';
     const INIT_DELAY_RANGE_MS = { min: 1000, max: 3000 };
 
     let isAutoMinimized = false;
     let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '260px', right: '20px' });
     let isHideThumbnails = GM_getValue(HIDE_THUMB_KEY, false);
     let isForceRemove = GM_getValue(FORCE_REMOVE_KEY, false);
+    let isHideMiniplayer = GM_getValue(HIDE_MINIPLAYER_KEY, false);
+    let isRemoveMiniplayer = GM_getValue(REMOVE_MINIPLAYER_KEY, false);
     const PAGE_CONFIG = {
         playlist: {
             thumbSelector: 'ytd-playlist-video-renderer ytd-thumbnail, ytd-playlist-header-renderer ytd-hero-playlist-thumbnail-renderer',
@@ -98,10 +102,19 @@
         // Read latest values from storage to be sure
         isHideThumbnails = GM_getValue(HIDE_THUMB_KEY, false);
         isForceRemove = GM_getValue(FORCE_REMOVE_KEY, false);
+        isHideMiniplayer = GM_getValue(HIDE_MINIPLAYER_KEY, false);
+        isRemoveMiniplayer = GM_getValue(REMOVE_MINIPLAYER_KEY, false);
 
         // CSS Hide Mode
+        let css = '';
         if (isHideThumbnails) {
-            const css = `${pageConfig.thumbSelector} { display: none !important; }`;
+            css += `${pageConfig.thumbSelector} { display: none !important; } `;
+        }
+        if (isHideMiniplayer) {
+            css += `ytd-miniplayer { display: none !important; } `;
+        }
+
+        if (css) {
             if (!styleElement || !styleElement.isConnected) {
                 styleElement = document.createElement('style');
                 styleElement.id = 'yt-lite-styles';
@@ -120,6 +133,14 @@
             clearExistingThumbnails(pageConfig);
         } else {
             stopObserver();
+        }
+
+        if (isRemoveMiniplayer) {
+            const miniplayer = document.querySelector('ytd-miniplayer');
+            if (miniplayer) {
+                miniplayer.remove();
+                console.log('[YouTube Playlist Lite] Removed miniplayer.');
+            }
         }
     }
 
@@ -268,13 +289,25 @@
             return container;
         };
 
-        contentContainer.appendChild(createCheckbox('yt-lite-hide-thumb', 'Hide (CSS)', isHideThumbnails, (e) => {
+        contentContainer.appendChild(createCheckbox('yt-lite-hide-thumb', 'Hide Thumbs (CSS)', isHideThumbnails, (e) => {
             GM_setValue(HIDE_THUMB_KEY, e.target.checked);
             applySettings();
         }));
 
-        contentContainer.appendChild(createCheckbox('yt-lite-force-remove', 'Auto Remove (DOM)', isForceRemove, (e) => {
+        contentContainer.appendChild(createCheckbox('yt-lite-force-remove', 'Remove Thumbs (DOM)', isForceRemove, (e) => {
             GM_setValue(FORCE_REMOVE_KEY, e.target.checked);
+            applySettings();
+        }));
+
+        contentContainer.appendChild(document.createElement('hr')).style.margin = '2px 0';
+
+        contentContainer.appendChild(createCheckbox('yt-lite-hide-miniplayer', 'Hide Miniplayer (CSS)', isHideMiniplayer, (e) => {
+            GM_setValue(HIDE_MINIPLAYER_KEY, e.target.checked);
+            applySettings();
+        }));
+
+        contentContainer.appendChild(createCheckbox('yt-lite-remove-miniplayer', 'Remove Miniplayer (DOM)', isRemoveMiniplayer, (e) => {
+            GM_setValue(REMOVE_MINIPLAYER_KEY, e.target.checked);
             applySettings();
         }));
 
@@ -283,7 +316,13 @@
         Object.assign(clearBtn.style, {
             padding: '4px', fontSize: '10px', backgroundColor: '#eef', border: '1px solid #99f', borderRadius: '4px', cursor: 'pointer'
         });
-        clearBtn.addEventListener('click', clearExistingThumbnails);
+        clearBtn.addEventListener('click', () => {
+             clearExistingThumbnails(getPageConfig());
+             if (isRemoveMiniplayer) {
+                 const mini = document.querySelector('ytd-miniplayer');
+                 if (mini) mini.remove();
+             }
+        });
         contentContainer.appendChild(clearBtn);
 
         document.body.appendChild(panel);
