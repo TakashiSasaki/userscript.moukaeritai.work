@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.51
+// @version      0.2.52
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -40,7 +40,7 @@
     const PLAYLIST_PATH = '/playlist';
     const DATA_KEY = 'yt_playlist_data';
     const DATA_VERSION = 2;
-    const INIT_DELAY_RANGE_MS = { min: 1000, max: 3000 };
+    const INIT_DELAY_RANGE_MS = { min: 10000, max: 15000 };
     // Helper to create trash icon
     const TRASH_ICON_PATHS = [
         "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
@@ -442,7 +442,8 @@
             const vid = extractVideoId(item);
             if (!vid) return;
 
-            const isHidden = item.style.display === 'none' || window.getComputedStyle(item).display === 'none';
+            // Optimization: Avoid window.getComputedStyle in loop to prevent forced reflow
+            const isHidden = item.hidden || item.style.display === 'none';
             if (!isHidden) {
                 if (currentSessionKnownIds.has(vid)) savedVisibleCount++;
                 else newVisibleCount++;
@@ -493,7 +494,7 @@
         scanAndRender();
 
         if (!scanIntervalId) {
-            scanIntervalId = window.setInterval(scanAndRender, 2000); // 2s polling
+            scanIntervalId = window.setInterval(scanAndRender, 5000); // 5s polling
         }
 
         console.log('[YouTube Playlist Saver] Backend & Status Service Running...');
