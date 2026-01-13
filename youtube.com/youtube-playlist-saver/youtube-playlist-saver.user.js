@@ -1,8 +1,9 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.53
+// @version      0.2.54
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
+// @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
 // @match        https://userscript.moukaeritai.work/*

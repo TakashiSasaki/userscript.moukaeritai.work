@@ -1,8 +1,9 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.14
+// @version      0.1.15
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
+// @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
 // @match        https://userscript.moukaeritai.work/*
