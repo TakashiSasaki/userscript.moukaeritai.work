@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.38
+// @version      0.1.39
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -75,13 +75,34 @@
         }
         const { min, max, avg, median, count } = stats;
         deletionStatsElement.style.display = 'block';
-        deletionStatsElement.innerHTML = `
-            <div style="font-weight: bold; margin-bottom: 2px;">Stats (${count} items):</div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px;">
-                <span>Min: ${min}ms</span><span>Max: ${max}ms</span>
-                <span>Avg: ${Math.round(avg)}ms</span><span>Med: ${Math.round(median)}ms</span>
-            </div>
-        `;
+        deletionStatsElement.textContent = '';
+
+        const title = document.createElement('div');
+        title.textContent = `Stats (${count} items):`;
+        title.style.fontWeight = 'bold';
+        title.style.marginBottom = '2px';
+
+        const grid = document.createElement('div');
+        grid.style.display = 'grid';
+        grid.style.gridTemplateColumns = '1fr 1fr';
+        grid.style.gap = '2px';
+
+        const minEl = document.createElement('span');
+        minEl.textContent = `Min: ${min}ms`;
+        const maxEl = document.createElement('span');
+        maxEl.textContent = `Max: ${max}ms`;
+        const avgEl = document.createElement('span');
+        avgEl.textContent = `Avg: ${Math.round(avg)}ms`;
+        const medEl = document.createElement('span');
+        medEl.textContent = `Med: ${Math.round(median)}ms`;
+
+        grid.appendChild(minEl);
+        grid.appendChild(maxEl);
+        grid.appendChild(avgEl);
+        grid.appendChild(medEl);
+
+        deletionStatsElement.appendChild(title);
+        deletionStatsElement.appendChild(grid);
     }
 
     // --- Constants ---
