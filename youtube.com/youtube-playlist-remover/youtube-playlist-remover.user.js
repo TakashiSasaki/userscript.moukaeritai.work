@@ -49,6 +49,41 @@
     let filterListenerBound = false;
     const filterInputValues = new WeakMap();
 
+    // --- Statistics ---
+    let deletionStatsElement = null;
+
+    function calculateStatistics(times) {
+        if (!times || times.length === 0) return null;
+        const min = Math.min(...times);
+        const max = Math.max(...times);
+        const sum = times.reduce((a, b) => a + b, 0);
+        const avg = sum / times.length;
+
+        const sorted = [...times].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+
+        return { min, max, avg, median, count: times.length };
+    }
+
+    function updateDeletionStats(stats) {
+        if (!deletionStatsElement) return;
+        if (!stats) {
+            deletionStatsElement.textContent = '';
+            deletionStatsElement.style.display = 'none';
+            return;
+        }
+        const { min, max, avg, median, count } = stats;
+        deletionStatsElement.style.display = 'block';
+        deletionStatsElement.innerHTML = `
+            <div style="font-weight: bold; margin-bottom: 2px;">Stats (${count} items):</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px;">
+                <span>Min: ${min}ms</span><span>Max: ${max}ms</span>
+                <span>Avg: ${Math.round(avg)}ms</span><span>Med: ${Math.round(median)}ms</span>
+            </div>
+        `;
+    }
+
     // --- Constants ---
     const TRASH_ICON_PATHS = [
         "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
@@ -192,6 +227,18 @@
         infoDiv.style.fontSize = '12px';
         infoDiv.style.marginBottom = '2px';
         contentContainer.appendChild(infoDiv);
+
+        // --- Statistics Display ---
+        const statsDiv = document.createElement('div');
+        statsDiv.id = 'yt-remover-stats';
+        statsDiv.style.fontSize = '10px';
+        statsDiv.style.color = '#333';
+        statsDiv.style.marginTop = '4px';
+        statsDiv.style.paddingTop = '4px';
+        statsDiv.style.borderTop = '1px solid #ccc';
+        statsDiv.style.display = 'none';
+        deletionStatsElement = statsDiv;
+        contentContainer.appendChild(statsDiv);
 
         // --- Options ---
         const optionsDiv = document.createElement('div');
@@ -483,6 +530,10 @@
 
         isRemoving = true;
         cancelRequested = false;
+        
+        // Reset stats
+        const deletionTimes = [];
+        updateDeletionStats(null);
 
         updateStatus('Removing...', true);
         updatePhase('Preparing...', true);
@@ -515,7 +566,14 @@
             item.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
             highlightOutline(item);
 
+            const startRemove = Date.now();
             const success = await attemptRemoveVideo(item);
+            const endRemove = Date.now();
+            
+            if (success) {
+                deletionTimes.push(endRemove - startRemove);
+            }
+
             if (cancelRequested) break;
             
             if (success) {
@@ -545,6 +603,11 @@
             // Small buffer between items
             updatePhase('Cooldown...', true);
             await new Promise(r => setTimeout(r, 500));
+        }
+
+        if (deletionTimes.length > 0) {
+            const stats = calculateStatistics(deletionTimes);
+            updateDeletionStats(stats);
         }
 
         if (cancelRequested) {
