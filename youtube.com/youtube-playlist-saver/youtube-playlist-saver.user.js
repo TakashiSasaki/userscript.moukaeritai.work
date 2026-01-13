@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.52
+// @version      0.2.53
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -151,7 +151,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.51';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.53';
         titleLabel.textContent = `Playlist Saver v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -203,6 +203,34 @@
         panelElements.savedVisible = createStatRow('SAVED in List');
         panelElements.newVisible = createStatRow('NEW in List');
         panelElements.storageStatus = createStatRow('Storage');
+
+        const actionsRow = document.createElement('div');
+        Object.assign(actionsRow.style, {
+            display: 'flex',
+            gap: '6px',
+            marginTop: '4px'
+        });
+
+        const createActionButton = (label, onClick) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = label;
+            Object.assign(button.style, {
+                flex: '1 1 0',
+                padding: '4px 6px',
+                fontSize: '11px',
+                border: '1px solid #a6c8a6',
+                borderRadius: '4px',
+                backgroundColor: '#f5fff5',
+                cursor: 'pointer'
+            });
+            button.addEventListener('click', onClick);
+            return button;
+        };
+
+        actionsRow.appendChild(createActionButton('Export JSON', exportDataToFile));
+        actionsRow.appendChild(createActionButton('Copy JSON', onExportToClipboardClick));
+        contentContainer.appendChild(actionsRow);
 
         document.body.appendChild(panel);
     }
@@ -636,12 +664,25 @@
     function exportDataToFile() {
         loadStorage();
         if (!cachedStorage) { alert('No data.'); return; }
+        const timestamp = getExportTimestamp(new Date());
         const b = new Blob([JSON.stringify(cachedStorage, null, 2)], { type: "application/json" });
         const u = URL.createObjectURL(b);
         const a = document.createElement('a');
-        a.href = u; a.download = 'youtube_playlist_saver_data.json';
+        a.href = u;
+        a.download = `youtube_playlist_saver_data_${timestamp}.json`;
         document.body.appendChild(a); a.click();
         setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(u); }, 100);
+    }
+
+    function getExportTimestamp(date) {
+        const pad = (value) => String(value).padStart(2, '0');
+        const year = date.getFullYear();
+        const month = pad(date.getMonth() + 1);
+        const day = pad(date.getDate());
+        const hours = pad(date.getHours());
+        const minutes = pad(date.getMinutes());
+        const seconds = pad(date.getSeconds());
+        return `${year}${month}${day}-${hours}${minutes}${seconds}`;
     }
 
     function importDataFromFile() {
