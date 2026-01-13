@@ -36,11 +36,13 @@
     // --- Configuration ---
     const PLAYLIST_PATH = '/playlist';
     const PANEL_POS_KEY = 'yt_remover_panel_position';
+    const WAIT_FOR_DISAPPEARANCE_KEY = 'yt_remover_wait_for_disappearance';
     const INIT_DELAY_RANGE_MS = { min: 10000, max: 15000 };
 
     let isActive = false;
     let refreshIntervalId = null;
     let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '150px', right: '20px' });
+    let waitForDisappearance = GM_getValue(WAIT_FOR_DISAPPEARANCE_KEY, true);
     let removeButton = null;
     let isRemoving = false;
     let cancelRequested = false;
@@ -111,7 +113,7 @@
         let initialLeft, initialTop;
 
         headerRow.addEventListener('mousedown', (e) => {
-            if (e.target.tagName === 'BUTTON') return;
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
             isDragging = true;
             dragStartX = e.clientX;
             dragStartY = e.clientY;
@@ -183,6 +185,29 @@
         infoDiv.style.fontSize = '12px';
         infoDiv.style.marginBottom = '2px';
         contentContainer.appendChild(infoDiv);
+
+        // --- Options ---
+        const optionsDiv = document.createElement('div');
+        Object.assign(optionsDiv.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' });
+        
+        const waitCheckbox = document.createElement('input');
+        waitCheckbox.type = 'checkbox';
+        waitCheckbox.id = 'yt-remover-wait-checkbox';
+        waitCheckbox.checked = waitForDisappearance;
+        waitCheckbox.style.cursor = 'pointer';
+        waitCheckbox.addEventListener('change', (e) => {
+            waitForDisappearance = e.target.checked;
+            GM_setValue(WAIT_FOR_DISAPPEARANCE_KEY, waitForDisappearance);
+        });
+
+        const waitLabel = document.createElement('label');
+        waitLabel.textContent = 'Wait for removal';
+        waitLabel.htmlFor = 'yt-remover-wait-checkbox';
+        waitLabel.style.cursor = 'pointer';
+
+        optionsDiv.appendChild(waitCheckbox);
+        optionsDiv.appendChild(waitLabel);
+        contentContainer.appendChild(optionsDiv);
 
         // --- Action Button ---
         const removeBtn = document.createElement('button');
@@ -387,7 +412,7 @@
 
         const START = Date.now();
         let waitedForMenu = false;
-        while (Date.now() - START < 5000) {
+        while (Date.now() - START < 10000) {
             const popup = document.querySelector('ytd-menu-popup-renderer');
             if (popup && isElementVisible(popup)) {
                 highlightOutline(popup);
@@ -500,21 +525,29 @@
 
             const success = await attemptRemoveVideo(item);
             if (cancelRequested) break;
+            
             if (success) {
-                // Wait for the item to actually disappear from the list (removed by YouTube)
-                const disappeared = await waitForItemDisappearance(item, 8000); // Wait up to 8s
-                if (cancelRequested) break;
-                if (disappeared) {
-                    itemsAboveAndValidSet.delete(item);
+                if (waitForDisappearance) {
+                    // Wait for the item to actually disappear from the list (removed by YouTube)
+                    const disappeared = await waitForItemDisappearance(item, 8000); // Wait up to 8s
+                    if (disappeared) {
+                        itemsAboveAndValidSet.delete(item);
+                    } else {
+                        console.warn('[YouTube Playlist Remover] Item removal timed out:', item);
+                    }
                 } else {
-                    console.warn('[YouTube Playlist Remover] Item removal timed out:', item);
-                    // Do not force remove. If YouTube didn't remove it, something might be wrong.
-                    // We continue to the next item, but this item remains in the list.
+                    // Do not wait for disappear, but wait 1s specifically
+                    await new Promise(r => setTimeout(r, 1000));
+                    itemsAboveAndValidSet.delete(item);
                 }
             }
+
             if (item.isConnected) {
                 clearOutline(item);
             }
+            
+            if (cancelRequested) break;
+
             // Small buffer between items
             await new Promise(r => setTimeout(r, 500));
         }
