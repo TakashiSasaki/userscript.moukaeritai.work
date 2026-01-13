@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.35
+// @version      0.1.36
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -146,7 +146,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.35';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.36';
         titleLabel.textContent = `Remover v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -348,37 +348,6 @@
 
     // --- Removal Logic ---
 
-    async function handlePotentialDialog() {
-        updatePhase('Confirming dialog...', true);
-        // Wait briefly for a dialog to appear
-        const start = Date.now();
-        while (Date.now() - start < 1000) {
-            // Check for standard confirmation dialogs
-            const dialog = document.querySelector('yt-confirm-dialog-renderer, tp-yt-paper-dialog');
-            if (dialog) {
-                if (dialog.getAttribute('aria-hidden') === 'true' || dialog.style.display === 'none') {
-                    await new Promise(r => setTimeout(r, 500));
-                    continue;
-                }
-
-                // Look for confirm buttons: ID priority first, then text
-                const confirmBtn = dialog.querySelector('#confirm-button') ||
-                    Array.from(dialog.querySelectorAll('yt-button-renderer, button'))
-                        .find(btn => {
-                            const text = btn.textContent.trim();
-                            return text === '削除' || text === 'Delete' || text === 'Remove';
-                        });
-
-                if (confirmBtn) {
-                    confirmBtn.focus(); // Shift focus before clicking
-                    confirmBtn.click();
-                    return true; // Dialog handled
-                }
-            }
-            await new Promise(r => setTimeout(r, 500));
-        }
-    }
-
     function highlightOutline(element) {
         if (!element) return;
         element.style.outline = '2px solid #d00';
@@ -464,7 +433,6 @@
                             }
                         }
 
-                        await handlePotentialDialog();
                         document.body.click(); // Close menu
                         return true;
                     }
