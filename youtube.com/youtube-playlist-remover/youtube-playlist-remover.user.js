@@ -573,6 +573,9 @@
                 
                 if (success) {
                     deletionTimes.push(endRemove - startRemove);
+                    // Update stats in real-time
+                    const stats = calculateStatistics(deletionTimes);
+                    updateDeletionStats(stats);
                 }
 
                 if (cancelRequested || !isActive) break;
