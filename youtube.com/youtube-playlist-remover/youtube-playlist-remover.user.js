@@ -54,8 +54,8 @@
 
     function calculateStatistics(times) {
         if (!times || times.length === 0) return null;
-        const min = Math.min(...times);
-        const max = Math.max(...times);
+        const min = times.reduce((a, b) => Math.min(a, b), Infinity);
+        const max = times.reduce((a, b) => Math.max(a, b), -Infinity);
         const sum = times.reduce((a, b) => a + b, 0);
         const avg = sum / times.length;
 
@@ -535,92 +535,103 @@
         const deletionTimes = [];
         updateDeletionStats(null);
 
-        updateStatus('Removing...', true);
-        updatePhase('Preparing...', true);
-        updateRemoveButtonLabel('Removing...', { force: true });
+        try {
+            updateStatus('Removing...', true);
+            updatePhase('Preparing...', true);
+            updateRemoveButtonLabel('Removing...', { force: true });
 
-        // Sort targets based on current DOM order and reverse to delete from bottom to top
-        // This prevents UI shifting from affecting unprocessed items.
-        const allItemsInDom = Array.from(document.querySelectorAll('ytd-playlist-video-renderer'));
-        const finalTargets = allItemsInDom
-            .filter(el => itemsAboveAndValidSet.has(el) && el.isConnected && !isItemHiddenByFilter(el))
-            .reverse();
+            // Sort targets based on current DOM order and reverse to delete from bottom to top
+            // This prevents UI shifting from affecting unprocessed items.
+            const allItemsInDom = Array.from(document.querySelectorAll('ytd-playlist-video-renderer'));
+            const finalTargets = allItemsInDom
+                .filter(el => itemsAboveAndValidSet.has(el) && el.isConnected && !isItemHiddenByFilter(el))
+                .reverse();
 
-        const total = finalTargets.length;
+            const total = finalTargets.length;
 
-        // Visual Feedback: Highlight target indexes
-        finalTargets.forEach(item => {
-            const indexEl = item.querySelector('#index');
-            if (indexEl) {
-                indexEl.style.color = '#d00';
-                indexEl.style.fontWeight = 'bold';
-            }
-        });
-
-        for (let i = 0; i < total; i++) {
-            if (cancelRequested) break;
-            const item = finalTargets[i];
-            const indexVal = item.querySelector('#index')?.textContent?.trim() || '?';
-            updateStatus(`Removing #${indexVal} (${i + 1}/${total})...`, true);
-            updatePhase('Scrolling...', true);
-            item.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
-            highlightOutline(item);
-
-            const startRemove = Date.now();
-            const success = await attemptRemoveVideo(item);
-            const endRemove = Date.now();
-            
-            if (success) {
-                deletionTimes.push(endRemove - startRemove);
-            }
-
-            if (cancelRequested) break;
-            
-            if (success) {
-                if (waitForDisappearance) {
-                    updatePhase('Waiting for disappearance...', true);
-                    // Wait for the item to actually disappear from the list (removed by YouTube)
-                    const disappeared = await waitForItemDisappearance(item, 8000); // Wait up to 8s
-                    if (disappeared) {
-                        itemsAboveAndValidSet.delete(item);
-                    } else {
-                        console.warn('[YouTube Playlist Remover] Item removal timed out:', item);
-                    }
-                } else {
-                    // Do not wait for disappear, but wait 1s specifically
-                    updatePhase('Cooldown...', true);
-                    await new Promise(r => setTimeout(r, 1000));
-                    itemsAboveAndValidSet.delete(item);
+            // Visual Feedback: Highlight target indexes
+            finalTargets.forEach(item => {
+                const indexEl = item.querySelector('#index');
+                if (indexEl) {
+                    indexEl.style.color = '#d00';
+                    indexEl.style.fontWeight = 'bold';
                 }
+            });
+
+            for (let i = 0; i < total; i++) {
+                if (cancelRequested || !isActive) break;
+                const item = finalTargets[i];
+                const indexVal = item.querySelector('#index')?.textContent?.trim() || '?';
+                updateStatus(`Removing #${indexVal} (${i + 1}/${total})...`, true);
+                updatePhase('Scrolling...', true);
+                item.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+                highlightOutline(item);
+
+                const startRemove = Date.now();
+                const success = await attemptRemoveVideo(item);
+                const endRemove = Date.now();
+                
+                if (success) {
+                    deletionTimes.push(endRemove - startRemove);
+                }
+
+                if (cancelRequested || !isActive) break;
+                
+                if (success) {
+                    if (waitForDisappearance) {
+                        updatePhase('Waiting for disappearance...', true);
+                        // Wait for the item to actually disappear from the list (removed by YouTube)
+                        const disappeared = await waitForItemDisappearance(item, 8000); // Wait up to 8s
+                        if (disappeared) {
+                            itemsAboveAndValidSet.delete(item);
+                        } else {
+                            console.warn('[YouTube Playlist Remover] Item removal timed out:', item);
+                        }
+                    } else {
+                        // Do not wait for disappear, but wait 1s specifically
+                        updatePhase('Cooldown...', true);
+                        await new Promise(r => setTimeout(r, 1000));
+                        itemsAboveAndValidSet.delete(item);
+                    }
+                }
+
+                if (item.isConnected) {
+                    clearOutline(item);
+                }
+                
+                if (cancelRequested || !isActive) break;
+
+                // Small buffer between items
+                updatePhase('Cooldown...', true);
+                await new Promise(r => setTimeout(r, 500));
             }
 
-            if (item.isConnected) {
-                clearOutline(item);
+            if (deletionTimes.length > 0) {
+                const stats = calculateStatistics(deletionTimes);
+                updateDeletionStats(stats);
             }
-            
-            if (cancelRequested) break;
 
-            // Small buffer between items
-            updatePhase('Cooldown...', true);
-            await new Promise(r => setTimeout(r, 500));
-        }
+            if (cancelRequested) {
+                updateStatus('Canceled');
+                updatePhase('Canceled');
+            } else if (!isActive) {
+                updateStatus('Aborted');
+                updatePhase('Navigated away');
+            } else {
+                updateStatus('Idle');
+                updatePhase('Idle');
+            }
 
-        if (deletionTimes.length > 0) {
-            const stats = calculateStatistics(deletionTimes);
-            updateDeletionStats(stats);
+        } catch (e) {
+            console.error('[YouTube Playlist Remover] Error during removal:', e);
+            updateStatus('Error');
+            updatePhase('Check console');
+        } finally {
+            updateRemoveButtonLabel('Remove Range', { force: true });
+            cancelRequested = false;
+            isRemoving = false;
+            updateCandidatesInfo();
         }
-
-        if (cancelRequested) {
-            updateStatus('Canceled');
-            updatePhase('Canceled');
-        } else {
-            updateStatus('Idle');
-            updatePhase('Idle');
-        }
-        updateRemoveButtonLabel('Remove Range', { force: true });
-        cancelRequested = false;
-        isRemoving = false;
-        updateCandidatesInfo();
     }
 
 
