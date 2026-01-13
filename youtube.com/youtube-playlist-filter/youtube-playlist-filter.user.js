@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.13
+// @version      0.1.14
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -36,7 +36,7 @@
     // --- Config & State ---
     const PLAYLIST_PATH = '/playlist';
     const PANEL_POS_KEY = 'yt_filter_panel_position';
-    const INIT_DELAY_RANGE_MS = { min: 1000, max: 3000 };
+    const INIT_DELAY_RANGE_MS = { min: 10000, max: 15000 };
     let isActive = false;
     let filterIntervalId = null;
     let observerInitTimerId = null;
@@ -389,7 +389,6 @@
         const div = document.getElementById('yt-filter-range-info');
         if (!div) return;
 
-        let maxIndex = 0;
         let matchCount = 0;
 
         // Combine sets for display calculation
@@ -401,22 +400,9 @@
             if (el.style.display !== 'none') {
                 matchCount++;
             }
-
-            // Extract Index
-            const indexEl = el.querySelector('#index');
-            if (indexEl) {
-                const idx = parseInt(indexEl.textContent.trim(), 10);
-                if (!isNaN(idx) && idx > maxIndex) {
-                    maxIndex = idx;
-                }
-            }
         });
 
-        if (maxIndex > 0) {
-            div.textContent = `Range: #1-#${maxIndex} (${matchCount} matches)`;
-        } else {
-            div.textContent = `Range: None`;
-        }
+        div.textContent = matchCount > 0 ? `Range: ${matchCount} matches` : `Range: None`;
     }
 
     // --- Mutation Observer for Async Loading ---
@@ -498,7 +484,7 @@
         }
 
         if (!filterIntervalId) {
-            filterIntervalId = window.setInterval(applyFilters, 2000);
+            filterIntervalId = window.setInterval(applyFilters, 5000);
         }
     }
 
