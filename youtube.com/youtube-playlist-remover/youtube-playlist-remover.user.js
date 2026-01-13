@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.34
+// @version      0.1.35
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -146,7 +146,7 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.31';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.35';
         titleLabel.textContent = `Remover v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
 
@@ -177,6 +177,13 @@
         statusDiv.textContent = 'Status: Idle';
         statusDiv.style.fontSize = '12px';
         contentContainer.appendChild(statusDiv);
+
+        const phaseDiv = document.createElement('div');
+        phaseDiv.id = 'yt-remover-phase';
+        phaseDiv.textContent = 'Phase: Idle';
+        phaseDiv.style.fontSize = '11px';
+        phaseDiv.style.color = '#555';
+        contentContainer.appendChild(phaseDiv);
 
         // --- Candidates Info ---
         const infoDiv = document.createElement('div');
@@ -233,6 +240,14 @@
         if (el) {
             el.textContent = `Status: ${text}`;
             el.style.color = isActive ? '#d00' : '#333';
+        }
+    }
+
+    function updatePhase(text, isActive = false) {
+        const el = document.getElementById('yt-remover-phase');
+        if (el) {
+            el.textContent = `Phase: ${text}`;
+            el.style.color = isActive ? '#d00' : '#555';
         }
     }
 
@@ -334,6 +349,7 @@
     // --- Removal Logic ---
 
     async function handlePotentialDialog() {
+        updatePhase('Confirming dialog...', true);
         // Wait briefly for a dialog to appear
         const start = Date.now();
         while (Date.now() - start < 1000) {
@@ -393,6 +409,7 @@
     }
 
     async function attemptRemoveVideo(videoContainer) {
+        updatePhase('Opening menu...', true);
         // Shift focus to the container itself first
         videoContainer.focus();
 
@@ -415,6 +432,7 @@
         while (Date.now() - START < 10000) {
             const popup = document.querySelector('ytd-menu-popup-renderer');
             if (popup && isElementVisible(popup)) {
+                updatePhase('Menu open', true);
                 highlightOutline(popup);
                 if (!waitedForMenu) {
                     await new Promise(r => setTimeout(r, 500));
@@ -432,6 +450,7 @@
                     const isTrash = path && TRASH_ICON_PATHS.includes(path.getAttribute('d'));
 
                     if (isRemove || isTrash) {
+                        updatePhase('Selecting remove', true);
                         // 4. Click tp-yt-paper-item inside for better emulation if it exists
                         const target = item.querySelector('tp-yt-paper-item') || item;
                         target.focus(); // Shift focus before clicking
@@ -450,6 +469,9 @@
                         return true;
                     }
                 }
+            }
+            if (!waitedForMenu) {
+                updatePhase('Waiting menu...', true);
             }
             await new Promise(r => setTimeout(r, 500));
         }
@@ -495,6 +517,7 @@
         cancelRequested = false;
 
         updateStatus('Removing...', true);
+        updatePhase('Preparing...', true);
         updateRemoveButtonLabel('Removing...', { force: true });
 
         // Sort targets based on current DOM order and reverse to delete from bottom to top
@@ -520,6 +543,7 @@
             const item = finalTargets[i];
             const indexVal = item.querySelector('#index')?.textContent?.trim() || '?';
             updateStatus(`Removing #${indexVal} (${i + 1}/${total})...`, true);
+            updatePhase('Scrolling...', true);
             item.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
             highlightOutline(item);
 
@@ -528,6 +552,7 @@
             
             if (success) {
                 if (waitForDisappearance) {
+                    updatePhase('Waiting for disappearance...', true);
                     // Wait for the item to actually disappear from the list (removed by YouTube)
                     const disappeared = await waitForItemDisappearance(item, 8000); // Wait up to 8s
                     if (disappeared) {
@@ -537,6 +562,7 @@
                     }
                 } else {
                     // Do not wait for disappear, but wait 1s specifically
+                    updatePhase('Cooldown...', true);
                     await new Promise(r => setTimeout(r, 1000));
                     itemsAboveAndValidSet.delete(item);
                 }
@@ -549,13 +575,16 @@
             if (cancelRequested) break;
 
             // Small buffer between items
+            updatePhase('Cooldown...', true);
             await new Promise(r => setTimeout(r, 500));
         }
 
         if (cancelRequested) {
             updateStatus('Canceled');
+            updatePhase('Canceled');
         } else {
             updateStatus('Idle');
+            updatePhase('Idle');
         }
         updateRemoveButtonLabel('Remove Range', { force: true });
         cancelRequested = false;
@@ -593,6 +622,8 @@
         setPanelActiveState(true);
         itemsAboveAndValidSet.clear();
         refreshObserver();
+        updateStatus('Idle');
+        updatePhase('Idle');
 
         if (!refreshIntervalId) {
             refreshIntervalId = window.setInterval(refreshObserver, 5000);
@@ -619,6 +650,8 @@
         isRemoving = false;
         cancelRequested = false;
         updateRemoveButtonLabel('Remove Range', { force: true });
+        updateStatus('Idle');
+        updatePhase('Idle');
         showPanel();
         setPanelActiveState(false);
     }
