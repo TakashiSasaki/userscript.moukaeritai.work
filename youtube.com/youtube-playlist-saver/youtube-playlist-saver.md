@@ -95,6 +95,10 @@ URL の `list` パラメータにプレイリスト ID が含まれるページ�
 }
 ```
 
+### 4.4 JSONスキーマ
+エクスポートされるデータの正確な形式定義は、[data-format/data-format-v2.schema.json](data-format/data-format-v2.schema.json) に記載されています。
+このスキーマはバリデーションや他のツールとのデータ交換に使用できます。
+
 ## 5. プロジェクト管理
 
 ### 5.1 バージョン管理
