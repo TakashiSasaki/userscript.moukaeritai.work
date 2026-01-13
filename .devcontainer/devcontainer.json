@@ -1,4 +1,4 @@
 {
-  "name": "Codespaces with git-subtree",
-  "postStartCommand": "EXEC=$(git --exec-path) && sudo ln -sf /usr/lib/git-core/git-subtree \"$EXEC/git-subtree\""
+  "name": "Codespaces with git-subtree + plocate",
+  "postStartCommand": "set -e; EXEC=$(git --exec-path); sudo ln -sf /usr/lib/git-core/git-subtree \"$EXEC/git-subtree\"; if ! command -v locate >/dev/null 2>&1; then sudo apt-get update; sudo apt-get install -y plocate; fi; sudo updatedb"
 }
