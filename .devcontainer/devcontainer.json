@@ -1,0 +1,4 @@
+{
+  "name": "Codespaces with git-subtree",
+  "postStartCommand": "EXEC=$(git --exec-path) && sudo ln -sf /usr/lib/git-core/git-subtree \"$EXEC/git-subtree\""
+}
