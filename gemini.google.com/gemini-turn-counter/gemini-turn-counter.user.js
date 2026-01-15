@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.16
+// @version      0.1.17
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -30,7 +30,7 @@
         document.addEventListener('userscript-ping', report);
         return;
     }
-    if (!/^\/app\/[a-f0-9]{16}/.test(location.pathname)) return;
+    // Removed initial URL check as it will be handled dynamically
 
     // Settings
     const SELECTORS = {
@@ -46,6 +46,12 @@
         // Table selector (based on samples/table-block.html)
         tableBlock: 'table-block' // or 'table' inside model response
     };
+
+    // --- State Management ---
+    let mainObserver = null;
+    let styleElement = null;
+    let isInitialized = false;
+    let uiContainer = null; // Store reference to the main UI container
 
     // Trusted Types Policy Creation
     let policy;
@@ -69,162 +75,143 @@
     };
 
     // Inject CSS styles (Ported from chatgpt-turn-counter with minor tweaks)
-    const style = document.createElement('style');
-    style.textContent = `
-        #gemini-turn-counter-ui {
-            position: fixed;
-            top: 60px;
-            right: 20px;
-            background-color: rgba(30, 31, 32, 0.9); /* Gemini dark theme bg approx */
-            color: #bdc1c6;
-            border-radius: 8px;
-            z-index: 9999;
-            font-family: Google Sans, Roboto, sans-serif;
-            font-size: 14px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            border: 1px solid #444746;
-            transition: all 0.3s ease;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            width: 40px;
-            height: 40px;
-            padding: 0;
-            user-select: none;
-        }
-        #gemini-turn-counter-ui.expanded {
-            width: auto;
-            height: auto;
-            min-width: 180px;
-            padding: 12px;
-            display: block;
-            cursor: default;
-        }
-        #gemini-turn-counter-ui .gtc-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-            position: relative;
-        }
-        #gemini-turn-counter-ui.expanded .gtc-icon {
-            display: none;
-        }
-        .gtc-icon-badge {
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-            background-color: #8ab4f8;
-            color: #202124;
-            font-size: 10px;
-            font-weight: bold;
-            padding: 0 4px;
-            border-radius: 10px;
-            min-width: 14px;
-            text-align: center;
-            line-height: 14px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        }
-        #gemini-turn-counter-ui .gtc-content {
-            display: none;
-        }
-        #gemini-turn-counter-ui.expanded .gtc-content {
-            display: block;
-        }
-        .gtc-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            white-space: nowrap;
-            margin-bottom: 4px;
-        }
-        .gtc-row:last-child {
-            margin-bottom: 0;
-        }
-        .gtc-val {
-            text-align: right;
-            font-variant-numeric: tabular-nums;
-            font-weight: bold;
-        }
-        .gtc-thumbnails {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2px;
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid #444746;
-            max-width: 220px; /* Limit width to enforce wrapping */
-        }
-        .gtc-thumbnail {
-            width: 20px;
-            height: 20px;
-            object-fit: cover;
-            border-radius: 2px;
-            border: 1px solid #444746;
-            cursor: copy;
-            transition: all 0.2s ease;
-        }
-        .gtc-thumbnail.copied {
-            border: 2px solid #8ab4f8; /* Gemini Blue */
-        }
-        #gtc-copy-status {
-            font-size: 10px;
-            margin-left: 5px;
-            color: #8ab4f8;
-        }
-        .gtc-setting-row {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin-top: 4px;
-            font-size: 11px;
-            color: #bdc1c6;
-        }
-        .gtc-input {
-            background: #1e1f20;
-            border: 1px solid #444746;
-            color: #e3e3e3;
-            width: 40px;
-            padding: 1px 2px;
-            border-radius: 2px;
-            font-size: 11px;
-            text-align: right;
-        }
-        /* Modal & Tooltip styles would go here (omitted for initial brevity) */
-    `;
-    document.head.appendChild(style);
+    function addStyles() {
+        const style = document.createElement('style');
+        style.id = 'gemini-turn-counter-style';
+        style.textContent = `
+            #gemini-turn-counter-ui {
+                position: fixed;
+                top: 60px;
+                right: 20px;
+                background-color: rgba(30, 31, 32, 0.9); /* Gemini dark theme bg approx */
+                color: #bdc1c6;
+                border-radius: 8px;
+                z-index: 9999;
+                font-family: Google Sans, Roboto, sans-serif;
+                font-size: 14px;
+                box-shadow: 0 0 10px rgba(0,0,0,0.5);
+                border: 1px solid #444746;
+                transition: all 0.3s ease;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                width: 40px;
+                height: 40px;
+                padding: 0;
+                user-select: none;
+            }
+            #gemini-turn-counter-ui.expanded {
+                width: auto;
+                height: auto;
+                min-width: 180px;
+                padding: 12px;
+                display: block;
+                cursor: default;
+            }
+            #gemini-turn-counter-ui .gtc-icon {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                height: 100%;
+                position: relative;
+            }
+            #gemini-turn-counter-ui.expanded .gtc-icon {
+                display: none;
+            }
+            .gtc-icon-badge {
+                position: absolute;
+                bottom: 2px;
+                right: 2px;
+                background-color: #8ab4f8;
+                color: #202124;
+                font-size: 10px;
+                font-weight: bold;
+                padding: 0 4px;
+                border-radius: 10px;
+                min-width: 14px;
+                text-align: center;
+                line-height: 14px;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            }
+            #gemini-turn-counter-ui .gtc-content {
+                display: none;
+            }
+            #gemini-turn-counter-ui.expanded .gtc-content {
+                display: block;
+            }
+            .gtc-row {
+                display: flex;
+                justify-content: space-between;
+                gap: 15px;
+                white-space: nowrap;
+                margin-bottom: 4px;
+            }
+            .gtc-row:last-child {
+                margin-bottom: 0;
+            }
+            .gtc-val {
+                text-align: right;
+                font-variant-numeric: tabular-nums;
+                font-weight: bold;
+            }
+            .gtc-thumbnails {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 2px;
+                margin-top: 8px;
+                padding-top: 8px;
+                border-top: 1px solid #444746;
+                max-width: 220px; /* Limit width to enforce wrapping */
+            }
+            .gtc-thumbnail {
+                width: 20px;
+                height: 20px;
+                object-fit: cover;
+                border-radius: 2px;
+                border: 1px solid #444746;
+                cursor: copy;
+                transition: all 0.2s ease;
+            }
+            .gtc-thumbnail.copied {
+                border: 2px solid #8ab4f8; /* Gemini Blue */
+            }
+            #gtc-copy-status {
+                font-size: 10px;
+                margin-left: 5px;
+                color: #8ab4f8;
+            }
+            .gtc-setting-row {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                margin-top: 4px;
+                font-size: 11px;
+                color: #bdc1c6;
+            }
+            .gtc-input {
+                background: #1e1f20;
+                border: 1px solid #444746;
+                color: #e3e3e3;
+                width: 40px;
+                padding: 1px 2px;
+                border-radius: 2px;
+                font-size: 11px;
+                text-align: right;
+            }
+            /* Modal & Tooltip styles would go here (omitted for initial brevity) */
+        `;
+        document.head.appendChild(style);
+        return style;
+    }
 
     // Create UI container
-    const container = document.createElement('div');
-    container.id = 'gemini-turn-counter-ui';
-
-    // Icon SVG
-    const iconSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="color: #a8c7fa;">
-        <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM9 17H7V10H9V17ZM13 17H11V7H13V17ZM17 17H15V13H17V17Z"/>
-    </svg>`;
-
-    setInnerHTML(container, `
-        <div class="gtc-icon">
-            ${iconSvg}
-            <span class="gtc-icon-badge">0</span>
-        </div>
-        <div class="gtc-content">Loading...</div>
-    `);
-    document.body.appendChild(container);
-
-    const contentDiv = container.querySelector('.gtc-content');
-    const badgeSpan = container.querySelector('.gtc-icon-badge');
+    // Removed direct UI creation, moved to initMainFunctionality
 
     // UI Events
-    container.addEventListener('click', () => {
-        container.classList.add('expanded');
-    });
-    container.addEventListener('mouseleave', () => {
-        container.classList.remove('expanded');
-    });
+    // Moved to initMainFunctionality
 
     // --- Core Logic ---
 
@@ -270,11 +257,18 @@
 
     const updateStats = () => {
         // Disconnect to avoid loops
-        observer.disconnect();
+        if (mainObserver) mainObserver.disconnect();
 
         try {
             const userTurns = document.querySelectorAll(SELECTORS.userTurn);
             const modelTurns = document.querySelectorAll(SELECTORS.modelTurn);
+
+            // Get UI container elements
+            const container = document.getElementById('gemini-turn-counter-ui');
+            if (!container) return; // Should not happen if initialized correctly
+
+            const badgeSpan = container.querySelector('.gtc-icon-badge');
+            const contentDiv = container.querySelector('.gtc-content');
 
             // Update Badge
             if (badgeSpan) {
@@ -420,21 +414,109 @@
             }
 
         } finally {
-            observer.observe(document.body, { childList: true, subtree: true });
+            if (mainObserver) mainObserver.observe(document.body, { childList: true, subtree: true });
         }
     };
 
-    const observer = new MutationObserver((_mutations) => {
-        // Simple debounce could be added here
-        updateStats();
-    });
+    /**
+     * Main initialization for the script's features.
+     */
+    function initMainFunctionality() {
+        if (isInitialized) return;
+        console.log('[Gemini Turn Counter] Initializing...');
 
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
+        styleElement = addStyles(); // addStyles() needs to return the style element
+        
+        // Create UI container
+        const container = document.createElement('div');
+        container.id = 'gemini-turn-counter-ui';
 
-    // Initial run
-    setTimeout(updateStats, 2000); // Wait a bit for initial load
+        // Icon SVG
+        const iconSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="color: #a8c7fa;">
+            <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM9 17H7V10H9V17ZM13 17H11V7H13V17ZM17 17H15V13H17V17Z"/>
+        </svg>`;
+
+        setInnerHTML(container, `
+            <div class="gtc-icon">
+                ${iconSvg}
+                <span class="gtc-icon-badge">0</span>
+            </div>
+            <div class="gtc-content">Loading...</div>
+        `);
+        document.body.appendChild(container);
+        uiContainer = container; // Store reference
+
+        // UI Events
+        container.addEventListener('click', () => {
+            container.classList.add('expanded');
+        });
+        container.addEventListener('mouseleave', () => {
+            container.classList.remove('expanded');
+        });
+
+        // Initial run
+        setTimeout(updateStats, 500); // Wait a bit for initial load
+
+        mainObserver = new MutationObserver((_mutations) => {
+            // Simple debounce could be added here
+            updateStats();
+        });
+        mainObserver.observe(document.body, { childList: true, subtree: true });
+
+        isInitialized = true;
+    }
+
+    /**
+     * Cleans up all injected elements, observers, and listeners.
+     */
+    function cleanup() {
+        if (!isInitialized) return;
+        console.log('[Gemini Turn Counter] Cleaning up...');
+
+        if (mainObserver) {
+            mainObserver.disconnect();
+            mainObserver = null;
+        }
+        if (styleElement) {
+            styleElement.remove();
+            styleElement = null;
+        }
+        if (uiContainer) {
+            uiContainer.remove();
+            uiContainer = null;
+        }
+
+        isInitialized = false;
+    }
+
+    /**
+     * Checks the URL and runs init or cleanup accordingly.
+     */
+    function checkUrlAndManageScriptState() {
+        const isChatPage = /^\/(app|gem)\/[a-f0-9]{16}/.test(location.pathname);
+
+        if (isChatPage) {
+            initMainFunctionality();
+        }
+        else {
+            cleanup();
+        }
+    }
+
+    // --- Entry Point ---
+    // Use a MutationObserver to detect SPA navigation changes.
+    // Observing the body for childList changes is a common way to catch page transitions.
+    const pageObserver = new MutationObserver(checkUrlAndManageScriptState);
+
+    if (document.body) {
+        pageObserver.observe(document.body, { childList: true, subtree: false });
+        // Initial check in case the page is loaded directly.
+        checkUrlAndManageScriptState();
+    } else {
+        window.addEventListener('DOMContentLoaded', () => {
+            pageObserver.observe(document.body, { childList: true, subtree: false });
+            checkUrlAndManageScriptState();
+        });
+    }
 
 })();
