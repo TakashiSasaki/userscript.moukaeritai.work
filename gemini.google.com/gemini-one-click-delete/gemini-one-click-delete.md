@@ -9,8 +9,8 @@ Tampermonkey 上で動作することを想定しています。
 ## ユーザースクリプト情報
 
 *   **Namespace**: `https://userscript.moukaeritai.work/`
-*   **Match URL**: `https://gemini.google.com/app/*`
-*   **GitHub**: [userscript.moukaeritai.work](https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/gemini.google.com/gemini-one-click-delete)
+*   **Match URL**: `https://gemini.google.com/*` （スクリプト内部でURLを監視し、チャットページでのみ動的に有効化されます）
+*   **GitHub**: [userscript.moukaeritai.work](https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete)
 
 ## 機能仕様
 
@@ -26,12 +26,19 @@ Tampermonkey 上で動作することを想定しています。
 
 ### 2. キーボードショートカット
 
-*   **ショートカット**: `Ctrl + D` （Macの場合は `Meta + D` も可の想定）
+*   **ショートカット**: `Ctrl + D` （Macの場合は `Meta + D` も可）
 *   **動作**:
     *   ショートカットキーが押されると、画面上の削除ボタン（標準またはフローティング）をプログラム的にクリックします。
     *   **安全性**: テキスト入力エリア（`input`, `textarea`, `contenteditable`）での入力中はショートカットを無効化します。
 
-### 3. エラーハンドリング
+### 3. SPA（シングルページアプリケーション）対応とパフォーマンス
+
+*   GeminiはSPAであるため、ページ遷移を検知してスクリプトの機能を動的に制御します。
+*   **有効化**: チャットページ (`/app/...`) に遷移した際に、削除ボタンやショートカット機能が自動的に有効になります。
+*   **無効化（クリーンアップ）**: チャットページから他のページ（ホームページなど）に移動すると、追加したボタンや機能はすべて削除され、リソースを解放します。
+*   これにより、スクリプトが必要な場面でのみ動作し、サイト全体のパフォーマンスへの影響を最小限に抑えます。
+
+### 4. エラーハンドリング
 
 *   **Trusted Types 対応**: `simulateClick` 関数において `MouseEvent` の `view` プロパティを `null` に設定することで、ブラウザのセキュリティポリシー（Trusted Types）によるエラーを回避しています。
 *   **待機ロジック**: メニューパネルや確認ダイアログが表示されるのを動的かつ堅牢に待機します。
@@ -48,6 +55,7 @@ Tampermonkey 上で動作することを想定しています。
 開発にあたっては、デスクトップ表示（`sample1.html`）およびモバイル表示（`sample2.html`）のDOM構造を参照しています。
 
 ## 更新履歴
+*   **v0.1.16**: SPA対応の強化。チャットページでのみ機能が動的に有効化・無効化されるようにし、パフォーマンスを向上。
 *   **v0.1.12**: ボタンのクリック処理を簡略化（`mousedown`, `mouseup` を削除）。ダークモード表示時のボタンスタイルを改善。
 *   **v0.1.10**: `Ctrl + D` ショートカットの実装。フローティングボタンと標準ボタンのどちらもトリガー可能。
 *   **v0.1.9**: `simulateClick` の `TypeError` 修正（Trusted Types対応）。
