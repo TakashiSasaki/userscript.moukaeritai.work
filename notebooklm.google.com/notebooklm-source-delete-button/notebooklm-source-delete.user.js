@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NotebookLM Source Delete Button
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.4
+// @version      0.1.5
 // @description  Add delete buttons and numbering to NotebookLM sources
 // @author       Takashi Sasaki
 // @match        https://notebooklm.google.com/*
@@ -32,7 +32,7 @@
     window.addEventListener('userscript-check-version', (e) => {
         if (e.detail === SCRIPT_ID) {
             window.dispatchEvent(new CustomEvent('userscript-version-response', {
-                detail: { id: SCRIPT_ID, version: '0.1.4' }
+                detail: { id: SCRIPT_ID, version: '0.1.5' }
             }));
         }
     });
@@ -107,25 +107,32 @@
     }
 
     function triggerNativeDelete(container) {
+        const emulateClick = (el) => {
+            const opts = { bubbles: true, cancelable: true, view: window };
+            el.dispatchEvent(new MouseEvent('mousedown', opts));
+            el.dispatchEvent(new MouseEvent('mouseup', opts));
+            el.click();
+        };
+
         const moreBtn = container.querySelector(SELECTORS.MORE_BUTTON);
         if (!moreBtn) return;
 
         // 1. Open the native menu
-        moreBtn.click();
+        emulateClick(moreBtn);
 
         // 2. Wait for the menu item and click it
         const menuObserver = new MutationObserver((mutations, obs) => {
             const nativeDeleteBtn = document.querySelector(SELECTORS.NATIVE_DELETE_BTN);
             if (nativeDeleteBtn) {
                 obs.disconnect();
-                nativeDeleteBtn.click();
+                emulateClick(nativeDeleteBtn);
 
                 // 3. Wait for the confirmation dialog and click "Delete"
                 const dialogObserver = new MutationObserver((mutations2, obs2) => {
                     const confirmBtn = document.querySelector(SELECTORS.CONFIRM_DELETE_BTN);
                     if (confirmBtn) {
                         obs2.disconnect();
-                        confirmBtn.click();
+                        emulateClick(confirmBtn);
                     }
                 });
                 dialogObserver.observe(document.body, { childList: true, subtree: true });
