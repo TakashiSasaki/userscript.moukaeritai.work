@@ -19,11 +19,25 @@
     - ソース名を変更するためのボタン。
     - `mat-menu-item` クラスを持ち、`role="menuitem"` が設定されています。
 
-## 削除ボタンの実装における意義
+## 3. 「Remove source」ボタンの特定方法
+
+DOM構造に基づき、以下の方法でボタンを特定できます。
+
+### 推奨されるセレクタ
+- **CSSセレクタ**: `button.more-menu-delete-source-button`
+  - このクラス名は機能に直結しており、Angularの動的生成クラス（`ng-tns-...`）とは異なり、ビルドを跨いでも安定している可能性が高いです。
+
+### 補完的な特定ロジック
+セレクタが機能しない場合のフォールバックとして、以下の属性や内容を組み合わせて特定します。
+1.  **タグとクラス**: `button.mat-mdc-menu-item`
+2.  **テキスト内容**: 内部の `span.mat-mdc-menu-item-text` のテキストが "Remove source" であること。
+3.  **アイコン**: 内部に `delete` というテキストを持つ `mat-icon` を含んでいること。
+
+## 4. 削除ボタンの実装における意義
 
 この断片は、ユーザースクリプトが NotebookLM のネイティブな削除機能をトリガーするために不可欠な情報を提供します。
 
 -   **トリガーシーケンス**:
     1.  対象の `.single-source-container` 内にある「More」ボタン（通常は `.source-item-more-button`）をクリックします。
-    2.  `cdk-overlay-container` 内にこのポップオーバーメニューが出現するのを待ちます。
-    3.  出現したメニューの中から `button.more-menu-delete-source-button` を特定し、プログラム的にクリックします。
+    2.  グローバルな `cdk-overlay-container` 内にこのポップオーバーメニューが出現するのを監視または待機します。
+    3.  出現したメニューの中から `button.more-menu-delete-source-button` を特定し、`click()` を発行します。
