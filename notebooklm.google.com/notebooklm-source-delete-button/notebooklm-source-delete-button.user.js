@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NotebookLM Source Delete Button
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.13
+// @version      0.1.14
 // @description  Add delete buttons and numbering to NotebookLM sources
 // @author       Takashi Sasaki
 // @match        https://notebooklm.google.com/*
@@ -10,8 +10,8 @@
 // @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
 // @grant        GM_info
 // @homepageURL  https://x.com/TakashiSasaki
-// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/notebooklm.google.com/notebooklm-source-delete-button/notebooklm-source-delete.user.js
-// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/notebooklm.google.com/notebooklm-source-delete-button/notebooklm-source-delete.user.js
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/notebooklm.google.com/notebooklm-source-delete-button/notebooklm-source-delete-button.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/notebooklm.google.com/notebooklm-source-delete-button/notebooklm-source-delete-button.user.js
 // ==/UserScript==
 
 (function() {
@@ -21,15 +21,16 @@
 
     // Portal API Guard
     if (location.host === "userscript.moukaeritai.work" || location.host === "127.0.0.1:5500" || location.host.endsWith(".app.github.dev")) {
-        window.dispatchEvent(new CustomEvent('userscript-check-installed', {
-            detail: {
-                name: GM_info.script.name,
-                version: GM_info.script.version
-            }
-        }));
-        window.addEventListener('userscript-ping', () => {
-            // console.log('Pong received!');
-        });
+        const report = () => {
+            window.dispatchEvent(new CustomEvent('userscript-check-installed', {
+                detail: {
+                    name: GM_info.script.name,
+                    version: GM_info.script.version
+                }
+            }));
+        };
+        report();
+        window.addEventListener('userscript-ping', report);
         return;
     }
 
@@ -50,6 +51,8 @@
         MORE_BUTTON: '.source-item-more-button',
         NATIVE_DELETE_BTN: 'button.more-menu-delete-source-button',
         NATIVE_RENAME_BTN: 'button.more-menu-edit-source-button',
+        OVERLAY_CONTAINER: '.cdk-overlay-container',
+        OVERLAY_PANE: '.cdk-overlay-pane',
         CONFIRM_DELETE_BTN: 'mat-dialog-container button.submit',
         CONFIRM_RENAME_BTN: 'mat-dialog-container button.submit', // リネーム確定ボタン（もしあれば）
         RENAME_INPUT: 'mat-dialog-container input.title-input',
@@ -60,6 +63,7 @@
 
     let currentScrollArea = null;
     let observer = null;
+    let pollTimer = null;
 
     function log(...args) {
         console.log(`[${SCRIPT_ID}]`, ...args);
@@ -173,6 +177,16 @@
         dispatchMouseEvents(el, ['mouseenter', 'mouseover']);
     };
 
+    function getMenuScope() {
+        const overlay = document.querySelector(SELECTORS.OVERLAY_CONTAINER);
+        if (!overlay) return document;
+        const panes = overlay.querySelectorAll(SELECTORS.OVERLAY_PANE);
+        if (panes.length > 0) {
+            return panes[panes.length - 1];
+        }
+        return overlay;
+    }
+
     async function openMenuAndClick(container, targetSelector, targetTextFallback) {
         log('Starting menu action sequence for container:', container);
 
@@ -204,11 +218,12 @@
         let targetBtn = null;
         // Wait up to 5 seconds
         for (let i = 0; i < 50; i++) {
-            targetBtn = document.querySelector(targetSelector);
+            const menuScope = getMenuScope();
+            targetBtn = menuScope.querySelector(targetSelector);
             
             // Fallback: Find by text content if specific class is missing
             if (!targetBtn) {
-                const menuItems = document.querySelectorAll('button[role="menuitem"]');
+                const menuItems = menuScope.querySelectorAll('button[role="menuitem"]');
                 for (const item of menuItems) {
                     if (item.textContent.includes(targetTextFallback)) {
                         targetBtn = item;
@@ -279,36 +294,72 @@
         }
     }
 
-    // Polling to handle SPA navigation and dynamic loading
-    setInterval(() => {
-        // Performance optimization: only run on notebook pages
-        if (!isNotebookPage()) {
-            if (observer) {
-                observer.disconnect();
-                observer = null;
-            }
-            currentScrollArea = null;
-            return;
+    function stopPolling() {
+        if (pollTimer) {
+            clearInterval(pollTimer);
+            pollTimer = null;
         }
+        if (observer) {
+            observer.disconnect();
+            observer = null;
+        }
+        currentScrollArea = null;
+    }
 
-        const scrollArea = document.querySelector(SELECTORS.SCROLL_AREA);
-        
-        // Check if the scroll area element has changed (e.g., due to page navigation)
-        if (scrollArea !== currentScrollArea) {
-            if (observer) {
-                observer.disconnect();
-                observer = null;
+    function startPolling() {
+        if (pollTimer) return;
+        pollTimer = setInterval(() => {
+            // Performance optimization: only run on notebook pages
+            if (!isNotebookPage()) {
+                stopPolling();
+                return;
             }
-            currentScrollArea = scrollArea;
+
+            const scrollArea = document.querySelector(SELECTORS.SCROLL_AREA);
             
-            if (scrollArea) {
-                // Initial numbering for the new view
-                updateUI();
+            // Check if the scroll area element has changed (e.g., due to page navigation)
+            if (scrollArea !== currentScrollArea) {
+                if (observer) {
+                    observer.disconnect();
+                    observer = null;
+                }
+                currentScrollArea = scrollArea;
                 
-                // Observe for changes in the list (e.g., adding/removing sources)
-                observer = new MutationObserver(() => updateUI());
-                observer.observe(scrollArea, { childList: true });
+                if (scrollArea) {
+                    // Initial numbering for the new view
+                    updateUI();
+                    
+                    // Observe for changes in the list (e.g., adding/removing sources)
+                    observer = new MutationObserver(() => updateUI());
+                    observer.observe(scrollArea, { childList: true });
+                }
             }
+        }, 1000);
+    }
+
+    function handleNavigation() {
+        if (isNotebookPage()) {
+            startPolling();
+        } else {
+            stopPolling();
         }
-    }, 1000);
+    }
+
+    const originalPushState = history.pushState;
+    history.pushState = function(...args) {
+        const result = originalPushState.apply(this, args);
+        handleNavigation();
+        return result;
+    };
+
+    const originalReplaceState = history.replaceState;
+    history.replaceState = function(...args) {
+        const result = originalReplaceState.apply(this, args);
+        handleNavigation();
+        return result;
+    };
+
+    window.addEventListener('popstate', handleNavigation);
+    window.addEventListener('hashchange', handleNavigation);
+    handleNavigation();
 })();
