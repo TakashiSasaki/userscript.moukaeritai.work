@@ -9,21 +9,29 @@
 1.  **コンテナ (`.artifact-library-container`)**:
     - ライブラリ全体を包む親要素。
 2.  **ライブラリ本体 (`artifact-library`)**:
-    - 個別のアーティファクト項目をリスト形式で保持します。
-3.  **ノート項目 (`artifact-library-note`)**:
-    - ユーザーが保存したノートや AI が生成したメモ。
-    - 内部に `.artifact-item-button` を持ち、タイトルや最終更新時間が表示されます。
-4.  **生成アイテム (`artifact-library-item`)**:
-    - オーディオ概要 (`audio_magic_eraser`)、スライド、インフォグラフィックなどの生成物。
-    - `aria-description` 属性（例: "Audio Overview", "Slides"）で種類が判別可能です。
-5.  **操作ボタン**:
-    - 各項目には「More」ボタン (`.artifact-more-button`) があり、削除や共有などのメニューを開くための `mat-menu` トリガーとなっています。
+    - アーティファクトのリストを管理するコンポーネント。
+3.  **アイテムラッパー要素**:
+    - **ノート (`artifact-library-note`)**: ユーザーが作成したメモや保存した回答。
+    - **生成物 (`artifact-library-item`)**: Audio Overview やガイドなどの AI 生成コンテンツ。
+4.  **アイテムボタンコンテナ (`div.artifact-item-button`)**:
+    - アイテムのクリック領域とメニューを保持するラッパー。
+5.  **メインボタン (`button.artifact-button-content`)**:
+    - アイテムを開くためのメインのインタラクション要素。
+    - **タイトル (`.artifact-title`)**: アーティファクトの名前。
+    - **詳細 (`.artifact-details`)**: 更新時間やソース数。
+    - **アクションコンテナ (`.artifact-action-container`)**: タイトルの右側に位置する領域。
+
+## 個別要素の特定方法 (セレクタ)
+
+- **アイテムのルート**: `artifact-library-note` または `artifact-library-item`
+- **タイトルテキスト**: `.artifact-title`
+- **削除ボタンのインジェクト先**: `.artifact-action-container`
+    - ネイティブの「More」ボタンもホバー時にこのコンテナ内に出現するため、ここにカスタムボタンを配置するのが UI 的に自然です。
 
 ## 実装における意義
 
-この断片は、ソースパネル以外の UI 構造を把握するために使用します。
+アーティファクト削除機能を実装する際、以下の点が重要になります。
 
-- **セレクタの特定**: アーティファクトのタイトル (`.artifact-title`) や「More」ボタンへのアクセス方法を確認できます。
-- **拡張性**: 将来的にアーティファクトの自動整理や一括操作機能を検討する際、`.artifact-item-button` や `artifact-library-note` といったセレクタが設計の基礎となります。
-- **前処理の検証**: 複雑な Angular コンポーネントを含むため、`preprocess_samples.py` のノイズ除去能力をテストするのに適しています。
-**包含関係の注意**: アーティファクトライブラリは `section.studio-panel` 内にあり、ソースパネルとは異なるスクロールコンテナ (`.panel-content-scrollable`) を持っています。
+- **動的生成への対応**: 「More」ボタンはホバーするまで DOM に存在しない可能性があるため、ソース削除機能と同様に `mouseenter` イベントのエミュレーションが必要です。
+- **コンテナの区別**: アーティファクトは `section.studio-panel` 内にあり、ソースパネル (`section.source-panel`) とはセレクタを分けて管理する必要があります。
+- **一括削除の検討**: `artifact-library` を親として、すべての子要素に対してシーケンシャルに削除処理を実行するロジックが組めます。
