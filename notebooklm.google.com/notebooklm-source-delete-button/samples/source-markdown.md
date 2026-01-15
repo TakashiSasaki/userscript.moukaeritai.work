@@ -20,4 +20,4 @@
 ## 削除ボタンの実装における意義
 
 この断片は、特定のソースタイプ（マークダウン）に対して、削除ボタンをどの位置に挿入するのが最適かを検証するために使用します。
-`ANALYSIS.md` で定義された「候補A（チェックボックスの隣）」を適用する場合、`.select-checkbox-container` がターゲットとなります。
+`ANALYSIS.md` で定義された「候補A（チェックボックスの隣）」を適用する場合、`.select-checkbox-container` がターゲットとなります。この構造は他のソース形式（Text, URL）と共通であるため、単一のセレクタ `.single-source-container .select-checkbox-container` で対応可能です。

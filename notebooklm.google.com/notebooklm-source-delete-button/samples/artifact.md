@@ -26,3 +26,4 @@
 - **セレクタの特定**: アーティファクトのタイトル (`.artifact-title`) や「More」ボタンへのアクセス方法を確認できます。
 - **拡張性**: 将来的にアーティファクトの自動整理や一括操作機能を検討する際、`.artifact-item-button` や `artifact-library-note` といったセレクタが設計の基礎となります。
 - **前処理の検証**: 複雑な Angular コンポーネントを含むため、`preprocess_samples.py` のノイズ除去能力をテストするのに適しています。
+**包含関係の注意**: アーティファクトライブラリは `section.studio-panel` 内にあり、ソースパネルとは異なるスクロールコンテナ (`.panel-content-scrollable`) を持っています。
