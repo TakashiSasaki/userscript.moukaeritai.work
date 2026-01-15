@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NotebookLM Source Delete Button
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.10
+// @version      0.1.11
 // @description  Add delete buttons and numbering to NotebookLM sources
 // @author       Takashi Sasaki
 // @match        https://notebooklm.google.com/*
@@ -32,7 +32,7 @@
     window.addEventListener('userscript-check-version', (e) => {
         if (e.detail === SCRIPT_ID) {
             window.dispatchEvent(new CustomEvent('userscript-version-response', {
-                detail: { id: SCRIPT_ID, version: '0.1.9' }
+                detail: { id: SCRIPT_ID, version: '0.1.11' }
             }));
         }
     });
@@ -47,7 +47,8 @@
         NATIVE_RENAME_BTN: 'button.more-menu-edit-source-button',
         CONFIRM_DELETE_BTN: 'mat-dialog-container button.submit',
         NUMBERING: 'notebooklm-source-number',
-        DELETE_BTN: 'notebooklm-source-delete-btn'
+        DELETE_BTN: 'notebooklm-source-delete-btn',
+        RENAME_BTN: 'notebooklm-source-rename-btn'
     };
 
     let currentScrollArea = null;
@@ -84,29 +85,63 @@
                 numberSpan.textContent = index + 1;
             }
 
-            // 2. Add Delete Button
+            // 2. Add Rename & Delete Buttons
             const checkboxContainer = container.querySelector(SELECTORS.CHECKBOX_CONTAINER);
-            if (checkboxContainer && !checkboxContainer.querySelector(`.${SELECTORS.DELETE_BTN}`)) {
-                const btn = document.createElement('button');
-                btn.className = SELECTORS.DELETE_BTN;
-                btn.textContent = '×';
-                btn.title = 'Remove source';
-                btn.style.marginLeft = '4px';
-                btn.style.border = 'none';
-                btn.style.background = 'transparent';
-                btn.style.color = '#888';
-                btn.style.cursor = 'pointer';
-                btn.style.fontSize = '16px';
-                btn.style.padding = '0 4px';
-                btn.style.lineHeight = '1';
-                btn.style.verticalAlign = 'middle';
+            if (checkboxContainer) {
+                // Rename Button
+                if (!checkboxContainer.querySelector(`.${SELECTORS.RENAME_BTN}`)) {
+                    const btn = document.createElement('button');
+                    btn.className = SELECTORS.RENAME_BTN;
+                    btn.textContent = '✎';
+                    btn.title = 'Rename source';
+                    btn.style.marginLeft = '4px';
+                    btn.style.border = 'none';
+                    btn.style.background = 'transparent';
+                    btn.style.color = '#888';
+                    btn.style.cursor = 'pointer';
+                    btn.style.fontSize = '16px';
+                    btn.style.padding = '0 4px';
+                    btn.style.lineHeight = '1';
+                    btn.style.verticalAlign = 'middle';
 
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    triggerNativeDelete(container);
-                });
-                checkboxContainer.appendChild(btn);
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        triggerNativeRename(container);
+                    });
+                    
+                    // Insert before delete button if exists
+                    const deleteBtn = checkboxContainer.querySelector(`.${SELECTORS.DELETE_BTN}`);
+                    if (deleteBtn) {
+                        checkboxContainer.insertBefore(btn, deleteBtn);
+                    } else {
+                        checkboxContainer.appendChild(btn);
+                    }
+                }
+
+                // Delete Button
+                if (!checkboxContainer.querySelector(`.${SELECTORS.DELETE_BTN}`)) {
+                    const btn = document.createElement('button');
+                    btn.className = SELECTORS.DELETE_BTN;
+                    btn.textContent = '×';
+                    btn.title = 'Remove source';
+                    btn.style.marginLeft = '4px';
+                    btn.style.border = 'none';
+                    btn.style.background = 'transparent';
+                    btn.style.color = '#888';
+                    btn.style.cursor = 'pointer';
+                    btn.style.fontSize = '16px';
+                    btn.style.padding = '0 4px';
+                    btn.style.lineHeight = '1';
+                    btn.style.verticalAlign = 'middle';
+
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        triggerNativeDelete(container);
+                    });
+                    checkboxContainer.appendChild(btn);
+                }
             }
         });
     }
@@ -115,23 +150,24 @@
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    async function triggerNativeDelete(container) {
-        log('Starting delete sequence for container:', container);
+    // Helper functions for event emulation
+    const dispatchMouseEvents = (el, types) => {
+        types.forEach(type => {
+            el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
+        });
+    };
 
-        const dispatchMouseEvents = (el, types) => {
-            types.forEach(type => {
-                el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
-            });
-        };
+    const emulateClick = (el) => {
+        log('Emulating click on:', el);
+        dispatchMouseEvents(el, ['mousedown', 'mouseup', 'click']);
+    };
+    const emulateHover = (el) => {
+        log('Emulating hover on:', el);
+        dispatchMouseEvents(el, ['mouseenter', 'mouseover']);
+    };
 
-        const emulateClick = (el) => {
-            log('Emulating click on:', el);
-            dispatchMouseEvents(el, ['mousedown', 'mouseup', 'click']);
-        };
-        const emulateHover = (el) => {
-            log('Emulating hover on:', el);
-            dispatchMouseEvents(el, ['mouseenter', 'mouseover']);
-        };
+    async function openMenuAndClick(container, targetSelector, targetTextFallback) {
+        log('Starting menu action sequence for container:', container);
 
         // 1. Reveal the "More" button by hovering the container
         emulateHover(container);
@@ -148,7 +184,7 @@
 
         if (!moreBtn) {
             log('More button never appeared.');
-            return;
+            return false;
         }
 
         log('More button found:', moreBtn);
@@ -158,29 +194,44 @@
         log('Waiting for menu to appear...');
 
         // 3. Poll for the menu item and click it
-        let nativeDeleteBtn = null;
+        let targetBtn = null;
         // Wait up to 5 seconds
         for (let i = 0; i < 50; i++) {
-            nativeDeleteBtn = document.querySelector(SELECTORS.NATIVE_DELETE_BTN);
+            targetBtn = document.querySelector(targetSelector);
             
             // Fallback: Find by text content if specific class is missing
-            if (!nativeDeleteBtn) {
+            if (!targetBtn) {
                 const menuItems = document.querySelectorAll('button[role="menuitem"]');
                 for (const item of menuItems) {
-                    if (item.textContent.includes('Remove source')) {
-                        nativeDeleteBtn = item;
+                    if (item.textContent.includes(targetTextFallback)) {
+                        targetBtn = item;
                         break;
                     }
                 }
             }
 
-            if (nativeDeleteBtn) break;
+            if (targetBtn) break;
             await sleep(100);
         }
 
-        if (nativeDeleteBtn) {
-            log('Native delete button found. Clicking...');
-            emulateClick(nativeDeleteBtn);
+        if (targetBtn) {
+            log('Target menu button found. Clicking...', targetBtn);
+            emulateClick(targetBtn);
+            return true;
+        } else {
+            log('Menu item not found (polling timed out).');
+            return false;
+        }
+    }
+
+    async function triggerNativeRename(container) {
+        await openMenuAndClick(container, SELECTORS.NATIVE_RENAME_BTN, 'Rename source');
+    }
+
+    async function triggerNativeDelete(container) {
+        const success = await openMenuAndClick(container, SELECTORS.NATIVE_DELETE_BTN, 'Remove source');
+        
+        if (success) {
 
             // 4. Wait for the confirmation dialog and click "Delete"
             log('Waiting for confirmation dialog...');
@@ -197,8 +248,6 @@
             } else {
                 log('Confirmation dialog timed out.');
             }
-        } else {
-            log('Menu observer timed out (polling).');
         }
     }
 
