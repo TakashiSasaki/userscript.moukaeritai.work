@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.6
+// @version      0.1.7
 // @description  Adds serial numbers and copy buttons to custom instructions on Gemini.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -40,6 +40,45 @@
     let instructionsObserver = null;
 
     /**
+     * Shows a toast notification.
+     * @param {string} message The message to display.
+     */
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.position = 'fixed';
+        toast.style.bottom = '20px';
+        toast.style.left = '50%';
+        toast.style.transform = 'translateX(-50%)';
+        toast.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        toast.style.color = 'white';
+        toast.style.padding = '10px 20px';
+        toast.style.borderRadius = '8px';
+        toast.style.zIndex = '10000';
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.5s ease, bottom 0.5s ease';
+        toast.style.fontFamily = 'sans-serif';
+
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '1';
+            toast.style.bottom = '30px';
+        }, 10);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.bottom = '20px';
+            toast.addEventListener('transitionend', () => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            });
+        }, 2500);
+    }
+
+
+    /**
      * Injects the "Copy All" button into the section header.
      */
     function addCopyAllButton() {
@@ -52,6 +91,8 @@
         copyAllButton.id = COPY_ALL_BUTTON_ID;
         copyAllButton.className = 'mdc-button mat-mdc-button-base mat-mdc-outlined-button';
         copyAllButton.style.marginLeft = '8px';
+        copyAllButton.style.setProperty('color', 'var(--mat-outlined-button-label-text-color, initial)', 'important');
+
 
         const icon = document.createElement('mat-icon');
         icon.className = 'mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color';
@@ -67,16 +108,19 @@
         copyAllButton.addEventListener('click', () => {
             const allInstructions = document.querySelectorAll('.memory .memory-text');
             const formattedText = Array.from(allInstructions).map((el, i) => {
-                const cleanText = el.textContent.replace(new RegExp(`^${i + 1}. `), '');
+                const numberSpan = el.querySelector(`.${NUMBER_SPAN_CLASS}`);
+                const cleanText = numberSpan ? el.textContent.substring(numberSpan.textContent.length) : el.textContent;
                 return `${i + 1}. ${cleanText}`;
             }).join('\n\n---\n\n');
 
             navigator.clipboard.writeText(formattedText).then(() => {
                 console.log('[gemini-saved-info] All instructions copied to clipboard.');
+                showToast('All instructions copied!');
                 label.textContent = 'Copied!';
                 setTimeout(() => { label.textContent = 'Copy all'; }, 2000);
             }).catch(err => {
                 console.error('[gemini-saved-info] Failed to copy all text: ', err);
+                showToast('Failed to copy all instructions.');
                 label.textContent = 'Error!';
                 setTimeout(() => { label.textContent = 'Copy all'; }, 2000);
             });
@@ -128,6 +172,7 @@
                     e.stopPropagation();
                     const textToCopy = textElement.textContent.replace(`${index + 1}. `, '');
                     navigator.clipboard.writeText(textToCopy).then(() => {
+                        showToast('Instruction copied!');
                         icon.textContent = 'done';
                         setTimeout(() => { icon.textContent = 'content_copy'; }, 1500);
                     });
@@ -161,7 +206,7 @@
     }
 
     /**
-     * Stops observers and cleans up all injected UI elements.  
+     * Stops observers and cleans up all injected UI elements.
      */
     function stopInstructionsObserver() {
         if (instructionsObserver) {
