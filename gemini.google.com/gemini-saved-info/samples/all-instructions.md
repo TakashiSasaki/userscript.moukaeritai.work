@@ -29,6 +29,7 @@ div[data-test-id="memories-section"]
 
 *   **Selector:** `div.memory.ng-star-inserted`
 *   **Purpose:** Represents a single custom instruction item. The script will iterate through all elements matching this selector to process each instruction.
+*   **Note:** The structure of each `div.memory` element is identical to the DOM fragment documented in `one-instruction.md`.
 
 ### 3. Instruction Text
 

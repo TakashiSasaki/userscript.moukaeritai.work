@@ -29,7 +29,7 @@ This is the primary section for managing custom instructions.
 *   **Add Button:** `button.create-memory-button` (contains a `mat-icon` with `fonticon="add"`)
 *   **Delete All Button:** `button.delete-all-memories-button`
 *   **Instructions Container:** `div[data-test-id="memories-section"]`
-    *   This container holds the list of individual instructions (`.memory` elements). Its structure is detailed in `all-instructions.md`.
+    *   This container holds the list of individual instructions. The structure of this container and its children is identical to the DOM fragment documented in `all-instructions.md`.
 
 ### 3. "Your premium content"
 

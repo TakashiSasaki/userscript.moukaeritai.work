@@ -37,4 +37,4 @@ The application is structured with a main root component (`<chat-app>`) that hol
 *   **Selector:** `bard-sidenav-content`
 *   **Purpose:** The container for the currently active page or view.
 *   **Mechanism:** It contains a `<router-outlet>` which Angular uses to dynamically load different components based on the URL.
-*   **In this Sample:** The `<router-outlet>` is followed by the `<saved-info-page>` component, as the DOM was captured on the `/saved-info` page. The structure of this component is detailed in `saved-info-dialog.md`.
+*   **In this Sample:** The `<router-outlet>` is followed by the `<saved-info-page>` component. This confirms that the structure of `whole-dom.html` contains the entire structure documented in `saved-info-dialog.md`.
