@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NotebookLM Source Delete Button
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.9
+// @version      0.1.10
 // @description  Add delete buttons and numbering to NotebookLM sources
 // @author       Takashi Sasaki
 // @match        https://notebooklm.google.com/*
