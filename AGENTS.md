@@ -6,9 +6,9 @@
 
 -   **Detailed Commit Messages**: Always prefer detailed commit messages, focusing on the *why* of a change rather than just the *what*.
 -   **`git commit -F` Usage**: Utilize `git commit -F` for committing changes, leveraging a temporary file for the commit message content.
--   **Temporary Commit Message File**: When committing, create a temporary file named `commit_message.txt` with the commit message content.
-    -   **Location**: The `commit_message.txt` file must be created within the project's working directory.
-    -   **Absolute Path**: Always use an absolute path when referencing `commit_message.txt` with `git commit -F`.
+-   **Temporary Commit Message File**: When committing, create a temporary file with the commit message content.
+    -   **Location**: The temporary file must be created within the project's working directory.
+    -   **Absolute Path**: Always use an absolute path when referencing the temporary file with `git commit -F`.
 -   **Single File Per Commit**: When instructed to commit a file, include only that specific file in the commit, even if other changes are staged or untracked.
 -   **English Commit Messages**: All Git commit messages should be written in English.
 -   **Manual Pushing**: The user prefers to push changes manually; agents should *never* push changes to a remote repository automatically.
