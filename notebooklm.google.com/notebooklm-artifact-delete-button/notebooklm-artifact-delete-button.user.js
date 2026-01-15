@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NotebookLM Artifact Delete Button
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.0
+// @version      0.1.1
 // @description  Add delete buttons to NotebookLM artifacts (notes, audio, etc.)
 // @author       Takashi Sasaki
 // @match        https://notebooklm.google.com/*
@@ -21,15 +21,16 @@
 
     // Portal API Guard
     if (location.host === "userscript.moukaeritai.work" || location.host === "127.0.0.1:5500" || location.host.endsWith(".app.github.dev")) {
-        window.dispatchEvent(new CustomEvent('userscript-check-installed', {
-            detail: {
-                name: GM_info.script.name,
-                version: GM_info.script.version
-            }
-        }));
-        window.addEventListener('userscript-ping', () => {
-            // console.log('Pong received!');
-        });
+        const report = () => {
+            window.dispatchEvent(new CustomEvent('userscript-check-installed', {
+                detail: {
+                    name: GM_info.script.name,
+                    version: GM_info.script.version
+                }
+            }));
+        };
+        report();
+        window.addEventListener('userscript-ping', report);
         return;
     }
 
@@ -48,12 +49,15 @@
         ACTION_CONTAINER: '.artifact-action-container',
         MORE_BUTTON: 'button.mat-mdc-menu-trigger', // Generic trigger within the item
         MENU_DELETE_BTN_TEXT: ['Delete', 'Remove'], 
+        OVERLAY_CONTAINER: '.cdk-overlay-container',
+        OVERLAY_PANE: '.cdk-overlay-pane',
         CONFIRM_DELETE_BTN: 'mat-dialog-container button.submit',
         DELETE_BTN_CLASS: 'notebooklm-artifact-delete-btn'
     };
 
     let currentScrollArea = null;
     let observer = null;
+    let pollTimer = null;
 
     function log(...args) {
         console.log(`[${SCRIPT_ID}]`, ...args);
@@ -80,6 +84,16 @@
     const emulateHover = (el) => {
         dispatchMouseEvents(el, ['mouseenter', 'mouseover']);
     };
+
+    function getMenuScope() {
+        const overlay = document.querySelector(SELECTORS.OVERLAY_CONTAINER);
+        if (!overlay) return document;
+        const panes = overlay.querySelectorAll(SELECTORS.OVERLAY_PANE);
+        if (panes.length > 0) {
+            return panes[panes.length - 1];
+        }
+        return overlay;
+    }
 
     async function triggerNativeDelete(container) {
         log('Starting delete sequence for artifact:', container);
@@ -108,7 +122,8 @@
         // 3. Poll for the menu item and click it
         let deleteMenuItem = null;
         for (let i = 0; i < 50; i++) { // 5 seconds
-            const menuItems = document.querySelectorAll('button[role="menuitem"]');
+            const menuScope = getMenuScope();
+            const menuItems = menuScope.querySelectorAll('button[role="menuitem"]');
             for (const item of menuItems) {
                 const text = item.textContent.trim();
                 if (SELECTORS.MENU_DELETE_BTN_TEXT.some(t => text.includes(t))) {
@@ -181,31 +196,67 @@
         });
     }
 
-    // Polling to handle SPA navigation and dynamic loading
-    setInterval(() => {
-        if (!isNotebookPage()) {
-            if (observer) {
-                observer.disconnect();
-                observer = null;
-            }
-            currentScrollArea = null;
-            return;
+    function stopPolling() {
+        if (pollTimer) {
+            clearInterval(pollTimer);
+            pollTimer = null;
         }
+        if (observer) {
+            observer.disconnect();
+            observer = null;
+        }
+        currentScrollArea = null;
+    }
 
-        const scrollArea = document.querySelector(SELECTORS.SCROLL_AREA);
-        
-        // Always try to update UI if scroll area exists, to handle initial load or missed mutations
-        if (scrollArea) {
-            updateUI();
-            
-            if (scrollArea !== currentScrollArea) {
-                if (observer) {
-                    observer.disconnect();
-                }
-                currentScrollArea = scrollArea;
-                observer = new MutationObserver(() => updateUI());
-                observer.observe(scrollArea, { childList: true, subtree: true });
+    function startPolling() {
+        if (pollTimer) return;
+        pollTimer = setInterval(() => {
+            if (!isNotebookPage()) {
+                stopPolling();
+                return;
             }
+
+            const scrollArea = document.querySelector(SELECTORS.SCROLL_AREA);
+            
+            // Always try to update UI if scroll area exists, to handle initial load or missed mutations
+            if (scrollArea) {
+                updateUI();
+                
+                if (scrollArea !== currentScrollArea) {
+                    if (observer) {
+                        observer.disconnect();
+                    }
+                    currentScrollArea = scrollArea;
+                    observer = new MutationObserver(() => updateUI());
+                    observer.observe(scrollArea, { childList: true });
+                }
+            }
+        }, 1000);
+    }
+
+    function handleNavigation() {
+        if (isNotebookPage()) {
+            startPolling();
+        } else {
+            stopPolling();
         }
-    }, 1000);
+    }
+
+    const originalPushState = history.pushState;
+    history.pushState = function(...args) {
+        const result = originalPushState.apply(this, args);
+        handleNavigation();
+        return result;
+    };
+
+    const originalReplaceState = history.replaceState;
+    history.replaceState = function(...args) {
+        const result = originalReplaceState.apply(this, args);
+        handleNavigation();
+        return result;
+    };
+
+    window.addEventListener('popstate', handleNavigation);
+    window.addEventListener('hashchange', handleNavigation);
+    handleNavigation();
 })();
