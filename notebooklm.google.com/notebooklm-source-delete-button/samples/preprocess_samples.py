@@ -129,7 +129,7 @@ def preprocess_html(file_path):
             if content: output_lines.append(content)
             return
         
-        if node.name is None: # BeautifulSoup object (root)
+        if node.name == '[document]': # BeautifulSoup object (root) or leftover tag from bad run
             for child in node.children: walk(child)
             return
 
