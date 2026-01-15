@@ -22,6 +22,7 @@ export default [
             "**/node_modules/**",
             "**/*.min.js",
             "**/samples/**", // Ignore sample files
+            "**/obsoleted/**", // Ignore obsoleted scripts
         ]
     }
 ];
