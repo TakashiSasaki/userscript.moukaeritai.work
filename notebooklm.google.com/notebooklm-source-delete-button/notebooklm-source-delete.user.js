@@ -44,6 +44,7 @@
         CHECKBOX_CONTAINER: '.select-checkbox-container',
         MORE_BUTTON: '.source-item-more-button',
         NATIVE_DELETE_BTN: 'button.more-menu-delete-source-button',
+        NATIVE_RENAME_BTN: 'button.more-menu-edit-source-button',
         CONFIRM_DELETE_BTN: 'mat-dialog-container button.submit',
         NUMBERING: 'notebooklm-source-number',
         DELETE_BTN: 'notebooklm-source-delete-btn'
