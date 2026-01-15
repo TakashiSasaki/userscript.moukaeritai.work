@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.5
+// @version      0.1.6
 // @description  Adds serial numbers and copy buttons to custom instructions on Gemini.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -9,7 +9,7 @@
 // @match        https://userscript.moukaeritai.work/*
 // @match        http://127.0.0.1:5500/*
 // @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
-// @grant        none
+// @grant        GM_info
 // @license      MIT
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js
@@ -17,6 +17,21 @@
 
 (function() {
     'use strict';
+
+    // For documentation page to check if the script is installed
+    if (location.hostname === 'userscript.moukaeritai.work' || location.hostname === '127.0.0.1' || location.hostname.endsWith('.app.github.dev')) {
+        const report = () => {
+            document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+                detail: {
+                    name: GM_info.script.name,
+                    version: GM_info.script.version
+                }
+            }));
+        };
+        report();
+        document.addEventListener('userscript-ping', report);
+        return;
+    }
 
     const TARGET_PAGE_URL = 'https://gemini.google.com/saved-info';
     const NUMBER_SPAN_CLASS = 'userscript-gemini-saved-info-number';
@@ -52,7 +67,7 @@
         copyAllButton.addEventListener('click', () => {
             const allInstructions = document.querySelectorAll('.memory .memory-text');
             const formattedText = Array.from(allInstructions).map((el, i) => {
-                const cleanText = el.textContent.replace(new RegExp(`^${i + 1}\. `), '');
+                const cleanText = el.textContent.replace(new RegExp(`^${i + 1}. `), '');
                 return `${i + 1}. ${cleanText}`;
             }).join('\n\n---\n\n');
 
@@ -146,7 +161,7 @@
     }
 
     /**
-     * Stops observers and cleans up all injected UI elements.
+     * Stops observers and cleans up all injected UI elements.  
      */
     function stopInstructionsObserver() {
         if (instructionsObserver) {
