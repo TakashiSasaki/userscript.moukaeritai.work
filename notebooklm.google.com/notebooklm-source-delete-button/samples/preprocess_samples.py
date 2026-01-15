@@ -1,7 +1,7 @@
 import os
 import re
 import glob
-from bs4 import BeautifulSoup, Comment, NavigableString
+from bs4 import BeautifulSoup, Comment, NavigableString, Doctype
 
 def preprocess_html(file_path):
     """
@@ -38,7 +38,17 @@ def preprocess_html(file_path):
         "Bad summary",
         "Copy",
         "Good response",
-        "Bad response"
+        "Bad response",
+        "Add source",
+        "Submit",
+        "Collapse",
+        "Customize",
+        "Create notebook",
+        "Share",
+        "Settings",
+        "Analytics",
+        "toggle-source-panel-button",
+        "toggle-studio-panel-button"
     ]
 
     for element in soup.find_all(True):
@@ -47,7 +57,7 @@ def preprocess_html(file_path):
             continue
 
         # aria-label やツールチップ属性から UI ボタンを特定して削除
-        attrs_to_check = ['aria-label', 'mattooltip', 'title', 'aria-description']
+        attrs_to_check = ['aria-label', 'mattooltip', 'title', 'aria-description', 'class']
         should_remove = False
         for attr in attrs_to_check:
             val = element.get(attr, '')
@@ -86,7 +96,7 @@ def preprocess_html(file_path):
         
         normalized_text = " ".join(text_node.split())
         if not normalized_text:
-            text_node.replace_with("")
+            text_node.extract()
             continue
         
         if len(normalized_text) > 1000:
@@ -97,10 +107,18 @@ def preprocess_html(file_path):
     # 6. 再フォーマット: 1行1ノード、インデントなし
     output_lines = []
     def walk(node):
+        if isinstance(node, Doctype):
+            output_lines.append(f"<!DOCTYPE {node}>")
+            return
         if isinstance(node, NavigableString):
             content = str(node).strip()
             if content: output_lines.append(content)
             return
+        
+        if node.name is None: # BeautifulSoup object (root)
+            for child in node.children: walk(child)
+            return
+
         attrs_str = "".join([f' {k}="{ " ".join(v) if isinstance(v, list) else v}"' for k, v in node.attrs.items()])
         if node.is_empty_element:
             output_lines.append(f"<{node.name}{attrs_str}/>")
@@ -109,9 +127,9 @@ def preprocess_html(file_path):
             for child in node.children: walk(child)
             output_lines.append(f"</{node.name}>")
 
-    walk(soup.html if soup.html else soup)
+    walk(soup)
     with open(file_path, 'w', encoding='utf-8') as f:
-        f.write("\n".join(output_lines))
+        f.write("\n".join(output_lines) + "\n")
 
 if __name__ == "__main__":
     for file in glob.glob("*.html"):
