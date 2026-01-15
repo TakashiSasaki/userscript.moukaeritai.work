@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NotebookLM Source Delete Button
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.3
+// @version      0.1.4
 // @description  Add delete buttons and numbering to NotebookLM sources
 // @author       Takashi Sasaki
 // @match        https://notebooklm.google.com/*
@@ -32,7 +32,7 @@
     window.addEventListener('userscript-check-version', (e) => {
         if (e.detail === SCRIPT_ID) {
             window.dispatchEvent(new CustomEvent('userscript-version-response', {
-                detail: { id: SCRIPT_ID, version: '0.1.3' }
+                detail: { id: SCRIPT_ID, version: '0.1.4' }
             }));
         }
     });
@@ -44,6 +44,7 @@
         CHECKBOX_CONTAINER: '.select-checkbox-container',
         MORE_BUTTON: '.source-item-more-button',
         NATIVE_DELETE_BTN: 'button.more-menu-delete-source-button',
+        CONFIRM_DELETE_BTN: 'mat-dialog-container button.submit',
         NUMBERING: 'notebooklm-source-number',
         DELETE_BTN: 'notebooklm-source-delete-btn'
     };
@@ -109,20 +110,32 @@
         const moreBtn = container.querySelector(SELECTORS.MORE_BUTTON);
         if (!moreBtn) return;
 
-        // Open the native menu
+        // 1. Open the native menu
         moreBtn.click();
 
-        // Observe the body for the appearance of the menu in the CDK overlay
+        // 2. Wait for the menu item and click it
         const menuObserver = new MutationObserver((mutations, obs) => {
             const nativeDeleteBtn = document.querySelector(SELECTORS.NATIVE_DELETE_BTN);
             if (nativeDeleteBtn) {
-                nativeDeleteBtn.click();
                 obs.disconnect();
+                nativeDeleteBtn.click();
+
+                // 3. Wait for the confirmation dialog and click "Delete"
+                const dialogObserver = new MutationObserver((mutations2, obs2) => {
+                    const confirmBtn = document.querySelector(SELECTORS.CONFIRM_DELETE_BTN);
+                    if (confirmBtn) {
+                        obs2.disconnect();
+                        confirmBtn.click();
+                    }
+                });
+                dialogObserver.observe(document.body, { childList: true, subtree: true });
+                // Safety timeout for dialog
+                setTimeout(() => dialogObserver.disconnect(), 2000);
             }
         });
 
         menuObserver.observe(document.body, { childList: true, subtree: true });
-        // Safety timeout to stop observing if the menu doesn't appear
+        // Safety timeout for menu
         setTimeout(() => menuObserver.disconnect(), 2000);
     }
 
