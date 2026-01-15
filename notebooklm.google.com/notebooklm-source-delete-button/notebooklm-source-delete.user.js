@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NotebookLM Source Delete Button
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.0
+// @version      0.1.1
 // @description  Add delete buttons and numbering to NotebookLM sources
 // @author       Takashi Sasaki
 // @match        https://notebooklm.google.com/*
@@ -17,6 +17,8 @@
 (function() {
     'use strict';
 
+    const SCRIPT_ID = 'notebooklm-source-delete-button';
+
     // Portal API Guard
     if (location.host === "userscript.moukaeritai.work" || location.host === "127.0.0.1:5500" || location.host.endsWith(".app.github.dev")) {
         window.dispatchEvent(new CustomEvent('userscript-check-installed'));
@@ -25,6 +27,15 @@
         });
         return;
     }
+
+    // Version Check API
+    window.addEventListener('userscript-check-version', (e) => {
+        if (e.detail === SCRIPT_ID) {
+            window.dispatchEvent(new CustomEvent('userscript-version-response', {
+                detail: { id: SCRIPT_ID, version: '0.1.1' }
+            }));
+        }
+    });
 
     const SELECTORS = {
         SCROLL_AREA: '.scroll-area-desktop',
@@ -35,6 +46,10 @@
 
     let currentScrollArea = null;
     let observer = null;
+
+    function isNotebookPage() {
+        return location.hostname === 'notebooklm.google.com' && location.pathname.startsWith('/notebook/');
+    }
 
     function addNumbering() {
         const containers = document.querySelectorAll(SELECTORS.SOURCE_CONTAINER);
@@ -64,6 +79,16 @@
 
     // Polling to handle SPA navigation and dynamic loading
     setInterval(() => {
+        // Performance optimization: only run on notebook pages
+        if (!isNotebookPage()) {
+            if (observer) {
+                observer.disconnect();
+                observer = null;
+            }
+            currentScrollArea = null;
+            return;
+        }
+
         const scrollArea = document.querySelector(SELECTORS.SCROLL_AREA);
         
         // Check if the scroll area element has changed (e.g., due to page navigation)
