@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NotebookLM Source Delete Button
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.12
+// @version      0.1.13
 // @description  Add delete buttons and numbering to NotebookLM sources
 // @author       Takashi Sasaki
 // @match        https://notebooklm.google.com/*
@@ -32,7 +32,7 @@
     window.addEventListener('userscript-check-version', (e) => {
         if (e.detail === SCRIPT_ID) {
             window.dispatchEvent(new CustomEvent('userscript-version-response', {
-                detail: { id: SCRIPT_ID, version: '0.1.12' }
+                detail: { id: SCRIPT_ID, version: '0.1.13' }
             }));
         }
     });
@@ -46,6 +46,7 @@
         NATIVE_DELETE_BTN: 'button.more-menu-delete-source-button',
         NATIVE_RENAME_BTN: 'button.more-menu-edit-source-button',
         CONFIRM_DELETE_BTN: 'mat-dialog-container button.submit',
+        CONFIRM_RENAME_BTN: 'mat-dialog-container button.submit', // リネーム確定ボタン（もしあれば）
         RENAME_INPUT: 'mat-dialog-container input.title-input',
         NUMBERING: 'notebooklm-source-number',
         DELETE_BTN: 'notebooklm-source-delete-btn',
@@ -235,6 +236,14 @@
                     log('Rename input found. Focusing...');
                     input.focus();
                     input.select(); // テキストを全選択状態にしてすぐ書き換えられるようにする
+                    
+                    // Enterキーで確定ボタンを自動クリックする補助（オプション）
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            const confirmBtn = document.querySelector(SELECTORS.CONFIRM_RENAME_BTN);
+                            if (confirmBtn) emulateClick(confirmBtn);
+                        }
+                    });
                     break;
                 }
                 await sleep(100);
