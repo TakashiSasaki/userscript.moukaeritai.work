@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.1.21
+// @version      0.1.22
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -29,7 +29,7 @@
         document.addEventListener('userscript-ping', report);
         return;
     }
-    if (!/^\/app\/[a-f0-9]{16}/.test(location.pathname)) return;
+    // Removed initial URL check as it will be handled dynamically
 
     // svg icons
     // svg icons
@@ -167,6 +167,7 @@
             }
         `;
         document.head.appendChild(style);
+        return style;
     }
 
     /**
@@ -532,36 +533,85 @@
         }
     }
 
+    // --- State Management ---
+    let mainObserver = null;
+    let keydownListener = null;
+    let styleElement = null;
+    let isInitialized = false;
+
     /**
-     * Initialize
+     * Main initialization for the script's features.
      */
-    function init() {
-        addStyles();
+    function initMainFunctionality() {
+        if (isInitialized) return;
+        console.log('[Gemini 1-Click Export to Docs] Initializing...');
 
-        // Initial process
-        processNodes();
+        styleElement = addStyles(); // addStyles() needs to return the style element
+        processNodes(); // Initial run
 
-        // Keyboard Listener
-        document.addEventListener('keydown', handleKeyboardShortcut);
+        mainObserver = new MutationObserver(processNodes);
+        mainObserver.observe(document.body, { childList: true, subtree: true });
 
-        // Observe for new turns / dynamic content
-        const observer = new MutationObserver((_mutations) => {
-            // Debounce or just run? For simplicity, we run.
-            // Optimally we check if relevant nodes were added.
-            processNodes();
-        });
+        keydownListener = handleKeyboardShortcut;
+        document.addEventListener('keydown', keydownListener);
 
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
+        isInitialized = true;
     }
 
-    // Wait for body
+    /**
+     * Cleans up all injected elements, observers, and listeners.
+     */
+    function cleanup() {
+        if (!isInitialized) return;
+        console.log('[Gemini 1-Click Export to Docs] Cleaning up...');
+
+        if (mainObserver) {
+            mainObserver.disconnect();
+            mainObserver = null;
+        }
+        if (keydownListener) {
+            document.removeEventListener('keydown', keydownListener);
+            keydownListener = null;
+        }
+        if (styleElement) {
+            styleElement.remove();
+            styleElement = null;
+        }
+        document.querySelectorAll('.gemini-quick-export-btn').forEach(btn => btn.remove());
+        const overlay = document.getElementById('gemini-export-overlay');
+        if (overlay) overlay.remove();
+
+
+        isInitialized = false;
+    }
+
+    /**
+     * Checks the URL and runs init or cleanup accordingly.
+     */
+    function checkUrlAndManageScriptState() {
+        const isChatPage = /^\/(app|gem)\/[a-f0-9]{16}/.test(location.pathname);
+
+        if (isChatPage) {
+            initMainFunctionality();
+        } else {
+            cleanup();
+        }
+    }
+
+    // --- Entry Point ---
+    // Use a MutationObserver to detect SPA navigation changes.
+    // Observing the body for childList changes is a common way to catch page transitions.
+    const pageObserver = new MutationObserver(checkUrlAndManageScriptState);
+
     if (document.body) {
-        init();
+        pageObserver.observe(document.body, { childList: true, subtree: false });
+        // Initial check in case the page is loaded directly.
+        checkUrlAndManageScriptState();
     } else {
-        window.addEventListener('DOMContentLoaded', init);
+        window.addEventListener('DOMContentLoaded', () => {
+            pageObserver.observe(document.body, { childList: true, subtree: false });
+            checkUrlAndManageScriptState();
+        });
     }
 
 })();
