@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NotebookLM Source Delete Button
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.1
+// @version      0.1.2
 // @description  Add delete buttons and numbering to NotebookLM sources
 // @author       Takashi Sasaki
 // @match        https://notebooklm.google.com/*
@@ -32,7 +32,7 @@
     window.addEventListener('userscript-check-version', (e) => {
         if (e.detail === SCRIPT_ID) {
             window.dispatchEvent(new CustomEvent('userscript-version-response', {
-                detail: { id: SCRIPT_ID, version: '0.1.1' }
+                detail: { id: SCRIPT_ID, version: '0.1.2' }
             }));
         }
     });
@@ -54,26 +54,25 @@
     function addNumbering() {
         const containers = document.querySelectorAll(SELECTORS.SOURCE_CONTAINER);
         containers.forEach((container, index) => {
-            let numberSpan = container.querySelector(`.${SELECTORS.NUMBERING}`);
+            const titleColumn = container.querySelector(SELECTORS.TITLE_COLUMN);
+            if (!titleColumn) return;
+
+            let numberSpan = titleColumn.querySelector(`.${SELECTORS.NUMBERING}`);
             if (!numberSpan) {
                 numberSpan = document.createElement('span');
                 numberSpan.className = SELECTORS.NUMBERING;
-                numberSpan.style.marginRight = '8px';
-                numberSpan.style.fontWeight = 'bold';
-                numberSpan.style.color = '#555';
-                numberSpan.style.minWidth = '24px';
-                numberSpan.style.display = 'inline-block';
-                numberSpan.style.textAlign = 'right';
+                numberSpan.style.position = 'absolute';
+                numberSpan.style.top = '0px';
+                numberSpan.style.left = '0px';
+                numberSpan.style.fontSize = '10px';
+                numberSpan.style.color = '#888';
+                numberSpan.style.lineHeight = '1';
+                numberSpan.style.pointerEvents = 'none';
 
-                const titleColumn = container.querySelector(SELECTORS.TITLE_COLUMN);
-                if (titleColumn) {
-                    titleColumn.insertBefore(numberSpan, titleColumn.firstChild);
-                } else {
-                    container.prepend(numberSpan);
-                }
+                titleColumn.style.position = 'relative';
+                titleColumn.appendChild(numberSpan);
             }
-            // Update number (1-based index)
-            numberSpan.textContent = `${index + 1}.`;
+            numberSpan.textContent = index + 1;
         });
     }
 
