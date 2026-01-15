@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NotebookLM Source Delete Button
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.11
+// @version      0.1.12
 // @description  Add delete buttons and numbering to NotebookLM sources
 // @author       Takashi Sasaki
 // @match        https://notebooklm.google.com/*
@@ -32,7 +32,7 @@
     window.addEventListener('userscript-check-version', (e) => {
         if (e.detail === SCRIPT_ID) {
             window.dispatchEvent(new CustomEvent('userscript-version-response', {
-                detail: { id: SCRIPT_ID, version: '0.1.11' }
+                detail: { id: SCRIPT_ID, version: '0.1.12' }
             }));
         }
     });
@@ -46,6 +46,7 @@
         NATIVE_DELETE_BTN: 'button.more-menu-delete-source-button',
         NATIVE_RENAME_BTN: 'button.more-menu-edit-source-button',
         CONFIRM_DELETE_BTN: 'mat-dialog-container button.submit',
+        RENAME_INPUT: 'mat-dialog-container input.title-input',
         NUMBERING: 'notebooklm-source-number',
         DELETE_BTN: 'notebooklm-source-delete-btn',
         RENAME_BTN: 'notebooklm-source-rename-btn'
@@ -225,7 +226,20 @@
     }
 
     async function triggerNativeRename(container) {
-        await openMenuAndClick(container, SELECTORS.NATIVE_RENAME_BTN, 'Rename source');
+        const success = await openMenuAndClick(container, SELECTORS.NATIVE_RENAME_BTN, 'Rename source');
+        if (success) {
+            log('Waiting for rename dialog input...');
+            for (let i = 0; i < 50; i++) {
+                const input = document.querySelector(SELECTORS.RENAME_INPUT);
+                if (input) {
+                    log('Rename input found. Focusing...');
+                    input.focus();
+                    input.select(); // テキストを全選択状態にしてすぐ書き換えられるようにする
+                    break;
+                }
+                await sleep(100);
+            }
+        }
     }
 
     async function triggerNativeDelete(container) {
