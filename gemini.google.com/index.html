@@ -478,10 +478,25 @@
             });
         });
 
-        // Ping after load
-        window.addEventListener('load', () => {
-            document.dispatchEvent(new CustomEvent('userscript-ping'));
+        // Initial state: set buttons to "Checking..."
+        const installButtons = document.querySelectorAll('.install-button');
+        installButtons.forEach(btn => {
+            btn.dataset.originalHtml = btn.innerHTML;
+            btn.textContent = 'Checking...';
+            btn.classList.add('installed');
+            btn.style.pointerEvents = 'none';
         });
+
+        // Ping after a random delay (3-5s)
+        setTimeout(() => {
+            installButtons.forEach(btn => {
+                // Restore original state before pinging
+                btn.innerHTML = btn.dataset.originalHtml;
+                btn.classList.remove('installed');
+                btn.style.pointerEvents = '';
+            });
+            document.dispatchEvent(new CustomEvent('userscript-ping'));
+        }, Math.floor(Math.random() * 2000) + 3000);
     </script>
 </body>
 
