@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NotebookLM Source Delete Button
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.5
+// @version      0.1.6
 // @description  Add delete buttons and numbering to NotebookLM sources
 // @author       Takashi Sasaki
 // @match        https://notebooklm.google.com/*
@@ -32,7 +32,7 @@
     window.addEventListener('userscript-check-version', (e) => {
         if (e.detail === SCRIPT_ID) {
             window.dispatchEvent(new CustomEvent('userscript-version-response', {
-                detail: { id: SCRIPT_ID, version: '0.1.5' }
+                detail: { id: SCRIPT_ID, version: '0.1.6' }
             }));
         }
     });
@@ -107,43 +107,61 @@
     }
 
     function triggerNativeDelete(container) {
-        const emulateClick = (el) => {
-            const opts = { bubbles: true, cancelable: true, view: window };
-            el.dispatchEvent(new MouseEvent('mousedown', opts));
-            el.dispatchEvent(new MouseEvent('mouseup', opts));
-            el.click();
+        const dispatchMouseEvents = (el, types) => {
+            types.forEach(type => {
+                el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
+            });
         };
 
+        const emulateClick = (el) => dispatchMouseEvents(el, ['mousedown', 'mouseup', 'click']);
+        const emulateHover = (el) => dispatchMouseEvents(el, ['mouseenter', 'mouseover']);
+
+        const startSequence = (btn) => {
+            // 2. Open the native menu
+            emulateClick(btn);
+
+            // 3. Wait for the menu item and click it
+            const menuObserver = new MutationObserver((mutations, obs) => {
+                const nativeDeleteBtn = document.querySelector(SELECTORS.NATIVE_DELETE_BTN);
+                if (nativeDeleteBtn) {
+                    obs.disconnect();
+                    emulateClick(nativeDeleteBtn);
+
+                    // 4. Wait for the confirmation dialog and click "Delete"
+                    const dialogObserver = new MutationObserver((mutations2, obs2) => {
+                        const confirmBtn = document.querySelector(SELECTORS.CONFIRM_DELETE_BTN);
+                        if (confirmBtn) {
+                            obs2.disconnect();
+                            emulateClick(confirmBtn);
+                        }
+                    });
+                    dialogObserver.observe(document.body, { childList: true, subtree: true });
+                    setTimeout(() => dialogObserver.disconnect(), 2000);
+                }
+            });
+
+            menuObserver.observe(document.body, { childList: true, subtree: true });
+            setTimeout(() => menuObserver.disconnect(), 2000);
+        };
+
+        // 1. Reveal the "More" button by hovering the container
+        emulateHover(container);
+
         const moreBtn = container.querySelector(SELECTORS.MORE_BUTTON);
-        if (!moreBtn) return;
-
-        // 1. Open the native menu
-        emulateClick(moreBtn);
-
-        // 2. Wait for the menu item and click it
-        const menuObserver = new MutationObserver((mutations, obs) => {
-            const nativeDeleteBtn = document.querySelector(SELECTORS.NATIVE_DELETE_BTN);
-            if (nativeDeleteBtn) {
-                obs.disconnect();
-                emulateClick(nativeDeleteBtn);
-
-                // 3. Wait for the confirmation dialog and click "Delete"
-                const dialogObserver = new MutationObserver((mutations2, obs2) => {
-                    const confirmBtn = document.querySelector(SELECTORS.CONFIRM_DELETE_BTN);
-                    if (confirmBtn) {
-                        obs2.disconnect();
-                        emulateClick(confirmBtn);
-                    }
-                });
-                dialogObserver.observe(document.body, { childList: true, subtree: true });
-                // Safety timeout for dialog
-                setTimeout(() => dialogObserver.disconnect(), 2000);
-            }
-        });
-
-        menuObserver.observe(document.body, { childList: true, subtree: true });
-        // Safety timeout for menu
-        setTimeout(() => menuObserver.disconnect(), 2000);
+        if (moreBtn) {
+            startSequence(moreBtn);
+        } else {
+            // If not found immediately, it might be dynamically added on hover
+            const btnObserver = new MutationObserver((mutations, obs) => {
+                const btn = container.querySelector(SELECTORS.MORE_BUTTON);
+                if (btn) {
+                    obs.disconnect();
+                    startSequence(btn);
+                }
+            });
+            btnObserver.observe(container, { childList: true, subtree: true });
+            setTimeout(() => btnObserver.disconnect(), 1000);
+        }
     }
 
     // Polling to handle SPA navigation and dynamic loading
