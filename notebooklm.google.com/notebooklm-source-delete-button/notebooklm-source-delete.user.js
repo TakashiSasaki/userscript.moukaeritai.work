@@ -8,7 +8,7 @@
 // @match        https://userscript.moukaeritai.work/*
 // @match        http://127.0.0.1:5500/*
 // @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
-// @grant        none
+// @grant        GM_info
 // @homepageURL  https://x.com/TakashiSasaki
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/notebooklm.google.com/notebooklm-source-delete-button/notebooklm-source-delete.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/notebooklm.google.com/notebooklm-source-delete-button/notebooklm-source-delete.user.js
@@ -21,7 +21,12 @@
 
     // Portal API Guard
     if (location.host === "userscript.moukaeritai.work" || location.host === "127.0.0.1:5500" || location.host.endsWith(".app.github.dev")) {
-        window.dispatchEvent(new CustomEvent('userscript-check-installed'));
+        window.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
         window.addEventListener('userscript-ping', () => {
             // console.log('Pong received!');
         });
@@ -32,7 +37,7 @@
     window.addEventListener('userscript-check-version', (e) => {
         if (e.detail === SCRIPT_ID) {
             window.dispatchEvent(new CustomEvent('userscript-version-response', {
-                detail: { id: SCRIPT_ID, version: '0.1.13' }
+                detail: { id: SCRIPT_ID, version: GM_info.script.version }
             }));
         }
     });
