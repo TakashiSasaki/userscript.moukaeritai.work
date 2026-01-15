@@ -4,6 +4,8 @@
 
 ## 主要な構成要素
 
+**包含関係**: `whole-dom.html` によると、この構造は `section.studio-panel > studio-panel > div.panel-content-scrollable` の内部に位置しています。
+
 1.  **コンテナ (`.artifact-library-container`)**:
     - ライブラリ全体を包む親要素。
 2.  **ライブラリ本体 (`artifact-library`)**:

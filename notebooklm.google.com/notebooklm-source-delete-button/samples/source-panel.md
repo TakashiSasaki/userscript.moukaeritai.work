@@ -12,7 +12,7 @@
     - ソース管理のメインコンポーネント。以下の要素を内包します。
     - **検索・追加エリア (`.source-discovery-container`)**: `source-discovery-query-box` を含み、新しいソースの検索や追加を行います。
     - **一括選択行 (`.row`)**: 「Select all sources」テキストと、一括選択用の `mat-checkbox` を含みます。
-    - **リスト領域 (`.scroll-area-desktop`)**: 個別のソース項目 (`.single-source-container`) が動的に並ぶスクロール可能なエリアです。
+    - **リスト領域 (`.scroll-area-desktop`)**: `div.contents > div > div.scroll-area-desktop` の階層に位置し、個別のソース項目 (`.single-source-container`) が動的に並ぶスクロール可能なエリアです。
 
 ## 削除ボタンの実装における意義
 

@@ -4,6 +4,8 @@
 
 ## 主要な構成要素
 
+**包含関係**: この要素は `div.scroll-area-desktop` の直接の子要素として配置されます。
+
 1.  **ルートコンテナ (`.single-source-container`)**:
     - 各ソース項目の親要素。`tabindex="0"` を持ち、フォーカス可能です。
     - Angular の動的属性 (`_ngcontent-ng-c...`) や `jslog` 属性が含まれています。
