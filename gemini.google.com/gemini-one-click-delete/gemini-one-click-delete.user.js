@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.1.16
+// @version      0.1.17
 // @description  Adds a 1-click button to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -220,7 +220,7 @@
      * Checks the URL and runs init or cleanup accordingly.
      */
     function checkUrlAndManageScriptState() {
-        const isChatPage = /^\/app\/[a-f0-9]{16}/.test(location.pathname);
+        const isChatPage = /^\/(app|gem)\/[a-f0-9]{16}/.test(location.pathname);
 
         if (isChatPage) {
             initMainFunctionality();
