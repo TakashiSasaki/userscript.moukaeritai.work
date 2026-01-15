@@ -1,0 +1,1 @@
+artifact.html はNotebookLMのページの右側に表示される出力の一覧です。
