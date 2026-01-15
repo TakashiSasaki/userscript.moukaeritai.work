@@ -6,12 +6,16 @@
 
 1.  **メニューアイテムボタン (`button.more-menu-delete-source-button`)**:
     - ポップオーバーメニュー内の個別の項目。
-    - `mat-mdc-menu-item` クラスを持ち、Angular Material のメニュー項目として実装されています。
-    - `more-menu-delete-source-button` という特定のクラスを持っており、これが要素の特定に非常に有用です。
+    - `mat-mdc-menu-item` クラスを持ち、Angular Material のメニュー項目として実装されています。`role="menuitem"` 属性を持ちます。
+    - `more-menu-button` クラス（メニュー項目全般）と、`more-menu-delete-source-button` クラス（削除ボタン固有）の両方を持っています。
+    - `jslog` 属性（例: `jslog="202052;...`）は Google の内部トラッキング用です。
 2.  **アイコン (`mat-icon`)**:
     - ゴミ箱アイコンを表示します。内部テキスト（マテリアルアイコン名）は `delete` です。
+    - `google-symbols` クラスを持ち、Google Symbols フォントを使用しています。
 3.  **テキストラベル (`span.mat-mdc-menu-item-text`)**:
-    - 「Remove source」というテキストが含まれます。
+    - 「 Remove source 」というテキストが含まれます（前後にスペースが含まれる点に注意）。
+4.  **リップルエフェクト (`div.mat-ripple`)**:
+    - クリック時の視覚効果（波紋）を制御する要素です。
 
 ## 削除ボタンの実装における意義
 
