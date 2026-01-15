@@ -56,6 +56,10 @@ def preprocess_html(file_path):
         if element.attrs is None:
             continue
 
+        # button 要素とその中身は、分析対象の重要な構造であるため保護する
+        if element.name == 'button' or element.find_parent('button'):
+            continue
+
         # aria-label やツールチップ属性から UI ボタンを特定して削除
         attrs_to_check = ['aria-label', 'mattooltip', 'title', 'aria-description', 'class']
         should_remove = False
@@ -108,6 +112,12 @@ def preprocess_html(file_path):
         if not isinstance(text_node, NavigableString) or text_node.parent is None:
             continue
         
+        # button 要素の中のテキストは正規化（スペースの集約）を避ける
+        if text_node.parent.name == 'button' or text_node.parent.find_parent('button'):
+            if not text_node.strip(): # 改行のみのノードなどは削除して整形を助ける
+                text_node.extract()
+            continue
+
         normalized_text = " ".join(text_node.split())
         if not normalized_text:
             text_node.extract()
@@ -120,17 +130,23 @@ def preprocess_html(file_path):
 
     # 6. 再フォーマット: 1行1ノード、インデントなし
     output_lines = []
-    def walk(node):
+    def walk(node, in_button=False):
         if isinstance(node, Doctype):
             output_lines.append(f"<!DOCTYPE {node}>")
             return
+
+        # 現在のノードが button か、あるいは button の中にあるか
+        is_button = getattr(node, 'name', None) == 'button'
+        current_in_button = in_button or is_button
+
         if isinstance(node, NavigableString):
-            content = str(node).strip()
+            # button 内なら strip せず、そのままの文字列（前後のスペース含む）を使用する
+            content = str(node) if in_button else str(node).strip()
             if content: output_lines.append(content)
             return
         
         if node.name == '[document]': # BeautifulSoup object (root) or leftover tag from bad run
-            for child in node.children: walk(child)
+            for child in node.children: walk(child, in_button)
             return
 
         attrs_str = "".join([f' {k}="{ " ".join(v) if isinstance(v, list) else v}"' for k, v in node.attrs.items()])
@@ -138,7 +154,7 @@ def preprocess_html(file_path):
             output_lines.append(f"<{node.name}{attrs_str}/>")
         else:
             output_lines.append(f"<{node.name}{attrs_str}>")
-            for child in node.children: walk(child)
+            for child in node.children: walk(child, current_in_button)
             output_lines.append(f"</{node.name}>")
 
     walk(soup)
