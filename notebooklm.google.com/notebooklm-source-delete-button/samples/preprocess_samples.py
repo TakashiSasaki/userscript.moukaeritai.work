@@ -27,7 +27,7 @@ def preprocess_html(file_path):
         svg.clear()
 
     # 4. 属性のクリーンアップ & 不要な UI 要素の除去
-    angular_attr_pattern = re.compile(r'^(_ngcontent|_nghost)-ng-c')
+    angular_attr_pattern = re.compile(r'^(ng-|(_ngcontent|_nghost)-ng-c|cdk-|mat-)')
     ui_labels = [
         "Save to note", 
         "Copy model response to clipboard", 
@@ -87,6 +87,18 @@ def preprocess_html(file_path):
             # 不要な jslog 属性を削除
             elif attr == 'jslog':
                 del element.attrs[attr]
+            # class 属性内の Angular 固有のノイズを削除 (セレクタ選定に不要なもの)
+            elif attr == 'class' and isinstance(val, list):
+                cleaned_classes = [c for c in val if not (
+                    c.startswith('ng-tns-') or 
+                    c == 'ng-star-inserted' or 
+                    c == '_mat-animation-noopable' or 
+                    c.startswith('mat-mdc-button-ripple')
+                )]
+                if cleaned_classes:
+                    element.attrs['class'] = cleaned_classes
+                else:
+                    del element.attrs['class']
 
     # 5. テキストの切り詰めとホワイトスペースの正規化
     for text_node in soup.find_all(string=True):
