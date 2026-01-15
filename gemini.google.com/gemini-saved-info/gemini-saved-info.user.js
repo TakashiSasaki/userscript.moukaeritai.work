@@ -1,12 +1,18 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
-// @namespace    namespace.moukaeritai.work
-// @version      0.1.1
+// @namespace    userscript.moukaeritai.work
+// @version      0.1.2
 // @description  Adds serial numbers to custom instructions on Gemini.
-// @author       Takashi SASAKI
+// @author       Takashi Sasaki
+// @homepageURL  https://x.com/TakashiSasaki
 // @match        https://gemini.google.com/*
+// @match        https://userscript.moukaeritai.work/*
+// @match        http://127.0.0.1:5500/*
+// @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
 // @grant        none
 // @license      MIT
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js
 // ==/UserScript==
 
 (function() {
