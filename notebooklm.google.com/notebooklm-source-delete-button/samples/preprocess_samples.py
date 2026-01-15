@@ -91,6 +91,8 @@ def preprocess_html(file_path):
             elif attr == 'class' and isinstance(val, list):
                 cleaned_classes = [c for c in val if not (
                     c.startswith('ng-tns-') or 
+                    c.startswith('ng-trigger') or
+                    c.startswith('ng-animate') or
                     c == 'ng-star-inserted' or 
                     c == '_mat-animation-noopable' or 
                     c.startswith('mat-mdc-button-ripple')
