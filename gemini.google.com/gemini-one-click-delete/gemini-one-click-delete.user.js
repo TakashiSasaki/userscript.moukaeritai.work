@@ -29,8 +29,6 @@
         document.addEventListener('userscript-ping', report);
         return;
     }
-    if (!/^\/app\/[a-f0-9]{16}/.test(location.pathname)) return;
-
     const SELECTORS = {
         // Trigger button (Conversation Options)
         // Shared by Desktop and Mobile
@@ -61,6 +59,12 @@
         // Search Result Indicators
         messageContent: 'message-content, user-query-content, response-element'
     };
+
+    // --- State Management ---
+    let mainObserver = null;
+    let keydownListener = null;
+    let styleElement = null;
+    let isInitialized = false;
 
     /**
      * Sleep helper
@@ -376,20 +380,6 @@
     }
 
     /**
-     * Initialization
-     */
-    function init() {
-        addStyles();
-        processNodes();
-
-        const observer = new MutationObserver(() => {
-            processNodes();
-        });
-
-        observer.observe(document.body, { childList: true, subtree: true });
-    }
-
-    /**
      * Handle Keyboard Shortcut (Ctrl+D)
      */
     async function handleKeyboardShortcut(e) {
@@ -422,13 +412,75 @@
         console.warn('Delete button not available or disabled.');
     }
 
+    /**
+     * Main initialization for the script's features.
+     */
+    function initMainFunctionality() {
+        if (isInitialized) return;
+        console.log('[Gemini 1-Click Delete] Initializing...');
+
+        styleElement = addStyles();
+        processNodes(); // Initial run
+
+        mainObserver = new MutationObserver(processNodes);
+        mainObserver.observe(document.body, { childList: true, subtree: true });
+
+        keydownListener = handleKeyboardShortcut;
+        document.addEventListener('keydown', keydownListener);
+
+        isInitialized = true;
+    }
+
+    /**
+     * Cleans up all injected elements, observers, and listeners.
+     */
+    function cleanup() {
+        if (!isInitialized) return;
+        console.log('[Gemini 1-Click Delete] Cleaning up...');
+
+        if (mainObserver) {
+            mainObserver.disconnect();
+            mainObserver = null;
+        }
+        if (keydownListener) {
+            document.removeEventListener('keydown', keydownListener);
+            keydownListener = null;
+        }
+        if (styleElement) {
+            styleElement.remove();
+            styleElement = null;
+        }
+        document.querySelectorAll('.gemini-quick-delete-btn').forEach(btn => btn.remove());
+
+        isInitialized = false;
+    }
+
+    /**
+     * Checks the URL and runs init or cleanup accordingly.
+     */
+    function checkUrlAndManageScriptState() {
+        const isChatPage = /^\/(app|gem)\/[a-f0-9]{16}/.test(location.pathname);
+
+        if (isChatPage) {
+            initMainFunctionality();
+        } else {
+            cleanup();
+        }
+    }
+
+    // --- Entry Point ---
+    // Use a MutationObserver to detect SPA navigation changes.
+    // Observing the body for childList changes is a common way to catch page transitions.
+    const pageObserver = new MutationObserver(checkUrlAndManageScriptState);
+
     if (document.body) {
-        init();
-        document.addEventListener('keydown', handleKeyboardShortcut);
+        pageObserver.observe(document.body, { childList: true, subtree: false });
+        // Initial check in case the page is loaded directly.
+        checkUrlAndManageScriptState();
     } else {
         window.addEventListener('DOMContentLoaded', () => {
-            init();
-            document.addEventListener('keydown', handleKeyboardShortcut);
+            pageObserver.observe(document.body, { childList: true, subtree: false });
+            checkUrlAndManageScriptState();
         });
     }
 
