@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NotebookLM Source Delete Button
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.6
+// @version      0.1.7
 // @description  Add delete buttons and numbering to NotebookLM sources
 // @author       Takashi Sasaki
 // @match        https://notebooklm.google.com/*
@@ -32,7 +32,7 @@
     window.addEventListener('userscript-check-version', (e) => {
         if (e.detail === SCRIPT_ID) {
             window.dispatchEvent(new CustomEvent('userscript-version-response', {
-                detail: { id: SCRIPT_ID, version: '0.1.6' }
+                detail: { id: SCRIPT_ID, version: '0.1.7' }
             }));
         }
     });
@@ -122,7 +122,19 @@
 
             // 3. Wait for the menu item and click it
             const menuObserver = new MutationObserver((mutations, obs) => {
-                const nativeDeleteBtn = document.querySelector(SELECTORS.NATIVE_DELETE_BTN);
+                let nativeDeleteBtn = document.querySelector(SELECTORS.NATIVE_DELETE_BTN);
+
+                // Fallback: Find by text content if specific class is missing
+                if (!nativeDeleteBtn) {
+                    const menuItems = document.querySelectorAll('button[role="menuitem"]');
+                    for (const item of menuItems) {
+                        if (item.textContent.includes('Remove source')) {
+                            nativeDeleteBtn = item;
+                            break;
+                        }
+                    }
+                }
+
                 if (nativeDeleteBtn) {
                     obs.disconnect();
                     emulateClick(nativeDeleteBtn);
