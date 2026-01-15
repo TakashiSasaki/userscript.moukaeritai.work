@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NotebookLM Source Delete Button
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.7
+// @version      0.1.8
 // @description  Add delete buttons and numbering to NotebookLM sources
 // @author       Takashi Sasaki
 // @match        https://notebooklm.google.com/*
@@ -32,7 +32,7 @@
     window.addEventListener('userscript-check-version', (e) => {
         if (e.detail === SCRIPT_ID) {
             window.dispatchEvent(new CustomEvent('userscript-version-response', {
-                detail: { id: SCRIPT_ID, version: '0.1.7' }
+                detail: { id: SCRIPT_ID, version: '0.1.8' }
             }));
         }
     });
@@ -51,6 +51,10 @@
 
     let currentScrollArea = null;
     let observer = null;
+
+    function log(...args) {
+        console.log(`[${SCRIPT_ID}]`, ...args);
+    }
 
     function isNotebookPage() {
         return location.hostname === 'notebooklm.google.com' && location.pathname.startsWith('/notebook/');
@@ -107,53 +111,75 @@
     }
 
     function triggerNativeDelete(container) {
+        log('Starting delete sequence for container:', container);
+
         const dispatchMouseEvents = (el, types) => {
             types.forEach(type => {
                 el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
             });
         };
 
-        const emulateClick = (el) => dispatchMouseEvents(el, ['mousedown', 'mouseup', 'click']);
-        const emulateHover = (el) => dispatchMouseEvents(el, ['mouseenter', 'mouseover']);
+        const emulateClick = (el) => {
+            log('Emulating click on:', el);
+            dispatchMouseEvents(el, ['mousedown', 'mouseup', 'click']);
+        };
+        const emulateHover = (el) => {
+            log('Emulating hover on:', el);
+            dispatchMouseEvents(el, ['mouseenter', 'mouseover']);
+        };
 
         const startSequence = (btn) => {
+            log('Starting sequence with More button:', btn);
             // 2. Open the native menu
             emulateClick(btn);
 
             // 3. Wait for the menu item and click it
+            log('Waiting for menu to appear...');
             const menuObserver = new MutationObserver((mutations, obs) => {
                 let nativeDeleteBtn = document.querySelector(SELECTORS.NATIVE_DELETE_BTN);
+                log('Searching for native delete button...', nativeDeleteBtn ? 'Found by selector' : 'Not found by selector');
 
                 // Fallback: Find by text content if specific class is missing
                 if (!nativeDeleteBtn) {
+                    log('Attempting fallback search by text content "Remove source"...');
                     const menuItems = document.querySelectorAll('button[role="menuitem"]');
                     for (const item of menuItems) {
                         if (item.textContent.includes('Remove source')) {
                             nativeDeleteBtn = item;
+                            log('Found by text content:', item);
                             break;
                         }
                     }
                 }
 
                 if (nativeDeleteBtn) {
+                    log('Native delete button found. Clicking...');
                     obs.disconnect();
                     emulateClick(nativeDeleteBtn);
 
                     // 4. Wait for the confirmation dialog and click "Delete"
+                    log('Waiting for confirmation dialog...');
                     const dialogObserver = new MutationObserver((mutations2, obs2) => {
                         const confirmBtn = document.querySelector(SELECTORS.CONFIRM_DELETE_BTN);
                         if (confirmBtn) {
+                            log('Confirmation button found. Clicking...', confirmBtn);
                             obs2.disconnect();
                             emulateClick(confirmBtn);
                         }
                     });
                     dialogObserver.observe(document.body, { childList: true, subtree: true });
-                    setTimeout(() => dialogObserver.disconnect(), 2000);
+                    setTimeout(() => {
+                        log('Dialog observer timed out.');
+                        dialogObserver.disconnect();
+                    }, 2000);
                 }
             });
 
             menuObserver.observe(document.body, { childList: true, subtree: true });
-            setTimeout(() => menuObserver.disconnect(), 2000);
+            setTimeout(() => {
+                log('Menu observer timed out.');
+                menuObserver.disconnect();
+            }, 2000);
         };
 
         // 1. Reveal the "More" button by hovering the container
@@ -161,18 +187,24 @@
 
         const moreBtn = container.querySelector(SELECTORS.MORE_BUTTON);
         if (moreBtn) {
+            log('More button found immediately.');
             startSequence(moreBtn);
         } else {
+            log('More button not found. Waiting for it to appear...');
             // If not found immediately, it might be dynamically added on hover
             const btnObserver = new MutationObserver((mutations, obs) => {
                 const btn = container.querySelector(SELECTORS.MORE_BUTTON);
                 if (btn) {
+                    log('More button appeared.');
                     obs.disconnect();
                     startSequence(btn);
                 }
             });
             btnObserver.observe(container, { childList: true, subtree: true });
-            setTimeout(() => btnObserver.disconnect(), 1000);
+            setTimeout(() => {
+                log('More button observer timed out.');
+                btnObserver.disconnect();
+            }, 1000);
         }
     }
 
