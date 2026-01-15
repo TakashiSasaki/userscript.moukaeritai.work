@@ -13,6 +13,7 @@
 *   **SPA Behavior:** In a Single Page Application (SPA), the URL can change without a full page reload.
     *   The userscript should only execute its primary logic when the URL is `https://gemini.google.com/saved-info`.
     *   When on any other URL, the script should have minimal to no performance impact. This typically involves disabling observers and cleaning up any injected UI elements.
+*   **Idempotent UI Updates:** When adding or updating UI elements (e.g., buttons, labels), the logic should be idempotent. The standard approach is to have a single update function that first removes all script-injected UI elements (using specific class names) and then re-creates them based on the current state. This prevents duplicate elements and handles dynamic content updates gracefully.
 
 ## Preprocessing Standards (HTML Samples)
 A `preprocess_samples.py` script has been implemented to clean and standardize DOM snapshots in `samples/`.

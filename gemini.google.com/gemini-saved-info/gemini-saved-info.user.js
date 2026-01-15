@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.3
-// @description  Adds serial numbers to custom instructions on Gemini.
+// @version      0.1.4
+// @description  Adds serial numbers and a copy button to custom instructions on Gemini.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://gemini.google.com/*
@@ -20,37 +20,69 @@
 
     const TARGET_PAGE_URL = 'https://gemini.google.com/saved-info';
     const NUMBER_SPAN_CLASS = 'userscript-gemini-saved-info-number';
+    const COPY_BUTTON_CLASS = 'userscript-gemini-saved-info-copy-button';
     let instructionsObserver = null; // To observe the list of instructions
 
     /**
-     * Removes all existing serial numbers and re-adds them to all instructions.
-     * This ensures the numbering is always correct even if items are added/removed.
+     * Updates all instruction items, adding serial numbers and copy buttons.
+     * This ensures the UI is always correct even if items are added/removed.
      * @param {HTMLElement} memoriesSection The container for all instructions.
      */
-    function renumberInstructions(memoriesSection) {
+    function updateInstructionItems(memoriesSection) {
         if (!memoriesSection) return;
 
-        // 1. Remove all existing numbers to prevent duplicates and handle deletions.
-        const existingNumbers = memoriesSection.querySelectorAll(`.${NUMBER_SPAN_CLASS}`);
-        existingNumbers.forEach(num => num.remove());
+        // 1. Remove all existing UI elements to prevent duplicates.
+        memoriesSection.querySelectorAll(`.${NUMBER_SPAN_CLASS}`).forEach(n => n.remove());
+        memoriesSection.querySelectorAll(`.${COPY_BUTTON_CLASS}`).forEach(b => b.remove());
 
         // 2. Get all current instructions.
         const instructions = memoriesSection.querySelectorAll('.memory');
-        if (instructions.length === 0) {
-            return; // No instructions to number.
-        }
+        if (instructions.length === 0) return;
 
-        console.log(`[gemini-saved-info] Found ${instructions.length} instructions. Re-numbering.`);
+        console.log(`[gemini-saved-info] Found ${instructions.length} instructions. Updating items.`);
 
-        // 3. Add new, correct numbers to each instruction.
+        // 3. Add new, correct UI elements to each instruction.
         instructions.forEach((instruction, index) => {
             const textElement = instruction.querySelector('.memory-text');
+            const actionsButton = instruction.querySelector('.memory-actions-button');
+
             if (textElement) {
+                // Add serial number
                 const numberSpan = document.createElement('span');
                 numberSpan.className = NUMBER_SPAN_CLASS;
                 numberSpan.textContent = `${index + 1}. `;
                 numberSpan.style.fontWeight = 'bold';
                 textElement.prepend(numberSpan);
+            }
+
+            if (actionsButton) {
+                // Add copy button
+                const copyButton = document.createElement('button');
+                copyButton.className = `${COPY_BUTTON_CLASS} mdc-icon-button mat-mdc-icon-button mat-mdc-button-base`;
+                copyButton.setAttribute('aria-label', 'Copy instruction');
+
+                const icon = document.createElement('mat-icon');
+                icon.className = 'mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color';
+                icon.setAttribute('aria-hidden', 'true');
+                icon.setAttribute('fonticon', 'content_copy');
+                icon.textContent = 'content_copy';
+                copyButton.appendChild(icon);
+
+                copyButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const textToCopy = textElement.textContent.replace(`${index + 1}. `, '');
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        console.log('[gemini-saved-info] Instruction copied to clipboard.');
+                        // Optional: Show feedback to the user
+                        icon.textContent = 'done';
+                        setTimeout(() => { icon.textContent = 'content_copy'; }, 1500);
+                    }).catch(err => {
+                        console.error('[gemini-saved-info] Failed to copy text: ', err);
+                    });
+                });
+
+                // Insert the copy button before the 3-dot menu button
+                actionsButton.parentNode.insertBefore(copyButton, actionsButton);
             }
         });
     }
@@ -63,23 +95,20 @@
         const instructionsContainer = memoriesSection.querySelector('.memories-container');
         if (!instructionsContainer) return;
 
-        // If an observer is already running, disconnect it first.
         if (instructionsObserver) instructionsObserver.disconnect();
 
         instructionsObserver = new MutationObserver(() => {
-            // When a change is detected (add/remove), re-number everything.
-            renumberInstructions(memoriesSection);
+            updateInstructionItems(memoriesSection);
         });
 
         instructionsObserver.observe(instructionsContainer, { childList: true });
 
-        // Initial numbering when the observer starts.
-        renumberInstructions(memoriesSection);
+        updateInstructionItems(memoriesSection);
         console.log('[gemini-saved-info] Instructions observer started.');
     }
 
     /**
-     * Stops the instructions observer and cleans up any added numbers.
+     * Stops the instructions observer and cleans up any added UI elements.
      */
     function stopInstructionsObserver() {
         if (instructionsObserver) {
@@ -87,11 +116,10 @@
             instructionsObserver = null;
             console.log('[gemini-saved-info] Instructions observer stopped.');
 
-            // Clean up numbers when we navigate away.
             const memoriesSection = document.querySelector('div[data-test-id="memories-section"]');
             if (memoriesSection) {
-                const existingNumbers = memoriesSection.querySelectorAll(`.${NUMBER_SPAN_CLASS}`);
-                existingNumbers.forEach(num => num.remove());
+                memoriesSection.querySelectorAll(`.${NUMBER_SPAN_CLASS}`).forEach(n => n.remove());
+                memoriesSection.querySelectorAll(`.${COPY_BUTTON_CLASS}`).forEach(b => b.remove());
             }
         }
     }
@@ -104,18 +132,14 @@
         const memoriesSection = document.querySelector('div[data-test-id="memories-section"]');
 
         if (onTargetPage && memoriesSection) {
-            // If we are on the right page and the container exists,
-            // start the specific instructions observer if it's not already running.
             if (!instructionsObserver) {
                 startInstructionsObserver(memoriesSection);
             }
         } else {
-            // If we're on a different page or the container is gone, stop the observer.
             stopInstructionsObserver();
         }
     });
 
-    // Start the main page observer.
     pageObserver.observe(document.body, { childList: true, subtree: true });
 
 })();
