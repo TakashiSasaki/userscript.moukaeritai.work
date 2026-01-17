@@ -44,14 +44,27 @@ The script includes the standard Portal API Guard to interact with `userscript.m
 -   **Linting**: Run `npx eslint chat.openai.com/chatgpt-no-margin/chatgpt-no-margin.user.js` before committing.
 -   **Version**: Follow semantic versioning. Current: `1.1.0`.
 
-## 6. HTML Sample Preprocessing
-When capturing HTML samples from ChatGPT for analysis, specific preprocessing steps are required to reduce file size and remove noise while preserving the structural integrity relevant to the userscript.
+## 6. HTML Sample Preprocessing / サンプルHTMLの前処理
+- DOM snapshots (HTML files in the `samples/` directory) are used to design selectors for manipulating the DOM with the user script. To improve development efficiency and reduce file size, always perform the following preprocessing.
+- A `preprocess_samples.py` script has been implemented to clean and standardize DOM snapshots in `samples/`. Run this script whenever adding new HTML samples.
+- **Logic Applied**:
+    1.  **Removal**: `<script>`, `<style>` tags, and HTML comment nodes are completely removed.
+    2.  **Head Cleanup**: `<meta>` and `<link>` tags within the `<head>` element are removed.
+    3.  **SVG Cleanup**: `<svg>` tags are kept, but all their child nodes are removed to reduce file size.
+    4.  **Attribute Cleanup**: Attributes with empty string values (e.g., `style=""`) are removed.
+    5.  **Text Truncation**: All text nodes are truncated to 999 characters or less to keep file sizes manageable.
+    6.  **Reformatting**: HTML is reformatted to a flat structure.
+        -   **One tag/text node per line**.
+        -   **No indentation** (to facilitate easier diffing and searching).
 
-**Preprocessing Steps:**
-1.  **Remove `<script>` and `<style>` tags**: Javascript and CSS blocks are unnecessary for structural DOM analysis and consume significant token space.
-2.  **Remove `<link>` tags**: External stylesheets and preloads in the `<head>` are not needed.
-3.  **Clean `<svg>` elements**: Retain the `<svg>` tag itself (to identify icons/buttons) but remove all its child elements (paths, defs, etc.) to save lines.
-4.  **Truncate Text**: Long text content within messages can be truncated, but the container structure must remain intact.
-
-**Helper Scripts:**
--   Python scripts (e.g., `remove_link_elements.py`, `remove_svg_children.py`) in the `samples/` directory were used to automate this cleanup. Future agents should use similar logic when adding new samples.
+- DOMスナップショット（`samples/`ディレクトリ内のHTMLファイル）は、ユーザースクリプトでDOMを操作するためのセレクタを設計するために使用します。開発効率の向上とファイルサイズの削減のため、必ず以下の前処理を行ってください。
+- `samples/` 内のDOMスナップショットをクリーンアップし、標準化するために `preprocess_samples.py` スクリプトが実装されています。新しいHTMLサンプルを追加するたびに、このスクリプトを実行してください。
+- **適用されるロジック**:
+    1.  **削除**: `<script>`、`<style>` タグ、およびHTMLコメントノードは完全に削除されます。
+    2.  **Headのクリーンアップ**: `<head>` 要素内の `<meta>` および `<link>` タグは削除されます。
+    3.  **SVGのクリーンアップ**: `<svg>` タグは保持されますが、ファイルサイズを削減するためにすべての子ノードは削除されます。
+    4.  **属性のクリーンアップ**: 空の文字列値を持つ属性（例: `style=""`）は削除されます。
+    5.  **テキストの切り捨て**: ファイルサイズを管理しやすくするため、すべてのテキストノードは999文字以下に切り捨てられます。
+    6.  **再フォーマット**: HTMLはフラットな構造に再フォーマットされます。
+        -   **1行に1つのタグ/テキストノード**。
+        -   **インデントなし**（差分確認と検索を容易にするため）。
