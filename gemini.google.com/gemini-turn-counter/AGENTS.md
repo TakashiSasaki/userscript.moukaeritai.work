@@ -29,18 +29,28 @@ Behavior on those hosts:
 *   **AGENTS.md**: AIエージェント向けの開発方針・コンテキスト記録。
 
 ### 4.3 前処理（Preprocessing）
-開発の効率化のため、DOM解析を行う前にブラウザから保存したHTML（ `samples/*.html` ）に対して以下の前処理を行うことを標準とします。
+- DOM snapshots (HTML files in the `samples/` directory) are used to design selectors for manipulating the DOM with the user script. To improve development efficiency and reduce file size, always perform the following preprocessing.
+- A `preprocess_samples.py` script has been implemented to clean and standardize DOM snapshots in `samples/`. Run this script whenever adding new HTML samples.
+- **Logic Applied**:
+    1.  **Removal**: `<script>`, `<style>` tags, and HTML comment nodes are completely removed.
+    2.  **Head Cleanup**: `<meta>` and `<link>` tags within the `<head>` element are removed.
+    3.  **SVG Cleanup**: `<svg>` tags are kept, but all their child nodes are removed to reduce file size.
+    4.  **Attribute Cleanup**: Attributes with empty string values (e.g., `style=""`) are removed.
+    5.  **Text Truncation**: All text nodes are truncated to 999 characters or less to keep file sizes manageable.
+    6.  **Reformatting**: HTML is reformatted to a flat structure.
+        -   **One tag/text node per line**.
+        -   **No indentation** (to facilitate easier diffing and searching).
 
-1.  **タグの削除**: `script`, `style`, `noscript`, `meta`, `link`
-2.  **属性の削除**:
-    *   イベントハンドラ (`on*`)
-    *   空の属性（`style=""` など値が空文字のもの）
-3.  **SVGの軽量化**: `<svg>` タグ自体は残すが、その子要素はすべて削除する（アイコンの位置情報として保持するため）。
-4.  **コメントの削除**: すべてのHTMLコメントノードを削除する。
-5.  **テキストの短縮**: 100文字を超える長いテキストノードは先頭100文字程度に切り詰める（`...` を付与）。
-6.  **整形**: HTMLをPretty-printして可読性を高める。
-
-これにより、ファイルサイズを削減し、DOM構造のノイズを減らして解析しやすくします。
+- `samples/` 内のDOMスナップショットをクリーンアップし、標準化するために `preprocess_samples.py` スクリプトが実装されています。新しいHTMLサンプルを追加するたびに、このスクリプトを実行してください。
+- **適用されるロジック**:
+    1.  **削除**: `<script>`、`<style>` タグ、およびHTMLコメントノードは完全に削除されます。
+    2.  **Headのクリーンアップ**: `<head>` 要素内の `<meta>` および `<link>` タグは削除されます。
+    3.  **SVGのクリーンアップ**: `<svg>` タグは保持されますが、ファイルサイズを削減するためにすべての子ノードは削除されます。
+    4.  **属性のクリーンアップ**: 空の文字列値を持つ属性（例: `style=""`）は削除されます。
+    5.  **テキストの切り捨て**: ファイルサイズを管理しやすくするため、すべてのテキストノードは999文字以下に切り捨てられます。
+    6.  **再フォーマット**: HTMLはフラットな構造に再フォーマットされます。
+        -   **1行に1つのタグ/テキストノード**。
+        -   **インデントなし**（差分確認と検索を容易にするため）。
 
 ### 4.4 バージョン管理ポリシー
 ユーザースクリプト (`gemini-turn-counter.user.js` 等) に何らかの変更を加えた際は、必ず `@version` のパッチレベル（末尾の数字）をインクリメントしてください。
