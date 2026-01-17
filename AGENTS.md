@@ -44,8 +44,9 @@ DOM解析用のサンプルHTML (`samples/` ディレクトリ) は、開発効�
 
 1.  **Truncate Text**: 長いテキストノードは1000文字程度に切り詰める。
 2.  **Remove Elements**: `<script>`, `<style>` タグおよびHTMLコメントは削除する。
-3.  **Remove Attributes**: 空の属性 (`style=""` など) や不要なイベントハンドラは削除する。
-4.  **Automation**: 各 `samples/` ディレクトリに `preprocess_samples.py` を配置し、これを実行して処理を行うこと。
+3.  **Remove Resource Attributes**: `href`, `src`, `srcset` 属性を削除して不要なリソース読み込みを防止する。ただし、セレクタ設計に必要な `id` と `class` 属性は保持する。
+4.  **Remove Empty Attributes**: 空の属性 (`style=""` など) や不要なイベントハンドラは削除する。
+5.  **Automation**: 各 `samples/` ディレクトリに `preprocess_samples.py` を配置し、これを実行して処理を行うこと。
 
 ### JavaScript Quality & Linting (JSの品質とリンティング)
 JavaScript（`.user.js`）のコードを変更した後は、必ずESLintを実行して文法エラーや潜在的なバグがないか確認してください。
