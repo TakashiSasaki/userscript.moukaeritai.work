@@ -8,6 +8,8 @@
     <title>Moukaeritai Userscripts</title>
     <link href="https://userscript.moukaeritai.work/" rel="canonical" />
     <link href="/sitemap.xml" rel="sitemap" title="Sitemap" type="application/xml" />
+    <link href="manifest.json" rel="manifest" />
+    <meta name="theme-color" content="#f8f9fa" />
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -700,6 +702,17 @@
             });
             document.dispatchEvent(new CustomEvent('userscript-ping'));
         }, Math.floor(Math.random() * 2000) + 3000);
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
     </script>
 </body>
 

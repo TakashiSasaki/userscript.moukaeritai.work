@@ -1,0 +1,20 @@
+{
+  "name": "Moukaeritai Userscripts",
+  "short_name": "Moukaeritai Userscripts",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "description": "A collection of userscripts by moukaeritai.",
+  "icons": [
+    {
+      "src": "https://moukaeritai.work/pictgram/192x192.webp",
+      "sizes": "192x192",
+      "type": "image/webp"
+    },
+    {
+      "src": "https://moukaeritai.work/pictgram/512x512.webp",
+      "sizes": "512x512",
+      "type": "image/webp"
+    }
+  ]
+}
