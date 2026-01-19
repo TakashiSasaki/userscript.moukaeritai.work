@@ -1,26 +1,5 @@
-# AGENTS.md
+# Agent Guidelines
 
-## 廃止されたドキュメントからの指示・メモ
+This project follows the agent development guidelines outlined in the root [AGENTS.md](/AGENTS.md) file.
 
-以下の内容は `gemini-one-click-delete.md` の以前のバージョンに含まれていましたが、文書更新に伴い削除されました。エージェントが開発を行う上で重要となりうる指示が含まれているため、ここに記録します。
-
-## Install Detection API
-The userscript includes the install-detection guard required by the portal index and only injects this API on the following hosts:
-
-- `userscript.moukaeritai.work`
-- `127.0.0.1`
-- `fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev`
-
-Behavior on those hosts:
-
-- **Dispatch**: `userscript-check-installed` is dispatched on page load.
-- **Listener**: `userscript-ping` is listened for and replied to, then the script returns early.
-
-### DOMセレクタの取得に関する指示
-> セレクタはChromeの開発者モードで取得できるDOMツリーから得たものです。
-> 同じ要素を指定するセレクタには複数の表現方法がありますから、
-> **私が提供したセレクタよりも安定性を重視してDOMツリーを分析してセレクタを作成してください。**
-
-### バージョン管理に関する指示
-*   コードを変更した際は、必ず `gemini-one-click-delete.user.js` と `gemini-one-click-delete.md` のバージョン番号をバンプアップしてください。
-*   その際、ルートディレクトリにある `index.html` 内のインストールボタン（バージョン表記）も併せてアップデートすることを忘れないでください。
+Please refer to the root `AGENTS.md` for all operational procedures, including Git practices, documentation structure, and HTML sample preprocessing.

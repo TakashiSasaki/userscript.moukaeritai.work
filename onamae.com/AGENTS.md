@@ -1,41 +1,5 @@
-# Agent Instructions (onamae.com directory)
+# Agent Guidelines
 
-このファイルは、`onamae.com/` ディレクトリ内のプロジェクトを保守・拡張する AI エージェントのための共有ガイドラインです。
+This project follows the agent development guidelines outlined in the root [AGENTS.md](/AGENTS.md) file.
 
-## 1. ドキュメント構成の標準ルール
-
-各ユーザースクリプトプロジェクトは、以下の3層構造でドキュメントを管理します：
-
-1.  **`index.html` (閲覧用)**:
-    *   ユーザー向けのレンダリング済みドキュメントページ。
-    *   `github-markdown-css` を使用し、右上にルートインデックスへの「ホームボタン」、下部に共通フッターを持つ「プレミアムデザイン」テンプレートを必ず使用してください。
-2.  **`{project-name}.md` (人間用仕様書)**:
-    *   スクリプトの概要、目的、機能など、人間に向けた説明を記述します。
-    *   技術的なセレクタや詳細な実装ロジック、エージェントへの指示はここには含めません。
-3.  **`AGENTS.md` (エージェント用作業指示書)**:
-    *   AI エージェントが実装・保守する際に必要な技術情報を記述します。
-    *   安定したセレクタ、DOM構造の分析、設計戦略、パッチ適用の際の注意点などを集約します。
-
-## 2. インデックス更新とUIルール
-
-新しいプロジェクトを追加、または既存のプロジェクトを更新した際は、適宜以下の修正を行ってください：
-
-*   **プロジェクト表示名**: インデックスページ（ルートおよびディレクトリ内）では、`onamae-block-evil` のようなIDではなく、「お名前.com 邪悪広告ブロッカー」のような**分かりやすい日本語名称**をメインに使用してください。
-*   **インストールボタンの配置**: `.project-item` カード内の**右下(bottom-right)** に配置するよう CSS を設定してください（`bottom: 1.5rem; right: 1.5rem;`）。
-*   **インストールパス**: サブディレクトリ構成（例: `onamae.com/onamae-rr-backup/onamae-rr-backup.user.js`）に合わせた正しい URL を設定してください。
-*   **ディレクトリ内インデックス**: `onamae.com/index.html` などの階層別インデックスを維持し、関連プロジェクト間の移動を容易にしてください。
-
-## 3. コミットとバージョン管理
-
-*   **コミットメッセージ**: `commit_message.txt` ファイルを作成し、詳細な変更内容を記述してから `git commit -F commit_message.txt` を実行してください。
-*   **バージョニング**: `major.minor.patch` 形式を遵守。
-    *   `patch`: 軽微な修正、リファクタリング。
-    *   `minor`: データ構造（スキーマ）の変更、大きな機能追加。
-    *   `major`: 開発者（人間）による手動更新時のみ。
-
-
-## 4. 既存パターンの尊重と検証
-
-*   **テンプレートの参照**: 既に作成済みのプロジェクト（例: `お名前.com 邪悪広告ブロッカー`）の `index.html` や `AGENTS.md` をテンプレートとして参照し、デザインと構造の一貫性を保ってください。
-*   **ローカル検証**: `index.html` の検証時は、CORS 制約を回避するため `python -m http.server` 等のローカルサーバーを使用してレンダリングを確認してください。
-
+Please refer to the root `AGENTS.md` for all operational procedures, including Git practices, documentation structure, and HTML sample preprocessing.

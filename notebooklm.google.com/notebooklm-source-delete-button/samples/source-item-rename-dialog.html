@@ -1,4 +1,6 @@
-<mat-dialog-container tabindex="-1" class="mat-mdc-dialog-container mdc-dialog cdk-dialog-container mdc-dialog--open mat-mdc-dialog-container-with-actions" id="mat-mdc-dialog-0" role="dialog" aria-modal="false">
+<html>
+<body>
+<mat-dialog-container aria-modal="false" class="mat-mdc-dialog-container mdc-dialog cdk-dialog-container mdc-dialog--open mat-mdc-dialog-container-with-actions" id="mat-mdc-dialog-0" role="dialog" tabindex="-1">
 <div class="mat-mdc-dialog-inner-container mdc-dialog__container">
 <div class="mat-mdc-dialog-surface mdc-dialog__surface">
 <edit-source-dialog class="mat-mdc-dialog-component-host">
@@ -10,14 +12,14 @@
 Rename All notes 2026/1/16?
 </mat-label>
 </div>
-<mat-form-field appearance="outline" color="primary" class="mat-mdc-form-field input-form-field mat-mdc-form-field-type-mat-input mat-form-field-appearance-outline mat-primary ng-valid ng-touched">
+<mat-form-field appearance="outline" class="mat-mdc-form-field input-form-field mat-mdc-form-field-type-mat-input mat-form-field-appearance-outline mat-primary ng-valid ng-touched" color="primary">
 <div class="mat-mdc-text-field-wrapper mdc-text-field mdc-text-field--outlined">
 <div class="mat-mdc-form-field-flex">
 <div class="mdc-notched-outline mdc-notched-outline--notched mdc-notched-outline--upgraded">
 <div class="mat-mdc-notch-piece mdc-notched-outline__leading">
 </div>
 <div class="mat-mdc-notch-piece mdc-notched-outline__notch" style="width: calc(110px * var(--mat-mdc-form-field-floating-label-scale, 0.75) + 9px);">
-<label class="mdc-floating-label mat-mdc-floating-label mdc-floating-label--float-above" id="mat-mdc-form-field-label-1" for="mat-input-1">
+<label class="mdc-floating-label mat-mdc-floating-label mdc-floating-label--float-above" for="mat-input-1" id="mat-mdc-form-field-label-1">
 <mat-label>
 Source Name
 </mat-label>
@@ -29,7 +31,7 @@ Source Name
 </div>
 </div>
 <div class="mat-mdc-form-field-infix">
-<input formcontrolname="title" class="mat-mdc-input-element title-input ng-pristine ng-valid mat-mdc-form-field-input-control mdc-text-field__input cdk-text-field-autofill-monitored ng-touched" placeholder="All notes 2026/1/16" id="mat-input-1" aria-invalid="false" aria-required="true"/>
+<input aria-invalid="false" aria-required="true" class="mat-mdc-input-element title-input ng-pristine ng-valid mat-mdc-form-field-input-control mdc-text-field__input cdk-text-field-autofill-monitored ng-touched" formcontrolname="title" id="mat-input-1" placeholder="All notes 2026/1/16"/>
 </div>
 </div>
 </div>
@@ -42,7 +44,7 @@ Source Name
 </mat-form-field>
 </mat-dialog-content>
 <mat-dialog-actions align="end" class="mat-mdc-dialog-actions mdc-dialog__actions mat-mdc-dialog-actions-align-end">
-<button color="primary" type="button" class="mdc-button mat-mdc-button-base cancel-button mat-mdc-button mat-primary">
+<button class="mdc-button mat-mdc-button-base cancel-button mat-mdc-button mat-primary" color="primary" type="button">
 <span class="mat-mdc-button-persistent-ripple mdc-button__ripple">
 </span>
 <span class="mdc-button__label">
@@ -60,3 +62,5 @@ Cancel
 </div>
 </div>
 </mat-dialog-container>
+</body>
+</html>

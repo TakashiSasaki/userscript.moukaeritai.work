@@ -1,13 +1,5 @@
-# AGENTS.md
+# Agent Guidelines
 
-## Install Detection API
-The userscript includes the install-detection guard required by the portal index and only injects this API on the following hosts:
+This project follows the agent development guidelines outlined in the root [AGENTS.md](/AGENTS.md) file.
 
-- `userscript.moukaeritai.work`
-- `127.0.0.1`
-- `fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev`
-
-Behavior on those hosts:
-
-- **Dispatch**: `userscript-check-installed` is dispatched on page load.
-- **Listener**: `userscript-ping` is listened for and replied to, then the script returns early.
+Please refer to the root `AGENTS.md` for all operational procedures, including Git practices, documentation structure, and HTML sample preprocessing.

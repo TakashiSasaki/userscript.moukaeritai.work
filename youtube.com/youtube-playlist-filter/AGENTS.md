@@ -1,51 +1,5 @@
-# YouTube Playlist Filter - Developer Notes
+# Agent Guidelines
 
-このドキュメントは、`youtube-playlist-filter.user.js` の開発・保守を行うAIエージェントおよび開発者のための技術的なメモです。
+This project follows the agent development guidelines outlined in the root [AGENTS.md](/AGENTS.md) file.
 
-## アルゴリズムとパフォーマンス
-
-### フィルタリング手法の選定
-現在、フィルタリング（非表示化）には **CSSの `display: none`** を使用しています。
-- **理由**: DOM要素を物理的に削除すると、YouTube内部のVirtual Scrollerやイベントリスナーの管理と整合性が取れなくなり、スクロール位置の乱れやエラーを引き起こすリスクが高いためです。
-- **例外**: メモリ使用量が極端に増大する場合（数千件の動画リストなど）に備え、オプションとして「DOMからの削除」機能の実装も検討されましたが、デフォルトはあくまでCSS非表示とします。
-
-### MutationObserver の設定
-YouTube は SPA (Single Page Application) であり、コンテンツは動的にロードされます。
-- `MutationObserver` は必須です。`childList` と `subtree` を監視し、新しい動画アイテム (`ytd-playlist-video-renderer`) が追加されたら即座にフィルタを適用します。
-- **デバウンス**: DOM変更は頻繁に発生するため、フィルタ関数の呼び出しには適切なデバウンス処理（またはスロットリング）を入れることを推奨します。現状は、シンプルな実装を優先していますが、パフォーマンス問題が発生した場合はここを見直してください。
-
-### SPAのURLマッチとアクティブ状態
-YouTube は SPA のため、ユーザースクリプトのインストール対象（`@match`）と主要機能の有効化対象のURLが一致しません。
-- `@match` は `*://www.youtube.com/*` など広く取り、**実際の主要機能は `/playlist?*` のみで有効化**する。
-- `yt-navigate-start/finish` などで URL 変化を検知し、**対象URLの間だけ監視・タイマー・UIを起動**して、他ページでは停止・非表示にする。
-
-### パネル表示とアクティブ状態
-UIパネルは手動開閉ではなく、ユーザースクリプトのアクティブ状態に連動させます。
-- **アクティブ時**: パネル内容を展開して `Active` を表示する。
-- **非アクティブ時**: パネル内容を閉じ、`Inactive` を表示する（ヘッダーのみ残す）。
-
-### 初期化ディレイ
-他のユーザースクリプトと同時に起動して負荷が集中しないよう、初回注入時は 1〜3 秒のランダムディレイを挟みます。
-- `INIT_DELAY_RANGE_MS` と `getRandomInitDelayMs()` を使い、`setTimeout(init, ...)` で遅延実行する。
-- 固定値ディレイには戻さない。
-
-## UI/UX の考慮事項
-
-### 入力フィールドでの挙動
-- **入力中の一時停止**: ユーザーがフィルタキーワードを入力している最中にリアルタイムでフィルタを適用すると、DOMの再描画により入力フィールドのフォーカスが外れたり、ブラウザが重くなったりすることがあります。
-    - **対策**: `input` イベントではなく、`change` イベントや、入力後の遅延実行、あるいは明示的な「Apply」ボタンの押下をトリガーとすることを検討してください。現状はフォーカス中にフィルタ適用を一時停止し、さらに `MutationObserver` と定期実行を停止して負荷を下げています。**blur後も0.5秒は再開せず、再フォーカスの猶予を取ります。**
-
-## 他スクリプトとの連携
-
-### 依存関係
-このスクリプトは単独でも動作しますが、以下のスクリプトとの併用が想定されています。
-- **YouTube Playlist Saver**: 動画の既知/新規ステータス情報を共有します。
-- **YouTube Playlist Remover**: フィルタリングされた結果（表示されている動画）に対して一括削除を実行する機能が Remover 側にあります。
-
-## インストール/バージョン検知API
-- `index.html` は `userscript-ping` を送信し、各ユーザースクリプトが `userscript-check-installed` を `dispatchEvent` して応答することで検知します。
-- 受信側は `data-script-name` と `@name` の一致で対象ボタンを特定します。
-- `Install (vX.Y.Z)` の表記からバージョンを抽出し、セマンティックバージョン比較で `Update` / `Installed` を切り替えます。
-
-### DOM構造への配慮
-- `ytd-playlist-video-renderer` の構造はYouTube側のアップデートで頻繁に変更されます。セレクタ（`#video-title` など）が機能しなくなった場合は、Chrome DevTools で最新のDOM構造を確認し、速やかにセレクタを更新してください。
+Please refer to the root `AGENTS.md` for all operational procedures, including Git practices, documentation structure, and HTML sample preprocessing.

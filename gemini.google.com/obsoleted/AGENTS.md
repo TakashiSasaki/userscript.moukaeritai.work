@@ -1,4 +1,5 @@
-# AGENTS.md (gemini.google.com/obsoleted)
+# Agent Guidelines
 
-## Maintenance Status
-Scripts in this directory are legacy/obsolete and are no longer maintained. Do not update or extend them unless explicitly requested.
+This project follows the agent development guidelines outlined in the root [AGENTS.md](/AGENTS.md) file.
+
+Please refer to the root `AGENTS.md` for all operational procedures, including Git practices, documentation structure, and HTML sample preprocessing.

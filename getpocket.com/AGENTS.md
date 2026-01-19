@@ -1,4 +1,5 @@
-# AGENTS.md (getpocket.com)
+# Agent Guidelines
 
-## Service Status
-Pocket (getpocket.com) has been discontinued, so userscript development for this site is finished. Do not add new features or start new scripts unless the service returns.
+This project follows the agent development guidelines outlined in the root [AGENTS.md](/AGENTS.md) file.
+
+Please refer to the root `AGENTS.md` for all operational procedures, including Git practices, documentation structure, and HTML sample preprocessing.

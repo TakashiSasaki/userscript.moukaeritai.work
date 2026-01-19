@@ -1,24 +1,5 @@
-# HTMLサンプル前処理基準 (Preprocessing Standards)
+# Agent Guidelines
 
-DOMスナップショット (`samples/` ディレクトリ内のHTMLファイル) をクリーンアップし、標準化するための基準です。開発効率とファイルサイズ削減のため、以下の処理を行います。これらのHTMLファイルはDOMをユーザースクリプトから操作するためにセレクタを設計するために使いますから、idやclassは維持してください。
+This project follows the agent development guidelines outlined in the root [AGENTS.md](/AGENTS.md) file.
 
-## 1. 削除・クリーンアップ対象
-- **タグの削除**: `<script>`, `<style>` タグ、およびHTMLコメントノードは完全に削除します。
-- **Headのクリーンアップ**: `<head>` 要素内の `<meta>` および `<link>` タグは削除します。
-- **SVGのクリーンアップ**: `<svg>` タグは保持しますが、ファイルサイズ削減のため全ての子ノードは削除します。
-- **属性のクリーンアップ**:
-    - 空の文字列値を持つ属性 (例: `style=""`) は削除します。
-    - Angular 固有の属性（例: `_ngcontent-ng-cXXXXX`）や不要なイベントハンドラは削除します。
-- **不要な要素の除去**:
-    - Google Tag Manager のスクリプト、`<iframe>`、および UI の一部である非表示の `<div>` など、コンテンツに直接関係しない要素を削除します。
-    - 具体的には「Save to note」「Copy model response to clipboard」「Play」「More」といったUIボタン関連の要素も対象となります。
-
-## 2. テキストとフォーマット
-- **テキストの切り詰め**: 全てのテキストノードは 1000 文字程度に切り詰め、冗長なデータを排除します。
-- **再フォーマット**: HTMLは以下の形式で整形されます。
-    - 1行に1つのタグ/テキストノード。
-    - インデントなし（diffや検索を容易にするため）。
-- **ホワイトスペースの正規化**: 複数の空白文字や改行を単一の空白に削減し、可読性を高めます。
-
-## 3. 自動化
-各 `samples/` ディレクトリに `preprocess_samples.py` を配置し、これを使用して処理を自動化します。手動での編集は避け、スクリプトによる一貫した出力を維持してください。
+Please refer to the root `AGENTS.md` for all operational procedures, including Git practices, documentation structure, and HTML sample preprocessing.

@@ -40,13 +40,55 @@
 3.  **`AGENTS.md` (AI用)**: エージェント向けの実装ノート。セレクタリスト、設計戦略、運用ルール等を記述。
 
 ### HTML Sample Preprocessing (サンプルHTMLの前処理)
-DOM解析用のサンプルHTML (`samples/` ディレクトリ) は、開発効率とファイルサイズ削減のため、必ず以下の前処理を行ってください。
 
-1.  **Truncate Text**: 長いテキストノードは1000文字程度に切り詰める。
-2.  **Remove Elements**: `<script>`, `<style>` タグおよびHTMLコメントは削除する。
-3.  **Remove Resource Attributes**: `href`, `src`, `srcset` 属性を削除して不要なリソース読み込みを防止する。ただし、セレクタ設計に必要な `id` と `class` 属性は保持する。
-4.  **Remove Empty Attributes**: 空の属性 (`style=""` など) や不要なイベントハンドラは削除する。
-5.  **Automation**: 各 `samples/` ディレクトリに `preprocess_samples.py` を配置し、これを実行して処理を行うこと。
+This section outlines the standard procedures and rules for handling HTML sample files to ensure they are lightweight, clear, and consistent. All agents must follow this guide when working with HTML sample files.
+
+#### Development Workflow
+
+When editing an HTML sample file (`.html`) or developing based on one, always follow these steps:
+
+1.  **Initialize File**: Before starting, if you need to re-run or validate the preprocessing script, you must first restore the target file to its original, committed state.
+    ```bash
+    # Restore a file to the HEAD state
+    git restore path/to/your/file.html
+    ```
+
+2.  **Run Preprocessor**: Execute the centralized `preprocess_html_samples.py` script on the HTML file(s). This script applies the rules defined below.
+    ```bash
+    # Process all HTML files in a specific samples/ directory
+    ./scripts/preprocess_html_samples.py 'path/to/samples/*.html'
+    ```
+
+3.  **Commit Changes**: If the preprocessor modifies any HTML files, commit those changes to the repository. This ensures all developers and agents use the updated samples.
+    ```bash
+    git add path/to/your/file.html
+    git commit -m "docs: Preprocess HTML samples with the latest script"
+    ```
+
+#### Preprocessing Rules
+
+The `preprocess_html_samples.py` script applies the following rules:
+
+1.  **Attribute Removal**:
+    *   Only attributes with empty string values (e.g., `style=""`, `class=""`) are removed.
+
+2.  **Element Removal/Clearing**:
+    *   **`<head>`**: Unnecessary elements within `<head>` (e.g., `<link>`, `<meta>`, `<title>`) are removed.
+    *   **`<script>` & `<style>`**: All `<script>` and `<style>` tags are removed from the document.
+    *   **`<svg>`**: The `<svg>` tag itself is kept, but all its child elements (`<path>`, `<g>`, etc.) are removed.
+    *   **Comments**: All HTML comments (`<!-- ... -->`) are removed.
+
+3.  **Content Truncation**:
+    *   Text nodes longer than 100 characters are truncated with an ellipsis (`...`).
+
+4.  **Formatting**:
+    *   The final HTML is pretty-printed with element-based newlines but no leading indentation on any line.
+
+#### Script Specification
+
+-   **Implementation**: Python with `BeautifulSoup4` (`bs4`) and `lxml`.
+-   **Idempotency**: The script is idempotent; running it multiple times on the same file will not produce further changes.
+-   **Environment**: Requires `python3`, `beautifulsoup4`, and `lxml`.
 
 ### JavaScript Quality & Linting (JSの品質とリンティング)
 JavaScript（`.user.js`）のコードを変更した後は、必ずESLintを実行して文法エラーや潜在的なバグがないか確認してください。

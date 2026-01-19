@@ -1,52 +1,5 @@
-# YouTube Playlist Saver - Developer Notes
+# Agent Guidelines
 
-このドキュメントは、`youtube-playlist-saver.user.js` の開発・保守を行うAIエージェントおよび開発者のための技術的なメモです。
+This project follows the agent development guidelines outlined in the root [AGENTS.md](/AGENTS.md) file.
 
-## データアーキテクチャ
-
-### ストレージ構造とバージョニング
-Saverは長期的なデータ保存を担うため、データ構造の変更には後方互換性の維持が必須です。
--   **Version 2 (現在)**:
-    -   `playlists` オブジェクト内に各プレイリストIDをキーとしてデータを保持。
-    -   各動画データはオブジェクト形式: `{ title: string, channel: string, addedAt: number }`
-    -   マイグレーションロジック(`loadStorage`関数内)が重要です。データ形式を変更する際は、必ず新しいバージョン番号を定義し、旧形式からの変換処理を追加してください。
-
-### セッション管理 ([NEW] / [SAVED] 判定)
-動画が「新規」か「既知」かの判定は、**ページロード（またはSPA遷移）時点でのスナップショット**と比較して行われます。
-1.  **初期化 (`scanAndRender` 初回実行時)**: その時点での `GM_getValue` の内容を `currentSessionKnownIds` (Set) にキャッシュします。
-2.  **実行時**: DOM上の動画IDが `currentSessionKnownIds` にあれば `[SAVED]`、なければ `[NEW]` と表示します。
-3.  **保存**: `[NEW]` な動画が見つかると、即座にストレージ (`GM_setValue`) に保存されますが、**表示は `[NEW]` のまま維持されます**。
-    -   これにより、ユーザーは「今回初めて見た動画」を視覚的に区別できます。リロードすると `[SAVED]` に変わります。
-
-## API 設計
-
-### 外部スクリプトへの公開
-Saverは他のスクリプト（Filter, Scrollerなど）に対して「バックエンド」のような役割を果たします。
--   `window.YouTubePlaylistSaver` オブジェクトを通じて機能を公開しています。
--   **主要メソッド**:
-    -   `isSaved(playlistId, videoId)`: 同期的にチェック可能。
-    -   `save(...)`: 外部から強制保存する用（現在は主に自己使用）。
--   **イベント**:
-    -   `YouTubePlaylistSaverReady`: スクリプトのロードが完了し、APIが利用可能になったタイミングで発火。他スクリプトはこのイベントをリッスンして初期化を行います。
-
-## SPA のアクティブ制御とパネル
-
--   **インストール範囲と有効化**: `@match` は YouTube 全体に広げ、主要処理は `/playlist?*` の間のみ実行します。
--   **ライフサイクル**: `yt-navigate-start/finish` で URL 変化を検知し、スキャンやタイマーはアクティブ時だけ動かします。
--   **パネル連動**: アクティブ時はパネル内容を表示して `Active`、非アクティブ時は内容を閉じて `Inactive` を表示（ヘッダーは残す）。
--   **初期化ディレイ**: 初回注入時は 1-3 秒のランダムディレイ後に `init()` を実行し、同時起動による負荷集中を避けます。
-
-## インポート/エクスポート
-
-### 外部連携
--   `GM_xmlhttpRequest` を使用して Gist 等の外部URLからJSONを取得・マージする機能を持ちます。
--   セキュリティのため、`@connect` ヘッダーで許可するドメインを制限しています（現在は `gist.githubusercontent.com`）。新しいドメインに対応させる場合はヘッダーの更新が必要です。
-
-## パフォーマンス
-
--   **バッチ保存**: `requestSave()` 関数によるデバウンス処理（2秒待機）を行っています。スクロールによって大量の動画が一気に検出された際、`GM_setValue` が頻発してフリーズするのを防ぐためです。この待機時間を短くしすぎないでください。
-
-## インストール/バージョン検知API
-- `index.html` は `userscript-ping` を送信し、各ユーザースクリプトが `userscript-check-installed` を `dispatchEvent` して応答することで検知します。
-- 受信側は `data-script-name` と `@name` の一致で対象ボタンを特定します。
-- `Install (vX.Y.Z)` の表記からバージョンを抽出し、セマンティックバージョン比較で `Update` / `Installed` を切り替えます。
+Please refer to the root `AGENTS.md` for all operational procedures, including Git practices, documentation structure, and HTML sample preprocessing.
