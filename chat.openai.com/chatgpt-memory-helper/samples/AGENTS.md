@@ -40,3 +40,30 @@ DOMの断片を記録した大規模なHTMLファイルを扱う際、ユーザ�
 ```
 
 この戦略により、生成されるHTMLはより小さく、クリーンになります。同時に、堅牢なユーザースクリプトを開発するために不可欠な構造情報は維持されます。
+
+## 4. 実装
+
+この前処理は、Pythonとライブラリ `BeautifulSoup4` (`bs4`) を用いて実装することを推奨します。必要に応じて、`pip` を使用して追加のモジュールをインストールしてください。
+
+処理後のHTMLは、インデントを含まない単一ラインのファイルとして出力します。インデントはDOMの構造分析には不要であり、これを除去することでファイルの可読性（機械的な）をさらに高めることができます。
+
+この前処理スクリプトは冪等性を持つように設計されており、同じファイルに何度実行しても、常に同じ結果が得られます。
+
+### Python実装例
+
+```python
+from bs4 import BeautifulSoup
+
+# ... (HTML content loaded into a 'html_content' variable)
+
+soup = BeautifulSoup(html_content, 'html.parser')
+
+# (Implement the removal/clearing logic here)
+# e.g., removing empty attributes, clearing svg children, etc.
+
+# Output without indentation
+# Use soup.prettify(formatter=None) to get the output without extra newlines.
+output_html = soup.prettify(formatter=None)
+
+# 'output_html' now contains the processed, single-line HTML
+```
