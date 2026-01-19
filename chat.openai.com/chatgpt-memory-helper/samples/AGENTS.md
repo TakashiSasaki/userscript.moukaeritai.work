@@ -45,7 +45,7 @@ DOMの断片を記録した大規模なHTMLファイルを扱う際、ユーザ�
 
 この前処理は、Pythonとライブラリ `BeautifulSoup4` (`bs4`) を用いて実装することを推奨します。必要に応じて、`pip` を使用して追加のモジュールをインストールしてください。
 
-処理後のHTMLは、インデントを含まない単一ラインのファイルとして出力します。インデントはDOMの構造分析には不要であり、これを除去することでファイルの可読性（機械的な）をさらに高めることができます。
+処理後のHTMLは、要素に基づいた改行は維持しつつ、各行の先頭にあるインデント用の空白は除去した形式で出力します。これにより、人間にとっての可読性をある程度保ちながら、不要なインデント情報を削減します。
 
 この前処理スクリプトは冪等性を持つように設計されており、同じファイルに何度実行しても、常に同じ結果が得られます。
 
@@ -61,9 +61,10 @@ soup = BeautifulSoup(html_content, 'html.parser')
 # (Implement the removal/clearing logic here)
 # e.g., removing empty attributes, clearing svg children, etc.
 
-# Output without indentation
-# Use soup.prettify(formatter=None) to get the output without extra newlines.
-output_html = soup.prettify(formatter=None)
+# Get pretty-printed HTML, then remove leading whitespace from each line.
+pretty_html = soup.prettify()
+# Also remove blank lines that might result from stripping.
+output_html = "\\n".join([line.lstrip() for line in pretty_html.splitlines() if line.strip()])
 
-# 'output_html' now contains the processed, single-line HTML
+# 'output_html' now contains the processed, pretty-printed HTML without indentation.
 ```

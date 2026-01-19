@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 
 """
-Preprocesses HTML sample files in its directory according to the strategy
-defined in AGENTS.md.
+Preprocesses HTML sample files according to the strategy defined in AGENTS.md.
+
+This script takes one or more glob patterns as command-line arguments
+and processes all matching files.
 """
 
 import glob
-import os
+import sys
 from bs4 import BeautifulSoup, Comment
 
 # The maximum length of a text node before it's truncated.
@@ -24,10 +26,10 @@ def process_file(filepath):
     print(f"Processing {filepath}...")
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
-            content = f.read()
+            original_content = f.read()
 
-        # Use lxml for performance and handling of potentially broken HTML.
-        soup = BeautifulSoup(content, 'lxml')
+        # Use lxml for performance.
+        soup = BeautifulSoup(original_content, 'lxml')
 
         # --- Apply preprocessing rules ---
 
@@ -47,12 +49,12 @@ def process_file(filepath):
         # 4. Remove empty attributes and truncate long text nodes
         for tag in soup.find_all(True):
             # Remove empty attributes
-            empty_attrs = [attr for attr, value in tag.attrs.items() if value == '']
-            for attr in empty_attrs:
-                del tag[attr]
+            if tag.attrs:
+                empty_attrs = [attr for attr, value in tag.attrs.items() if isinstance(value, str) and value == '']
+                for attr in empty_attrs:
+                    del tag[attr]
 
-            # Truncate long text nodes that are direct children
-            # We only check for strings that are direct children of the tag
+            # Truncate long text nodes
             for child in list(tag.children):
                  if child.name is None and hasattr(child, 'string'): # It's a NavigableString
                     text = child.string.strip()
@@ -61,13 +63,15 @@ def process_file(filepath):
                         child.string.replace_with(truncated_text)
 
 
-        # Get the processed HTML as a single line without indentation
-        output_html = soup.prettify(formatter=None)
-        output_html = "".join(line.strip() for line in output_html.splitlines())
+        # Get pretty-printed HTML, then remove leading whitespace from each line.
+        # This gives element-based newlines without indentation.
+        pretty_html = soup.prettify()
+        # Also remove blank lines that might result from stripping.
+        output_html = "\n".join([line.lstrip() for line in pretty_html.splitlines() if line.strip()])
 
 
         # Overwrite the file if content has changed
-        if output_html != content:
+        if output_html != original_content:
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(output_html)
             print(f"  -> Modified {filepath}")
@@ -79,12 +83,20 @@ def process_file(filepath):
 
 
 if __name__ == "__main__":
-    # Get the directory where the script is located
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    # Find all .html files in that directory
-    html_files = glob.glob(os.path.join(script_dir, '*.html'))
+    if len(sys.argv) > 1:
+        patterns = sys.argv[1:]
+    else:
+        # Default to all .html files in the current directory if no args are provided
+        patterns = ['*.html']
+        print("No glob patterns provided. Defaulting to '*.html' in the current directory.")
 
-    for f in html_files:
-        process_file(f)
+    file_count = 0
+    for pattern in patterns:
+        for filepath in glob.glob(pattern, recursive=True):
+            process_file(filepath)
+            file_count += 1
+    
+    if file_count == 0:
+        print("No files found matching the provided patterns.")
 
     print("\nPreprocessing complete.")
