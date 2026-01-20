@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.0
+// @version      0.2.1
 // @description  Adds a 1-click button to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -380,11 +380,13 @@
     }
 
     /**
-     * Handle Keyboard Shortcut (Ctrl+D)
+     * Handle Keyboard Shortcut (Ctrl+D or Ctrl+Shift+Backspace)
      */
     async function handleKeyboardShortcut(e) {
-        // Only trigger on Ctrl + D (or Meta + D for Mac support if desired, though usually Ctrl in Windows context)
-        if (!((e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D'))) return;
+        const isCtrlD = (e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D');
+        const isCtrlShiftBackspace = (e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Backspace';
+
+        if (!isCtrlD && !isCtrlShiftBackspace) return;
 
         // Ignore if user is typing in an input
         const activeTag = document.activeElement.tagName.toLowerCase();
@@ -393,7 +395,7 @@
         }
 
         e.preventDefault(); // Prevent bookmarking or other default browser actions
-        console.log('Ctrl+D detected: Triggering 1-Click Delete...');
+        console.log('Shortcut detected: Triggering 1-Click Delete...');
 
         // 1. Try to find an existing standard delete button (header)
         const standardBtn = document.querySelector('.gemini-quick-delete-btn:not(.floating)');
