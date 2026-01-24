@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NotebookLM Artifact Delete Button
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.1
+// @version      0.1.2
 // @description  Add delete buttons to NotebookLM artifacts (notes, audio, etc.)
 // @author       Takashi Sasaki
 // @match        https://notebooklm.google.com/*
@@ -48,12 +48,40 @@
         ITEM_CONTAINER: 'artifact-library-note, artifact-library-item',
         ACTION_CONTAINER: '.artifact-action-container',
         MORE_BUTTON: 'button.mat-mdc-menu-trigger', // Generic trigger within the item
-        MENU_DELETE_BTN_TEXT: ['Delete', 'Remove'], 
+        MENU_DELETE_BTN_TEXT: ['Delete', 'Remove'],
         OVERLAY_CONTAINER: '.cdk-overlay-container',
         OVERLAY_PANE: '.cdk-overlay-pane',
         CONFIRM_DELETE_BTN: 'mat-dialog-container button.submit',
         DELETE_BTN_CLASS: 'notebooklm-artifact-delete-btn'
     };
+
+    let uiPanel = null;
+
+    function createUIPanel() {
+        if (document.getElementById(`${SCRIPT_ID}-panel`)) return;
+
+        uiPanel = document.createElement('div');
+        uiPanel.id = `${SCRIPT_ID}-panel`;
+        uiPanel.style.position = 'fixed';
+        uiPanel.style.bottom = '10px';
+        uiPanel.style.right = '10px';
+        uiPanel.style.padding = '5px 10px';
+        uiPanel.style.background = 'linear-gradient(45deg, rgba(200, 220, 255, 0.8), rgba(220, 200, 255, 0.8))';
+        uiPanel.style.border = '1px solid #ccc';
+        uiPanel.style.borderRadius = '5px';
+        uiPanel.style.zIndex = '10000';
+        uiPanel.style.fontSize = '12px';
+        uiPanel.style.fontFamily = 'monospace';
+        uiPanel.style.color = '#333';
+        uiPanel.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+        uiPanel.style.display = 'none'; // Initially hidden
+
+        const text = document.createElement('span');
+        text.textContent = `${GM_info.script.name} v${GM_info.script.version}`;
+        uiPanel.appendChild(text);
+
+        document.body.appendChild(uiPanel);
+    }
 
     let currentScrollArea = null;
     let observer = null;
@@ -205,10 +233,16 @@
             observer.disconnect();
             observer = null;
         }
+        if (uiPanel) {
+            uiPanel.style.display = 'none';
+        }
         currentScrollArea = null;
     }
 
     function startPolling() {
+        if (!uiPanel) createUIPanel();
+        if (uiPanel) uiPanel.style.display = 'block';
+
         if (pollTimer) return;
         pollTimer = setInterval(() => {
             if (!isNotebookPage()) {
@@ -258,5 +292,6 @@
 
     window.addEventListener('popstate', handleNavigation);
     window.addEventListener('hashchange', handleNavigation);
+    createUIPanel(); // Create panel on script start
     handleNavigation();
 })();
