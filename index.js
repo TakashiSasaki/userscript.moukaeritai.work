@@ -4,9 +4,7 @@ const projectItems = document.querySelectorAll('.project-item');
 
 tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-        // Remove active class from all buttons
         tabBtns.forEach(b => b.classList.remove('active'));
-        // Add active class to clicked button
         btn.classList.add('active');
 
         const filter = btn.getAttribute('data-filter');
@@ -43,15 +41,23 @@ async function fetchAndApplyLatestVersions() {
     };
 
     const updateButton = (btn, version) => {
+        // Restore original HTML content before updating
+        if (btn.dataset.originalHtml) {
+            btn.innerHTML = btn.dataset.originalHtml;
+        }
+
         if (!version) {
             btn.textContent = 'Version N/A';
             btn.style.backgroundColor = '#dc3545'; // Red for error
-            return;
+        } else {
+            const currentText = btn.innerHTML;
+            const updatedText = currentText.replace(/Install/g, `Install (v${version})`);
+            btn.innerHTML = updatedText;
+            btn.dataset.version = version; // Store for later comparison
         }
-        const currentText = btn.innerHTML;
-        const updatedText = currentText.replace(/\(v[\d.]+\)/, `(v${version})`);
-        btn.innerHTML = updatedText;
-        btn.dataset.version = version; // Store for later comparison
+        // Re-enable the button
+        btn.style.pointerEvents = 'auto';
+        btn.style.backgroundColor = ''; // Revert to default stylesheet color
     };
 
     const promises = Array.from(buttons).map(async (btn) => {
@@ -106,10 +112,19 @@ document.addEventListener('userscript-check-installed', (event) => {
 });
 
 async function initialize() {
-    // 1. Fetch latest versions and update buttons
+    // 1. Set initial "loading" state for all buttons
+    const buttons = document.querySelectorAll('.install-button');
+    buttons.forEach(btn => {
+        btn.dataset.originalHtml = btn.innerHTML; // Save original content (icon + "Install")
+        btn.textContent = 'Checking...';
+        btn.style.backgroundColor = '#6c757d'; // Grey out
+        btn.style.pointerEvents = 'none'; // Disable click
+    });
+
+    // 2. Fetch latest versions and update buttons
     await fetchAndApplyLatestVersions();
 
-    // 2. Ping installed userscripts after a delay to check their versions
+    // 3. Ping installed userscripts after a delay to check their versions
     setTimeout(() => {
         document.dispatchEvent(new CustomEvent('userscript-ping'));
     }, 1000); // 1-second delay after fetching is done
