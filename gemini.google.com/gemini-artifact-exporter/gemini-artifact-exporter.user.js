@@ -387,6 +387,7 @@
 
         const btn = document.createElement('button');
         btn.textContent = 'Export All Docs';
+        btn.title = 'まだエクスポートしていないアーティファクトのみを対象にします。';
         btn.style.cssText = `
             padding: 10px 16px;
             background-color: #1a73e8;
@@ -401,6 +402,7 @@
 
         const forceBtn = document.createElement('button');
         forceBtn.textContent = 'Force Export All';
+        forceBtn.title = 'すべてのアーティファクトを再エクスポートします。';
         forceBtn.style.cssText = `
             padding: 8px 12px;
             background-color: #d93025; /* Red for force action */
