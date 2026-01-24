@@ -10,6 +10,16 @@
     <link href="/sitemap.xml" rel="sitemap" title="Sitemap" type="application/xml" />
     <link href="manifest.json" rel="manifest" />
     <meta name="theme-color" content="#f8f9fa" />
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-55X4ZJ49');</script>
+    <!-- End Google Tag Manager -->
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -105,7 +115,7 @@
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
             transform: translateY(-2px);
         }
-        
+
         .project-item.hidden {
             display: none;
         }
@@ -179,6 +189,10 @@
 </head>
 
 <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-55X4ZJ49" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     <a class="top-nav-link" href="https://moukaeritai.work/">
         <img height="16" src="https://moukaeritai.work/pictgram/64x64.webp/slate_teal.webp" style="border-radius: 4px;"
             width="16" />
@@ -188,31 +202,50 @@
 
     <div class="tab-nav">
         <button class="tab-btn active" data-filter="all">
-            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.47-7-7.43 0-.55.08-1.09.23-1.61L11 15v4.93zm6.97-2.61C17.16 15.62 16.03 15 14.82 15H11V4.07c1.37.38 2.53.97 3.47 1.76l-.11.11L18 9.07V9c-.6-.44-1.29-.82-2.04-1.1L18.97 4.07c-2.3-2.1-5.74-2.14-8.08-.07L13 14.82h-1c-.97 0-1.87-.29-2.65-.78L5.07 4.07c-2.1 2.3-2.14 5.74-.07 8.08L14.93 11V7c-.6-.44-1.29-.82-2.04-1.1L18.97 4.07z"/></svg>
+            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16">
+                <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.47-7-7.43 0-.55.08-1.09.23-1.61L11 15v4.93zm6.97-2.61C17.16 15.62 16.03 15 14.82 15H11V4.07c1.37.38 2.53.97 3.47 1.76l-.11.11L18 9.07V9c-.6-.44-1.29-.82-2.04-1.1L18.97 4.07c-2.3-2.1-5.74-2.14-8.08-.07L13 14.82h-1c-.97 0-1.87-.29-2.65-.78L5.07 4.07c-2.1 2.3-2.14 5.74-.07 8.08L14.93 11V7c-.6-.44-1.29-.82-2.04-1.1L18.97 4.07z" />
+            </svg>
             <span>All</span>
         </button>
         <button class="tab-btn" data-filter="onamae">
-            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>
+            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16">
+                <path
+                    d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z" />
+            </svg>
             <span>onamae.com</span>
         </button>
         <button class="tab-btn" data-filter="openai">
-            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16">
+                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" />
+            </svg>
             <span>OpenAI</span>
         </button>
         <button class="tab-btn" data-filter="gemini">
-            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16">
+                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+            </svg>
             <span>Gemini</span>
         </button>
         <button class="tab-btn" data-filter="grok">
-            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-.25 15.75c-2.49 0-4.5-2.01-4.5-4.5s2.01-4.5 4.5-4.5 4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-7.5c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16">
+                <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-.25 15.75c-2.49 0-4.5-2.01-4.5-4.5s2.01-4.5 4.5-4.5 4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-7.5c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+            </svg>
             <span>Grok</span>
         </button>
         <button class="tab-btn" data-filter="notebooklm">
-            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 18H8v-2h5v2zm3-4H8v-2h8v2zm0-4H8V8h8v4z"/></svg>
+            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16">
+                <path
+                    d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 18H8v-2h5v2zm3-4H8v-2h8v2zm0-4H8V8h8v4z" />
+            </svg>
             <span>NotebookLM</span>
         </button>
         <button class="tab-btn" data-filter="youtube">
-            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16"><path d="M10 16.5l6-4.5-6-4.5v9zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16">
+                <path
+                    d="M10 16.5l6-4.5-6-4.5v9zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+            </svg>
             <span>YouTube</span>
         </button>
     </div>
@@ -509,8 +542,7 @@
         </li>
         <li class="project-item" data-category="notebooklm">
             <h3 class="project-title">
-                <img alt="notebooklm.google.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=notebooklm.google.com&amp;sz=32" />
+                <img alt="notebooklm.google.com" class="project-icon" src="notebooklm.google.com/notebooklm.svg" />
                 <a href="notebooklm.google.com/index.html">NotebookLM Source Management Tools 🛠️</a>
             </h3>
             <p class="project-desc">
@@ -527,8 +559,7 @@
         </li>
         <li class="project-item" data-category="notebooklm">
             <h3 class="project-title">
-                <img alt="notebooklm.google.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=notebooklm.google.com&amp;sz=32" />
+                <img alt="notebooklm.google.com" class="project-icon" src="notebooklm.google.com/notebooklm.svg" />
                 <a href="notebooklm.google.com/index.html">NotebookLM Artifact Delete Button 🗑️</a>
             </h3>
             <p class="project-desc">
@@ -651,7 +682,9 @@
                 </svg>
             </a>
             <small> | <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> | Developed by <a
-                    href="https://x.com/TakashiSasaki">Takashi Sasaki</a> | <a href="https://github.com/codespaces/fuzzy-halibut-qgr4qgggrh494p" target="codespaces">Open in Codespaces</a></small>
+                    href="https://x.com/TakashiSasaki">Takashi Sasaki</a> | <a
+                    href="https://github.com/codespaces/fuzzy-halibut-qgr4qgggrh494p" target="codespaces">Open in
+                    Codespaces</a></small>
         </p>
     </footer>
     <script>
