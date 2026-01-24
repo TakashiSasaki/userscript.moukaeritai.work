@@ -105,6 +105,13 @@ JavaScript（`.user.js`）のコードを変更した後は、必ずESLintを実
 -   `https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*`
 -   **ガード内容**: `userscript-check-installed` を `dispatchEvent` し、`userscript-ping` を監視して応答した後、早期 `return` すること。
 
+### UIパネルの基本要件
+全てのユーザースクリプトがUIパネルを持つわけではありませんが、もしUIパネルを表示する機能を持つ場合は、以下の基本要件を満たす必要があります。
+
+-   **半透明**: UIパネルは、ページのコンテンツを完全に隠さないように、半透明（例: `opacity: 0.8`）にしてください。
+-   **バージョン表示**: パネル内には、スクリプトの現在のバージョン番号を明記してください。`GM_info.script.version` を利用して動的に取得することを推奨します。
+-   **控えめなデザイン**: パネルは小さく、ページの主要な操作を妨げない位置（例: 画面の隅）に配置してください。
+
 ## リポジトリ情報
 
 -   **リモートURL**: `https://github.com/TakashiSasaki/userscript.moukaeritai.work`
