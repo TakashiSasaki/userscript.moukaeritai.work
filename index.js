@@ -22,11 +22,55 @@ tabBtns.forEach(btn => {
     });
 });
 
-document.addEventListener('userscript-check-installed', (event) => {
-    const { name, version } = event.detail;
+// --- Dynamic Version Fetching ---
+async function fetchAndApplyLatestVersions() {
     const buttons = document.querySelectorAll('.install-button');
 
-    // Semantic Versioning comparison
+    const fetchVersion = async (url) => {
+        try {
+            const response = await fetch(url, { cache: 'no-store' });
+            if (!response.ok) {
+                console.error(`Failed to fetch ${url}: ${response.statusText}`);
+                return null;
+            }
+            const scriptText = await response.text();
+            const match = scriptText.match(/@version\s+([\d.]+)/);
+            return match ? match[1] : null;
+        } catch (error) {
+            console.error(`Error fetching or parsing ${url}:`, error);
+            return null;
+        }
+    };
+
+    const updateButton = (btn, version) => {
+        if (!version) {
+            btn.textContent = 'Version N/A';
+            btn.style.backgroundColor = '#dc3545'; // Red for error
+            return;
+        }
+        const currentText = btn.innerHTML;
+        const updatedText = currentText.replace(/\(v[\d.]+\)/, `(v${version})`);
+        btn.innerHTML = updatedText;
+        btn.dataset.version = version; // Store for later comparison
+    };
+
+    const promises = Array.from(buttons).map(async (btn) => {
+        const scriptUrl = btn.href;
+        if (scriptUrl) {
+            const version = await fetchVersion(scriptUrl);
+            updateButton(btn, version);
+        }
+    });
+
+    await Promise.all(promises);
+}
+
+
+// --- Installed Script Detection ---
+document.addEventListener('userscript-check-installed', (event) => {
+    const { name, version: installedVersion } = event.detail;
+    const buttons = document.querySelectorAll('.install-button');
+
     const compareVersions = (v1, v2) => {
         if (!v1 || !v2) return 0;
         const parts1 = v1.split('.').map(Number);
@@ -42,21 +86,17 @@ document.addEventListener('userscript-check-installed', (event) => {
 
     buttons.forEach(btn => {
         if (btn.getAttribute('data-script-name') === name) {
-            // Extract version from button text "Install (vX.Y.Z)"
-            const match = btn.textContent.match(/v(\d+\.\d+\.\d+)/);
-            const serverVersion = match ? match[1] : null;
+            const serverVersion = btn.dataset.version;
 
-            if (serverVersion && compareVersions(serverVersion, version) > 0) {
-                // Update available
+            if (serverVersion && compareVersions(serverVersion, installedVersion) > 0) {
                 btn.innerHTML = `<svg height="16" viewBox="0 0 24 24" width="16"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Update (v${serverVersion})`;
-                btn.style.backgroundColor = '#f39c12'; // Orange for update
+                btn.style.backgroundColor = '#f39c12';
                 btn.style.boxShadow = '0 4px 15px rgba(243, 156, 18, 0.4)';
                 btn.style.pointerEvents = 'auto';
                 btn.classList.remove('installed');
             } else {
-                // Installed and up-to-date
-                btn.textContent = `Installed (v${version})`;
-                btn.style.backgroundColor = '#6c757d'; // Grey for installed
+                btn.textContent = `Installed (v${installedVersion})`;
+                btn.style.backgroundColor = '#6c757d';
                 btn.style.boxShadow = 'none';
                 btn.style.pointerEvents = 'none';
                 btn.classList.add('installed');
@@ -65,27 +105,17 @@ document.addEventListener('userscript-check-installed', (event) => {
     });
 });
 
-// Initial state: set buttons to "Checking..."
-const installButtons = document.querySelectorAll('.install-button');
-installButtons.forEach(btn => {
-    btn.dataset.originalHtml = btn.innerHTML;
-    btn.textContent = 'Checking...';
-    btn.style.backgroundColor = '#6c757d';
-    btn.style.pointerEvents = 'none';
-    btn.style.boxShadow = 'none';
-});
+async function initialize() {
+    // 1. Fetch latest versions and update buttons
+    await fetchAndApplyLatestVersions();
 
-// Ping userscripts to report themselves after a random delay (3-5s)
-setTimeout(() => {
-    installButtons.forEach(btn => {
-        btn.innerHTML = btn.dataset.originalHtml;
-        btn.style.backgroundColor = '';
-        btn.style.pointerEvents = '';
-        btn.style.boxShadow = '';
-    });
-    document.dispatchEvent(new CustomEvent('userscript-ping'));
-}, Math.floor(Math.random() * 2000) + 3000);
+    // 2. Ping installed userscripts after a delay to check their versions
+    setTimeout(() => {
+        document.dispatchEvent(new CustomEvent('userscript-ping'));
+    }, 1000); // 1-second delay after fetching is done
+}
 
+// --- Service Worker ---
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').then(registration => {
@@ -95,3 +125,6 @@ if ('serviceWorker' in navigator) {
         });
     });
 }
+
+// --- Run Initialization ---
+initialize();
