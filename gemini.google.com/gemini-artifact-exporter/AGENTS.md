@@ -1,5 +1,3 @@
-# Agent Guidelines
+`gemini.google.com/gemini-artifact-exporter` では、Google Gemini のサイドバーに表示される「Article」タイプのアーティファクトを、まとめて Google Docs にエクスポートするユーザースクリプトを開発しています。
 
-This project follows the agent development guidelines outlined in the root [AGENTS.md](/AGENTS.md) file.
-
-Please refer to the root `AGENTS.md` for all operational procedures, including Git practices, documentation structure, and HTML sample preprocessing.
+詳細は [gemini-artifact-exporter.md](gemini-artifact-exporter.md) を参照してください。
