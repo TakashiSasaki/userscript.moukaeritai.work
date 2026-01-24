@@ -1,0 +1,164 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    padding: 2em;
+    background-color: #f8f9fa;
+    color: #212529;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 1.5em;
+    font-weight: 300;
+}
+
+.top-nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #495057;
+    position: absolute;
+    top: 1.5em;
+    left: 2em;
+}
+
+.top-nav-link:hover {
+    text-decoration: underline;
+}
+
+/* Tabs Styles */
+.tab-nav {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    background: white;
+    border: 1px solid #dee2e6;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #495057;
+    transition: all 0.2s;
+    outline: none;
+    /* Added for icon alignment */
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tab-btn:hover {
+    background-color: #e9ecef;
+}
+
+.tab-btn.active {
+    background-color: #0056b3;
+    color: white;
+    border-color: #0056b3;
+}
+
+.tab-btn svg {
+    fill: currentColor;
+    width: 16px;
+    height: 16px;
+}
+
+.project-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.project-item {
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.project-item:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.project-item.hidden {
+    display: none;
+}
+
+.project-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.project-title a {
+    text-decoration: none;
+    color: #0056b3;
+    font-weight: 500;
+}
+
+.project-title a:hover {
+    text-decoration: underline;
+}
+
+.project-icon {
+    width: 32px;
+    height: 32px;
+}
+
+.project-desc {
+    flex-grow: 1;
+    color: #495057;
+    font-size: 0.95em;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.install-button {
+    position: absolute;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    background-color: #28a745;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 0.9em;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.install-button:hover {
+    background-color: #218838;
+}
+
+.install-button svg {
+    fill: currentColor;
+}
+
+footer {
+    text-align: center;
+    margin-top: 3em;
+    color: #6c757d;
+}
+
+footer a {
+    color: #0056b3;
+}
