@@ -1,178 +1,178 @@
-# Agent Operational Guidelines
+# エージェント運用ガイドライン
 
 このドキュメントは、このプロジェクトと対話するエージェント向けの推奨運用ガイドラインを概説しています。これらのガイドラインを遵守することで、一貫した動作、適切なバージョン管理の実施、および効率的なコラボレーションが保証されます。
 
-## Git Commit Practices
+## Gitコミットプラクティス
 
--   **Detailed Commit Messages**: Always prefer detailed commit messages, focusing on the *why* of a change rather than just the *what*.
--   **`git commit -F` Usage**: Utilize `git commit -F` for committing changes, leveraging a temporary file for the commit message content.
--   **Temporary Commit Message File**: When committing, create a temporary file with the commit message content.
-    -   **Location**: The temporary file must be created within the project's working directory.
-    -   **Absolute Path**: Always use an absolute path when referencing the temporary file with `git commit -F`.
--   **Single File Per Commit**: When instructed to commit a file, include only that specific file in the commit, even if other changes are staged or untracked.
--   **English Commit Messages**: All Git commit messages should be written in English.
--   **Manual Pushing**: The user prefers to push changes manually; agents should *never* push changes to a remote repository automatically.
+-   **詳細なコミットメッセージ**: 何を変更したか（*what*）だけでなく、なぜ変更したか（*why*）に焦点を当てた、詳細なコミットメッセージを常に心がけてください。
+-   **`git commit -F` の使用**: 変更をコミットする際は `git commit -F` を利用し、コミットメッセージの内容は一時ファイルに記述してください。
+-   **一時コミットメッセージファイル**: コミット時、メッセージを記述するための一時ファイルを作成してください。
+    -   **場所**: 一時ファイルは、必ずプロジェクトのワーキングディレクトリ内に作成してください。
+    -   **絶対パス**: `git commit -F` で一時ファイルを参照する際は、必ず絶対パスを使用してください。
+-   **コミットごとの単一ファイル**: ファイルのコミットを指示された場合、ステージングされている、あるいは未追跡の他の変更があったとしても、その特定のファイルのみをコミットに含めてください。
+-   **英語のコミットメッセージ**: すべてのGitコミットメッセージは英語で記述してください。
+-   **手動でのプッシュ**: ユーザーは変更のプッシュを手動で行うことを好みます。エージェントはリモートリポジトリに変更を自動でプッシュしては**いけません**。
 
-## Common Development Standards (共通開発基準)
+## 共通開発基準
 
 以下の基準は、このリポジトリで開発されるすべてのユーザースクリプトに適用されます。
 
-### Metadata & Versioning (メタデータとバージョニング)
+### メタデータとバージョニング
 すべての `.user.js` ファイルは以下のメタデータを含む必要があります。
 
 -   **@namespace**: `userscript.moukaeritai.work`
 -   **@author**: `Takashi Sasaki`
 -   **@homepageURL**: `https://x.com/TakashiSasaki`
--   **Published at**: `https://userscript.moukaeritai.work` (README等のドキュメントに記載)
+-   **公開場所**: `https://userscript.moukaeritai.work` (README等のドキュメントに記載)
 -   **@version**: `major.minor.patch` (セマンティックバージョニング形式)
-    -   **Strict Rule**: JavaScript（`.user.js`）のコードを1行でも変更した場合は、必ずパッチバージョンをインクリメント（バンプアップ）してください。
+    -   **厳格なルール**: JavaScript（`.user.js`）のコードを1行でも変更した場合は、必ずパッチバージョンをインクリメント（バンプアップ）してください。
     -   機能追加やバグ修正ごとにパッチバージョンをインクリメントしてください。
 -   **@updateURL** / **@downloadURL**:
     -   GitHubのRawファイルURLを指定し、Tampermonkey等のマネージャーが更新を自動検出できるようにします。
-    -   Format: `https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/DOMAIN_NAME/SCRIPT_NAME/SCRIPT_NAME.user.js`
+    -   フォーマット: `https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/DOMAIN_NAME/SCRIPT_NAME/SCRIPT_NAME.user.js`
     -   **注意**: デフォルトブランチ名は `userscript.moukaeritai.work` です。
 
-### Documentation Layers (ドキュメントの3層構造)
+### ドキュメントの3層構造
 ドキュメントの肥大化を防ぎ、人間とAIの双方に最適な情報を提供するため、以下の3層構造を維持してください。
 
 1.  **`index.html` (ビューア)**: プレミアムデザインテンプレートを使用したドキュメント閲覧用ページ。
 2.  **`{project-name}.md` (人間用)**: ユーザー向けの概要、目的、機能説明。実装の詳細は含めない。
 3.  **`AGENTS.md` (AI用)**: エージェント向けの実装ノート。セレクタリスト、設計戦略、運用ルール等を記述。
 
-### HTML Sample Preprocessing (サンプルHTMLの前処理)
+### サンプルHTMLの前処理
 
-This section outlines the standard procedures and rules for handling HTML sample files to ensure they are lightweight, clear, and consistent. All agents must follow this guide when working with HTML sample files.
+このセクションでは、HTMLサンプルファイルを軽量かつ明確で一貫性のある状態に保つための標準的な手順とルールを概説します。すべてのエージェントは、HTMLサンプルファイルを扱う際にこのガイドに従う必要があります。
 
-#### Development Workflow
+#### 開発ワークフロー
 
-When editing an HTML sample file (`.html`) or developing based on one, always follow these steps:
+HTMLサンプルファイル（`.html`）を編集したり、それに基づいて開発を行ったりする場合は、常に以下の手順に従ってください。
 
-1.  **Initialize File**: Before starting, if you need to re-run or validate the preprocessing script, you must first restore the target file to its original, committed state.
+1.  **ファイルの初期化**: 開始前に、前処理スクリプトを再実行または検証する必要がある場合は、まず対象ファイルを元のコミットされた状態に復元する必要があります。
     ```bash
-    # Restore a file to the HEAD state
+    # ファイルをHEADの状態に復元する
     git restore path/to/your/file.html
     ```
 
-2.  **Run Preprocessor**: Execute the centralized `preprocess_html_samples.py` script on the HTML file(s). This script applies the rules defined below.
+2.  **前処理スクリプトの実行**: 中央集権化された `preprocess_html_samples.py` スクリプトをHTMLファイルに対して実行します。このスクリプトは以下に定義されたルールを適用します。
     ```bash
-    # Process all HTML files in a specific samples/ directory
+    # 特定の samples/ ディレクトリ内のすべてのHTMLファイルを処理する
     ./scripts/preprocess_html_samples.py 'path/to/samples/*.html'
     ```
 
-3.  **Commit Changes**: If the preprocessor modifies any HTML files, commit those changes to the repository. This ensures all developers and agents use the updated samples.
+3.  **変更のコミット**: 前処理スクリプトがHTMLファイルを変更した場合、それらの変更をリポジトリにコミットします。これにより、すべての開発者とエージェントが更新されたサンプルを使用することが保証されます。
     ```bash
     git add path/to/your/file.html
     git commit -m "docs: Preprocess HTML samples with the latest script"
     ```
 
-#### Preprocessing Rules
+#### 前処理ルール
 
-The `preprocess_html_samples.py` script applies the following rules:
+`preprocess_html_samples.py` スクリプトは以下のルールを適用します。
 
-1.  **Attribute Removal**:
-    *   Only attributes with empty string values (e.g., `style=""`, `class=""`) are removed.
+1.  **属性の削除**:
+    *   空の文字列値を持つ属性（例: `style=""`, `class=""`）のみが削除されます。
 
-2.  **Element Removal/Clearing**:
-    *   **`<head>`**: Unnecessary elements within `<head>` (e.g., `<link>`, `<meta>`, `<title>`) are removed.
-    *   **`<script>` & `<style>`**: All `<script>` and `<style>` tags are removed from the document.
-    *   **`<svg>`**: The `<svg>` tag itself is kept, but all its child elements (`<path>`, `<g>`, etc.) are removed.
-    *   **Comments**: All HTML comments (`<!-- ... -->`) are removed.
+2.  **要素の削除/クリア**:
+    *   **`<head>`**: `<head>` 内の不要な要素（例: `<link>`, `<meta>`, `<title>`）は削除されます。
+    *   **`<script>` & `<style>`**: すべての `<script>` および `<style>` タグはドキュメントから削除されます。
+    *   **`<svg>`**: `<svg>` タグ自体は保持されますが、そのすべての子要素（`<path>`, `<g>`など）は削除されます。
+    *   **コメント**: すべてのHTMLコメント（`<!-- ... -->`）は削除されます。
 
-3.  **Content Truncation**:
-    *   Text nodes longer than 100 characters are truncated with an ellipsis (`...`).
+3.  **コンテンツの切り詰め**:
+    *   100文字を超えるテキストノードは、省略記号（`...`）で切り詰められます。
 
-4.  **Formatting**:
-    *   The final HTML is pretty-printed with element-based newlines but no leading indentation on any line.
+4.  **フォーマット**:
+    *   最終的なHTMLは、要素に基づいた改行で整形されますが、どの行にも先頭のインデントはありません。
 
-#### Script Specification
+#### スクリプトの仕様
 
--   **Implementation**: Python with `BeautifulSoup4` (`bs4`) and `lxml`.
--   **Idempotency**: The script is idempotent; running it multiple times on the same file will not produce further changes.
--   **Environment**: Requires `python3`, `beautifulsoup4`, and `lxml`.
+-   **実装**: Python、`BeautifulSoup4` (`bs4`)、`lxml`を使用。
+-   **べき等性**: このスクリプトはべき等です。同じファイルに対して複数回実行しても、さらなる変更は生じません。
+-   **環境**: `python3`, `beautifulsoup4`, `lxml` が必要です。
 
-### JavaScript Quality & Linting (JSの品質とリンティング)
+### JSの品質とリンティング
 JavaScript（`.user.js`）のコードを変更した後は、必ずESLintを実行して文法エラーや潜在的なバグがないか確認してください。
 
--   **Command**: `npx eslint path/to/script.user.js`
--   **Requirement**: コミット前にすべてのエラーを解消し、警告も可能な限り修正してください。
--   **Reminder**: 変更が小さくてもESLintの実行を省略しないこと。
+-   **コマンド**: `npx eslint path/to/script.user.js`
+-   **要件**: コミット前にすべてのエラーを解消し、警告も可能な限り修正してください。
+-   **注意事項**: 変更が小さくてもESLintの実行を省略しないこと。
 
-### Portal API Guard (インストール検知APIのガード)
+### インストール検知APIのガード
 最上位の `index.html` からリンクされているユーザースクリプトは、以下の3つの `@match` を持ち、該当ドメインでは**メイン機能を動かさず**「インストール検知APIのみ」を実行するガードを必ず入れてください。
 -   `https://userscript.moukaeritai.work/*`
 -   `http://127.0.0.1:5500/*`
 -   `https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*`
 -   **ガード内容**: `userscript-check-installed` を `dispatchEvent` し、`userscript-ping` を監視して応答した後、早期 `return` すること。
 
-## Repository Information (リポジトリ情報)
+## リポジトリ情報
 
--   **Remote URL**: `https://github.com/TakashiSasaki/userscript.moukaeritai.work`
--   **Default Branch**: `userscript.moukaeritai.work`
--   **Namespace**: `userscript.moukaeritai.work`
+-   **リモートURL**: `https://github.com/TakashiSasaki/userscript.moukaeritai.work`
+-   **デフォルトブランチ**: `userscript.moukaeritai.work`
+-   **名前空間**: `userscript.moukaeritai.work`
 
-## Project Structure & Development Workflow (プロジェクト構造と開発フロー)
+## プロジェクト構造と開発フロー
 
 階層構造: `DOMAIN_NAME/SCRIPT_NAME/`
 
 ```
 repo_root/
-  ├── index.html                  # Main project list (Landing page)
-  ├── AGENTS.md                   # Global agent guidelines (This file)
-  ├── DOMAIN_NAME/                # e.g., gemini.google.com
-  │   ├── AGENTS.md               # Directory-level agent instructions
-  │   └── SCRIPT_NAME/            # e.g., gemini-profile-badge
-  │       ├── SCRIPT_NAME.user.js # Userscript source
-  │       ├── SCRIPT_NAME.md      # Specification (Human-readable)
-  │       ├── AGENTS.md           # Implementation details (Agent-readable)
-  │       ├── index.html          # Documentation viewer
-  │       └── samples/            # DOM snapshots
+  ├── index.html                  # メインプロジェクトリスト (ランディングページ)
+  ├── AGENTS.md                   # グローバルエージェントガイドライン (このファイル)
+  ├── DOMAIN_NAME/                # 例: gemini.google.com
+  │   ├── AGENTS.md               # ディレクトリレベルのエージェント指示
+  │   └── SCRIPT_NAME/            # 例: gemini-profile-badge
+  │       ├── SCRIPT_NAME.user.js # ユーザースクリプトソース
+  │       ├── SCRIPT_NAME.md      # 仕様書 (人間向け)
+  │       ├── AGENTS.md           # 実装詳細 (エージェント向け)
+  │       ├── index.html          # ドキュメントビューア
+  │       └── samples/            # DOMスナップショット
 ```
 
-### Development Workflow
-1.  **Capture Samples**: DOMスナップショットを取得し `samples/` へ保存。
-2.  **Preprocess**: `preprocess_samples.py` でHTMLを軽量化。
-3.  **Specify**: `SCRIPT_NAME.md` にユーザー向け仕様を記述。
-4.  **Note**: `AGENTS.md` にエージェント向け技術詳細（セレクタ等）を記述。
-5.  **Implement**: `.user.js` 実装。
-6.  **Lint**: `npx eslint` でチェック。
-7.  **Document**: プレミアムデザインの `index.html` を作成。
-8.  **Register**: ルート `index.html` にプロジェクト追加。
+### 開発フロー
+1.  **サンプルの取得**: DOMスナップショットを取得し `samples/` へ保存。
+2.  **前処理**: `preprocess_html_samples.py` でHTMLを軽量化。
+3.  **仕様記述**: `SCRIPT_NAME.md` にユーザー向け仕様を記述。
+4.  **技術メモ**: `AGENTS.md` にエージェント向け技術詳細（セレクタ等）を記述。
+5.  **実装**: `.user.js` を実装。
+6.  **リンティング**: `npx eslint` でチェック。
+7.  **ドキュメント作成**: プレミアムデザインの `index.html` を作成。
+8.  **登録**: ルートの `index.html` にプロジェクトを追加。
 
-## Index Maintenance (インデックスの維持)
+## インデックスの維持
 
 新しいプロジェクトを追加する際は、ルートおよび各ディレクトリの `index.html` を更新してください。
--   **Consistency**: `onamae.com/index.html` 等、サブディレクトリにもインデックスを配置し、回遊性を高める。
--   **Card Design**:
-    -   **Title**: サイトのFavicon (Google S2 API) + プロジェクト名（ドキュメントへのリンク）。
-    -   **Positioning**: **インストールボタンはカードの右下(bottom-right)に配置**してください。
--   **Version Updates**: ユーザースクリプトのバージョンを上げた際は、必ず `index.html` 内のそのスクリプトの `Install` ボタンのテキスト（例: `Install (vX.Y.Z)`）も最新のバージョン番号に更新してください。
+-   **一貫性**: `onamae.com/index.html` 等、サブディレクトリにもインデックスを配置し、回遊性を高める。
+-   **カードデザイン**:
+    -   **タイトル**: サイトのFavicon (Google S2 API) + プロジェクト名（ドキュメントへのリンク）。
+    -   **配置**: **インストールボタンはカードの右下(bottom-right)に配置**してください。
+-   **バージョン更新**: ユーザースクリプトのバージョンを上げた際は、必ず `index.html` 内のそのスクリプトの `Install` ボタンのテキスト（例: `Install (vX.Y.Z)`）も最新のバージョン番号に更新してください。
 
 
-## UserScript Best Practices (SPA & Performance)
+## ユーザースクリプトベストプラクティス (SPA & パフォーマンス)
 
-Recent learnings from YouTube userscript development:
+YouTubeユーザースクリプト開発からの最近の学び:
 
-### 1. SPA Navigation & Cleanup
--   **Early Cleanup**: On SPA sites (like YouTube), rely on early navigation events (e.g., `yt-navigate-start`) to stop observers and timers *before* the page teardown begins. Waiting for "finish" events often causes browser hangs due to observers processing thousands of deletion mutations.
--   **Idempotency**: Ensure cleanup functions are idempotent so they can be safely called multiple times (e.g., on start, on finish, on unload).
+### 1. SPAナビゲーションとクリーンアップ
+-   **早期クリーンアップ**: YouTubeのようなSPAサイトでは、ページの解体が始まる*前*に、`yt-navigate-start`のような早期のナビゲーションイベントを頼りにオブザーバーやタイマーを停止させること。`finish`イベントを待つと、オブザーバーが何千もの削除ミューテーションを処理するため、ブラウザがハングすることがよくあります。
+-   **べき等性**: クリーンアップ関数は、複数回安全に呼び出せるように（例: 開始時、終了時、アンロード時）、べき等性を確保してください。
 
-### 2. Observer Performance
--   **Avoid Broad Observation**: Never observe `document.body` with `subtree: true` if you expect massive DOM changes.
--   **Polling Alternative**: For waiting on elements during transitions, lightweight polling (`setInterval`) is often safer and more performant than `MutationObserver`.
+### 2. Observerのパフォーマンス
+-   **広範な監視の回避**: 大規模なDOM変更が予想される場合、`subtree: true` を指定して `document.body` を監視してはいけません。
+-   **ポーリングの代替案**: トランジション中に要素を待つ場合、軽量なポーリング（`setInterval`）の方が `MutationObserver` よりも安全でパフォーマンスが高いことがよくあります。
 
-### 3. Strict Context Checking
--   **URL Verification**: Always verify `window.location.pathname` or parameters at the start of your main logic to ensure the script doesn't leak UI elements into unintended pages (e.g., showing playlist tools on a video watch page).
+### 3. 厳格なコンテキストチェック
+-   **URL検証**: メインロジックの開始時に常に `window.location.pathname` やパラメータを検証し、意図しないページにUI要素が漏れ出さないようにしてください（例: 動画再生ページにプレイリストツールが表示されるなど）。
 
-### 4. Trusted Types Compliance (Security)
--   **Avoid `innerHTML`**: Modern sites (like YouTube) enforce Trusted Types security policies that block assignments to `innerHTML`.
--   **Use DOM Methods**: Always use `document.createElement()`, `textContent`, `setAttribute()`, and `appendChild()` to build UI elements safely.
+### 4. Trusted Typesコンプライアンス (セキュリティ)
+-   **`innerHTML` の回避**: YouTubeのような現代的なサイトは、`innerHTML` への代入をブロックするTrusted Typesセキュリティポリシーを強制します。
+-   **DOMメソッドの使用**: UI要素を安全に構築するには、常に `document.createElement()`, `textContent`, `setAttribute()`, `appendChild()` を使用してください。
 
-### 5. Panel State Coupled to Activity
--   **Active/Inactive Sync**: If a script has a UI panel, tie its open/closed state to the script's active context rather than manual toggles.
--   **Active State**: Show the panel contents and display `Active`.
--   **Inactive State**: Collapse the panel contents and display `Inactive` (keep the header visible).
+### 5. アクティビティと連動したパネルの状態
+-   **アクティブ/非アクティブの同期**: スクリプトがUIパネルを持つ場合、その開閉状態を手動のトグルではなく、スクリプトのアクティブなコンテキストに連動させてください。
+-   **アクティブ状態**: パネルのコンテンツを表示し、`Active`と表示します。
+-   **非アクティブ状態**: パネルのコンテンツを折りたたみ、`Inactive`と表示します（ヘッダーは表示したまま）。
 
-## ユーザー固有の好み (User-Specific Preferences)
+## ユーザー固有の好み
 
--   **User Name**: Takashi Sasaki
--   **Email**: takashi316@gmail.com
+-   **ユーザー名**: Takashi Sasaki
+-   **メールアドレス**: takashi316@gmail.com
