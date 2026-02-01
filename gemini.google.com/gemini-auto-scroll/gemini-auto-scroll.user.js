@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.4
+// @version      0.2.5
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -419,12 +419,17 @@
     }
 
     function findNextConversationId() {
-        const selectedItem = document.querySelector('div[data-test-id="conversation"].selected');
-        if (selectedItem && selectedItem.nextElementSibling) {
-            const jslog = selectedItem.nextElementSibling.getAttribute('jslog');
-            if (jslog) {
-                const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/["']([a-f0-9]{16})["']/);
-                if (match) return match[1];
+        const allItems = Array.from(document.querySelectorAll(SELECTORS.CONVERSATION_ITEM));
+        const selectedIndex = allItems.findIndex(item => item.classList.contains('selected'));
+
+        if (selectedIndex !== -1 && selectedIndex < allItems.length - 1) {
+            const nextItem = allItems[selectedIndex + 1];
+            if (nextItem) {
+                const jslog = nextItem.getAttribute('jslog');
+                if (jslog) {
+                    const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/["']([a-f0-9]{16})["']/);
+                    if (match) return match[1];
+                }
             }
         }
         return null;
