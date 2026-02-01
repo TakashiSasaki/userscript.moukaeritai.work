@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.0
+// @version      0.2.1
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -61,7 +61,8 @@
         ENDLESS_RETRIES: 300, // "Endless" enough for most cases
         SPINNER_WAIT_MS: 3000,
         SCROLL_DELAY_MS: 500,
-        STORAGE_KEY: 'gemini_auto_scroll_enabled'
+        STORAGE_KEY: 'gemini_auto_scroll_enabled',
+        STORAGE_KEY_AUTOSWITCH: 'gemini_auto_switch_enabled'
     };
 
     // --- State & Trusted Types ---
@@ -102,6 +103,18 @@
             attemptScrollToConversation();
         }
     }
+
+    function isAutoSwitchEnabled() {
+        // Default to true for existing users
+        return localStorage.getItem(CONSTANTS.STORAGE_KEY_AUTOSWITCH) !== 'false';
+    }
+
+    function toggleAutoSwitch() {
+        const newState = !isAutoSwitchEnabled();
+        localStorage.setItem(CONSTANTS.STORAGE_KEY_AUTOSWITCH, newState);
+        updatePanelUI();
+    }
+
 
     // --- UI Injection ---
 
@@ -284,24 +297,37 @@
         const panel = document.getElementById('gemini-auto-scroll-panel');
         if (!panel) return;
 
-        const btn = panel.querySelector('.gtc-toggle-btn');
-        const statusText = panel.querySelector('.status-text');
-        if (!btn || !statusText) return;
-
-        const enabled = isAutoScrollEnabled();
-        btn.className = 'gtc-toggle-btn ' + (enabled ? 'enabled' : 'disabled');
-        if (isProcessing) {
-            btn.classList.add('processing');
-            statusText.textContent = 'Scrolling...';
-        } else {
-             statusText.textContent = enabled ? 'ON' : 'OFF';
+        // Update Auto-Scroll UI
+        const scrollBtn = panel.querySelector('.scroll-toggle');
+        const scrollStatusText = panel.querySelector('.scroll-status');
+        if (scrollBtn && scrollStatusText) {
+            const isScrollEnabled = isAutoScrollEnabled();
+            scrollBtn.className = 'gtc-toggle-btn scroll-toggle ' + (isScrollEnabled ? 'enabled' : 'disabled');
+            if (isProcessing) {
+                scrollBtn.classList.add('processing');
+                scrollStatusText.textContent = 'Scrolling...';
+            } else {
+                scrollStatusText.textContent = isScrollEnabled ? 'ON' : 'OFF';
+            }
+            const scrollIcon = scrollBtn.querySelector('.gtc-icon');
+            if (scrollIcon) {
+                setInnerHTML(scrollIcon, isScrollEnabled ? ICONS.CHECKED : ICONS.UNCHECKED);
+            }
         }
 
-
-        const icon = btn.querySelector('.gtc-icon');
-        if (icon) {
-            setInnerHTML(icon, enabled ? ICONS.CHECKED : ICONS.UNCHECKED);
+        // Update Auto-Switch UI
+        const switchBtn = panel.querySelector('.switch-toggle');
+        const switchStatusText = panel.querySelector('.switch-status');
+        if (switchBtn && switchStatusText) {
+            const isSwitchEnabled = isAutoSwitchEnabled();
+            switchBtn.className = 'gtc-toggle-btn switch-toggle ' + (isSwitchEnabled ? 'enabled' : 'disabled');
+            switchStatusText.textContent = isSwitchEnabled ? 'ON' : 'OFF';
+            const switchIcon = switchBtn.querySelector('.gtc-icon');
+            if (switchIcon) {
+                setInnerHTML(switchIcon, isSwitchEnabled ? ICONS.CHECKED : ICONS.UNCHECKED);
+            }
         }
+
 
         const count = updateConversationIndices();
         const badge = panel.querySelector('.gtc-badge');
@@ -338,8 +364,15 @@
                 <div class="control-row">
                     <label>Auto-Scroll</label>
                     <div class="toggle-switch">
-                        <span class="status-text">OFF</span>
-                        <button class="gtc-toggle-btn"><span class="gtc-icon"></span></button>
+                        <span class="status-text scroll-status">OFF</span>
+                        <button class="gtc-toggle-btn scroll-toggle"><span class="gtc-icon"></span></button>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <label>Auto-Select Next</label>
+                    <div class="toggle-switch">
+                        <span class="status-text switch-status">ON</span>
+                        <button class="gtc-toggle-btn switch-toggle"><span class="gtc-icon"></span></button>
                     </div>
                 </div>
                 <div class="info-row">
@@ -351,11 +384,18 @@
 
         document.body.appendChild(panel);
 
-        const toggleBtn = panel.querySelector('.gtc-toggle-btn');
-        toggleBtn.addEventListener('click', (e) => {
+        const scrollToggleBtn = panel.querySelector('.scroll-toggle');
+        scrollToggleBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             toggleAutoScroll();
+        });
+
+        const switchToggleBtn = panel.querySelector('.switch-toggle');
+        switchToggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleAutoSwitch();
         });
 
         const header = panel.querySelector('.panel-header');
@@ -613,9 +653,13 @@
                     const wasSelected = removedNode.classList?.contains('selected') || removedNode.querySelector('.selected');
 
                     if (isConversation && wasSelected && lastSelectedIndex !== -1) {
-                        console.log('[GeminiAutoScroll] Selected conversation deleted. Selecting next at index:', lastSelectedIndex);
-                        // Execute selection in next tick to allow DOM to settle
-                        setTimeout(selectNextConversation, 50);
+                        if (isAutoSwitchEnabled()) {
+                            console.log('[GeminiAutoScroll] Selected conversation deleted. Selecting next at index:', lastSelectedIndex);
+                            // Execute selection in next tick to allow DOM to settle
+                            setTimeout(selectNextConversation, 50);
+                        } else {
+                            console.log('[GeminiAutoScroll] Selected conversation deleted, but auto-select is disabled.');
+                        }
                     }
                 }
             }
