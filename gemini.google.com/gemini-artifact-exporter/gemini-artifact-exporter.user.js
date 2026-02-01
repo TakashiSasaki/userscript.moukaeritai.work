@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.9
+// @version      0.2.10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -83,9 +83,13 @@
                 return resolve(el);
             }
 
+            let timeoutId = null;
             const observer = new MutationObserver(() => {
                 const el = context.querySelector(selector);
                 if (el) {
+                    if (timeoutId) {
+                        clearTimeout(timeoutId);
+                    }
                     log(`Element ${selector} detected by observer.`);
                     observer.disconnect();
                     resolve(el);
@@ -97,7 +101,7 @@
                 subtree: true
             });
 
-            setTimeout(() => {
+            timeoutId = setTimeout(() => {
                 observer.disconnect();
                 log(`Timeout reached for: ${selector}`);
                 reject(new Error(`Timeout waiting for ${selector}`));
