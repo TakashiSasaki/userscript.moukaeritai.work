@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.7
+// @version      0.2.8
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -322,14 +322,7 @@
             return;
         }
 
-        const confirmMsg = `Found ${articleTitles.length} 'Article' artifacts.\n\nExport all of them to Google Docs? ${isDryRun ? '\n\n(Mode: DRY RUN)' : ''}`;
-
-        if (!confirm(confirmMsg)) {
-            log('Export cancelled by user.');
-            return;
-        }
-
-        if (document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
+if (document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
              document.querySelector(SELECTORS.PANEL_CLOSE_BUTTON)?.click();
              await sleep(1500);
         }
