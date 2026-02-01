@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.1
+// @version      0.2.2
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -62,7 +62,8 @@
         SPINNER_WAIT_MS: 3000,
         SCROLL_DELAY_MS: 500,
         STORAGE_KEY: 'gemini_auto_scroll_enabled',
-        STORAGE_KEY_AUTOSWITCH: 'gemini_auto_switch_enabled'
+        STORAGE_KEY_AUTOSWITCH: 'gemini_auto_switch_enabled',
+        STORAGE_KEY_LOG_VISIBLE: 'gemini_log_panel_visible'
     };
 
     // --- State & Trusted Types ---
@@ -114,6 +115,37 @@
         localStorage.setItem(CONSTANTS.STORAGE_KEY_AUTOSWITCH, newState);
         updatePanelUI();
     }
+
+    function isLogPanelVisible() {
+        return localStorage.getItem(CONSTANTS.STORAGE_KEY_LOG_VISIBLE) === 'true';
+    }
+
+    function toggleLogPanelVisibility() {
+        const newState = !isLogPanelVisible();
+        localStorage.setItem(CONSTANTS.STORAGE_KEY_LOG_VISIBLE, newState);
+        updatePanelUI();
+        const logPanel = document.getElementById('gemini-log-panel');
+        if (logPanel) {
+            logPanel.style.display = newState ? 'flex' : 'none';
+        }
+    }
+
+
+    // --- Log Panel ---
+    const log = (message) => {
+        if (!isLogPanelVisible()) return;
+        const logPanel = document.getElementById('gemini-log-panel-content');
+        if (logPanel) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logPanel.appendChild(logEntry);
+            // Auto-scroll to the bottom
+            logPanel.scrollTop = logPanel.scrollHeight;
+        }
+        console.log(`[GeminiAutoScroll LOG] ${message}`);
+    };
 
 
     // --- UI Injection ---
@@ -243,6 +275,51 @@
                 font-family: monospace;
             }
 
+            /* --- Log Panel Styles --- */
+            #gemini-log-panel {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                width: 450px;
+                height: 300px;
+                background-color: rgba(30, 30, 30, 0.9);
+                border: 1px solid #444;
+                border-radius: 8px;
+                z-index: 9999;
+                display: none; /* Initially hidden */
+                flex-direction: column;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                backdrop-filter: blur(5px);
+                resize: both;
+                overflow: hidden;
+            }
+            #gemini-log-panel-header {
+                padding: 8px 12px;
+                cursor: move;
+                background-color: #333;
+                color: #f1f1f1;
+                font-family: 'Google Sans', sans-serif;
+                font-size: 14px;
+                user-select: none;
+                border-bottom: 1px solid #444;
+            }
+            #gemini-log-panel-content {
+                flex-grow: 1;
+                overflow-y: auto;
+                padding: 10px;
+                font-family: 'Fira Code', 'monospace';
+                font-size: 12px;
+                color: #e0e0e0;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .log-entry {
+                white-space: pre-wrap;
+                word-break: break-all;
+            }
+
+
             /* --- Custom Scrollbar Styles --- */
             ::-webkit-scrollbar { width: 16px !important; height: 16px !important; background-color: #f0f0f0; display: block !important; }
             ::-webkit-scrollbar-track { background: #e0e0e0; border-left: 1px solid #ccc; }
@@ -252,6 +329,54 @@
         `;
         document.head.appendChild(style);
     }
+
+    function createLogPanel() {
+        if (document.getElementById('gemini-log-panel')) return;
+
+        const logPanel = document.createElement('div');
+        logPanel.id = 'gemini-log-panel';
+        setInnerHTML(logPanel, `
+            <div id="gemini-log-panel-header">Log Panel</div>
+            <div id="gemini-log-panel-content"></div>
+        `);
+        document.body.appendChild(logPanel);
+
+        if (isLogPanelVisible()) {
+            logPanel.style.display = 'flex';
+        }
+
+        // --- Dragging Logic ---
+        const header = logPanel.querySelector('#gemini-log-panel-header');
+        let isDragging = false;
+        let offset = { x: 0, y: 0 };
+
+        header.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            offset.x = e.clientX - logPanel.offsetLeft;
+            offset.y = e.clientY - logPanel.offsetTop;
+            logPanel.style.transition = 'none';
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            let newX = e.clientX - offset.x;
+            let newY = e.clientY - offset.y;
+            newX = Math.max(0, Math.min(newX, window.innerWidth - logPanel.offsetWidth));
+            newY = Math.max(0, Math.min(newY, window.innerHeight - logPanel.offsetHeight));
+            logPanel.style.left = `${newX}px`;
+            logPanel.style.top = `${newY}px`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!isDragging) return;
+            isDragging = false;
+            logPanel.style.transition = '';
+            document.body.style.userSelect = '';
+        });
+    }
+
 
     function updateConversationIndices() {
         const items = document.querySelectorAll(SELECTORS.CONVERSATION_ITEM);
@@ -328,22 +453,37 @@
             }
         }
 
+        // Update Log Panel Toggle UI
+        const logBtn = panel.querySelector('.log-toggle');
+        const logStatusText = panel.querySelector('.log-status');
+        if (logBtn && logStatusText) {
+            const isLogVisible = isLogPanelVisible();
+            logBtn.className = 'gtc-toggle-btn log-toggle ' + (isLogVisible ? 'enabled' : 'disabled');
+            logStatusText.textContent = isLogVisible ? 'ON' : 'OFF';
+            const logIcon = logBtn.querySelector('.gtc-icon');
+            if (logIcon) {
+                setInnerHTML(logIcon, isLogVisible ? ICONS.CHECKED : ICONS.UNCHECKED);
+            }
+        }
+
 
         const count = updateConversationIndices();
         const badge = panel.querySelector('.gtc-badge');
         if (badge) {
             badge.textContent = `${count} items`;
         }
-
         const convIdSpan = panel.querySelector('.conversation-id');
-        if(convIdSpan){
+        if (convIdSpan) {
             convIdSpan.textContent = findSelectedConversationId() || 'N/A';
         }
 
         const items = Array.from(document.querySelectorAll(SELECTORS.CONVERSATION_ITEM));
         const selectedIndex = items.findIndex(item => item.classList.contains('selected'));
         if (selectedIndex !== -1) {
-            lastSelectedIndex = selectedIndex;
+            if (lastSelectedIndex !== selectedIndex) {
+                log(`Selected index changed from ${lastSelectedIndex} to ${selectedIndex}.`);
+                lastSelectedIndex = selectedIndex;
+            }
         }
     }
 
@@ -375,6 +515,13 @@
                         <button class="gtc-toggle-btn switch-toggle"><span class="gtc-icon"></span></button>
                     </div>
                 </div>
+                <div class="control-row">
+                    <label>Show Log</label>
+                    <div class="toggle-switch">
+                        <span class="status-text log-status">OFF</span>
+                        <button class="gtc-toggle-btn log-toggle"><span class="gtc-icon"></span></button>
+                    </div>
+                </div>
                 <div class="info-row">
                     <span>Loaded: <span class="gtc-badge">0 items</span></span>
                     <span>ID: <span class="conversation-id">N/A</span></span>
@@ -384,18 +531,22 @@
 
         document.body.appendChild(panel);
 
-        const scrollToggleBtn = panel.querySelector('.scroll-toggle');
-        scrollToggleBtn.addEventListener('click', (e) => {
+        panel.querySelector('.scroll-toggle').addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             toggleAutoScroll();
         });
 
-        const switchToggleBtn = panel.querySelector('.switch-toggle');
-        switchToggleBtn.addEventListener('click', (e) => {
+        panel.querySelector('.switch-toggle').addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             toggleAutoSwitch();
+        });
+
+        panel.querySelector('.log-toggle').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleLogPanelVisibility();
         });
 
         const header = panel.querySelector('.panel-header');
@@ -415,7 +566,7 @@
             e.preventDefault();
             let newX = e.clientX - offset.x;
             let newY = e.clientY - offset.y;
-            
+
             // Clamp position to be within viewport
             newX = Math.max(0, Math.min(newX, window.innerWidth - panel.offsetWidth));
             newY = Math.max(0, Math.min(newY, window.innerHeight - panel.offsetHeight));
@@ -441,19 +592,19 @@
                 panel.style.left = savedPos.left;
                 panel.style.right = 'auto';
             } else {
-                 // Default position if none is saved
+                // Default position if none is saved
                 panel.style.top = '20px';
                 panel.style.right = '20px';
                 panel.style.left = 'auto';
             }
         } catch (e) {
             console.error('[GeminiAutoScroll] Failed to load panel position.', e);
-             // Fallback default position
+            // Fallback default position
             panel.style.top = '20px';
             panel.style.right = '20px';
             panel.style.left = 'auto';
         }
-        
+
         panel.classList.add('ready');
 
         updatePanelUI();
@@ -559,7 +710,7 @@
 
         isProcessing = true;
         updatePanelUI();
-        console.log('[GeminiAutoScroll] Auto-scroll loop started.');
+        log('Auto-scroll loop started.');
 
         let container = getScrollContainer();
 
@@ -591,6 +742,7 @@
             while (isAutoScrollEnabled()) {
                 // Critical Error Check
                 if (checkErrorState()) {
+                    log('Critical error detected ("Couldn\'t load"). Stopping auto-scroll.');
                     console.warn('[GeminiAutoScroll] Critical error detected ("Couldn\'t load"). Stopping auto-scroll.');
                     toggleAutoScroll(); // This will disable it
                     alert('Gemini Auto-Scroll halted: "Couldn’t load recent chats" error detected. Please reload the page.');
@@ -602,7 +754,7 @@
 
                 if (currentContainer && currentContainer !== container) {
                     container = currentContainer;
-                    console.log('[GeminiAutoScroll] New scroll container found:', container);
+                    log(`New scroll container found: ${container.tagName}.${container.className}`);
                     attachObserver(container);
                 }
 
@@ -611,29 +763,23 @@
                     // Since this loop is now a fallback (2s interval), blind scroll is acceptable 
                     // and much more performant than forcing layout calc.
                     scrollDown();
-                } else {
-                    // Only log periodically to avoid spam
-                    if (Math.random() < 0.05) console.warn('[GeminiAutoScroll] No scroll container found.');
                 }
 
                 // Wait loop - Increased to 2s to rely mostly on MutationObserver and reduce CPU usage
                 await sleep(2000);
 
-                // Check for spinner to pause slightly? 
-                // Actually, if we want to "force" past the spinner to trigger loader, 
-                // keeping it at the bottom is usually correct for "endless" lists.
-                // But we can pause briefly if we see a spinner to let it render.
                 if (isSpinnerVisible()) {
                     await sleep(200);
                 }
             }
         } catch (e) {
+            log(`Error in scroll loop: ${e.message}`);
             console.error('[GeminiAutoScroll] Error:', e);
         } finally {
             if (mutationObserver) mutationObserver.disconnect();
             isProcessing = false;
             updatePanelUI();
-            console.log('[GeminiAutoScroll] Auto-scroll loop stopped.');
+            log('Auto-scroll loop stopped.');
         }
     }
 
@@ -644,6 +790,8 @@
 
     const uiObserver = new MutationObserver((mutations) => {
         createDraggablePanel();
+        createLogPanel();
+
 
         // Check for deletions of the selected item
         for (const mutation of mutations) {
@@ -653,12 +801,13 @@
                     const wasSelected = removedNode.classList?.contains('selected') || removedNode.querySelector('.selected');
 
                     if (isConversation && wasSelected && lastSelectedIndex !== -1) {
+                        log(`Selected conversation (index: ${lastSelectedIndex}) was removed from DOM.`);
                         if (isAutoSwitchEnabled()) {
-                            console.log('[GeminiAutoScroll] Selected conversation deleted. Selecting next at index:', lastSelectedIndex);
+                            log('Auto-switch is enabled. Triggering selection of next conversation.');
                             // Execute selection in next tick to allow DOM to settle
                             setTimeout(selectNextConversation, 50);
                         } else {
-                            console.log('[GeminiAutoScroll] Selected conversation deleted, but auto-select is disabled.');
+                            log('Auto-switch is disabled. No action taken.');
                         }
                     }
                 }
@@ -673,17 +822,21 @@
     });
 
     function selectNextConversation() {
+        log('Attempting to select next conversation.');
         const items = document.querySelectorAll(SELECTORS.CONVERSATION_ITEM);
+        log(`Found ${items.length} conversation items.`);
         if (items.length === 0) {
+            log('No conversations found. Aborting selection.');
             return;
         }
 
         // Select the one that is now at the same index, or the last one if we were at the end
         const newIndex = Math.min(lastSelectedIndex, items.length - 1);
+        log(`Calculated new index: ${newIndex} (lastSelectedIndex: ${lastSelectedIndex}, items.length: ${items.length})`);
         const target = items[newIndex];
 
         if (target) {
-            console.log(`[GeminiAutoScroll] Auto-selecting next conversation at index ${newIndex}`);
+            log(`Target element found at index ${newIndex}. Clicking it.`);
             target.click();
             // Ensure focus is returned to the web page from the address bar
             window.focus();
@@ -691,6 +844,9 @@
                 document.activeElement.blur();
             }
             document.body.focus();
+            log('Successfully clicked and focused body.');
+        } else {
+            log(`No target element found at index ${newIndex}.`);
         }
     }
 
@@ -700,6 +856,7 @@
         const currentUrl = window.location.href;
         if (currentUrl !== lastUrl) {
             lastUrl = currentUrl;
+            log(`URL changed to: ${currentUrl}. Re-triggering scroll check.`);
             // Re-trigger scroll when URL changes
             setTimeout(attemptScrollToConversation, 1200);
         }
@@ -710,6 +867,7 @@
 
     setTimeout(() => {
         createDraggablePanel();
+        createLogPanel();
         attemptScrollToConversation();
     }, 2500);
 
