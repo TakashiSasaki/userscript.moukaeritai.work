@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.2
+// @version      0.2.7
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -113,16 +113,23 @@
 
     // Find a fresh reference to the chip in the DOM based on its title
     function findChipByTitle(title) {
+        log(`Querying for chip with title: "${title}"`);
         const chips = Array.from(document.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
-        return chips.find(chip => {
+        log(` -> Found ${chips.length} total chips with selector '${SELECTORS.SIDEBAR_CHIP}'.`);
+        const foundChip = chips.find(chip => {
             const t = chip.querySelector(SELECTORS.CHIP_TITLE);
-            // Match the original title, ignoring any "✅ " prefix we might have added
-            const cleanText = t ? t.textContent.trim().replace(/^✅\s*/, '') : '';
+            const cleanText = t ? t.textContent.trim() : '';
             return cleanText === title;
         });
+        if (foundChip) {
+            log(` -> Success: Found matching chip.`);
+        } else {
+            log(` -> Failure: No chip with title "${title}" found.`);
+        }
+        return foundChip;
     }
 
-    async function processArtifact(targetTitle) {
+    async function processArtifact(targetTitle, isDryRun) {
         // Always re-query the chip to avoid stale element references
         let chip = findChipByTitle(targetTitle);
 
@@ -132,7 +139,7 @@
         }
 
         const titleEl = chip.querySelector(SELECTORS.CHIP_TITLE);
-        const title = titleEl.textContent.trim().replace(/^✅\s*/, '');
+        const title = titleEl.textContent.trim();
 
         log(`--- Start processing artifact: "${title}" ---`);
 
@@ -212,17 +219,26 @@
             // 3. Click Share
             log('Attempting to click Share button...');
             const shareBtn = await waitForElement(SELECTORS.SHARE_BUTTON, document.querySelector(SELECTORS.IMMERSIVE_PANEL));
+            await sleep(1000);
             shareBtn.click();
             log('Share button clicked.');
 
             // 4. Click Export to Docs
             log('Waiting for Export to Docs button in menu...');
             const exportBtn = await waitForElement(SELECTORS.EXPORT_BUTTON);
-            exportBtn.click();
-            log('Export to Docs button clicked.');
+            await sleep(1000);
 
-            log('Wait 5s for export processing...');
-            await sleep(5000);
+            if (isDryRun) {
+                log('[DRY RUN] Skipping final export click.');
+                exportBtn.style.border = '2px solid yellow'; // Visual feedback for testing
+            } else {
+                exportBtn.click();
+                log('Export to Docs button clicked.');
+            }
+
+
+            log(`Wait ${isDryRun ? '1s' : '5s'} for processing...`);
+            await sleep(isDryRun ? 1000 : 5000);
 
             // 6. Close Panel
             const closeBtn = document.querySelector(SELECTORS.PANEL_CLOSE_BUTTON);
@@ -237,15 +253,6 @@
                 log(document.querySelector(SELECTORS.IMMERSIVE_PANEL) ? 'Warning: Panel still in DOM after close request.' : 'Confirmed: Panel removed from DOM.');
             }
 
-            // 7. Mark as processed for this session
-            const finalChip = findChipByTitle(title);
-            if (finalChip) {
-                const finalTitleEl = finalChip.querySelector(SELECTORS.CHIP_TITLE);
-                if (finalTitleEl && !finalTitleEl.textContent.startsWith('✅')) {
-                    finalChip.style.border = '2px solid green';
-                    finalTitleEl.textContent = `✅ ${title}`;
-                }
-            }
             log(`--- Finished processing: "${title}" ---`);
 
         } catch (e) {
@@ -258,26 +265,40 @@
     async function runBatchExport() {
         const logPanelBody = document.getElementById('gemini-log-panel-body');
         if (logPanelBody) {
-            logPanelBody.innerHTML = ''; // Clear previous logs
+            // Clear previous logs safely without using innerHTML to avoid TrustedHTML violation
+            while (logPanelBody.firstChild) {
+                logPanelBody.removeChild(logPanelBody.firstChild);
+            }
         }
-        log(`Batch export started.`);
+
+        const isDryRun = GM_getValue(DRY_RUN_KEY, true);
+        log(`Batch export started. ${isDryRun ? '[DRY RUN]' : '[LIVE RUN]'}`);
+
         if (!isConversationPage()) {
             log('Abort: Not on a conversation page.');
             return;
         }
 
+        log('Querying for sidebar element...');
         let sidebar = document.querySelector(SELECTORS.SIDEBAR);
-        if (!sidebar) {
+        if (sidebar) {
+            log(' -> Sidebar found.');
+        } else {
+            log(' -> Sidebar not found. Attempting to open it...');
             const toggleBtn = document.querySelector(SELECTORS.SIDEBAR_BUTTON);
             if (toggleBtn) {
+                log(' -> Found sidebar toggle button. Clicking it...');
                 toggleBtn.click();
                 try {
                     sidebar = await waitForElement(SELECTORS.SIDEBAR, document, 3000);
-                } catch {
+                    log(' -> Sidebar appeared after click.');
+                } catch (e) {
+                    log('ERROR: Sidebar did not appear after clicking toggle button.');
                     alert('Could not open sidebar.');
                     return;
                 }
             } else {
+                log('ERROR: Sidebar toggle button not found.');
                 alert('Sidebar toggle button not found.');
                 return;
             }
@@ -290,7 +311,7 @@
             const icon = chip.querySelector(SELECTORS.CHIP_ICON_CONTAINER);
             const titleEl = chip.querySelector(SELECTORS.CHIP_TITLE);
             if (icon && icon.getAttribute('fonticon') === 'article' && titleEl) {
-                articleTitles.push(titleEl.textContent.trim().replace(/^✅\s*/, ''));
+                articleTitles.push(titleEl.textContent.trim());
             }
         });
 
@@ -301,7 +322,7 @@
             return;
         }
 
-        const confirmMsg = `Found ${articleTitles.length} 'Article' artifacts.\n\nExport all of them to Google Docs?`;
+        const confirmMsg = `Found ${articleTitles.length} 'Article' artifacts.\n\nExport all of them to Google Docs? ${isDryRun ? '\n\n(Mode: DRY RUN)' : ''}`;
 
         if (!confirm(confirmMsg)) {
             log('Export cancelled by user.');
@@ -313,11 +334,17 @@
              await sleep(1500);
         }
 
+        const cooldownSeconds = parseInt(GM_getValue(COOLDOWN_SECONDS_KEY, 3), 10);
+
         for (let i = 0; i < articleTitles.length; i++) {
             log(`Processing item ${i + 1}/${articleTitles.length}: ${articleTitles[i]}`);
-            await processArtifact(articleTitles[i]);
-            log(`Cooldown before next item (2s)...`);
-            await sleep(2000);
+            await processArtifact(articleTitles[i], isDryRun);
+
+            // Only cooldown if it's not the last item
+            if (i < articleTitles.length - 1) {
+                log(`Cooldown before next item (${cooldownSeconds}s)...`);
+                await sleep(cooldownSeconds * 1000);
+            }
         }
 
         log('BATCH EXPORT COMPLETED.');
@@ -328,6 +355,8 @@
     const PANEL_POSITION_KEY = 'gemini-exporter-panel-pos';
     const LOG_PANEL_POSITION_KEY = 'gemini-exporter-log-pos';
     const LOG_PANEL_VISIBLE_KEY = 'gemini-exporter-log-visible';
+    const DRY_RUN_KEY = 'gemini-exporter-dry-run';
+    const COOLDOWN_SECONDS_KEY = 'gemini-exporter-cooldown-seconds';
 
     function makePanelDraggable(panel, handle, storageKey) {
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
@@ -395,17 +424,50 @@
         `;
 
         const logHeader = document.createElement('div');
-        logHeader.textContent = 'Export Log';
         logHeader.style.cssText = `
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding: 8px 12px;
             cursor: move;
             color: rgba(255, 255, 255, 0.7);
             font-weight: 500;
-            text-align: center;
             font-family: 'Google Sans', sans-serif;
             font-size: 13px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         `;
+
+        const headerTitle = document.createElement('span');
+        headerTitle.textContent = 'Export Log';
+
+        const copyBtn = document.createElement('button');
+        copyBtn.textContent = 'Copy';
+        copyBtn.style.cssText = `
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 11px;
+            cursor: pointer;
+        `;
+        copyBtn.onclick = () => {
+            const logBody = document.getElementById('gemini-log-panel-body');
+            if (!logBody) return;
+            navigator.clipboard.writeText(logBody.innerText).then(() => {
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy';
+                }, 1500);
+            }).catch(err => {
+                log('Error copying to clipboard: ' + err);
+                copyBtn.textContent = 'Error!';
+                 setTimeout(() => {
+                    copyBtn.textContent = 'Copy';
+                }, 2000);
+            });
+        };
+
 
         const logBody = document.createElement('div');
         logBody.id = 'gemini-log-panel-body';
@@ -417,6 +479,8 @@
             font-family: monospace;
         `;
 
+        logHeader.appendChild(headerTitle);
+        logHeader.appendChild(copyBtn);
         logPanel.appendChild(logHeader);
         logPanel.appendChild(logBody);
         document.body.appendChild(logPanel);
@@ -494,33 +558,93 @@
 
         btn.onclick = () => runBatchExport();
 
-        const logToggleContainer = document.createElement('label');
-        logToggleContainer.style.cssText = `
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            font-family: 'Google Sans', sans-serif;
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.8);
-            padding: 4px 8px;
-        `;
-        const logToggleCheckbox = document.createElement('input');
-        logToggleCheckbox.type = 'checkbox';
-        logToggleCheckbox.checked = GM_getValue(LOG_PANEL_VISIBLE_KEY, false);
+        // --- Toggles Container ---
+        const togglesContainer = document.createElement('div');
+        togglesContainer.style.cssText = `display: flex; flex-direction: column; gap: 4px;`;
 
-        logToggleCheckbox.onchange = (e) => {
-            const logPanel = document.getElementById('gemini-log-panel');
-            if (logPanel) {
-                logPanel.style.display = e.target.checked ? 'flex' : 'none';
-            }
-            GM_setValue(LOG_PANEL_VISIBLE_KEY, e.target.checked);
+
+        const createToggle = (key, text, defaultValue) => {
+            const container = document.createElement('label');
+            container.style.cssText = `
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                font-family: 'Google Sans', sans-serif;
+                font-size: 13px;
+                color: rgba(255, 255, 255, 0.8);
+                padding: 2px 8px;
+            `;
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = GM_getValue(key, defaultValue);
+
+            checkbox.onchange = (e) => {
+                GM_setValue(key, e.target.checked);
+                if (key === LOG_PANEL_VISIBLE_KEY) {
+                    const logPanel = document.getElementById('gemini-log-panel');
+                    if (logPanel) {
+                        logPanel.style.display = e.target.checked ? 'flex' : 'none';
+                    }
+                }
+            };
+            container.appendChild(checkbox);
+            container.appendChild(document.createTextNode(text));
+            return container;
         };
-        logToggleContainer.appendChild(logToggleCheckbox);
-        logToggleContainer.appendChild(document.createTextNode('Show Log Panel'));
+
+        const createCooldownInput = (key, text, defaultValue) => {
+            const container = document.createElement('label');
+            container.style.cssText = `
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                cursor: pointer;
+                font-family: 'Google Sans', sans-serif;
+                font-size: 13px;
+                color: rgba(255, 255, 255, 0.8);
+                padding: 2px 8px;
+            `;
+            const numberInput = document.createElement('input');
+            numberInput.type = 'number';
+            numberInput.min = '3'; // Minimum value
+            numberInput.style.cssText = `
+                width: 50px;
+                background-color: rgba(0,0,0,0.3);
+                color: white;
+                border: 1px solid rgba(255,255,255,0.2);
+                border-radius: 4px;
+                padding: 2px 4px;
+                font-size: 13px;
+            `;
+            numberInput.value = GM_getValue(key, defaultValue);
+
+            numberInput.onchange = (e) => {
+                let value = parseInt(e.target.value, 10);
+                if (isNaN(value) || value < 3) {
+                    value = 3;
+                    e.target.value = value;
+                }
+                GM_setValue(key, value);
+            };
+
+            container.appendChild(document.createTextNode(text));
+            container.appendChild(numberInput);
+            return container;
+        };
+
+        const logToggle = createToggle(LOG_PANEL_VISIBLE_KEY, 'Show Log Panel', false);
+        const dryRunToggle = createToggle(DRY_RUN_KEY, 'Dry Run', true);
+        const cooldownInput = createCooldownInput(COOLDOWN_SECONDS_KEY, 'Cooldown (s)', 3);
+
+        togglesContainer.appendChild(dryRunToggle);
+        togglesContainer.appendChild(logToggle);
+        togglesContainer.appendChild(cooldownInput);
+
 
         buttonContainer.appendChild(btn);
-        buttonContainer.appendChild(logToggleContainer);
+        buttonContainer.appendChild(togglesContainer);
 
         panel.appendChild(header);
         panel.appendChild(buttonContainer);
