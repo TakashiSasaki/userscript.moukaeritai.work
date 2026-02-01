@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.8
+// @version      0.2.9
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -341,7 +341,6 @@ if (document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
         }
 
         log('BATCH EXPORT COMPLETED.');
-        alert('Batch export completed.');
     }
 
     // --- UI Injection & Control ---
