@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.2
+// @version      0.2.3
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -124,7 +124,7 @@
         const newState = !isLogPanelVisible();
         localStorage.setItem(CONSTANTS.STORAGE_KEY_LOG_VISIBLE, newState);
         updatePanelUI();
-        const logPanel = document.getElementById('gemini-log-panel');
+        const logPanel = document.getElementById('gemini-auto-scroll-log-panel');
         if (logPanel) {
             logPanel.style.display = newState ? 'flex' : 'none';
         }
@@ -134,7 +134,7 @@
     // --- Log Panel ---
     const log = (message) => {
         if (!isLogPanelVisible()) return;
-        const logPanel = document.getElementById('gemini-log-panel-content');
+        const logPanel = document.getElementById('gemini-auto-scroll-log-panel-content');
         if (logPanel) {
             const timestamp = new Date().toLocaleTimeString();
             const logEntry = document.createElement('div');
@@ -276,7 +276,7 @@
             }
 
             /* --- Log Panel Styles --- */
-            #gemini-log-panel {
+            #gemini-auto-scroll-log-panel {
                 position: fixed;
                 bottom: 20px;
                 right: 20px;
@@ -293,7 +293,7 @@
                 resize: both;
                 overflow: hidden;
             }
-            #gemini-log-panel-header {
+            #gemini-auto-scroll-log-panel-header {
                 padding: 8px 12px;
                 cursor: move;
                 background-color: #333;
@@ -303,7 +303,7 @@
                 user-select: none;
                 border-bottom: 1px solid #444;
             }
-            #gemini-log-panel-content {
+            #gemini-auto-scroll-log-panel-content {
                 flex-grow: 1;
                 overflow-y: auto;
                 padding: 10px;
@@ -331,13 +331,13 @@
     }
 
     function createLogPanel() {
-        if (document.getElementById('gemini-log-panel')) return;
+        if (document.getElementById('gemini-auto-scroll-log-panel')) return;
 
         const logPanel = document.createElement('div');
-        logPanel.id = 'gemini-log-panel';
+        logPanel.id = 'gemini-auto-scroll-log-panel';
         setInnerHTML(logPanel, `
-            <div id="gemini-log-panel-header">Log Panel</div>
-            <div id="gemini-log-panel-content"></div>
+            <div id="gemini-auto-scroll-log-panel-header">Log Panel</div>
+            <div id="gemini-auto-scroll-log-panel-content"></div>
         `);
         document.body.appendChild(logPanel);
 
@@ -346,7 +346,7 @@
         }
 
         // --- Dragging Logic ---
-        const header = logPanel.querySelector('#gemini-log-panel-header');
+        const header = logPanel.querySelector('#gemini-auto-scroll-log-panel-header');
         let isDragging = false;
         let offset = { x: 0, y: 0 };
 
