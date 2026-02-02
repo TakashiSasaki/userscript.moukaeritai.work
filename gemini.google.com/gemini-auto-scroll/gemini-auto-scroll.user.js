@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.11
+// @version      0.2.12
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -544,15 +544,21 @@
             // If we are on the root /app/ path (no current ID) and Auto-Switch is ON,
             // we should select the FIRST conversation in the list.
             if (autoSwitchEnabled && allItems.length > 0) {
-                // Determine ID of the first item
-                const firstItem = allItems[0];
+                // Determine which item to select. Try to stay at the same index (or close to it)
+                // to mimic "next" behavior relative to the deleted item.
+                let targetIndex = 0;
+                if (lastSelectedIndex >= 0) {
+                    targetIndex = Math.min(lastSelectedIndex, allItems.length - 1);
+                }
+
+                const targetItem = allItems[targetIndex];
                 let nextId = null;
-                const jslog = firstItem.getAttribute('jslog');
+                const jslog = targetItem.getAttribute('jslog');
                 if (jslog) {
                     const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/[\"\']([a-f0-9]{16})[\"\']/);
                     if (match) {
                         nextId = match[1];
-                        log(`findNextConversationId: On root path, Auto-Switch Enabled. Selecting first item: ${nextId}`);
+                        log(`findNextConversationId: On root path, Auto-Switch Enabled. Target index: ${targetIndex} (last: ${lastSelectedIndex}). Selected ID: ${nextId}`);
                         return nextId;
                     }
                 }
@@ -1024,8 +1030,8 @@
         }, 500);
     });
 
-    function selectNextConversation() {
-        log('Attempting to select next conversation.');
+    function selectNextConversation(retryCount = 0) {
+        log(`Attempting to select next conversation (attempt ${retryCount + 1}).`);
 
         // Use the centralized logic to find the appropriate next ID
         const nextId = findNextConversationId();
@@ -1042,16 +1048,23 @@
                 log(`Target element found for ID ${nextId}. Clicking it.`);
                 target.click();
             } else {
-                // Element not found in DOM (virtual scrolling?), but we have an ID.
-                // Navigate directly via URL if click is not possible.
-                log(`Target element for ID ${nextId} not found in DOM. Navigating via URL.`);
-                window.location.href = `https://gemini.google.com/app/${nextId}`;
+                if (retryCount < 5) {
+                    log(`Target element for ID ${nextId} not found in DOM. Retrying in 200ms...`);
+                    setTimeout(() => selectNextConversation(retryCount + 1), 200);
+                } else {
+                    // Element not found in DOM after retries.
+                    // Navigate directly via URL as last resort.
+                    log(`Target element for ID ${nextId} not found in DOM after retries. Navigating via URL.`);
+                    window.location.href = `https://gemini.google.com/app/${nextId}`;
+                }
             }
         } else {
-            log('No next conversation ID determined by findNextConversationId.');
-
-            // Fallback: If we are root but findNextConversationId returned null (maybe list not loaded yet?), retry once?
-            // For now, just log.
+            if (retryCount < 3) {
+                log('No next conversation ID determined yet. Retrying...');
+                setTimeout(() => selectNextConversation(retryCount + 1), 200);
+            } else {
+                log('No next conversation ID determined by findNextConversationId after retries.');
+            }
         }
     }
 
