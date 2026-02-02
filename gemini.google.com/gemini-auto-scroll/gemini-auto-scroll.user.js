@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.10
+// @version      0.2.11
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -114,6 +114,17 @@
         const newState = !isAutoSwitchEnabled();
         localStorage.setItem(CONSTANTS.STORAGE_KEY_AUTOSWITCH, newState);
         updatePanelUI();
+    }
+
+    function isAutoSwitchEnabled() {
+        return localStorage.getItem('GEMINI_AUTO_SCROLL_SWITCH_NEXT') === 'true';
+    }
+
+    function toggleAutoSwitch() {
+        const newState = !isAutoSwitchEnabled();
+        localStorage.setItem('GEMINI_AUTO_SCROLL_SWITCH_NEXT', newState);
+        updatePanelUI();
+        log(`Auto-Switch to Next: ${newState ? 'Enabled' : 'Disabled'}`);
     }
 
     function isLogPanelVisible() {
@@ -523,16 +534,35 @@
 
 
     function findNextConversationId() {
+        // Check if Auto-Switch is enabled
+        const autoSwitchEnabled = isAutoSwitchEnabled();
+
         const currentId = getConversationIdFromUrl();
+        const allItems = getConversationItems();
+
         if (!currentId) {
-            log('findNextConversationId: Could not get current ID from URL.');
+            // If we are on the root /app/ path (no current ID) and Auto-Switch is ON,
+            // we should select the FIRST conversation in the list.
+            if (autoSwitchEnabled && allItems.length > 0) {
+                // Determine ID of the first item
+                const firstItem = allItems[0];
+                let nextId = null;
+                const jslog = firstItem.getAttribute('jslog');
+                if (jslog) {
+                    const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/[\"\']([a-f0-9]{16})[\"\']/);
+                    if (match) {
+                        nextId = match[1];
+                        log(`findNextConversationId: On root path, Auto-Switch Enabled. Selecting first item: ${nextId}`);
+                        return nextId;
+                    }
+                }
+            }
+            log('findNextConversationId: Could not get current ID from URL and Auto-Switch criteria not met.');
             return null;
         }
 
-        const allItems = getConversationItems();
         if (allItems.length === 0) {
-            log('findNextConversationId: No items found using any selector strategy.');
-            log('Tried: div[data-test-id="conversation"], div[jslog*="c_"]');
+            // log('findNextConversationId: No items found using any selector strategy.');
         }
         const currentIndex = allItems.findIndex(item => {
             const jslog = item.getAttribute('jslog');
@@ -679,9 +709,9 @@
                     </div>
                 </div>
                 <div class="control-row">
-                    <label>Auto-Select Next</label>
+                    <label>Auto-Switch Next</label>
                     <div class="toggle-switch">
-                        <span class="status-text switch-status">ON</span>
+                        <span class="status-text switch-status">OFF</span>
                         <button class="gtc-toggle-btn switch-toggle"><span class="gtc-icon"></span></button>
                     </div>
                 </div>
@@ -996,30 +1026,32 @@
 
     function selectNextConversation() {
         log('Attempting to select next conversation.');
-        const items = getConversationItems();
-        log(`Found ${items.length} conversation items.`);
-        if (items.length === 0) {
-            log('No conversations found. Aborting selection.');
-            return;
-        }
 
-        // Select the one that is now at the same index, or the last one if we were at the end
-        const newIndex = Math.min(lastSelectedIndex, items.length - 1);
-        log(`Calculated new index: ${newIndex} (lastSelectedIndex: ${lastSelectedIndex}, items.length: ${items.length})`);
-        const target = items[newIndex];
+        // Use the centralized logic to find the appropriate next ID
+        const nextId = findNextConversationId();
 
-        if (target) {
-            log(`Target element found at index ${newIndex}. Clicking it.`);
-            target.click();
-            // Ensure focus is returned to the web page from the address bar
-            window.focus();
-            if (document.activeElement) {
-                document.activeElement.blur();
+        if (nextId) {
+            // Find the element with this ID and click it
+            const items = getConversationItems();
+            const target = items.find(item => {
+                const jslog = item.getAttribute('jslog');
+                return jslog && jslog.includes(nextId);
+            });
+
+            if (target) {
+                log(`Target element found for ID ${nextId}. Clicking it.`);
+                target.click();
+            } else {
+                // Element not found in DOM (virtual scrolling?), but we have an ID.
+                // Navigate directly via URL if click is not possible.
+                log(`Target element for ID ${nextId} not found in DOM. Navigating via URL.`);
+                window.location.href = `https://gemini.google.com/app/${nextId}`;
             }
-            document.body.focus();
-            log('Successfully clicked and focused body.');
         } else {
-            log(`No target element found at index ${newIndex}.`);
+            log('No next conversation ID determined by findNextConversationId.');
+
+            // Fallback: If we are root but findNextConversationId returned null (maybe list not loaded yet?), retry once?
+            // For now, just log.
         }
     }
 
@@ -1030,6 +1062,13 @@
         if (currentUrl !== lastUrl) {
             lastUrl = currentUrl;
             log(`URL changed to: ${currentUrl}. Re-triggering scroll check.`);
+
+            // If on root path and Auto-Switch is enabled, trigger selection
+            if (isAutoSwitchEnabled() && !getConversationIdFromUrl()) {
+                log('URL is root and Auto-Switch is enabled. Attempting to select next conversation.');
+                setTimeout(selectNextConversation, 1500); // Wait for list reload
+            }
+
             // Re-trigger scroll when URL changes
             setTimeout(attemptScrollToConversation, 1200);
         }
