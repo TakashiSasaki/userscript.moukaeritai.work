@@ -22,7 +22,7 @@ tabBtns.forEach(btn => {
 
 // --- Dynamic Version Fetching ---
 async function fetchAndApplyLatestVersions() {
-    const buttons = document.querySelectorAll('.install-button');
+    const projectItems = document.querySelectorAll('.project-item');
 
     const fetchVersion = async (url) => {
         try {
@@ -40,42 +40,51 @@ async function fetchAndApplyLatestVersions() {
         }
     };
 
-    const updateButton = (btn, version) => {
-        // Restore original HTML content before updating
-        if (btn.dataset.originalHtml) {
-            btn.innerHTML = btn.dataset.originalHtml;
-        }
+    const updateServerVersionUI = (item, version) => {
+        const badge = item.querySelector('.version-badge.latest');
+        const installBtn = item.querySelector('.install-button');
+
+        if (!badge) return;
 
         if (!version) {
-            btn.textContent = 'Version N/A';
-            btn.style.backgroundColor = '#dc3545'; // Red for error
+            badge.textContent = 'Error';
+            badge.classList.add('outdated');
         } else {
-            const currentText = btn.innerHTML;
-            const updatedText = currentText.replace(/Install/g, `Install (v${version})`);
-            btn.innerHTML = updatedText;
-            btn.dataset.version = version; // Store for later comparison
+            badge.textContent = `v${version}`;
+            badge.classList.add('latest');
+            // Store version on the item for comparison logic
+            item.dataset.serverVersion = version;
+
+            // Trigger a re-evaluation of the button state
+            updateButtonState(item);
         }
-        // Re-enable the button
-        btn.style.pointerEvents = 'auto';
-        btn.style.backgroundColor = ''; // Revert to default stylesheet color
     };
 
-    const promises = Array.from(buttons).map(async (btn) => {
-        const scriptUrl = btn.href;
-        if (scriptUrl) {
-            const version = await fetchVersion(scriptUrl);
-            updateButton(btn, version);
+    const promises = Array.from(projectItems).map(async (item) => {
+        const btn = item.querySelector('.install-button');
+        if (btn && btn.href) {
+            const version = await fetchVersion(btn.href);
+            updateServerVersionUI(item, version);
         }
     });
 
     await Promise.all(promises);
 }
 
+function updateButtonState(item) {
+    const installBtn = item.querySelector('.install-button');
+    if (!installBtn) return;
 
-// --- Installed Script Detection ---
-document.addEventListener('userscript-check-installed', (event) => {
-    const { name, version: installedVersion } = event.detail;
-    const buttons = document.querySelectorAll('.install-button');
+    const serverVersion = item.dataset.serverVersion;
+    const installedVersion = item.dataset.installedVersion;
+
+    if (!installedVersion) {
+        // Case: Not installed
+        installBtn.innerHTML = installBtn.dataset.originalContent || installBtn.innerHTML; // Restore icon+text
+        installBtn.style.backgroundColor = ''; // Default green
+        installBtn.classList.remove('installed');
+        return;
+    }
 
     const compareVersions = (v1, v2) => {
         if (!v1 || !v2) return 0;
@@ -90,44 +99,93 @@ document.addEventListener('userscript-check-installed', (event) => {
         return 0;
     };
 
-    buttons.forEach(btn => {
-        if (btn.getAttribute('data-script-name') === name) {
-            const serverVersion = btn.dataset.version;
+    if (serverVersion && compareVersions(serverVersion, installedVersion) > 0) {
+        // Case: Update available
+        installBtn.innerHTML = `
+            <svg height="16" viewBox="0 0 24 24" width="16"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            Update
+        `;
+        installBtn.style.backgroundColor = '#f39c12'; // Orange
+    } else {
+        // Case: Up to date (or server version unknown)
+        installBtn.textContent = 'Installed'; // Simplify text
+        installBtn.style.backgroundColor = '#6c757d'; // Grey
+    }
+}
 
-            if (serverVersion && compareVersions(serverVersion, installedVersion) > 0) {
-                btn.innerHTML = `<svg height="16" viewBox="0 0 24 24" width="16"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Update (v${serverVersion})`;
-                btn.style.backgroundColor = '#f39c12';
-                btn.style.boxShadow = '0 4px 15px rgba(243, 156, 18, 0.4)';
-                btn.style.pointerEvents = 'auto';
-                btn.classList.remove('installed');
-            } else {
-                btn.textContent = `Installed (v${installedVersion})`;
-                btn.style.backgroundColor = '#6c757d';
-                btn.style.boxShadow = 'none';
-                btn.style.pointerEvents = 'none';
-                btn.classList.add('installed');
+
+// --- Installed Script Detection ---
+document.addEventListener('userscript-check-installed', (event) => {
+    const { name, version: installedVersion } = event.detail;
+    const projectItems = document.querySelectorAll('.project-item');
+
+    projectItems.forEach(item => {
+        const btn = item.querySelector('.install-button');
+        if (btn && btn.getAttribute('data-script-name') === name) {
+
+            // Update Installed Version Badge
+            const badge = item.querySelector('.version-badge.installed');
+            if (badge) {
+                badge.textContent = `v${installedVersion}`;
+                badge.classList.remove('outdated'); // Reset
+                badge.classList.add('installed');
             }
+
+            // Store state
+            item.dataset.installedVersion = installedVersion;
+
+            // Update Button
+            updateButtonState(item);
         }
     });
 });
 
 async function initialize() {
-    // 1. Set initial "loading" state for all buttons
-    const buttons = document.querySelectorAll('.install-button');
-    buttons.forEach(btn => {
-        btn.dataset.originalHtml = btn.innerHTML; // Save original content (icon + "Install")
-        btn.textContent = 'Checking...';
-        btn.style.backgroundColor = '#6c757d'; // Grey out
-        btn.style.pointerEvents = 'none'; // Disable click
+    const projectItems = document.querySelectorAll('.project-item');
+
+    // 1. Inject UI Structure
+    projectItems.forEach(item => {
+        const installBtn = item.querySelector('.install-button');
+        if (!installBtn) return;
+
+        // Save original button content once
+        installBtn.dataset.originalContent = installBtn.innerHTML;
+
+        // Create Footer Container
+        const footer = document.createElement('div');
+        footer.className = 'project-footer';
+
+        // Create Version Info Area
+        const versionInfo = document.createElement('div');
+        versionInfo.className = 'version-info';
+        versionInfo.innerHTML = `
+            <div class="version-row">
+                <span class="version-label">Latest:</span>
+                <span class="version-badge latest">...</span>
+            </div>
+            <div class="version-row">
+                <span class="version-label">Installed:</span>
+                <span class="version-badge installed">-</span>
+            </div>
+        `;
+
+        // Move button into footer
+        footer.appendChild(versionInfo);
+
+        // We need to clone or move the button. Moving is better to keep event listeners if any (though currently none are attached via JS except href)
+        // But we need to insert the footer into the item, and move the button into the footer.
+        item.appendChild(footer);
+        footer.appendChild(installBtn);
     });
 
-    // 2. Fetch latest versions and update buttons
+
+    // 2. Fetch latest versions
     await fetchAndApplyLatestVersions();
 
-    // 3. Ping installed userscripts after a delay to check their versions
+    // 3. Ping installed userscripts
     setTimeout(() => {
         document.dispatchEvent(new CustomEvent('userscript-ping'));
-    }, 1000); // 1-second delay after fetching is done
+    }, 1000);
 }
 
 // --- Service Worker ---

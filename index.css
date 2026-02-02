@@ -162,3 +162,75 @@ footer {
 footer a {
     color: #0056b3;
 }
+
+/* --- New Version Info Styles --- */
+.project-item {
+    padding-bottom: 70px; /* Make space for absolute footer if needed, or just let flex handle it */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.project-footer {
+    border-top: 1px solid #f1f3f4;
+    padding-top: 12px;
+    margin-top: auto; /* Push to bottom */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.version-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.8em;
+    color: #5f6368;
+}
+
+.version-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.version-label {
+    min-width: 55px; /* Alignment */
+}
+
+.version-badge {
+    background-color: #e8eaed; /* Default/Loading */
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-weight: bold;
+}
+
+.version-badge.latest {
+    background-color: #e6f4ea;
+    color: #137333;
+}
+
+.version-badge.installed {
+    background-color: #e8f0fe;
+    color: #1967d2;
+}
+
+.version-badge.outdated {
+    background-color: #fce8e6;
+    color: #c5221f;
+}
+
+.version-badge.active {
+    /* For currently processed item highlights if needed */
+}
+
+/* Adjust install button to fit in footer */
+.install-button {
+    position: static; /* Remove absolute positioning */
+    margin: 0;
+    padding: 6px 12px;
+    font-size: 0.85em;
+    /* keep other styles */
+}
