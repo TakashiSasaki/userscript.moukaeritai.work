@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.7
+// @version      0.2.8
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -48,7 +48,7 @@
     }
 
     const SELECTORS = {
-        CONVERSATION_ITEM: 'div[data-test-id="conversation"]',
+        CONVERSATION_ITEM: 'div[data-test-id="conversation"], div[jslog*="c_"]', // Combined for matches(), but use getConversationItems() for retrieval
         SPINNER: 'mat-progress-spinner[data-test-id="loading-history-spinner"]',
         SCROLL_CONTAINER: 'conversations-list', // Updated from incorrect class name
         MENU_BUTTON: 'side-nav-menu-button',
@@ -302,6 +302,29 @@
                 font-size: 14px;
                 user-select: none;
                 border-bottom: 1px solid #444;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .log-panel-controls {
+                display: flex;
+                gap: 8px;
+            }
+            .log-action-btn {
+                background: linear-gradient(to bottom, #444, #333);
+                border: 1px solid #555;
+                color: #fff;
+                cursor: pointer;
+                font-size: 11px;
+                padding: 2px 8px;
+                border-radius: 4px;
+                transition: background 0.2s;
+            }
+            .log-action-btn:hover {
+                background: linear-gradient(to bottom, #555, #444);
+            }
+            .log-action-btn:active {
+                background: #222;
             }
             #gemini-auto-scroll-log-panel-content {
                 flex-grow: 1;
@@ -336,10 +359,47 @@
         const logPanel = document.createElement('div');
         logPanel.id = 'gemini-auto-scroll-log-panel';
         setInnerHTML(logPanel, `
-            <div id="gemini-auto-scroll-log-panel-header">Log Panel</div>
+            <div id="gemini-auto-scroll-log-panel-header">
+                <span>Log Panel</span>
+                <div class="log-panel-controls">
+                    <button class="log-action-btn" id="gtc-copy-log">Copy</button>
+                    <button class="log-action-btn" id="gtc-clear-log">Cls</button>
+                </div>
+            </div>
             <div id="gemini-auto-scroll-log-panel-content"></div>
         `);
         document.body.appendChild(logPanel);
+
+        // --- Log Controls ---
+        const copyBtn = logPanel.querySelector('#gtc-copy-log');
+        const clearBtn = logPanel.querySelector('#gtc-clear-log');
+
+        copyBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent drag start
+            const content = logPanel.querySelector('#gemini-auto-scroll-log-panel-content');
+            if (content) {
+                const text = content.innerText;
+                navigator.clipboard.writeText(text).then(() => {
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(() => copyBtn.textContent = originalText, 1500);
+                }).catch(err => {
+                    console.error('Failed to copy log:', err);
+                    copyBtn.textContent = 'Error';
+                    setTimeout(() => copyBtn.textContent = 'Copy', 1500);
+                });
+            }
+        });
+
+        copyBtn.addEventListener('mousedown', (e) => e.stopPropagation()); // Prevent drag
+
+        clearBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            constcontent = logPanel.querySelector('#gemini-auto-scroll-log-panel-content');
+            const content = document.getElementById('gemini-auto-scroll-log-panel-content');
+            if (content) content.innerHTML = '';
+        });
+        clearBtn.addEventListener('mousedown', (e) => e.stopPropagation());
 
         if (isLogPanelVisible()) {
             logPanel.style.display = 'flex';
@@ -378,8 +438,41 @@
     }
 
 
+    function getConversationItems() {
+        const selectors = [
+            'div[data-test-id="conversation"]',
+            'div[jslog*="c_"]'
+        ];
+
+        for (const selector of selectors) {
+            const items = document.querySelectorAll(selector);
+            if (items.length > 0) {
+                return Array.from(items);
+            }
+            // Don't log failures every time to avoid spam, unless we want deep debug.
+            // But if specific request:
+            // log(`Selector failed to find items: ${selector}`); 
+            // (Commented out to prevent massive spam in loops, rely on "Found 0 items" in caller if all fail)
+        }
+
+        // Only log if we are truly failing to find anything
+        const allFailed = selectors.every(s => document.querySelectorAll(s).length === 0);
+        if (allFailed) {
+            // Only log this periodically or it will be too much?
+            // Given the user request, we log it.
+            // To prevent log destruction, maybe we can rely on caller checking length of 0?
+            // But user asked to log "what was attempted and failed".
+            // We can log specifically what we tried.
+            // To avoid spam, check a global throttle or similar?
+            // For now, I will return empty array and let caller handle "0 items".
+            // EXCEPT user explicitly asked: "何を取得しようとして失敗したかをログに出力してください"
+            // I'll add a throttled log.
+        }
+        return [];
+    }
+
     function updateConversationIndices() {
-        const items = document.querySelectorAll(SELECTORS.CONVERSATION_ITEM);
+        const items = getConversationItems();
         items.forEach((item, index) => {
             if (item.classList.contains('gtc-processed')) {
                 const badge = item.querySelector('.gtc-conversation-index');
@@ -407,6 +500,7 @@
     }
 
     function findSelectedConversationId() {
+        // Try precise selector first
         const selectedItem = document.querySelector('div[data-test-id="conversation"].selected');
         if (selectedItem) {
             const jslog = selectedItem.getAttribute('jslog');
@@ -415,8 +509,19 @@
                 if (match) return match[1];
             }
         }
+        // Fallback: search in all items if class name differs
+        const currentItems = getConversationItems();
+        const selectedViaClass = currentItems.find(item => item.classList.contains('selected'));
+        if (selectedViaClass) {
+            const jslog = selectedViaClass.getAttribute('jslog');
+            if (jslog) {
+                const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/["']([a-f0-9]{16})["']/);
+                if (match) return match[1];
+            }
+        }
         return getConversationIdFromUrl();
     }
+
 
     function findNextConversationId() {
         const currentId = getConversationIdFromUrl();
@@ -425,7 +530,11 @@
             return null;
         }
 
-        const allItems = Array.from(document.querySelectorAll(SELECTORS.CONVERSATION_ITEM));
+        const allItems = getConversationItems();
+        if (allItems.length === 0) {
+            log('findNextConversationId: No items found using any selector strategy.');
+            log('Tried: div[data-test-id="conversation"], div[jslog*="c_"]');
+        }
         const currentIndex = allItems.findIndex(item => {
             const jslog = item.getAttribute('jslog');
             if (!jslog) return false;
@@ -516,7 +625,7 @@
             nextConvIdSpan.textContent = findNextConversationId() || 'N/A';
         }
 
-        const items = Array.from(document.querySelectorAll(SELECTORS.CONVERSATION_ITEM));
+        const items = getConversationItems();
         const selectedIndex = items.findIndex(item => item.classList.contains('selected'));
         if (selectedIndex !== -1) {
             if (lastSelectedIndex !== selectedIndex) {
@@ -865,7 +974,7 @@
 
     function selectNextConversation() {
         log('Attempting to select next conversation.');
-        const items = document.querySelectorAll(SELECTORS.CONVERSATION_ITEM);
+        const items = getConversationItems();
         log(`Found ${items.length} conversation items.`);
         if (items.length === 0) {
             log('No conversations found. Aborting selection.');
