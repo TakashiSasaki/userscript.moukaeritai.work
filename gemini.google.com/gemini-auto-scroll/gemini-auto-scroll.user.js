@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.8
+// @version      0.2.9
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -50,7 +50,7 @@
     const SELECTORS = {
         CONVERSATION_ITEM: 'div[data-test-id="conversation"], div[jslog*="c_"]', // Combined for matches(), but use getConversationItems() for retrieval
         SPINNER: 'mat-progress-spinner[data-test-id="loading-history-spinner"]',
-        SCROLL_CONTAINER: 'conversations-list', // Updated from incorrect class name
+        SCROLL_CONTAINER: '.conversations-container, conversations-list', // Updated to target the inner container first
         MENU_BUTTON: 'side-nav-menu-button',
         ERROR_SNACKBAR: 'mat-snack-bar-container',
         ERROR_LABEL: '.mat-mdc-snack-bar-label'
@@ -439,35 +439,34 @@
 
 
     function getConversationItems() {
+        // Strategy 1: Scope search to the conversations list container (High precision)
+        // Removed broader containers (side-navigation-content, bard-sidenav) to avoid picking up Bot items
+        let container = document.querySelector('conversations-list') ||
+            document.querySelector('.conversations-container');
+
         const selectors = [
             'div[data-test-id="conversation"]',
-            'div[jslog*="c_"]'
+            // Exclude bot items which have data-test-id="item"
+            'div[jslog*="c_"]:not([data-test-id="item"])'
         ];
 
+        if (container) {
+            for (const selector of selectors) {
+                const items = container.querySelectorAll(selector);
+                if (items.length > 0) {
+                    return Array.from(items);
+                }
+            }
+        }
+
+        // Strategy 2: Fallback to document search if container not found or empty (Lower precision but safer)
         for (const selector of selectors) {
             const items = document.querySelectorAll(selector);
             if (items.length > 0) {
                 return Array.from(items);
             }
-            // Don't log failures every time to avoid spam, unless we want deep debug.
-            // But if specific request:
-            // log(`Selector failed to find items: ${selector}`); 
-            // (Commented out to prevent massive spam in loops, rely on "Found 0 items" in caller if all fail)
         }
 
-        // Only log if we are truly failing to find anything
-        const allFailed = selectors.every(s => document.querySelectorAll(s).length === 0);
-        if (allFailed) {
-            // Only log this periodically or it will be too much?
-            // Given the user request, we log it.
-            // To prevent log destruction, maybe we can rely on caller checking length of 0?
-            // But user asked to log "what was attempted and failed".
-            // We can log specifically what we tried.
-            // To avoid spam, check a global throttle or similar?
-            // For now, I will return empty array and let caller handle "0 items".
-            // EXCEPT user explicitly asked: "何を取得しようとして失敗したかをログに出力してください"
-            // I'll add a throttled log.
-        }
         return [];
     }
 
@@ -539,20 +538,43 @@
             const jslog = item.getAttribute('jslog');
             if (!jslog) return false;
             const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/["']([a-f0-9]{16})["']/);
-            return match && match[1] === currentId;
+            if (match && match[1] === currentId) {
+                return true;
+            }
+            return false;
         });
 
-        log(`findNextConversationId: Found ${allItems.length} items, currentIndex: ${currentIndex}`);
+        if (currentIndex === -1) {
+            log(`findNextConversationId: Current ID ${currentId} not found in list.`);
+            // Debug: Log the first few IDs found to understand mismatch
+            const debugIds = allItems.slice(0, 5).map(item => {
+                const jslog = item.getAttribute('jslog');
+                const match = jslog && (jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/["']([a-f0-9]{16})["']/));
+                return match ? match[1] : 'unknown';
+            });
+            log(`Top 5 item IDs in list: ${debugIds.join(', ')}... (Total: ${allItems.length})`);
+        } else {
+            log(`findNextConversationId: Found ${allItems.length} items, currentIndex: ${currentIndex}`);
+        }
 
-        if (currentIndex !== -1 && currentIndex < allItems.length - 1) {
-            const nextItem = allItems[currentIndex + 1];
-            if (nextItem) {
-                const jslog = nextItem.getAttribute('jslog');
-                if (jslog) {
-                    const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/["']([a-f0-9]{16})["']/);
-                    if (match) {
-                        log(`- Next conversation ID found: ${match[1]}`);
-                        return match[1];
+        if (currentIndex !== -1) {
+            // Search forward from the current item
+            for (let i = currentIndex + 1; i < allItems.length; i++) {
+                const nextItem = allItems[i];
+                if (nextItem) {
+                    const jslog = nextItem.getAttribute('jslog');
+                    if (jslog) {
+                        const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/["']([a-f0-9]{16})["']/);
+                        if (match) {
+                            const nextId = match[1];
+                            if (nextId !== currentId) {
+                                log(`- Next conversation ID found: ${nextId} (at index ${i})`);
+                                return nextId;
+                            } else {
+                                // This is a duplicate ID entry in the list, skip it.
+                                // log(`- Skipped duplicate ID at index ${i}`);
+                            }
+                        }
                     }
                 }
             }
