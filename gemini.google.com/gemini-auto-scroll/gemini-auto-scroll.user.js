@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.9
+// @version      0.2.10
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -445,7 +445,7 @@
             document.querySelector('.conversations-container');
 
         const selectors = [
-            'div[data-test-id="conversation"]',
+            '[data-test-id="conversation"]',
             // Exclude bot items which have data-test-id="item"
             'div[jslog*="c_"]:not([data-test-id="item"])'
         ];
