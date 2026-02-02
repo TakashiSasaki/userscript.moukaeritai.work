@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.6
+// @version      0.2.7
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -33,7 +33,7 @@
         document.addEventListener('userscript-ping', report);
         return;
     }
-    if (!/^\/app\/[a-f0-9]{16}/.test(location.pathname)) return;
+    if (!/^\/app/.test(location.pathname)) return;
 
     // --- Tampermonkey Menu ---
     if (typeof GM_registerMenuCommand !== 'undefined') {
@@ -48,7 +48,7 @@
     }
 
     const SELECTORS = {
-        CONVERSATION_ITEM: 'div[jslog*="c_"]',
+        CONVERSATION_ITEM: 'div[data-test-id="conversation"]',
         SPINNER: 'mat-progress-spinner[data-test-id="loading-history-spinner"]',
         SCROLL_CONTAINER: 'conversations-list', // Updated from incorrect class name
         MENU_BUTTON: 'side-nav-menu-button',
@@ -419,21 +419,30 @@
     }
 
     function findNextConversationId() {
-        log('findNextConversationId called');
-        const allItems = Array.from(document.querySelectorAll(SELECTORS.CONVERSATION_ITEM));
-        const selectedIndex = allItems.findIndex(item => item.classList.contains('selected'));
-        log(`- Found ${allItems.length} items, selectedIndex: ${selectedIndex}`);
+        const currentId = getConversationIdFromUrl();
+        if (!currentId) {
+            log('findNextConversationId: Could not get current ID from URL.');
+            return null;
+        }
 
-        if (selectedIndex !== -1 && selectedIndex < allItems.length - 1) {
-            const nextItem = allItems[selectedIndex + 1];
+        const allItems = Array.from(document.querySelectorAll(SELECTORS.CONVERSATION_ITEM));
+        const currentIndex = allItems.findIndex(item => {
+            const jslog = item.getAttribute('jslog');
+            if (!jslog) return false;
+            const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/["']([a-f0-9]{16})["']/);
+            return match && match[1] === currentId;
+        });
+
+        log(`findNextConversationId: Found ${allItems.length} items, currentIndex: ${currentIndex}`);
+
+        if (currentIndex !== -1 && currentIndex < allItems.length - 1) {
+            const nextItem = allItems[currentIndex + 1];
             if (nextItem) {
-                log('- Found nextItem');
                 const jslog = nextItem.getAttribute('jslog');
-                log(`- jslog attribute: ${jslog}`);
                 if (jslog) {
                     const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/["']([a-f0-9]{16})["']/);
                     if (match) {
-                        log(`- Match found: ${match[1]}`);
+                        log(`- Next conversation ID found: ${match[1]}`);
                         return match[1];
                     }
                 }
