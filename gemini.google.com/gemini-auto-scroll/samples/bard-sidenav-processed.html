@@ -1,0 +1,850 @@
+<bard-sidenav class="ng-tns-c3698178955-3 ng-trigger ng-trigger-widthTransition mystuff-side-nav-update disable-onload-animations ng-star-inserted" data-hveid="0" data-ved="0CAAQ3s4KahcKEwjFq-Gm67mSAxUAAAAAHQAAAAAQAw" decode-data-ved="1" jslog="173918;track:impression,attention" role="navigation" style="width: var(--bard-sidenav-open-width);"><side-navigation-content class="ia-redesign ng-star-inserted" style="--side-nav-transition-duration: 300ms; --side-nav-open-close-animation-curve: cubic-bezier(0.2, 0, 0, 1); --side-nav-open-item-opacity-duration: 150ms; --side-nav-open-item-opacity-delay: 100ms; --side-nav-close-item-opacity-duration: 100ms; --side-nav-open-close-opacity-animation-curve: cubic-bezier(0, 0, 0, 0);">
+<div class="sidenav-with-history-container disable-onload-animations side-nav-mystuff-update ng-star-inserted expanded content-loaded">
+<search-nav-button class="search-button-desktop ng-tns-c176554018-6 ng-star-inserted" jslog="259052;track:generic_click,impression"><button aria-describedby="cdk-describedby-message-ng-1-4" aria-label="検索" cdk-describedby-host="ng-1" class="mdc-icon-button mat-mdc-icon-button mat-mdc-button-base mat-mdc-tooltip-trigger search-button ng-tns-c176554018-6 ng-trigger ng-trigger-searchNavButtonVisibilityAnimation mat-unthemed _mat-animation-noopable" mat-ripple-loader-class-name="mat-mdc-button-ripple" style="visibility: visible;"><span class="mat-mdc-button-persistent-ripple mdc-icon-button__ripple"></span><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="search" data-mat-icon-type="font" fonticon="search" role="img"></mat-icon><span class="mat-focus-indicator"></span><span class="mat-mdc-button-touch-target"></span></button></search-nav-button>
+<div class="overflow-container" data-test-id="overflow-container">
+<mat-action-list aria-disabled="false" class="mat-mdc-action-list mat-mdc-list-base mdc-list top-action-list ng-star-inserted" role="group"><side-nav-action-button class="is-segment-button ia-redesign ng-star-inserted" data-test-id="new-chat-button" icon="edit_square" jslog="188172;track:generic_click,impression" style="--side-nav-open-dynamic-item-opacity-duration: 100ms; --side-nav-open-dynamic-item-opacity-delay: 150ms; --side-nav-close-dynamic-item-opacity-duration: 50ms;"><a aria-describedby="cdk-describedby-message-ng-1-5" aria-disabled="false" aria-label="チャットを新規作成" cdk-describedby-host="ng-1" class="mat-mdc-list-item mdc-list-item mat-ripple mat-mdc-tooltip-trigger side-nav-action-button explicit-gmat-override mat-mdc-list-item-interactive mdc-list-item--with-leading-icon _mat-animation-noopable mat-mdc-list-item-single-line mdc-list-item--with-one-line ng-star-inserted" data-test-id="expanded-button" href="/app">
+<div class="mat-mdc-list-item-icon icon-container explicit-gmat-override mdc-list-item__start">
+<mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l google-symbols mat-ligature-font mat-icon-no-color ng-star-inserted" data-mat-icon-name="edit_square" data-mat-icon-type="font" data-test-id="side-nav-action-button-icon" fonticon="edit_square" role="img"></mat-icon>
+</div><span class="mdc-list-item__content"><span class="mat-mdc-list-item-unscoped-content mdc-list-item__primary-text"><span class="gds-label-l ng-star-inserted" data-test-id="side-nav-action-button-content">チャットを新規作成</span></span></span>
+<div class="mat-focus-indicator"></div>
+</a><button aria-label="一時チャット" class="mdc-icon-button mat-mdc-icon-button mat-mdc-button-base mat-mdc-tooltip-trigger temp-chat-button mat-unthemed _mat-animation-noopable ng-star-inserted" data-test-id="temp-chat-button" jslog="274589;track:generic_click,impression" mat-ripple-loader-class-name="mat-mdc-button-ripple" mattooltip="一時チャット" mattooltipposition="right"><span class="mat-mdc-button-persistent-ripple mdc-icon-button__ripple"></span><temp-chat-icon class="temp-chat-icon"><svg fill="none" height="16" viewbox="0 0 24 23" width="16" xmlns="http://www.w3.org/2000/svg"></svg></temp-chat-icon><span class="mat-focus-indicator"></span><span class="mat-mdc-button-touch-target"></span></button></side-nav-action-button></mat-action-list><infinite-scroller>
+<div class="top-gradient-container ng-star-inserted">
+<div class="top-gradient"></div>
+</div>
+<div class="loading-content-spinner-container ng-star-inserted">
+<mat-progress-spinner aria-label="Gem と最近の会話を読み込んでいます" aria-valuemax="100" aria-valuemin="0" class="mat-mdc-progress-spinner mdc-circular-progress mat-progress-spinner-reduced-motion mat-primary mdc-circular-progress--indeterminate" data-test-id="loading-content-spinner" diameter="24" mode="indeterminate" role="progressbar" style="width: 24px; height: 24px; --mat-progress-spinner-size: 24px; --mat-progress-spinner-active-indicator-width: 24px;" tabindex="-1">
+<div aria-hidden="true" class="mdc-circular-progress__determinate-container"><svg class="mdc-circular-progress__determinate-circle-graphic" focusable="false" viewbox="0 0 16.4 16.4" xmlns="http://www.w3.org/2000/svg"></svg></div>
+<div aria-hidden="true" class="mdc-circular-progress__indeterminate-container">
+<div class="mdc-circular-progress__spinner-layer">
+<div class="mdc-circular-progress__circle-clipper mdc-circular-progress__circle-left">
+<svg class="mdc-circular-progress__indeterminate-circle-graphic ng-star-inserted" focusable="false" viewbox="0 0 16.4 16.4" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+<div class="mdc-circular-progress__gap-patch"><svg class="mdc-circular-progress__indeterminate-circle-graphic ng-star-inserted" focusable="false" viewbox="0 0 16.4 16.4" xmlns="http://www.w3.org/2000/svg"></svg></div>
+<div class="mdc-circular-progress__circle-clipper mdc-circular-progress__circle-right">
+<svg class="mdc-circular-progress__indeterminate-circle-graphic ng-star-inserted" focusable="false" viewbox="0 0 16.4 16.4" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+</div>
+</div>
+</mat-progress-spinner>
+</div>
+<div class="side-nav-entry-container ng-star-inserted">
+<side-nav-entry-button data-test-id="my-stuff-side-nav-entry-button" jslog="279441;track:generic_click,impression"><a aria-label="作成したもの" class="mat-mdc-tooltip-trigger side-nav-entry-button is-arrow-icon mat-mdc-tooltip-disabled ng-star-inserted" data-test-id="side-nav-entry-button" href="mystuff" mattooltipposition="right" mattooltipshowdelay="300">
+<div class="title-container gds-label-l ng-star-inserted"> 作成したもの </div>
+<div class="icon ng-star-inserted" data-test-id="arrow-icon"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="keyboard_arrow_right" data-mat-icon-type="font" fonticon="keyboard_arrow_right" role="img"></mat-icon></div>
+</a></side-nav-entry-button><my-stuff-recents-preview class="ng-star-inserted">
+<div class="my-stuff-recents-preview ng-star-inserted">
+<library-item-card class="preview-item ng-star-inserted" jslog="279443;track:generic_click,impression;BardVeMetadataKey:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,[6,[1769908922,107000000]]]">
+<div class="library-item-card-container ng-star-inserted">
+<div aria-label="このアイテムをプレビューするか開きます" class="library-item-card alt-bg-color" role="button" tabindex="0">
+
+<div class="header ng-star-inserted">
+<div aria-describedby="cdk-describedby-message-ng-1-54" cdk-describedby-host="ng-1" class="mat-mdc-tooltip-trigger title">音声プリエンファシス・モニター</div>
+</div>
+<div class="footer ng-star-inserted"><mat-icon aria-hidden="true" class="mat-icon notranslate icon google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="code" data-mat-icon-type="font" fonticon="code" role="img"></mat-icon></div>
+</div>
+</div>
+</library-item-card><library-item-card class="preview-item ng-star-inserted" jslog="279443;track:generic_click,impression;BardVeMetadataKey:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,[5,[1769901630,42000000]]]">
+<div class="library-item-card-container ng-star-inserted">
+<div aria-label="このアイテムをプレビューするか開きます" class="library-item-card alt-bg-color" role="button" tabindex="0">
+
+<div class="header ng-star-inserted">
+<div aria-describedby="cdk-describedby-message-ng-1-55" cdk-describedby-host="ng-1" class="mat-mdc-tooltip-trigger title">UI仕様書</div>
+</div>
+<div class="footer ng-star-inserted"><mat-icon aria-hidden="true" class="mat-icon notranslate icon google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="article" data-mat-icon-type="font" fonticon="article" role="img"></mat-icon></div>
+
+</div>
+</div>
+</library-item-card><library-item-card class="preview-item ng-star-inserted" jslog="279443;track:generic_click,impression;BardVeMetadataKey:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,[6,[1769901173,940000000]]]">
+<div class="library-item-card-container ng-star-inserted">
+<div aria-label="このアイテムをプレビューするか開きます" class="library-item-card alt-bg-color" role="button" tabindex="0">
+
+<div class="header ng-star-inserted">
+<div aria-describedby="cdk-describedby-message-ng-1-56" cdk-describedby-host="ng-1" class="mat-mdc-tooltip-trigger title">音声記録・再生モニター</div>
+</div>
+<div class="footer ng-star-inserted"><mat-icon aria-hidden="true" class="mat-icon notranslate icon google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="code" data-mat-icon-type="font" fonticon="code" role="img"></mat-icon></div>
+</div>
+</div>
+</library-item-card>
+</div>
+</my-stuff-recents-preview>
+</div>
+
+<div class="gems-list-container ng-star-inserted"><bot-list class="sidenav-style-updates ia-redesign ng-tns-c3819841217-4 my-stuff-side-nav ng-star-inserted">
+<div class="title-container ng-tns-c3819841217-4 side-nav-style-updates ng-trigger ng-trigger-conversationListTitleVisibilityAnimation ng-star-inserted" style="visibility: visible;"><side-nav-entry-button class="ng-tns-c3819841217-4" data-test-id="bot-list-side-nav-entry-button" jslog="279440;track:generic_click,impression"><a aria-label="Gem" class="mat-mdc-tooltip-trigger side-nav-entry-button is-arrow-icon mat-mdc-tooltip-disabled ng-star-inserted" data-test-id="side-nav-entry-button" href="/gems/view" mattooltipposition="right" mattooltipshowdelay="300">
+<div class="title-container gds-label-l ng-star-inserted"> Gem </div>
+<div class="icon ng-star-inserted" data-test-id="arrow-icon"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="keyboard_arrow_right" data-mat-icon-type="font" fonticon="keyboard_arrow_right" role="img"></mat-icon></div>
+</a></side-nav-entry-button></div>
+<div class="bots-list-container ng-tns-c3819841217-4 ng-star-inserted" jslog="209256;track:impression" role="region"><bot-list-item class="ng-tns-c3819841217-4 bot-list-item--expanded my-stuff-side-nav ng-star-inserted">
+<div class="bot-item is-pinned gtc-processed" data-test-id="item" jslog='243359;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,[null,null,"c72dfad9389d",1]];mutable:true' style="position: relative;"><button class="mat-ripple mat-mdc-tooltip-trigger bot-new-conversation-button is-my-stuff-side-nav-enabled mat-mdc-tooltip-disabled" jslog="209259;track:generic_click,impression" mattooltipposition="right" mattooltipshowdelay="300"><mat-icon aria-hidden="true" class="mat-icon notranslate bot-icon-spark gds-icon-l google-symbols mat-ligature-font mat-icon-no-color ng-star-inserted" data-mat-icon-name="gem_spark" data-mat-icon-type="font" fonticon="gem_spark" role="img"></mat-icon><span class="bot-name gds-body-m gds-label-l">⏰タスク管理</span></button><bot-actions-menu class="is-pinned ng-star-inserted"><button aria-expanded="false" aria-haspopup="menu" aria-label="Gem アクションのメニューを開く" class="mdc-icon-button mat-mdc-icon-button mat-mdc-button-base mat-mdc-menu-trigger bot-actions-menu-button my-stuff-side-nav mat-unthemed _mat-animation-noopable" data-test-id="actions-menu-button" mat-ripple-loader-class-name="mat-mdc-button-ripple"><span class="mat-mdc-button-persistent-ripple mdc-icon-button__ripple"></span><mat-icon aria-hidden="true" class="mat-icon notranslate bot-item-pin-icon gds-icon-s google-symbols mat-ligature-font mat-icon-no-color ng-star-inserted" data-mat-icon-name="push_pin" data-mat-icon-type="font" fonticon="push_pin" role="img"></mat-icon><mat-icon aria-hidden="true" class="mat-icon notranslate bot-item-menu-icon gds-icon-l google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon" fonticon="more_vert" role="img"></mat-icon><span class="mat-focus-indicator"></span><span class="mat-mdc-button-touch-target"></span></button><bot-overflow-menu><mat-menu></mat-menu></bot-overflow-menu></bot-actions-menu><span class="gtc-conversation-index">1</span></div>
+</bot-list-item><bot-list-item class="ng-tns-c3819841217-4 bot-list-item--expanded my-stuff-side-nav ng-star-inserted">
+<div class="bot-item is-pinned gtc-processed" data-test-id="item" jslog='243359;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,[null,null,"b8f366410b1d",1,1]];mutable:true' style="position: relative;"><button class="mat-ripple mat-mdc-tooltip-trigger bot-new-conversation-button is-my-stuff-side-nav-enabled mat-mdc-tooltip-disabled" jslog="209259;track:generic_click,impression" mattooltipposition="right" mattooltipshowdelay="300"><mat-icon aria-hidden="true" class="mat-icon notranslate bot-icon-spark gds-icon-l google-symbols mat-ligature-font mat-icon-no-color ng-star-inserted" data-mat-icon-name="gem_spark" data-mat-icon-type="font" fonticon="gem_spark" role="img"></mat-icon><span class="bot-name gds-body-m gds-label-l">動画要約</span></button><bot-actions-menu class="is-pinned ng-star-inserted"><button aria-expanded="false" aria-haspopup="menu" aria-label="Gem アクションのメニューを開く" class="mdc-icon-button mat-mdc-icon-button mat-mdc-button-base mat-mdc-menu-trigger bot-actions-menu-button my-stuff-side-nav mat-unthemed _mat-animation-noopable" data-test-id="actions-menu-button" mat-ripple-loader-class-name="mat-mdc-button-ripple"><span class="mat-mdc-button-persistent-ripple mdc-icon-button__ripple"></span><mat-icon aria-hidden="true" class="mat-icon notranslate bot-item-pin-icon gds-icon-s google-symbols mat-ligature-font mat-icon-no-color ng-star-inserted" data-mat-icon-name="push_pin" data-mat-icon-type="font" fonticon="push_pin" role="img"></mat-icon><mat-icon aria-hidden="true" class="mat-icon notranslate bot-item-menu-icon gds-icon-l google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon" fonticon="more_vert" role="img"></mat-icon><span class="mat-focus-indicator"></span><span class="mat-mdc-button-touch-target"></span><span class="mat-ripple mat-mdc-button-ripple"></span></button><bot-overflow-menu><mat-menu></mat-menu></bot-overflow-menu></bot-actions-menu><span class="gtc-conversation-index">2</span></div>
+</bot-list-item><bot-list-item class="ng-tns-c3819841217-4 bot-list-item--expanded my-stuff-side-nav ng-star-inserted">
+<div class="bot-item gtc-processed" data-test-id="item" jslog='243359;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,[null,null,"ebee7c6b6afe",null,2]];mutable:true' style="position: relative;"><button class="mat-ripple mat-mdc-tooltip-trigger bot-new-conversation-button is-my-stuff-side-nav-enabled mat-mdc-tooltip-disabled" jslog="209259;track:generic_click,impression" mattooltipposition="right" mattooltipshowdelay="300"><mat-icon aria-hidden="true" class="mat-icon notranslate bot-icon-spark gds-icon-l google-symbols mat-ligature-font mat-icon-no-color ng-star-inserted" data-mat-icon-name="gem_spark" data-mat-icon-type="font" fonticon="gem_spark" role="img"></mat-icon><span class="bot-name gds-body-m gds-label-l">🔖ブックマーク一覧</span></button><bot-actions-menu class="ng-star-inserted"><button aria-expanded="false" aria-haspopup="menu" aria-label="Gem アクションのメニューを開く" class="mdc-icon-button mat-mdc-icon-button mat-mdc-button-base mat-mdc-menu-trigger bot-actions-menu-button my-stuff-side-nav mat-unthemed _mat-animation-noopable" data-test-id="actions-menu-button" mat-ripple-loader-class-name="mat-mdc-button-ripple"><span class="mat-mdc-button-persistent-ripple mdc-icon-button__ripple"></span><mat-icon aria-hidden="true" class="mat-icon notranslate bot-item-menu-icon gds-icon-l google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon" fonticon="more_vert" role="img"></mat-icon><span class="mat-focus-indicator"></span><span class="mat-mdc-button-touch-target"></span></button><bot-overflow-menu><mat-menu></mat-menu></bot-overflow-menu></bot-actions-menu><span class="gtc-conversation-index">3</span></div>
+</bot-list-item></div>
+</bot-list></div>
+<div class="chat-history ng-star-inserted">
+<div class="chat-history-list ng-star-inserted"><conversations-list class="sidenav-style-updates ng-tns-c989502761-7 ia-redesign side-nav-style-updates ng-star-inserted" data-test-id="all-conversations">
+<div class="title-container ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListTitleVisibilityAnimation" style="visibility: visible;">
+<h1 class="title gds-label-l ng-tns-c989502761-7 side-nav-style-updates ng-star-inserted"> チャット </h1>
+</div>
+<div class="conversations-container ng-tns-c989502761-7 ng-star-inserted" id="conversations-list-0" role="region">
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened has-visible-icon ng-star-inserted">
+<a aria-describedby="cdk-describedby-message-ng-1-6" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/b0d72917abc7cfaa" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_b0d72917abc7cfaa",null,1]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ Web Audio APIを用いたリアルタイム音声プリエンファシス・モニターの開発 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-s conversation-pin-icon ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color ng-star-inserted" data-mat-icon-name="push_pin" data-mat-icon-type="font" fonticon="push_pin" role="img"></mat-icon><span class="cdk-visually-hidden ng-tns-c989502761-7 ng-star-inserted">固定したチャット</span></div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened has-visible-icon ng-star-inserted">
+<a aria-describedby="cdk-describedby-message-ng-1-7" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/55c64c85f26fa8e4" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_55c64c85f26fa8e4",null,1,1]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ Google ドライブ フォルダ直下検索方法 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-s conversation-pin-icon ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color ng-star-inserted" data-mat-icon-name="push_pin" data-mat-icon-type="font" fonticon="push_pin" role="img"></mat-icon><span class="cdk-visually-hidden ng-tns-c989502761-7 ng-star-inserted">固定したチャット</span></div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened has-visible-icon ng-star-inserted">
+<a class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation mat-mdc-tooltip-disabled" data-test-id="conversation" href="/app/dc9f90e53d04368b" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_dc9f90e53d04368b",null,1,2]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 1月28日タスク <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-s conversation-pin-icon ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color ng-star-inserted" data-mat-icon-name="push_pin" data-mat-icon-type="font" fonticon="push_pin" role="img"></mat-icon><span class="cdk-visually-hidden ng-tns-c989502761-7 ng-star-inserted">固定したチャット</span></div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened has-visible-icon ng-star-inserted">
+<a aria-describedby="cdk-describedby-message-ng-1-9" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/d4882fdf8e3f498d" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_d4882fdf8e3f498d",null,1,3]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 文字起こしアプリの特定とSVGアイコン付き比較表の作成 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-s conversation-pin-icon ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color ng-star-inserted" data-mat-icon-name="push_pin" data-mat-icon-type="font" fonticon="push_pin" role="img"></mat-icon><span class="cdk-visually-hidden ng-tns-c989502761-7 ng-star-inserted">固定したチャット</span></div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened has-visible-icon ng-star-inserted">
+<a aria-describedby="cdk-describedby-message-ng-1-10" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/7c52e577a7824fc0" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_7c52e577a7824fc0",null,1,4]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ Google Keepノートのニュース記事レポート <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-s conversation-pin-icon ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color ng-star-inserted" data-mat-icon-name="push_pin" data-mat-icon-type="font" fonticon="push_pin" role="img"></mat-icon><span class="cdk-visually-hidden ng-tns-c989502761-7 ng-star-inserted">固定したチャット</span></div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened has-visible-icon ng-star-inserted">
+<a class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation mat-mdc-tooltip-disabled" data-test-id="conversation" href="/app/ce2a63fbc1dc778f" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_ce2a63fbc1dc778f",null,1,5]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ プロンプト収集と改良の記録 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-s conversation-pin-icon ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color ng-star-inserted" data-mat-icon-name="push_pin" data-mat-icon-type="font" fonticon="push_pin" role="img"></mat-icon><span class="cdk-visually-hidden ng-tns-c989502761-7 ng-star-inserted">固定したチャット</span></div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened has-visible-icon ng-star-inserted">
+<a aria-describedby="cdk-describedby-message-ng-1-12" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/16889b7bcab31429" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_16889b7bcab31429",null,1,6]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ Google Tasks 移動ウェブアプリ開発 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-s conversation-pin-icon ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color ng-star-inserted" data-mat-icon-name="push_pin" data-mat-icon-type="font" fonticon="push_pin" role="img"></mat-icon><span class="cdk-visually-hidden ng-tns-c989502761-7 ng-star-inserted">固定したチャット</span></div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<a aria-describedby="cdk-describedby-message-ng-1-13" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/0c4666d6c26c83e6" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_0c4666d6c26c83e6",null,0,7]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 433MHz帯制度改訂案、アマチュア無線への影響 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<a aria-describedby="cdk-describedby-message-ng-1-14" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/2e5b71a69a6a63c6" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_2e5b71a69a6a63c6",null,0,8]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ Google Drive ファイルURL抽出自動化 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<a class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation mat-mdc-tooltip-disabled" data-test-id="conversation" href="/app/a3803a39a5c83de3" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_a3803a39a5c83de3",null,0,9]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ Microsoft365研修日程表の整形 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<a aria-describedby="cdk-describedby-message-ng-1-16" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/fcb089a93e5b165d" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_fcb089a93e5b165d",null,0,10]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 業務改革アイデアソン開催提案 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<a class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation mat-mdc-tooltip-disabled" data-test-id="conversation" href="/app/ce8af290bac8b593" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_ce8af290bac8b593",null,0,11]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 大学事務組織のROI定義と評価 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<a aria-describedby="cdk-describedby-message-ng-1-18" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/34a9a9c1a01b4e5c" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_34a9a9c1a01b4e5c",null,0,12]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ Google、AI概要への情報利用拒否機能を検討 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<a aria-describedby="cdk-describedby-message-ng-1-19" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation selected" data-test-id="conversation" href="/app/3d0600d9c44315fd" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_3d0600d9c44315fd",null,0,13]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ Arm版Windows、主要アプリ対応進む <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted selected">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<a class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation mat-mdc-tooltip-disabled" data-test-id="conversation" href="/app/443c1f849853e826" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_443c1f849853e826",null,0,14]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ リマインダーの設定と記憶 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<a class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation mat-mdc-tooltip-disabled" data-test-id="conversation" href="/app/6f685d082d4714e1" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_6f685d082d4714e1",null,0,15]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 音声信号処理におけるGMM解説 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<a aria-describedby="cdk-describedby-message-ng-1-22" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/1133893a04b5a11b" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_1133893a04b5a11b",null,0,16]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ CoreBook Air レビュー：軽さと性能の両立 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<a class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation mat-mdc-tooltip-disabled" data-test-id="conversation" href="/app/2d768265ee60df25" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_2d768265ee60df25",null,0,17]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ Firefox 設定ハックまとめ <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<a class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation mat-mdc-tooltip-disabled" data-test-id="conversation" href="/app/283d3101fcc9248b" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_283d3101fcc9248b",null,0,18]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ iVDR mini規格の解説と衰退 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<a class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation mat-mdc-tooltip-disabled" data-test-id="conversation" href="/app/050488f4d4d0b229" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_050488f4d4d0b229",null,0,19]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 100vw水平スクロール問題解決 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation mat-mdc-tooltip-disabled" data-test-id="conversation" href="/app/66a1d4c7476367a0" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_66a1d4c7476367a0",null,0,20]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ NEC基地局事業撤退の分析 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation mat-mdc-tooltip-disabled" data-test-id="conversation" href="/app/ba31a0af7a1aa452" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_ba31a0af7a1aa452",null,0,21]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 鏡像世界と物理法則の対称性 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-32" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/c3bc8d32b5adb618" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_c3bc8d32b5adb618",null,0,22]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+MCP (Model Context Protocol) の
+                                                STDIOトランスポートについて調査して仕...<div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation mat-mdc-tooltip-disabled" data-test-id="conversation" href="/app/61010c16695bb6c5" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_61010c16695bb6c5",null,0,23]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ CSI and CVI in HRV Analysis <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-34" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/4823267c2126f28d" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_4823267c2126f28d",null,0,24]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ ViTPose: シンプルな姿勢推定モデル <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-35" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/9e6f74593cd5d302" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_9e6f74593cd5d302",null,0,25]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ マウスのクリック遅延原因の特定 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-36" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/b9cc81905a5061a5" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_b9cc81905a5061a5",null,0,26]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ Outlook カテゴリ一覧とIDの取得 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-37" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/320d4072d03e02fc" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_320d4072d03e02fc",null,0,27]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ Outlook分類（カテゴリ）一覧のテキスト化 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-38" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/390744c192939761" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_390744c192939761",null,0,28]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 通知確認権限の無効 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-39" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/6ca59cb36d260fbf" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_6ca59cb36d260fbf",null,0,29]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 愛媛大学リユース市 実施案内 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation mat-mdc-tooltip-disabled" data-test-id="conversation" href="/app/a623415677bc096f" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_a623415677bc096f",null,0,30]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 愛媛大学リユース市2025案内 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-41" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/365f1f115f770b36" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_365f1f115f770b36",null,0,31]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 愛媛大学リユース市2025の概要 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation mat-mdc-tooltip-disabled" data-test-id="conversation" href="/app/45b81d468170aa8e" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_45b81d468170aa8e",null,0,32]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 愛媛大学リユース市 案内要約 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation mat-mdc-tooltip-disabled" data-test-id="conversation" href="/app/536eea44b2330cb2" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_536eea44b2330cb2",null,0,33]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ PDFアクセス不可、代替案提示 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-44" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/e800595cb49e1de8" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_e800595cb49e1de8",null,0,34]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ Google Keep ブックマークノート検索 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-45" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/23aa89e7cc6bad26" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_23aa89e7cc6bad26",null,0,35]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ Google Keepノート一覧表示 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-46" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/ed6a82d75b173c8e" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_ed6a82d75b173c8e",null,0,36]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ GLM-4.7-Flashと改良版の解説 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-47" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/5d88db789b605d7b" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_5d88db789b605d7b",null,0,37]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ AI活用新日記術：録音とNotebookLM <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-48" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/6ae7e2f20706b099" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_6ae7e2f20706b099",null,0,38]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ Google、中国サイバー企業に制裁 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-49" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/c1c0d66707892e34" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_c1c0d66707892e34",null,0,39]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ Windows プログラミングにおけるミューテックス <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-60" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/730e12677ba68680" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_730e12677ba68680",null,0,40]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ スタートメニューアイコン不具合の対処法 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-61" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/05db88023bd1fc17" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_05db88023bd1fc17",null,0,41]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ MSIXとAppx：Windowsアプリパッケージング <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-62" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/cd9aa08debd34694" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_cd9aa08debd34694",null,0,42]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ PWAの「ファイルの場所」の仕組み <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-63" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/ce5d5dfe2222e8ae" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_ce5d5dfe2222e8ae",null,0,43]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ ローカルAI構築と活用ガイド <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-64" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/ca4b5406e08ed0a7" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_ca4b5406e08ed0a7",null,0,44]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 2026年ローカルLLM事情の整理 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-65" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/2cd75e0d99712811" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_2cd75e0d99712811",null,0,45]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ Faciloのシンプル設計思想とAI戦略 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-66" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/abceacf8af107278" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_abceacf8af107278",null,0,46]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ ChromeのAI自動ブラウズ機能 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-67" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/da04d0d98ff3d747" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_da04d0d98ff3d747",null,0,47]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 論文の時制使い分けガイド <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-68" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/030df20a9e3e8393" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_030df20a9e3e8393",null,0,48]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ RMSSD: 副交感神経活動の指標 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-69" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/769adabf45b1c7a9" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_769adabf45b1c7a9",null,0,49]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ GitHubリポジトリにAgentsタブ追加 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-70" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/abc1242deeb184b5" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_abc1242deeb184b5",null,0,50]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ ランチェスター戦略の解説 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-71" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/30782e1ac44512db" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_30782e1ac44512db",null,0,51]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ LLMの数学的限界とAI展望 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-72" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/d3788916e02916de" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_d3788916e02916de",null,0,52]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ VSCodeからNeovimへの移行 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-73" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/1add4172da0b91a1" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_1add4172da0b91a1",null,0,53]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 今日の時刻と用件 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-74" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/ab3b4acf4a71083c" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_ab3b4acf4a71083c",null,0,54]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ ヤンキーの高級車所有の理由 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-75" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/642be34a064ed62a" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_642be34a064ed62a",null,0,55]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ オロナインとヒビテンの有効成分比較 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-76" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/0fee8418143ba0b5" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_0fee8418143ba0b5",null,0,56]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 紅まどんなと愛果28号の違い <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-77" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/1d7d79147f38b62c" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_1d7d79147f38b62c",null,0,57]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ Git ベアリポジトリと通常リポジトリの違い <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-78" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/1c36d54b8d6467e6" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_1c36d54b8d6467e6",null,0,58]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ 大学事務改善アイデアソンシート案 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+<div class="conversation-items-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted"><a aria-describedby="cdk-describedby-message-ng-1-79" cdk-describedby-host="ng-1" class="mat-ripple mat-mdc-tooltip-trigger conversation ng-tns-c989502761-7 ng-trigger ng-trigger-conversationListRevealAnimation" data-test-id="conversation" href="/app/1954b875714526d7" jslog='186014;track:generic_click;BardVeMetadataKey:[null,null,null,null,null,null,null,["c_1954b875714526d7",null,0,59]];mutable:true' mattooltipposition="right" mattooltipshowdelay="300" role="button" tabindex="0">
+<div class="conversation-title gds-label-l ng-tns-c989502761-7" dir="ltr">
+ ピアレビュー表彰状の発行者名 <div class="conversation-title-cover ng-tns-c989502761-7"></div>
+</div>
+<div class="pin-icon-container with-mat-icon ng-tns-c989502761-7">
+
+</div>
+</a>
+<div class="conversation-actions-container ng-tns-c989502761-7 side-nav-opened ng-star-inserted">
+<button aria-expanded="false" aria-haspopup="menu" aria-label="会話アクションのメニューを開く" class="mat-mdc-menu-trigger conversation-actions-menu-button ng-tns-c989502761-7" data-test-id="actions-menu-button"><mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l ng-tns-c989502761-7 google-symbols mat-ligature-font mat-icon-no-color" data-mat-icon-name="more_vert" data-mat-icon-type="font" data-test-id="actions-menu-icon gds-icon-l" fonticon="more_vert" role="img"></mat-icon></button><mat-menu></mat-menu>
+</div>
+</div>
+</div>
+</conversations-list>
+<div class="loading-history-spinner-container ng-star-inserted"><mat-progress-spinner aria-label="会話の履歴を読み込んでいます" aria-valuemax="100" aria-valuemin="0" class="mat-mdc-progress-spinner mdc-circular-progress mat-progress-spinner-reduced-motion mat-primary mdc-circular-progress--indeterminate" data-test-id="loading-history-spinner" diameter="24" mode="indeterminate" role="progressbar" style="width: 24px; height: 24px; --mat-progress-spinner-size: 24px; --mat-progress-spinner-active-indicator-width: 24px;" tabindex="-1">
+<div aria-hidden="true" class="mdc-circular-progress__determinate-container"><svg class="mdc-circular-progress__determinate-circle-graphic" focusable="false" viewbox="0 0 16.4 16.4" xmlns="http://www.w3.org/2000/svg"></svg></div>
+<div aria-hidden="true" class="mdc-circular-progress__indeterminate-container">
+<div class="mdc-circular-progress__spinner-layer">
+<div class="mdc-circular-progress__circle-clipper mdc-circular-progress__circle-left">
+<svg class="mdc-circular-progress__indeterminate-circle-graphic ng-star-inserted" focusable="false" viewbox="0 0 16.4 16.4" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+<div class="mdc-circular-progress__gap-patch"><svg class="mdc-circular-progress__indeterminate-circle-graphic ng-star-inserted" focusable="false" viewbox="0 0 16.4 16.4" xmlns="http://www.w3.org/2000/svg"></svg></div>
+<div class="mdc-circular-progress__circle-clipper mdc-circular-progress__circle-right">
+<svg class="mdc-circular-progress__indeterminate-circle-graphic ng-star-inserted" focusable="false" viewbox="0 0 16.4 16.4" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+</div>
+</div>
+</mat-progress-spinner></div>
+</div>
+</div>
+<div class="bottom-gradient-container ng-star-inserted visible">
+<div class="bottom-gradient"></div>
+</div>
+</infinite-scroller><mat-action-list aria-disabled="false" class="mat-mdc-action-list mat-mdc-list-base mdc-list desktop-controls ng-star-inserted" role="group"><side-nav-action-button arialabel="Settings &amp; help" class="ia-redesign" data-test-id="settings-and-help-button" icon="settings_2" jslog="250248;track:generic_click,impression" style="--side-nav-open-dynamic-item-opacity-duration: 100ms; --side-nav-open-dynamic-item-opacity-delay: 150ms; --side-nav-close-dynamic-item-opacity-duration: 50ms;"><button aria-disabled="false" aria-expanded="false" aria-haspopup="menu" aria-label="Settings &amp; help" class="mat-mdc-list-item mdc-list-item mat-mdc-menu-trigger mat-ripple mat-mdc-tooltip-trigger side-nav-action-button explicit-gmat-override mat-mdc-list-item-interactive mdc-list-item--with-leading-icon _mat-animation-noopable mat-mdc-tooltip-disabled mat-mdc-list-item-single-line mdc-list-item--with-one-line ng-star-inserted" data-test-id="expanded-button" type="button">
+<div class="mat-mdc-list-item-icon icon-container explicit-gmat-override mdc-list-item__start">
+<mat-icon aria-hidden="true" class="mat-icon notranslate gds-icon-l google-symbols mat-ligature-font mat-icon-no-color ng-star-inserted" data-mat-icon-name="settings_2" data-mat-icon-type="font" data-test-id="side-nav-action-button-icon" fonticon="settings_2" role="img"></mat-icon>
+</div><span class="mdc-list-item__content"><span class="mat-mdc-list-item-unscoped-content mdc-list-item__primary-text"><span class="gds-label-l ng-star-inserted" data-test-id="side-nav-action-button-content">設定とヘルプ</span></span></span>
+<div class="mat-focus-indicator"></div>
+</button></side-nav-action-button><mat-menu overlaptrigger="true"></mat-menu><mat-menu overlaptrigger="true"></mat-menu><mat-menu overlaptrigger="true"></mat-menu></mat-action-list>
+</div>
+</div>
+
+</side-navigation-content>
+<div class="ng-tns-c3698178955-3 ng-star-inserted" jslog="234646;track:impression"></div>
+</bard-sidenav>
