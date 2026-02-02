@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.12
+// @version      0.2.14
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -48,7 +48,7 @@
     }
 
     const SELECTORS = {
-        CONVERSATION_ITEM: 'div[data-test-id="conversation"], div[jslog*="c_"]', // Combined for matches(), but use getConversationItems() for retrieval
+        CONVERSATION_ITEM: '[data-test-id="conversation"], [jslog*="c_"]', // Combined for matches(), but use getConversationItems() for retrieval
         SPINNER: 'mat-progress-spinner[data-test-id="loading-history-spinner"]',
         SCROLL_CONTAINER: '.conversations-container, conversations-list', // Updated to target the inner container first
         MENU_BUTTON: 'side-nav-menu-button',
@@ -62,7 +62,7 @@
         SPINNER_WAIT_MS: 3000,
         SCROLL_DELAY_MS: 500,
         STORAGE_KEY: 'gemini_auto_scroll_enabled',
-        STORAGE_KEY_AUTOSWITCH: 'gemini_auto_switch_enabled',
+        STORAGE_KEY_AUTOSWITCH: 'gemini_auto_switch_next',
         STORAGE_KEY_LOG_VISIBLE: 'gemini_log_panel_visible'
     };
 
@@ -106,23 +106,13 @@
     }
 
     function isAutoSwitchEnabled() {
-        // Default to true for existing users
+        // Default to true for better UX in this version
         return localStorage.getItem(CONSTANTS.STORAGE_KEY_AUTOSWITCH) !== 'false';
     }
 
     function toggleAutoSwitch() {
         const newState = !isAutoSwitchEnabled();
         localStorage.setItem(CONSTANTS.STORAGE_KEY_AUTOSWITCH, newState);
-        updatePanelUI();
-    }
-
-    function isAutoSwitchEnabled() {
-        return localStorage.getItem('GEMINI_AUTO_SCROLL_SWITCH_NEXT') === 'true';
-    }
-
-    function toggleAutoSwitch() {
-        const newState = !isAutoSwitchEnabled();
-        localStorage.setItem('GEMINI_AUTO_SCROLL_SWITCH_NEXT', newState);
         updatePanelUI();
         log(`Auto-Switch to Next: ${newState ? 'Enabled' : 'Disabled'}`);
     }
@@ -511,7 +501,7 @@
 
     function findSelectedConversationId() {
         // Try precise selector first
-        const selectedItem = document.querySelector('div[data-test-id="conversation"].selected');
+        const selectedItem = document.querySelector('[data-test-id="conversation"].selected');
         if (selectedItem) {
             const jslog = selectedItem.getAttribute('jslog');
             if (jslog) {
