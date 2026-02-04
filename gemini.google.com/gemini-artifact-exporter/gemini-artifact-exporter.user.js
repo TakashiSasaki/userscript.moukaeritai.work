@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.18
+// @version      0.2.19
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -809,6 +809,31 @@
         }
     }
 
-    setInterval(updateButtonVisibility, 500);
+    function debounce(func, wait) {
+        let timeout;
+        return function (...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    const debouncedUpdate = debounce(updateButtonVisibility, 200);
+
+    // Initial check
+    updateButtonVisibility();
+
+    // Observe DOM changes instead of polling
+    const observer = new MutationObserver((mutations) => {
+        // We could try to filter mutations here, but for "sidebar button appearance",
+        // essentially any subtree change could be relevant in an SPA.
+        // Debouncing protects performance.
+        debouncedUpdate();
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
 
 })();
