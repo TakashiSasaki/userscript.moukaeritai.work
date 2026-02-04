@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,38 +15,47 @@
             padding: 20px;
             color: #333;
         }
+
         pre {
             background-color: #f4f4f4;
             padding: 10px;
             border-radius: 5px;
             overflow-x: auto;
         }
+
         code {
             font-family: Consolas, Monaco, 'Andale Mono', monospace;
             background-color: #f4f4f4;
             padding: 2px 4px;
             border-radius: 3px;
         }
-        h1, h2, h3 {
+
+        h1,
+        h2,
+        h3 {
             color: #2c3e50;
         }
+
         a {
             color: #0366d6;
             text-decoration: none;
         }
+
         a:hover {
             text-decoration: underline;
         }
+
         #content {
             margin-top: 20px;
         }
     </style>
 </head>
+
 <body>
     <div id="content">Loading documentation...</div>
 
     <script>
-        fetch('chatgpt-no-margin.md')
+        fetch('README.md')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -61,4 +71,5 @@
             });
     </script>
 </body>
+
 </html>

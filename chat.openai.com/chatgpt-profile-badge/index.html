@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,20 +14,26 @@
             line-height: 1.6;
             color: #333;
         }
-        h1, h2, h3, h4 {
+
+        h1,
+        h2,
+        h3,
+        h4 {
             border-bottom: 1px solid #eaecef;
             padding-bottom: 0.3em;
             margin-top: 24px;
             margin-bottom: 16px;
         }
+
         code {
             font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-            background-color: rgba(27,31,35,0.05);
+            background-color: rgba(27, 31, 35, 0.05);
             padding: 0.2em 0.4em;
             margin: 0;
             font-size: 85%;
             border-radius: 3px;
         }
+
         pre {
             background-color: #f6f8fa;
             border-radius: 6px;
@@ -35,6 +42,7 @@
             overflow: auto;
             padding: 16px;
         }
+
         pre code {
             background-color: transparent;
             padding: 0;
@@ -42,16 +50,21 @@
             font-size: 100%;
             border: 0;
         }
+
         a {
             color: #0366d6;
             text-decoration: none;
         }
+
         a:hover {
             text-decoration: underline;
         }
-        ul, ol {
+
+        ul,
+        ol {
             padding-left: 2em;
         }
+
         hr {
             border: 0;
             border-top: 1px solid #eaecef;
@@ -59,13 +72,14 @@
         }
     </style>
 </head>
+
 <body>
     <div id="content">Loading documentation...</div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            fetch('chatgpt-profile-badge.md')
+            fetch('README.md')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
@@ -82,4 +96,5 @@
         });
     </script>
 </body>
+
 </html>
