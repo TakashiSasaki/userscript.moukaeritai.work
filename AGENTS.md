@@ -62,7 +62,9 @@ HTMLサンプルファイル（`.html`）を編集したり、それに基づい
     git restore path/to/your/file.html
     ```
 
-2.  **前処理スクリプトの実行**: 中央集権化された `preprocess_html_samples.py` スクリプトをHTMLファイルに対して実行します。このスクリプトは以下に定義されたルールを適用します。
+2.  **前処理スクリプトの実行 (必須)**:
+    全ドメインの全ユーザースクリプトで共通の前処理基準を適用するため、必ずリポジトリルートにある `./scripts/preprocess_html_samples.py` を使用してください。個別のスクリプトや手動での前処理は禁止されています。
+
     ```bash
     # 特定の samples/ ディレクトリ内のすべてのHTMLファイルを処理する
     ./scripts/preprocess_html_samples.py 'path/to/samples/*.html'
