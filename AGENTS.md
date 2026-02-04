@@ -108,12 +108,45 @@ JavaScript（`.user.js`）のコードを変更した後は、必ずESLintを実
 -   **要件**: コミット前にすべてのエラーを解消し、警告も可能な限り修正してください。
 -   **注意事項**: 変更が小さくてもESLintの実行を省略しないこと。
 
-### インストール検知APIのガード
-最上位の `index.html` からリンクされているユーザースクリプトは、以下の3つの `@match` を持ち、該当ドメインでは**メイン機能を動かさず**「インストール検知APIのみ」を実行するガードを必ず入れてください。
--   `https://userscript.moukaeritai.work/*`
--   `http://127.0.0.1:5500/*`
--   `https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*`
--   **ガード内容**: `userscript-check-installed` を `dispatchEvent` し、`userscript-ping` を監視して応答した後、早期 `return` すること。
+### インストール検知APIのガードと共通ロジック
+最上位の `index.html` からリンクされているユーザースクリプトは、以下の `@match` 設定と共通の検知ロジックを実装してください。該当ドメインでは**メイン機能を動かさず**「インストール検知APIのみ」を実行して早期リターンする必要があります。
+
+#### 1. 必須 @match
+```javascript
+// @match        https://userscript.moukaeritai.work/*
+// @match        http://127.0.0.1:5500/*
+// @match        https://*.app.github.dev/*
+```
+
+#### 2. 標準実装コード
+すべてのスクリプトで以下のコードスニペットを使用してください。
+
+```javascript
+    const installCheckHosts = [
+        'userscript.moukaeritai.work',
+        '127.0.0.1'
+    ];
+    const installCheckSuffixes = [
+        '.app.github.dev'
+    ];
+
+    const isInstallCheckHost = installCheckHosts.includes(location.hostname) ||
+        installCheckSuffixes.some(suffix => location.hostname.endsWith(suffix));
+
+    if (isInstallCheckHost) {
+        const report = () => {
+            document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+                detail: {
+                    name: GM_info.script.name,
+                    version: GM_info.script.version
+                }
+            }));
+        };
+        report();
+        document.addEventListener('userscript-ping', report);
+        return;
+    }
+```
 
 ### UIパネルの基本要件
 全てのユーザースクリプトがUIパネルを持つわけではありませんが、もしUIパネルを表示する機能を持つ場合は、以下の基本要件を満たす必要があります。
