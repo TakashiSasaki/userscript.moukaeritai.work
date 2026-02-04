@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.7
+// @version      0.1.8
 // @description  Adds serial numbers and copy buttons to custom instructions on Gemini.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -15,11 +15,22 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     // For documentation page to check if the script is installed
-    if (location.hostname === 'userscript.moukaeritai.work' || location.hostname === '127.0.0.1' || location.hostname.endsWith('.app.github.dev')) {
+    const installCheckHosts = [
+        'userscript.moukaeritai.work',
+        '127.0.0.1'
+    ];
+    const installCheckSuffixes = [
+        '.app.github.dev'
+    ];
+
+    const isInstallCheckHost = installCheckHosts.includes(location.hostname) ||
+        installCheckSuffixes.some(suffix => location.hostname.endsWith(suffix));
+
+    if (isInstallCheckHost) {
         const report = () => {
             document.dispatchEvent(new CustomEvent('userscript-check-installed', {
                 detail: {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Profile Badge
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.7
+// @version      0.1.8
 // @description  Add a custom text/emoji badge to the user profile area on Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -20,7 +20,18 @@
 (function () {
     'use strict';
 
-    if (location.hostname === 'userscript.moukaeritai.work' || location.hostname === '127.0.0.1' || location.hostname === 'fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev') {
+    const installCheckHosts = [
+        'userscript.moukaeritai.work',
+        '127.0.0.1'
+    ];
+    const installCheckSuffixes = [
+        '.app.github.dev'
+    ];
+
+    const isInstallCheckHost = installCheckHosts.includes(location.hostname) ||
+        installCheckSuffixes.some(suffix => location.hostname.endsWith(suffix));
+
+    if (isInstallCheckHost) {
         const report = () => {
             document.dispatchEvent(new CustomEvent('userscript-check-installed', {
                 detail: {

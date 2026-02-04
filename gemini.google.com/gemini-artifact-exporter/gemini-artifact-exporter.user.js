@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.13
+// @version      0.2.14
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -19,13 +19,18 @@
 (function () {
     'use strict';
 
-    const installDetectionHosts = new Set([
+    const installCheckHosts = [
         'userscript.moukaeritai.work',
-        '127.0.0.1',
-        'fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev'
-    ]);
+        '127.0.0.1'
+    ];
+    const installCheckSuffixes = [
+        '.app.github.dev'
+    ];
 
-    if (installDetectionHosts.has(location.hostname)) {
+    const isInstallCheckHost = installCheckHosts.includes(location.hostname) ||
+        installCheckSuffixes.some(suffix => location.hostname.endsWith(suffix));
+
+    if (isInstallCheckHost) {
         const report = () => {
             document.dispatchEvent(new CustomEvent('userscript-check-installed', {
                 detail: {

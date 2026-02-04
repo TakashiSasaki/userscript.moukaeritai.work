@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.17
+// @version      0.1.18
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -17,7 +17,18 @@
 (function () {
     'use strict';
 
-    if (location.hostname === 'userscript.moukaeritai.work' || location.hostname === '127.0.0.1' || location.hostname === 'fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev') {
+    const installCheckHosts = [
+        'userscript.moukaeritai.work',
+        '127.0.0.1'
+    ];
+    const installCheckSuffixes = [
+        '.app.github.dev'
+    ];
+
+    const isInstallCheckHost = installCheckHosts.includes(location.hostname) ||
+        installCheckSuffixes.some(suffix => location.hostname.endsWith(suffix));
+
+    if (isInstallCheckHost) {
         const report = () => {
             document.dispatchEvent(new CustomEvent('userscript-check-installed', {
                 detail: {
@@ -426,7 +437,7 @@
         console.log('[Gemini Turn Counter] Initializing...');
 
         styleElement = addStyles(); // addStyles() needs to return the style element
-        
+
         // Create UI container
         const container = document.createElement('div');
         container.id = 'gemini-turn-counter-ui';
