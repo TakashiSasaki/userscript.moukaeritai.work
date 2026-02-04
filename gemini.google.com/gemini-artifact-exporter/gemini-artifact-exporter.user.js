@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.16
+// @version      0.2.17
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -518,7 +518,7 @@
             z-index: 9998; /* Below main panel */
             width: 400px;
             height: 300px;
-            background-color: rgba(20, 20, 22, 0.8);
+            background-color: rgba(20, 20, 22, 0.5);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
@@ -608,7 +608,7 @@
         panel.style.cssText = `
             position: fixed;
             z-index: 9999;
-            background-color: rgba(28, 28, 30, 0.7);
+            background-color: rgba(28, 28, 30, 0.5);
             backdrop-filter: blur(12px) saturate(180%);
             -webkit-backdrop-filter: blur(12px) saturate(180%);
             border: 1px solid rgba(255, 255, 255, 0.125);
