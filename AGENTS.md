@@ -166,39 +166,59 @@ repo_root/
 -   **バージョン更新**: ユーザースクリプトのバージョンを上げた際は、必ず `index.html` 内のそのスクリプトの `Install` ボタンのテキスト（例: `Install (vX.Y.Z)`）も最新のバージョン番号に更新してください。
 
 
-## ユーザースクリプトベストプラクティス (SPA & パフォーマンス)
+## Technical Knowledge Base
 
-YouTubeユーザースクリプト開発からの最近の学び:
+### YouTube (SPA & Performance)
 
-### 1. SPAナビゲーションとクリーンアップ
--   **早期クリーンアップ**: YouTubeのようなSPAサイトでは、ページの解体が始まる*前*に、`yt-navigate-start`のような早期のナビゲーションイベントを頼りにオブザーバーやタイマーを停止させること。`finish`イベントを待つと、オブザーバーが何千もの削除ミューテーションを処理するため、ブラウザがハングすることがよくあります。
--   **べき等性**: クリーンアップ関数は、複数回安全に呼び出せるように（例: 開始時、終了時、アンロード時）、べき等性を確保してください。
+YouTube user script development learnings:
 
-### 2. Observerのパフォーマンス
--   **広範な監視の回避**: 大規模なDOM変更が予想される場合、`subtree: true` を指定して `document.body` を監視してはいけません。
--   **ポーリングの代替案**: トランジション中に要素を待つ場合、軽量なポーリング（`setInterval`）の方が `MutationObserver` よりも安全でパフォーマンスが高いことがよくあります。
+1.  **SPA Navigation & Cleanup**:
+    -   **Early Cleanup**: On SPA sites like YouTube, rely on early navigation events like `yt-navigate-start` to stop observers and timers *before* page teardown begins. Waiting for `finish` events often causes browser hangs as observers process thousands of deletion mutations.
+    -   **Idempotency**: Ensure cleanup functions are idempotent so they can be safely called multiple times (e.g., on start, on finish, on unload).
 
-### 3. 厳格なコンテキストチェック
--   **URL検証**: メインロジックの開始時に常に `window.location.pathname` やパラメータを検証し、意図しないページにUI要素が漏れ出さないようにしてください（例: 動画再生ページにプレイリストツールが表示されるなど）。
+2.  **Observer Performance**:
+    -   **Avoid Broad Monitoring**: Do NOT monitor `document.body` with `subtree: true` if massive DOM changes are expected.
+    -   **Polling Alternatives**: For waiting on elements during transitions, lightweight polling (`setInterval`) is often safer and more performant than `MutationObserver`.
 
-### 4. Trusted Typesコンプライアンス (セキュリティ)
--   **`innerHTML` の回避**: YouTubeのような現代的なサイトは、`innerHTML` への代入をブロックするTrusted Typesセキュリティポリシーを強制します。
--   **DOMメソッドの使用**: UI要素を安全に構築するには、常に `document.createElement()`, `textContent`, `setAttribute()`, `appendChild()` を使用してください。
+3.  **Strict Context Checking**:
+    -   **URL Verification**: Always verify `window.location.pathname` or parameters at the start of your main logic to ensure UI elements don't bleed into unintended pages (e.g., playlist tools appearing on video watch pages).
 
-### 5. アクティビティと連動したパネルの状態
--   **アクティブ/非アクティブの同期**: スクリプトがUIパネルを持つ場合、その開閉状態を手動のトグルではなく、スクリプトのアクティブなコンテキストに連動させてください。
--   **アクティブ状態**: パネルのコンテンツを表示し、`Active`と表示します。
--   **非アクティブ状態**: パネルのコンテンツを折りたたみ、`Inactive`と表示します（ヘッダーは表示したまま）。
+4.  **Trusted Types Compliance (Security)**:
+    -   **Avoid `innerHTML`**: Modern sites like YouTube enforce Trusted Types security policies that block assignment to `innerHTML`.
+    -   **Use DOM Methods**: Always use `document.createElement()`, `textContent`, `setAttribute()`, and `appendChild()` to securely construct UI elements.
 
-## ユーザー固有の好み
+### Gemini (DOM Structure & Selectors)
 
--   **ユーザー名**: Takashi Sasaki
--   **メールアドレス**: takashi316@gmail.com
+Learnings from implementing features like Auto-Scroll and Conversation Management (as of Feb 2026):
 
-### indexページのファイル構成
+1.  **Conversation List Hierarchy**:
+    -   The list is roughly at `conversations-list > .conversations-container`.
+    -   **BEWARE**: Broader containers like `side-navigation-content` or `bard-sidenav` also contain "Gems" (Bot) items. Targeting these broad containers allows selectors to pick up Bot items, causing bugs (e.g., incorrect ID logic, sequential numbering artifacts).
 
-フォルダのインデックスページは、以下の3つのファイルで構成されます。
+2.  **Item Selectors**:
+    -   **Correct Selector**: `[data-test-id="conversation"]`. Note: This attribute is on an `<a>` tag, NOT a `div`. Do NOT restrict your selector to `div` (e.g., `div[data-test-id="conversation"]` will fail).
+    -   **Recommended Strategy**: Prioritize `[data-test-id="conversation"]`. If falling back to `jslog` or other attributes, strictly exclude `[data-test-id="item"]` (which usually denotes Bots/Gems).
 
--   `index.html`: ページの構造を定義します。
--   `index.css`: ページのスタイルを定義します。
--   `index.js`: ページの動的な振る舞いを定義します。
+3.  **Virtual Scrolling**:
+    -   Gemini uses virtual scrolling. Only currently visible conversation items exist in the DOM. `document.querySelectorAll` will only return a subset (e.g., ~15 items) of the full history.
+    -   Logic that depends on "finding the current item and then finding the next one" must handle cases where the current item has been scrolled out of view and unloaded from the DOM.
+
+### Shared UI Patterns
+
+1.  **Activity-Linked Panel State**:
+    -   **Sync Active/Inactive**: If a script has a UI panel, its open/closed state should be linked to the script's active context, not just a manual toggle.
+    -   **Active State**: Expand panel content and show "Active".
+    -   **Inactive State**: Collapse panel content and show "Inactive" (keep header visible).
+
+## User Preferences
+
+-   **Name**: Takashi Sasaki
+-   **Email**: takashi316@gmail.com
+
+### Index Page File Structure
+
+Folder index pages consist of three files:
+
+-   `index.html`: Defines page structure.
+-   `index.css`: Defines page styles.
+-   `index.js`: Defines dynamic behavior.
