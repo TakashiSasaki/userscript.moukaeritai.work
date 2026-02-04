@@ -155,6 +155,16 @@ JavaScript（`.user.js`）のコードを変更した後は、必ずESLintを実
 -   **バージョン表示**: パネル内には、スクリプトの現在のバージョン番号を明記してください。`GM_info.script.version` を利用して動的に取得することを推奨します。
 -   **控えめなデザイン**: パネルは小さく、ページの主要な操作を妨げない位置（例: 画面の隅）に配置してください。
 
+### パフォーマンスと監視戦略 (Performance & Monitoring Strategy)
+Webページのパフォーマンスへの影響を最小限に抑えるため、以下の戦略を採用してください。
+
+-   **ポーリングの回避**: `setInterval` 等による継続的なポーリング監視は、CPUリソースを無駄に消費するため**原則禁止**します。
+-   **イベント駆動**: 可能な限り、ブラウザのイベント（`click`, `input`, `navigation` 等）や `CustomEvent` を利用してロジックをトリガーしてください。
+-   **MutationObserverの適切な利用**:
+    -   DOMの変化を監視する必要がある場合は `MutationObserver` を利用してください。
+    -   観測範囲（`subtree`, `childList`）は必要最小限に絞ってください。`document.body` 全体を `subtree: true` で監視することは極力避けてください。
+    -   **Debounce (デバウンス)**: `MutationObserver` のコールバック内では、必ずデバウンス処理（`setTimeout` を利用した呼び出し頻度制限）を実装し、短期間の大量のDOM変更による負荷スパイクを防いでください。
+
 ## リポジトリ情報
 
 -   **リモートURL**: `https://github.com/TakashiSasaki/userscript.moukaeritai.work`
