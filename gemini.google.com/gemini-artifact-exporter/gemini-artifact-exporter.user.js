@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.11
+// @version      0.2.12
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -331,8 +331,13 @@
             await sleep(1500);
         }
 
+        const progressEl = document.getElementById('gemini-batch-export-progress');
+
         for (let i = 0; i < articleTitles.length; i++) {
-            log(`Processing item ${i + 1}/${articleTitles.length}: ${articleTitles[i]}`);
+            const statusText = `Processing ${i + 1}/${articleTitles.length}: ${articleTitles[i]}`;
+            log(statusText);
+            if (progressEl) progressEl.textContent = `${i + 1} / ${articleTitles.length}`;
+
             await processArtifact(articleTitles[i], isDryRun);
 
             // Only cooldown if it's not the last item
@@ -340,9 +345,15 @@
                 // Read cooldown settings freshly for every iteration to allow dynamic adjustment
                 const currentCooldown = parseInt(GM_getValue(COOLDOWN_SECONDS_KEY, 3), 10);
                 log(`Cooldown before next item (${currentCooldown}s)...`);
+                if (progressEl) progressEl.textContent = `Cooldown (${currentCooldown}s)...`;
                 await sleep(currentCooldown * 1000);
             }
         }
+
+        if (progressEl) progressEl.textContent = 'Done!';
+        setTimeout(() => {
+            if (progressEl) progressEl.textContent = '';
+        }, 3000);
 
         log('BATCH EXPORT COMPLETED.');
     }
@@ -639,7 +650,19 @@
         togglesContainer.appendChild(cooldownInput);
 
 
+        const progressDisplay = document.createElement('div');
+        progressDisplay.id = 'gemini-batch-export-progress';
+        progressDisplay.style.cssText = `
+            text-align: center;
+            font-family: 'Google Sans', sans-serif;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 4px;
+            height: 1.2em; /* Reserve height to prevent layout shift */
+        `;
+
         buttonContainer.appendChild(btn);
+        buttonContainer.appendChild(progressDisplay);
         buttonContainer.appendChild(togglesContainer);
 
         panel.appendChild(header);
