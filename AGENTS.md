@@ -33,6 +33,14 @@
     -   フォーマット: `https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/DOMAIN_NAME/SCRIPT_NAME/SCRIPT_NAME.user.js`
     -   **注意**: デフォルトブランチ名は `userscript.moukaeritai.work` です。
 
+### リリース除外対象の命名規則
+以下のキーワードをファイル名やディレクトリ名に含むスクリプトは、開発用または過去の遺産であり、正式なリリース対象ではありません。これらは `index.html` に掲載してはいけません。
+
+-   `obsoleted`
+-   `old`
+-   `example`
+-   `test`
+
 ### ドキュメントの3層構造
 ドキュメントの肥大化を防ぎ、人間とAIの双方に最適な情報を提供するため、以下の3層構造を維持してください。
 
