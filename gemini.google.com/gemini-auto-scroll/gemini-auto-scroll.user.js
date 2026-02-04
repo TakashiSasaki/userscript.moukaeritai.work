@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.15
+// @version      0.2.16
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -1078,7 +1078,9 @@
             log(`URL changed to: ${currentUrl}. Re-triggering scroll check.`);
 
             // If on root path and Auto-Switch is enabled, trigger selection
-            if (isAutoSwitchEnabled() && !getConversationIdFromUrl()) {
+            // But NOT if we are on the /saved-info page
+            const isSavedInfo = currentUrl.includes('/saved-info');
+            if (isAutoSwitchEnabled() && !getConversationIdFromUrl() && !isSavedInfo) {
                 log('URL is root and Auto-Switch is enabled. Attempting to select next conversation.');
                 setTimeout(selectNextConversation, 1500); // Wait for list reload
             }
