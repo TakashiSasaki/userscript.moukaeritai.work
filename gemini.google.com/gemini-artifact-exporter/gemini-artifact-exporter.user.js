@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.17
+// @version      0.2.18
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -780,15 +780,22 @@
     }
 
     function updateButtonVisibility() {
+        // Required element for this script to work
+        const sidebarButtonExists = document.querySelector(SELECTORS.SIDEBAR_BUTTON) !== null;
+
+        // If the essential element is missing, we consider the script inactive/hidden
+        // regardless of the URL check, although typically they go hand-in-hand.
+        const shouldActive = isConversationPage() && sidebarButtonExists;
+
         const panel = document.getElementById('gemini-batch-export-panel');
         if (!panel) {
-            if (isConversationPage()) {
+            if (shouldActive) {
                 createTriggerButtons();
             }
             return;
         }
 
-        const shouldShow = isConversationPage();
+        const shouldShow = shouldActive;
         panel.style.display = shouldShow ? 'flex' : 'none';
 
         const logPanel = document.getElementById('gemini-log-panel');
