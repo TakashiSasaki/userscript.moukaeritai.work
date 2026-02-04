@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.12
+// @version      0.2.13
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -266,7 +266,28 @@
         }
     }
 
+    let isExporting = false;
+    let cancelExport = false;
+
     async function runBatchExport() {
+        if (isExporting) {
+            cancelExport = true;
+            log('Cancellation requested by user.');
+            const btn = document.querySelector('#gemini-batch-export-panel button');
+            if (btn) btn.textContent = 'Stopping...';
+            return;
+        }
+
+        isExporting = true;
+        cancelExport = false;
+
+        const btn = document.querySelector('#gemini-batch-export-panel button');
+        if (btn) {
+            btn.textContent = 'Cancel Export';
+            btn.style.backgroundColor = '#d93025'; // Red color
+            btn.onmouseover = () => { btn.style.backgroundColor = '#a50e0e'; };
+            btn.onmouseout = () => { btn.style.backgroundColor = '#d93025'; };
+        }
         const logPanelBody = document.getElementById('gemini-log-panel-body');
         if (logPanelBody) {
             // Clear previous logs safely without using innerHTML to avoid TrustedHTML violation
@@ -280,6 +301,13 @@
 
         if (!isConversationPage()) {
             log('Abort: Not on a conversation page.');
+            isExporting = false;
+            if (btn) {
+                btn.textContent = 'Export All Articles';
+                btn.style.backgroundColor = '#1a73e8';
+                btn.onmouseover = () => { btn.style.backgroundColor = '#1b66c9'; };
+                btn.onmouseout = () => { btn.style.backgroundColor = '#1a73e8'; };
+            }
             return;
         }
 
@@ -299,11 +327,25 @@
                 } catch (e) {
                     log('ERROR: Sidebar did not appear after clicking toggle button.');
                     alert('Could not open sidebar.');
+                    isExporting = false;
+                    if (btn) {
+                        btn.textContent = 'Export All Articles';
+                        btn.style.backgroundColor = '#1a73e8';
+                        btn.onmouseover = () => { btn.style.backgroundColor = '#1b66c9'; };
+                        btn.onmouseout = () => { btn.style.backgroundColor = '#1a73e8'; };
+                    }
                     return;
                 }
             } else {
                 log('ERROR: Sidebar toggle button not found.');
                 alert('Sidebar toggle button not found.');
+                isExporting = false;
+                if (btn) {
+                    btn.textContent = 'Export All Articles';
+                    btn.style.backgroundColor = '#1a73e8';
+                    btn.onmouseover = () => { btn.style.backgroundColor = '#1b66c9'; };
+                    btn.onmouseout = () => { btn.style.backgroundColor = '#1a73e8'; };
+                }
                 return;
             }
         }
@@ -321,8 +363,26 @@
 
         log(`Found ${articleTitles.length} article artifacts.`);
 
+        const finishExport = () => {
+            isExporting = false;
+            cancelExport = false;
+            if (btn) {
+                btn.textContent = 'Export All Articles';
+                btn.style.backgroundColor = '#1a73e8';
+                btn.onmouseover = () => { btn.style.backgroundColor = '#1b66c9'; };
+                btn.onmouseout = () => { btn.style.backgroundColor = '#1a73e8'; };
+            }
+        };
+
         if (articleTitles.length === 0) {
             alert('No "Article" type artifacts found in the sidebar.');
+            isExporting = false;
+            if (btn) {
+                btn.textContent = 'Export All Articles';
+                btn.style.backgroundColor = '#1a73e8';
+                btn.onmouseover = () => { btn.style.backgroundColor = '#1b66c9'; };
+                btn.onmouseout = () => { btn.style.backgroundColor = '#1a73e8'; };
+            }
             return;
         }
 
@@ -334,6 +394,14 @@
         const progressEl = document.getElementById('gemini-batch-export-progress');
 
         for (let i = 0; i < articleTitles.length; i++) {
+            if (cancelExport) {
+                log('Batch export cancelled by user.');
+                if (progressEl) progressEl.textContent = 'Cancelled';
+                setTimeout(() => { if (progressEl) progressEl.textContent = ''; }, 3000);
+                finishExport();
+                return;
+            }
+
             const statusText = `Processing ${i + 1}/${articleTitles.length}: ${articleTitles[i]}`;
             log(statusText);
             if (progressEl) progressEl.textContent = `${i + 1} / ${articleTitles.length}`;
@@ -342,11 +410,24 @@
 
             // Only cooldown if it's not the last item
             if (i < articleTitles.length - 1) {
+                if (cancelExport) { // Check again before cooldown
+                    log('Batch export cancelled by user.');
+                    if (progressEl) progressEl.textContent = 'Cancelled';
+                    setTimeout(() => { if (progressEl) progressEl.textContent = ''; }, 3000);
+                    finishExport();
+                    return;
+                }
+
                 // Read cooldown settings freshly for every iteration to allow dynamic adjustment
                 const currentCooldown = parseInt(GM_getValue(COOLDOWN_SECONDS_KEY, 3), 10);
                 log(`Cooldown before next item (${currentCooldown}s)...`);
                 if (progressEl) progressEl.textContent = `Cooldown (${currentCooldown}s)...`;
-                await sleep(currentCooldown * 1000);
+
+                // Active wait to allow quicker cancellation response
+                for (let c = 0; c < currentCooldown * 10; c++) {
+                    if (cancelExport) break;
+                    await sleep(100);
+                }
             }
         }
 
@@ -356,6 +437,7 @@
         }, 3000);
 
         log('BATCH EXPORT COMPLETED.');
+        finishExport();
     }
 
     // --- UI Injection & Control ---
