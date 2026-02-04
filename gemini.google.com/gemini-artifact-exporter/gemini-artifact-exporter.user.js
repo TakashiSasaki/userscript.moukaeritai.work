@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.10
+// @version      0.2.11
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -16,7 +16,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     const installDetectionHosts = new Set([
@@ -326,12 +326,10 @@
             return;
         }
 
-if (document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
-             document.querySelector(SELECTORS.PANEL_CLOSE_BUTTON)?.click();
-             await sleep(1500);
+        if (document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
+            document.querySelector(SELECTORS.PANEL_CLOSE_BUTTON)?.click();
+            await sleep(1500);
         }
-
-        const cooldownSeconds = parseInt(GM_getValue(COOLDOWN_SECONDS_KEY, 3), 10);
 
         for (let i = 0; i < articleTitles.length; i++) {
             log(`Processing item ${i + 1}/${articleTitles.length}: ${articleTitles[i]}`);
@@ -339,8 +337,10 @@ if (document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
 
             // Only cooldown if it's not the last item
             if (i < articleTitles.length - 1) {
-                log(`Cooldown before next item (${cooldownSeconds}s)...`);
-                await sleep(cooldownSeconds * 1000);
+                // Read cooldown settings freshly for every iteration to allow dynamic adjustment
+                const currentCooldown = parseInt(GM_getValue(COOLDOWN_SECONDS_KEY, 3), 10);
+                log(`Cooldown before next item (${currentCooldown}s)...`);
+                await sleep(currentCooldown * 1000);
             }
         }
 
@@ -458,7 +458,7 @@ if (document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
             }).catch(err => {
                 log('Error copying to clipboard: ' + err);
                 copyBtn.textContent = 'Error!';
-                 setTimeout(() => {
+                setTimeout(() => {
                     copyBtn.textContent = 'Copy';
                 }, 2000);
             });
@@ -667,7 +667,7 @@ if (document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
             }
             return;
         }
-        
+
         const shouldShow = isConversationPage();
         panel.style.display = shouldShow ? 'flex' : 'none';
 
