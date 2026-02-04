@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.14
+// @version      0.2.15
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -428,9 +428,19 @@
                 log(`Cooldown before next item (${currentCooldown}s)...`);
                 if (progressEl) progressEl.textContent = `Cooldown (${currentCooldown}s)...`;
 
-                // Active wait to allow quicker cancellation response
-                for (let c = 0; c < currentCooldown * 10; c++) {
+                // Active wait to allow quicker cancellation response (Wall-clock time based)
+                const startTime = Date.now();
+                const cooldownMs = currentCooldown * 1000;
+
+                while (Date.now() - startTime < cooldownMs) {
                     if (cancelExport) break;
+
+                    // Update progress display with remaining time
+                    if (progressEl) {
+                        const remaining = Math.ceil((cooldownMs - (Date.now() - startTime)) / 1000);
+                        progressEl.textContent = `Cooldown (${remaining}s)...`;
+                    }
+
                     await sleep(100);
                 }
             }
