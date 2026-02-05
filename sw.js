@@ -35,27 +35,37 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // We only handle GET requests for caching
+  if (event.request.method !== 'GET') return;
+
   // Network First, falling back to Cache
   event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        // Check if we received a valid response
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
+    (async () => {
+      try {
+        // Always try to fetch from the network first
+        const networkResponse = await fetch(event.request);
+
+        // If fetch is successful, update the cache
+        // We check for status 200 (OK) or 0 (Opaque cross-origin response)
+        if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
+          const cache = await caches.open(CACHE_NAME);
+          // Only cache if the response is a valid type to be stored
+          // (Basic, CORS, or Opaque are generally fine for GET assets)
+          cache.put(event.request, networkResponse.clone());
         }
 
-        // Clone the response (it can be consumed only once)
-        const responseToCache = networkResponse.clone();
-
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-
         return networkResponse;
-      })
-      .catch(() => {
-        // Network failed, try cache
-        return caches.match(event.request);
-      })
+      } catch (error) {
+        // Network failed (offline), try to serve from cache
+        const cachedResponse = await caches.match(event.request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        // If neither network nor cache is available, re-throw the error
+        throw error;
+      }
+    })()
   );
 });
+
