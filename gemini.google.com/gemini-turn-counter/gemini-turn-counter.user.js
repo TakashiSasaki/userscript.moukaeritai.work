@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.18
+// @version      0.1.19
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -515,19 +515,37 @@
     }
 
     // --- Entry Point ---
-    // Use a MutationObserver to detect SPA navigation changes.
-    // Observing the body for childList changes is a common way to catch page transitions.
-    const pageObserver = new MutationObserver(checkUrlAndManageScriptState);
+    // Use the modern Navigation API for efficient, event-driven SPA routing detection.
+    // Fallback to a lightweight setInterval for unsupported browser environments.
 
+    let lastUrl = location.href;
+
+    function handleUrlChange() {
+        if (location.href !== lastUrl) {
+            lastUrl = location.href;
+            console.log('[Gemini Turn Counter] URL changed:', location.href);
+            // Delay slightly to ensure the new DOM is partially rendered before initialization
+            setTimeout(checkUrlAndManageScriptState, 500);
+        }
+    }
+
+    if (window.navigation) {
+        // Modern approach: Extremely performant, fired only on navigation events
+        window.navigation.addEventListener('navigatesuccess', () => {
+            handleUrlChange();
+        });
+        console.log('[Gemini Turn Counter] Using Navigation API for SPA routing.');
+    } else {
+        // Fallback: Extremely lightweight URL comparison poll (microseconds impact)
+        setInterval(handleUrlChange, 500);
+        console.log('[Gemini Turn Counter] Using setInterval fallback for SPA routing.');
+    }
+
+    // Initial check on load
     if (document.body) {
-        pageObserver.observe(document.body, { childList: true, subtree: false });
-        // Initial check in case the page is loaded directly.
         checkUrlAndManageScriptState();
     } else {
-        window.addEventListener('DOMContentLoaded', () => {
-            pageObserver.observe(document.body, { childList: true, subtree: false });
-            checkUrlAndManageScriptState();
-        });
+        window.addEventListener('DOMContentLoaded', checkUrlAndManageScriptState);
     }
 
 })();
