@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.23
+// @version      0.1.24
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -57,7 +57,7 @@
         // Table selector (based on samples/table-block.html)
         tableBlock: 'table-block', // or 'table' inside model response
         // Artifact selector
-        artifact: 'entry-chip',
+        artifact: 'immersive-entry-chip, entry-chip, .default-entry-chip-content',
         // Link Card selector
         linkCard: '.list-item-container.link, yt-core-attributed-string, [data-test-id="link-preview"]'
     };
@@ -357,7 +357,7 @@
                    </div>`
                 : '';
 
-            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.1.22';
+            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.1.24';
             setInnerHTML(contentDiv, `
                 <div style="margin-bottom: 8px; font-weight: bold; border-bottom:1px solid #555; padding-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
                     <span>Gemini Turns</span>
