@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.17
+// @version      0.2.18
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -72,7 +72,9 @@
         SCROLL_DELAY_MS: 500,
         STORAGE_KEY: 'gemini_auto_scroll_enabled',
         STORAGE_KEY_AUTOSWITCH: 'gemini_auto_switch_next',
-        STORAGE_KEY_LOG_VISIBLE: 'gemini_log_panel_visible'
+        STORAGE_KEY_LOG_VISIBLE: 'gemini_log_panel_visible',
+        STORAGE_KEY_MINIMIZED: 'gemini_auto_scroll_minimized',
+        PANEL_POSITION_KEY: 'gemini_auto_scroll_panel_position'
     };
 
     // --- State & Trusted Types ---
@@ -140,6 +142,18 @@
         }
     }
 
+    function isPanelMinimized() {
+        return localStorage.getItem(CONSTANTS.STORAGE_KEY_MINIMIZED) === 'true';
+    }
+
+    function togglePanelMinimized() {
+        const newState = !isPanelMinimized();
+        localStorage.setItem(CONSTANTS.STORAGE_KEY_MINIMIZED, newState);
+        const panel = document.getElementById('gemini-auto-scroll-panel');
+        if (panel) {
+            panel.classList.toggle('minimized', newState);
+        }
+    }
 
     // --- Log Panel ---
     const log = (message) => {
@@ -189,6 +203,33 @@
             #gemini-auto-scroll-panel.ready {
                 display: block;
             }
+            #gemini-auto-scroll-panel.minimized {
+                width: auto;
+                background-color: #c2e7ff; /* Light blue */
+                color: #001d35; /* Dark text */
+                border: 1px solid #c2e7ff;
+                padding: 0 12px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                font-weight: 500;
+                font-size: 13px;
+                white-space: nowrap;
+                backdrop-filter: none;
+            }
+            #gemini-auto-scroll-panel.minimized .panel-header, 
+            #gemini-auto-scroll-panel.minimized .panel-content {
+                display: none;
+            }
+            #gemini-auto-scroll-panel .minimized-summary {
+                display: none;
+                user-select: none;
+            }
+            #gemini-auto-scroll-panel.minimized .minimized-summary {
+                display: block;
+            }
             #gemini-auto-scroll-panel .panel-header {
                 padding: 8px 12px;
                 border-bottom: 1px solid #e0e0e0;
@@ -211,6 +252,20 @@
                 color: #1967d2;
                 padding: 2px 6px;
                 border-radius: 4px;
+            }
+            .gtc-minimize-btn {
+                cursor: pointer;
+                padding: 0 6px;
+                border-radius: 4px;
+                user-select: none;
+                transition: background 0.2s;
+                font-size: 16px;
+                line-height: 1;
+                color: #5f6368;
+                font-weight: bold;
+            }
+            .gtc-minimize-btn:hover {
+                background: rgba(0,0,0,0.1);
             }
             #gemini-auto-scroll-panel .panel-content {
                 padding: 12px;
@@ -597,6 +652,14 @@
         if (badge) {
             badge.textContent = `${count} items`;
         }
+
+        // Update Summary Text
+        const summarySpan = panel.querySelector('.minimized-summary');
+        if (summarySpan) {
+            const version = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.2.18';
+            summarySpan.textContent = `Auto-Scroll v${version} | ${count} items | ID: ${findSelectedConversationId() || 'N/A'}`;
+        }
+
         const convIdSpan = panel.querySelector('.conversation-id');
         if (convIdSpan) {
             convIdSpan.textContent = findSelectedConversationId() || 'N/A';
@@ -626,9 +689,13 @@
         panel.id = 'gemini-auto-scroll-panel';
 
         setInnerHTML(panel, `
+            <div class="minimized-summary">Loading...</div>
             <div class="panel-header">
-                <h1>${GM_info.script.name}</h1>
-                <span class="version-badge">v${GM_info.script.version}</span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <h1>${GM_info.script.name}</h1>
+                    <span class="version-badge">v${GM_info.script.version}</span>
+                </div>
+                <span class="gtc-minimize-btn" title="Minimize">−</span>
             </div>
             <div class="panel-content">
                 <div class="control-row">
@@ -681,6 +748,21 @@
             e.stopPropagation();
             toggleLogPanelVisibility();
         });
+
+        // Toggle Expand/Minimize when clicking minimized body
+        panel.addEventListener('click', (e) => {
+            if (panel.classList.contains('minimized') && !e.target.closest('button, input, .gtc-minimize-btn')) {
+                togglePanelMinimized();
+            }
+        });
+
+        const minimizeBtn = panel.querySelector('.gtc-minimize-btn');
+        if (minimizeBtn) {
+            minimizeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                togglePanelMinimized();
+            });
+        }
 
         const header = panel.querySelector('.panel-header');
         let isDragging = false;
@@ -736,6 +818,10 @@
             panel.style.top = '20px';
             panel.style.right = '20px';
             panel.style.left = 'auto';
+        }
+
+        if (isPanelMinimized()) {
+            panel.classList.add('minimized');
         }
 
         panel.classList.add('ready');
