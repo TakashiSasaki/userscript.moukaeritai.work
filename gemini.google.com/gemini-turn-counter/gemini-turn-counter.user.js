@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.27
+// @version      0.1.28
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -97,31 +97,38 @@
                 position: fixed;
                 top: 60px;
                 right: 20px;
-                background-color: #1e1f20; /* Solid Gemini dark theme bg */
-                color: #bdc1c6;
+                background-color: #c2e7ff; /* Light blue */
+                color: #001d35; /* Dark text */
                 border-radius: 8px;
                 z-index: 9999;
                 font-family: Google Sans, Roboto, sans-serif;
-                font-size: 14px;
+                font-size: 13px;
                 box-shadow: 0 0 10px rgba(0,0,0,0.5);
-                border: 1px solid #444746;
+                border: 1px solid #c2e7ff;
                 overflow: hidden;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 cursor: pointer;
-                width: 40px;
-                height: 40px;
-                padding: 0;
+                width: auto;
+                height: 32px;
+                padding: 0 12px;
                 user-select: none;
+                font-weight: 500;
+                white-space: nowrap;
             }
             #gemini-turn-counter-ui.expanded {
+                background-color: #1e1f20; /* Solid Gemini dark theme bg */
+                color: #bdc1c6;
+                border: 1px solid #444746;
                 width: auto;
                 height: auto;
                 min-width: 180px;
                 padding: 12px;
                 display: block;
                 cursor: default;
+                font-weight: normal;
+                font-size: 14px;
             }
             #gemini-turn-counter-ui .gtc-icon {
                 display: flex;
@@ -129,25 +136,9 @@
                 justify-content: center;
                 width: 100%;
                 height: 100%;
-                position: relative;
             }
             #gemini-turn-counter-ui.expanded .gtc-icon {
                 display: none;
-            }
-            .gtc-icon-badge {
-                position: absolute;
-                bottom: 2px;
-                right: 2px;
-                background-color: #8ab4f8;
-                color: #202124;
-                font-size: 10px;
-                font-weight: bold;
-                padding: 0 4px;
-                border-radius: 10px;
-                min-width: 14px;
-                text-align: center;
-                line-height: 14px;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.3);
             }
             #gemini-turn-counter-ui .gtc-content {
                 display: none;
@@ -292,15 +283,8 @@
             const container = document.getElementById('gemini-turn-counter-ui');
             if (!container) return; // Should not happen if initialized correctly
 
-            const badgeSpan = container.querySelector('.gtc-icon-badge');
+            const iconDiv = container.querySelector('.gtc-icon');
             const contentDiv = container.querySelector('.gtc-content');
-
-            // Update Badge
-            if (badgeSpan) {
-                badgeSpan.textContent = modelTurns.length;
-                // Optional: Hide badge if 0? 
-                // badgeSpan.style.display = modelTurns.length > 0 ? 'block' : 'none';
-            }
 
             let userCharCount = 0;
             let collectedImages = [];
@@ -349,13 +333,17 @@
             });
 
             const imageCount = collectedImages.length;
+            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.1.28';
+
+            if (iconDiv) {
+                iconDiv.textContent = `Gemini Turns v${scriptVersion} | U:${userTurns.length} M:${modelTurns.length} A:${totalArtifacts} L:${totalLinkCards}`;
+            }
+
             const thumbnailsHtml = imageCount > 0
                 ? `<div class="gtc-thumbnails">
                     ${collectedImages.map(url => `<img src="${url}" class="gtc-thumbnail" />`).join('')}
                    </div>`
                 : '';
-
-            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.1.27';
             setInnerHTML(contentDiv, `
                 <div style="margin-bottom: 8px; font-weight: bold; border-bottom:1px solid #555; padding-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
                     <span>Gemini Turns</span>
@@ -476,16 +464,8 @@
         const container = document.createElement('div');
         container.id = 'gemini-turn-counter-ui';
 
-        // Icon SVG
-        const iconSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="color: #a8c7fa;">
-            <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM9 17H7V10H9V17ZM13 17H11V7H13V17ZM17 17H15V13H17V17Z"/>
-        </svg>`;
-
         setInnerHTML(container, `
-            <div class="gtc-icon">
-                ${iconSvg}
-                <span class="gtc-icon-badge">0</span>
-            </div>
+            <div class="gtc-icon">Loading...</div>
             <div class="gtc-content">Loading...</div>
         `);
         document.body.appendChild(container);
