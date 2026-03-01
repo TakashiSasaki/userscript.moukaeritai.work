@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.19
+// @version      0.2.20
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -66,13 +66,8 @@
     };
 
     const CONSTANTS = {
-        MAX_RETRIES: 20,
-        ENDLESS_RETRIES: 300, // "Endless" enough for most cases
-        SPINNER_WAIT_MS: 3000,
-        SCROLL_DELAY_MS: 500,
         STORAGE_KEY: 'gemini_auto_scroll_enabled',
         STORAGE_KEY_AUTOSWITCH: 'gemini_auto_switch_next',
-        STORAGE_KEY_LOG_VISIBLE: 'gemini_log_panel_visible',
         STORAGE_KEY_MINIMIZED: 'gemini_auto_scroll_minimized',
         PANEL_POSITION_KEY: 'gemini_auto_scroll_panel_position'
     };
@@ -125,21 +120,6 @@
         const newState = !isAutoSwitchEnabled();
         localStorage.setItem(CONSTANTS.STORAGE_KEY_AUTOSWITCH, newState);
         updatePanelUI();
-        log(`Auto-Switch to Next: ${newState ? 'Enabled' : 'Disabled'}`);
-    }
-
-    function isLogPanelVisible() {
-        return localStorage.getItem(CONSTANTS.STORAGE_KEY_LOG_VISIBLE) === 'true';
-    }
-
-    function toggleLogPanelVisibility() {
-        const newState = !isLogPanelVisible();
-        localStorage.setItem(CONSTANTS.STORAGE_KEY_LOG_VISIBLE, newState);
-        updatePanelUI();
-        const logPanel = document.getElementById('gemini-auto-scroll-log-panel');
-        if (logPanel) {
-            logPanel.style.display = newState ? 'flex' : 'none';
-        }
     }
 
     function isPanelMinimized() {
@@ -154,22 +134,6 @@
             panel.classList.toggle('minimized', newState);
         }
     }
-
-    // --- Log Panel ---
-    const log = (message) => {
-        if (!isLogPanelVisible()) return;
-        const logPanel = document.getElementById('gemini-auto-scroll-log-panel-content');
-        if (logPanel) {
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = document.createElement('div');
-            logEntry.className = 'log-entry';
-            logEntry.textContent = `[${timestamp}] ${message}`;
-            logPanel.appendChild(logEntry);
-            // Auto-scroll to the bottom
-            logPanel.scrollTop = logPanel.scrollHeight;
-        }
-        console.log(`[GeminiAutoScroll LOG] ${message}`);
-    };
 
 
     // --- UI Injection ---
@@ -325,7 +289,6 @@
                 font-weight: bold;
                 color: #1e8e3e;
             }
-
             .gtc-conversation-index {
                 position: absolute;
                 top: 6px;
@@ -340,74 +303,6 @@
                 font-family: monospace;
             }
 
-            /* --- Log Panel Styles --- */
-            #gemini-auto-scroll-log-panel {
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                width: 450px;
-                height: 300px;
-                background-color: rgba(30, 30, 30, 0.9);
-                border: 1px solid #444;
-                border-radius: 8px;
-                z-index: 9999;
-                display: none; /* Initially hidden */
-                flex-direction: column;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-                backdrop-filter: blur(5px);
-                resize: both;
-                overflow: hidden;
-            }
-            #gemini-auto-scroll-log-panel-header {
-                padding: 8px 12px;
-                cursor: move;
-                background-color: #333;
-                color: #f1f1f1;
-                font-family: 'Google Sans', sans-serif;
-                font-size: 14px;
-                user-select: none;
-                border-bottom: 1px solid #444;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            .log-panel-controls {
-                display: flex;
-                gap: 8px;
-            }
-            .log-action-btn {
-                background: linear-gradient(to bottom, #444, #333);
-                border: 1px solid #555;
-                color: #fff;
-                cursor: pointer;
-                font-size: 11px;
-                padding: 2px 8px;
-                border-radius: 4px;
-                transition: background 0.2s;
-            }
-            .log-action-btn:hover {
-                background: linear-gradient(to bottom, #555, #444);
-            }
-            .log-action-btn:active {
-                background: #222;
-            }
-            #gemini-auto-scroll-log-panel-content {
-                flex-grow: 1;
-                overflow-y: auto;
-                padding: 10px;
-                font-family: 'Fira Code', 'monospace';
-                font-size: 12px;
-                color: #e0e0e0;
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-            }
-            .log-entry {
-                white-space: pre-wrap;
-                word-break: break-all;
-            }
-
-
             /* --- Custom Scrollbar Styles --- */
             ::-webkit-scrollbar { width: 16px !important; height: 16px !important; background-color: #f0f0f0; display: block !important; }
             ::-webkit-scrollbar-track { background: #e0e0e0; border-left: 1px solid #ccc; }
@@ -417,91 +312,6 @@
         `;
         document.head.appendChild(style);
     }
-
-    function createLogPanel() {
-        if (document.getElementById('gemini-auto-scroll-log-panel')) return;
-
-        const logPanel = document.createElement('div');
-        logPanel.id = 'gemini-auto-scroll-log-panel';
-        setInnerHTML(logPanel, `
-            <div id="gemini-auto-scroll-log-panel-header">
-                <span>Log Panel</span>
-                <div class="log-panel-controls">
-                    <button class="log-action-btn" id="gtc-copy-log">Copy</button>
-                    <button class="log-action-btn" id="gtc-clear-log">Cls</button>
-                </div>
-            </div>
-            <div id="gemini-auto-scroll-log-panel-content"></div>
-        `);
-        document.body.appendChild(logPanel);
-
-        // --- Log Controls ---
-        const copyBtn = logPanel.querySelector('#gtc-copy-log');
-        const clearBtn = logPanel.querySelector('#gtc-clear-log');
-
-        copyBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent drag start
-            const content = logPanel.querySelector('#gemini-auto-scroll-log-panel-content');
-            if (content) {
-                const text = content.innerText;
-                navigator.clipboard.writeText(text).then(() => {
-                    const originalText = copyBtn.textContent;
-                    copyBtn.textContent = 'Copied!';
-                    setTimeout(() => copyBtn.textContent = originalText, 1500);
-                }).catch(err => {
-                    console.error('Failed to copy log:', err);
-                    copyBtn.textContent = 'Error';
-                    setTimeout(() => copyBtn.textContent = 'Copy', 1500);
-                });
-            }
-        });
-
-        copyBtn.addEventListener('mousedown', (e) => e.stopPropagation()); // Prevent drag
-
-        clearBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            constcontent = logPanel.querySelector('#gemini-auto-scroll-log-panel-content');
-            const content = document.getElementById('gemini-auto-scroll-log-panel-content');
-            if (content) content.innerHTML = '';
-        });
-        clearBtn.addEventListener('mousedown', (e) => e.stopPropagation());
-
-        if (isLogPanelVisible()) {
-            logPanel.style.display = 'flex';
-        }
-
-        // --- Dragging Logic ---
-        const header = logPanel.querySelector('#gemini-auto-scroll-log-panel-header');
-        let isDragging = false;
-        let offset = { x: 0, y: 0 };
-
-        header.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            offset.x = e.clientX - logPanel.offsetLeft;
-            offset.y = e.clientY - logPanel.offsetTop;
-            logPanel.style.transition = 'none';
-            document.body.style.userSelect = 'none';
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            let newX = e.clientX - offset.x;
-            let newY = e.clientY - offset.y;
-            newX = Math.max(0, Math.min(newX, window.innerWidth - logPanel.offsetWidth));
-            newY = Math.max(0, Math.min(newY, window.innerHeight - logPanel.offsetHeight));
-            logPanel.style.left = `${newX}px`;
-            logPanel.style.top = `${newY}px`;
-        });
-
-        document.addEventListener('mouseup', () => {
-            if (!isDragging) return;
-            isDragging = false;
-            logPanel.style.transition = '';
-            document.body.style.userSelect = '';
-        });
-    }
-
 
     function getConversationItems() {
         const container = document.querySelector(SELECTORS.SCROLL_CONTAINER) || document;
@@ -633,20 +443,6 @@
             }
         }
 
-        // Update Log Panel Toggle UI
-        const logBtn = panel.querySelector('.log-toggle');
-        const logStatusText = panel.querySelector('.log-status');
-        if (logBtn && logStatusText) {
-            const isLogVisible = isLogPanelVisible();
-            logBtn.className = 'gtc-toggle-btn log-toggle ' + (isLogVisible ? 'enabled' : 'disabled');
-            logStatusText.textContent = isLogVisible ? 'ON' : 'OFF';
-            const logIcon = logBtn.querySelector('.gtc-icon');
-            if (logIcon) {
-                setInnerHTML(logIcon, isLogVisible ? ICONS.CHECKED : ICONS.UNCHECKED);
-            }
-        }
-
-
         const count = updateConversationIndices();
         const badge = panel.querySelector('.gtc-badge');
         if (badge) {
@@ -674,7 +470,7 @@
         const selectedIndex = items.findIndex(item => item.classList.contains('selected'));
         if (selectedIndex !== -1) {
             if (lastSelectedIndex !== selectedIndex) {
-                log(`Selected index changed from ${lastSelectedIndex} to ${selectedIndex}.`);
+                console.debug(`[GeminiAutoScroll] Selected index changed from ${lastSelectedIndex} to ${selectedIndex}.`);
                 lastSelectedIndex = selectedIndex;
             }
         }
@@ -712,13 +508,6 @@
                         <button class="gtc-toggle-btn switch-toggle"><span class="gtc-icon"></span></button>
                     </div>
                 </div>
-                <div class="control-row">
-                    <label>Show Log</label>
-                    <div class="toggle-switch">
-                        <span class="status-text log-status">OFF</span>
-                        <button class="gtc-toggle-btn log-toggle"><span class="gtc-icon"></span></button>
-                    </div>
-                </div>
                 <div class="info-row">
                     <span>Loaded: <span class="gtc-badge">0 items</span></span>
                     <span>ID: <span class="conversation-id">N/A</span></span>
@@ -741,12 +530,6 @@
             e.preventDefault();
             e.stopPropagation();
             toggleAutoSwitch();
-        });
-
-        panel.querySelector('.log-toggle').addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleLogPanelVisibility();
         });
 
         // Toggle Expand/Minimize when clicking minimized body
@@ -902,14 +685,6 @@
         return false;
     }
 
-    function isSpinnerVisible() {
-        return document.querySelector(SELECTORS.SPINNER) !== null;
-    }
-
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
     // --- Main Logic ---
 
     async function attemptScrollToConversation() {
@@ -918,76 +693,52 @@
 
         isProcessing = true;
         updatePanelUI();
-        log('Auto-scroll loop started.');
+        console.debug('[GeminiAutoScroll] Auto-scroll loop started.');
 
         let container = getScrollContainer();
-
-        // 1. Setup MutationObserver for the container to detect new items immediately
-        let mutationObserver = null;
+        let scrollInterval = null;
 
         const scrollDown = () => {
             if (container && isAutoScrollEnabled()) {
-                // Use a large number to scroll to bottom without reading scrollHeight (which forces reflow)
                 container.scrollTop = 99999999;
             }
         };
 
-        // Local debounce timer to avoid conflict with the global UI debounce timer
-        let scrollDebounceTimer = null;
-
-        const attachObserver = (target) => {
-            if (mutationObserver) mutationObserver.disconnect();
-            mutationObserver = new MutationObserver((_mutations) => {
-                if (!isAutoScrollEnabled()) return;
-                // Debounce scrolling to avoid slamming the browser/app with events
-                if (scrollDebounceTimer) clearTimeout(scrollDebounceTimer);
-                scrollDebounceTimer = setTimeout(scrollDown, 100);
-            });
-            mutationObserver.observe(target, { childList: true, subtree: true });
-        };
-
         try {
-            while (isAutoScrollEnabled()) {
-                // Critical Error Check
-                if (checkErrorState()) {
-                    log('Critical error detected ("Couldn\'t load"). Stopping auto-scroll.');
-                    console.warn('[GeminiAutoScroll] Critical error detected ("Couldn\'t load"). Stopping auto-scroll.');
-                    toggleAutoScroll(); // This will disable it
-                    alert('Gemini Auto-Scroll halted: "Couldn’t load recent chats" error detected. Please reload the page.');
-                    break;
+            // Use a simple high-frequency interval to push scroll down.
+            // This is actually frequently better than MutationObserver for endless scroll, 
+            // since the API fetching bottleneck limits the actual DOM repaint rate anyway.
+            scrollInterval = setInterval(() => {
+                if (!isAutoScrollEnabled()) {
+                    clearInterval(scrollInterval);
+                    return;
                 }
 
-                // Determine container (it might change or be created lazily)
-                const currentContainer = getScrollContainer();
+                if (checkErrorState()) {
+                    console.warn('[GeminiAutoScroll] Critical error detected ("Couldn\'t load"). Stopping auto-scroll.');
+                    toggleAutoScroll();
+                    clearInterval(scrollInterval);
+                    alert('Gemini Auto-Scroll halted: "Couldn’t load recent chats" error detected. Please reload the page.');
+                    return;
+                }
 
+                const currentContainer = getScrollContainer();
                 if (currentContainer && currentContainer !== container) {
                     container = currentContainer;
-                    log(`New scroll container found: ${container.tagName}.${container.className}`);
-                    attachObserver(container);
                 }
 
-                if (container) {
-                    // Just scroll. Reading scrollHeight/scrollTop forces reflow. 
-                    // Since this loop is now a fallback (2s interval), blind scroll is acceptable 
-                    // and much more performant than forcing layout calc.
-                    scrollDown();
-                }
+                if (container) scrollDown();
 
-                // Wait loop - Increased to 2s to rely mostly on MutationObserver and reduce CPU usage
-                await sleep(2000);
+            }, 500);
 
-                if (isSpinnerVisible()) {
-                    await sleep(200);
-                }
-            }
         } catch (e) {
-            log(`Error in scroll loop: ${e.message}`);
-            console.error('[GeminiAutoScroll] Error:', e);
+            console.error('[GeminiAutoScroll] Error in scroll loop:', e);
         } finally {
-            if (mutationObserver) mutationObserver.disconnect();
-            isProcessing = false;
+            // Keep the 'isProcessing = true' flag up as long as interval runs.
+            // To cleanly resolve state, we only set false if we exit synchronosly.
+            // Since this is infinite via interval, it actually runs until disabled.
+            isProcessing = !!scrollInterval;
             updatePanelUI();
-            log('Auto-scroll loop stopped.');
         }
     }
 
@@ -998,8 +749,6 @@
 
     const uiObserver = new MutationObserver((mutations) => {
         createDraggablePanel();
-        createLogPanel();
-
 
         // Check for deletions of the selected item
         for (const mutation of mutations) {
@@ -1009,13 +758,10 @@
                     const wasSelected = removedNode.classList?.contains('selected') || removedNode.querySelector('.selected');
 
                     if (isConversation && wasSelected && lastSelectedIndex !== -1) {
-                        log(`Selected conversation (index: ${lastSelectedIndex}) was removed from DOM.`);
+                        console.debug(`[GeminiAutoScroll] Selected conversation (index: ${lastSelectedIndex}) was removed from DOM.`);
                         if (isAutoSwitchEnabled()) {
-                            log('Auto-switch is enabled. Triggering selection of next conversation.');
                             // Execute selection in next tick to allow DOM to settle
                             setTimeout(selectNextConversation, 50);
-                        } else {
-                            log('Auto-switch is disabled. No action taken.');
                         }
                     }
                 }
@@ -1030,8 +776,6 @@
     });
 
     function selectNextConversation(retryCount = 0) {
-        log(`Attempting to select next conversation (attempt ${retryCount + 1}).`);
-
         // Use the centralized logic to find the appropriate next ID
         const nextId = findNextConversationId();
 
@@ -1041,25 +785,20 @@
             const target = items.find(item => getIdFromItem(item) === nextId);
 
             if (target) {
-                log(`Target element found for ID ${nextId}. Clicking it.`);
+                console.debug(`[GeminiAutoScroll] Target element found for ID ${nextId}. Clicking it.`);
                 target.click();
             } else {
                 if (retryCount < 5) {
-                    log(`Target element for ID ${nextId} not found in DOM. Retrying in 200ms...`);
                     setTimeout(() => selectNextConversation(retryCount + 1), 200);
                 } else {
                     // Element not found in DOM after retries.
                     // Navigate directly via URL as last resort.
-                    log(`Target element for ID ${nextId} not found in DOM after retries. Navigating via URL.`);
                     window.location.href = `https://gemini.google.com/app/${nextId}`;
                 }
             }
         } else {
             if (retryCount < 3) {
-                log('No next conversation ID determined yet. Retrying...');
                 setTimeout(() => selectNextConversation(retryCount + 1), 200);
-            } else {
-                log('No next conversation ID determined by findNextConversationId after retries.');
             }
         }
     }
@@ -1070,13 +809,11 @@
         const currentUrl = window.location.href;
         if (currentUrl !== lastUrl) {
             lastUrl = currentUrl;
-            log(`URL changed to: ${currentUrl}. Re-triggering scroll check.`);
 
             // If on root path and Auto-Switch is enabled, trigger selection
             // But NOT if we are on the /saved-info page
             const isSavedInfo = currentUrl.includes('/saved-info');
             if (isAutoSwitchEnabled() && !getConversationIdFromUrl() && !isSavedInfo) {
-                log('URL is root and Auto-Switch is enabled. Attempting to select next conversation.');
                 setTimeout(selectNextConversation, 1500); // Wait for list reload
             }
 
@@ -1090,7 +827,6 @@
 
     setTimeout(() => {
         createDraggablePanel();
-        createLogPanel();
         attemptScrollToConversation();
     }, 2500);
 
