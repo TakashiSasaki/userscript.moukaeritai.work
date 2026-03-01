@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.16
+// @version      0.2.17
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -59,12 +59,10 @@
     }
 
     const SELECTORS = {
-        CONVERSATION_ITEM: '[data-test-id="conversation"], [jslog*="c_"]', // Combined for matches(), but use getConversationItems() for retrieval
+        CONVERSATION_ITEM: 'a.conversation, a[data-test-id="conversation"]',
         SPINNER: 'mat-progress-spinner[data-test-id="loading-history-spinner"]',
-        SCROLL_CONTAINER: '.conversations-container, conversations-list', // Updated to target the inner container first
-        MENU_BUTTON: 'side-nav-menu-button',
-        ERROR_SNACKBAR: 'mat-snack-bar-container',
-        ERROR_LABEL: '.mat-mdc-snack-bar-label'
+        SCROLL_CONTAINER: 'nav infinite-scroller, infinite-scroller',
+        ERROR_SNACKBAR: 'mat-snack-bar-container'
     };
 
     const CONSTANTS = {
@@ -451,35 +449,9 @@
 
 
     function getConversationItems() {
-        // Strategy 1: Scope search to the conversations list container (High precision)
-        // Removed broader containers (side-navigation-content, bard-sidenav) to avoid picking up Bot items
-        let container = document.querySelector('conversations-list') ||
-            document.querySelector('.conversations-container');
-
-        const selectors = [
-            '[data-test-id="conversation"]',
-            // Exclude bot items which have data-test-id="item"
-            'div[jslog*="c_"]:not([data-test-id="item"])'
-        ];
-
-        if (container) {
-            for (const selector of selectors) {
-                const items = container.querySelectorAll(selector);
-                if (items.length > 0) {
-                    return Array.from(items);
-                }
-            }
-        }
-
-        // Strategy 2: Fallback to document search if container not found or empty (Lower precision but safer)
-        for (const selector of selectors) {
-            const items = document.querySelectorAll(selector);
-            if (items.length > 0) {
-                return Array.from(items);
-            }
-        }
-
-        return [];
+        const container = document.querySelector(SELECTORS.SCROLL_CONTAINER) || document;
+        const items = container.querySelectorAll(SELECTORS.CONVERSATION_ITEM);
+        return Array.from(items);
     }
 
     function updateConversationIndices() {
@@ -510,113 +482,64 @@
         return items.length;
     }
 
-    function findSelectedConversationId() {
-        // Try precise selector first
-        const selectedItem = document.querySelector('[data-test-id="conversation"].selected');
-        if (selectedItem) {
-            const jslog = selectedItem.getAttribute('jslog');
-            if (jslog) {
-                const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/["']([a-f0-9]{16})["']/);
-                if (match) return match[1];
-            }
+    function getIdFromItem(item) {
+        if (!item) return null;
+
+        // Strategy 1: href (Most reliable)
+        const href = item.getAttribute('href');
+        if (href) {
+            const match = href.match(/\/app\/([a-f0-9]{16})/);
+            if (match) return match[1];
         }
-        // Fallback: search in all items if class name differs
+
+        // Strategy 2: jslog fallback
+        const jslog = item.getAttribute('jslog');
+        if (jslog) {
+            const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/["']([a-f0-9]{16})["']/);
+            if (match) return match[1];
+        }
+        return null;
+    }
+
+    function findSelectedConversationId() {
         const currentItems = getConversationItems();
-        const selectedViaClass = currentItems.find(item => item.classList.contains('selected'));
-        if (selectedViaClass) {
-            const jslog = selectedViaClass.getAttribute('jslog');
-            if (jslog) {
-                const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/["']([a-f0-9]{16})["']/);
-                if (match) return match[1];
-            }
+        const selectedItem = currentItems.find(item => item.classList.contains('selected') || item.getAttribute('aria-current') === 'page' || item.getAttribute('aria-current') === 'true');
+
+        if (selectedItem) {
+            const id = getIdFromItem(selectedItem);
+            if (id) return id;
         }
         return getConversationIdFromUrl();
     }
 
 
     function findNextConversationId() {
-        // Check if Auto-Switch is enabled
         const autoSwitchEnabled = isAutoSwitchEnabled();
-
         const currentId = getConversationIdFromUrl();
         const allItems = getConversationItems();
 
         if (!currentId) {
-            // If we are on the root /app/ path (no current ID) and Auto-Switch is ON,
-            // we should select the FIRST conversation in the list.
             if (autoSwitchEnabled && allItems.length > 0) {
-                // Determine which item to select. Try to stay at the same index (or close to it)
-                // to mimic "next" behavior relative to the deleted item.
                 let targetIndex = 0;
                 if (lastSelectedIndex >= 0) {
                     targetIndex = Math.min(lastSelectedIndex, allItems.length - 1);
                 }
-
-                const targetItem = allItems[targetIndex];
-                let nextId = null;
-                const jslog = targetItem.getAttribute('jslog');
-                if (jslog) {
-                    const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/[\"\']([a-f0-9]{16})[\"\']/);
-                    if (match) {
-                        nextId = match[1];
-                        log(`findNextConversationId: On root path, Auto-Switch Enabled. Target index: ${targetIndex} (last: ${lastSelectedIndex}). Selected ID: ${nextId}`);
-                        return nextId;
-                    }
-                }
+                const nextId = getIdFromItem(allItems[targetIndex]);
+                if (nextId) return nextId;
             }
-            log('findNextConversationId: Could not get current ID from URL and Auto-Switch criteria not met.');
             return null;
         }
 
-        if (allItems.length === 0) {
-            // log('findNextConversationId: No items found using any selector strategy.');
-        }
-        const currentIndex = allItems.findIndex(item => {
-            const jslog = item.getAttribute('jslog');
-            if (!jslog) return false;
-            const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/["']([a-f0-9]{16})["']/);
-            if (match && match[1] === currentId) {
-                return true;
-            }
-            return false;
-        });
-
-        if (currentIndex === -1) {
-            log(`findNextConversationId: Current ID ${currentId} not found in list.`);
-            // Debug: Log the first few IDs found to understand mismatch
-            const debugIds = allItems.slice(0, 5).map(item => {
-                const jslog = item.getAttribute('jslog');
-                const match = jslog && (jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/["']([a-f0-9]{16})["']/));
-                return match ? match[1] : 'unknown';
-            });
-            log(`Top 5 item IDs in list: ${debugIds.join(', ')}... (Total: ${allItems.length})`);
-        } else {
-            log(`findNextConversationId: Found ${allItems.length} items, currentIndex: ${currentIndex}`);
-        }
+        const currentIndex = allItems.findIndex(item => getIdFromItem(item) === currentId);
 
         if (currentIndex !== -1) {
-            // Search forward from the current item
             for (let i = currentIndex + 1; i < allItems.length; i++) {
-                const nextItem = allItems[i];
-                if (nextItem) {
-                    const jslog = nextItem.getAttribute('jslog');
-                    if (jslog) {
-                        const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/["']([a-f0-9]{16})["']/);
-                        if (match) {
-                            const nextId = match[1];
-                            if (nextId !== currentId) {
-                                log(`- Next conversation ID found: ${nextId} (at index ${i})`);
-                                return nextId;
-                            } else {
-                                // This is a duplicate ID entry in the list, skip it.
-                                // log(`- Skipped duplicate ID at index ${i}`);
-                            }
-                        }
-                    }
+                const nextId = getIdFromItem(allItems[i]);
+                if (nextId && nextId !== currentId) {
+                    return nextId;
                 }
             }
         }
-        log('- No next conversation ID found, returning null');
         return null;
     }
 
@@ -841,49 +764,17 @@
     }
 
     function getScrollContainer() {
-        // Strategy 1: Find valid scroll container from a list item (Auto-Detect) - BEST
-        // This checks actual computed styles for overflow and scrollHeight.
+        const container = document.querySelector(SELECTORS.SCROLL_CONTAINER);
+        if (container && isElementScrollable(container)) {
+            return container;
+        }
+        // Fallback
         const anyItem = document.querySelector(SELECTORS.CONVERSATION_ITEM);
         if (anyItem) {
             const scrollParent = findScrollableParent(anyItem);
-            if (scrollParent) {
-                if (!window._gtcInfoLogged) {
-                    console.log('[GeminiAutoScroll] Detected scroll container via item:', scrollParent);
-                    window._gtcInfoLogged = true;
-                }
-                return scrollParent;
-            }
+            if (scrollParent) return scrollParent;
         }
-
-        // Strategy 0: Explicit User-Identified Tag (Fallback)
-        // If Strategy 1 failed (e.g. no items, or not enough items to scroll yet), we try to guess.
-        const explicitContainer = document.querySelector('infinite-scroller');
-        if (explicitContainer) {
-            // Check if the infinite-scroller itself is the scroller
-            if (isElementScrollable(explicitContainer)) return explicitContainer;
-
-            // Check known children
-            const candidates = [
-                explicitContainer.querySelector('.conversations-container'),
-                explicitContainer.querySelector('.chat-history-list'),
-                explicitContainer.querySelector('conversations-list')
-            ];
-
-            for (const candidate of candidates) {
-                if (candidate && isElementScrollable(candidate)) {
-                    return candidate;
-                }
-            }
-
-            // If we are here, we found structure but no scrollbar.
-            // Maybe it is too short to scroll? Or styles not loaded?
-            // Return one as best guess to allow attempts.
-            return candidates[0] || explicitContainer;
-        }
-
-        // Strategy 2: Fallback to known selectors
-        return document.querySelector(SELECTORS.SCROLL_CONTAINER) ||
-            document.querySelector('conversations-list');
+        return container;
     }
 
     function isElementScrollable(element) {
@@ -1040,10 +931,7 @@
         if (nextId) {
             // Find the element with this ID and click it
             const items = getConversationItems();
-            const target = items.find(item => {
-                const jslog = item.getAttribute('jslog');
-                return jslog && jslog.includes(nextId);
-            });
+            const target = items.find(item => getIdFromItem(item) === nextId);
 
             if (target) {
                 log(`Target element found for ID ${nextId}. Clicking it.`);
