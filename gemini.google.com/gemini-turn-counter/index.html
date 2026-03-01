@@ -62,40 +62,106 @@
         </svg>
         userscript.moukaeritai.work
     </a>
-    <div id="content">Loading documentation...</div>
 
-    <!-- Marked library for parsing markdown -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            fetch('README.md')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(text => {
-                    document.getElementById('content').innerHTML = marked.parse(text);
-                })
-                .catch(err => {
-                    document.getElementById('content').innerHTML = `
-                        <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 1em; border-radius: 4px;">
-                            <h3 style="margin-top: 0;">Error loading document</h3>
-                            <p>${err.message}</p>
-                            <hr>
-                            <p><strong>注意:</strong> このファイルをローカルファイルシステム (file://) から直接開いている場合、ブラウザのセキュリティポリシー(CORS)により外部ファイルの読み込みがブロックされることがあります。</p>
-                            <p>以下のいずれかの方法で閲覧してください：</p>
-                            <ul>
-                                <li>ローカルサーバーを起動してアクセスする (例: <code>python -m http.server</code> や <code>npx http-server</code>)</li>
-                                <li>VSCodeの "Live Server" 拡張機能を使用する</li>
-                            </ul>
-                        </div>
-                    `;
-                    console.error('Error fetching markdown:', err);
-                });
-        });
-    </script>
+    <div id="content">
+        <h1>Gemini Turn Counter 開発ドキュメント</h1>
+        <p>このドキュメントは、Tampermonkey等で動作するユーザースクリプト <code>gemini-turn-counter.user.js</code> の仕様と開発について記述します。</p>
+
+        <h2>1. 概要と目的</h2>
+        <p>すでに作成済みの <code>chatgpt-turn-counter</code> と同様に、Google Gemini
+            上での会話において、メッセージ数（ターン数）や文字数をリアルタイムにカウントし、画面上に表示することを目的としています。</p>
+
+        <h2>2. 機能一覧</h2>
+
+        <h3>2.1 カウンター機能 (Turn Counter)</h3>
+        <p>以下の要素をカウントし、表示します。</p>
+        <ul>
+            <li><strong>ユーザー送信数 (User)</strong>: ユーザーがメッセージを送信した回数
+                <ul>
+                    <li><strong>文字数表示</strong>: テキストノードの合計文字数を併記 (例: <code>5 (1,234 chars)</code>)。</li>
+                </ul>
+            </li>
+            <li><strong>モデル応答数 (Model)</strong>: Geminiがレスポンスを返した回数
+                <ul>
+                    <li><strong>文字数表示</strong>: 応答メッセージの合計文字数を併記。</li>
+                </ul>
+            </li>
+            <li><strong>画像送信数 (Images)</strong>: ユーザーが送信した画像の数
+                <ul>
+                    <li><strong>サムネイル表示</strong>: 送信画像を縮小表示し、ホバーで詳細を確認可能。</li>
+                </ul>
+            </li>
+            <li><strong>アーティファクト / リンクカード数</strong>: 応答に含まれるキャンバス（Artifacts）やリンクカードの数。</li>
+            <li><strong>コードブロック / テーブル数</strong>: 応答に含まれるコードブロックやテーブルの数。</li>
+        </ul>
+
+        <h3>2.2 ユーザーインターフェイス (UI)</h3>
+        <p><code>chatgpt-turn-counter</code> のデザインをベースに、Gemini向けに最適化されています。</p>
+        <ul>
+            <li><strong>初期状態</strong>: 画面右上に浮動パネルとして表示。</li>
+            <li><strong>ドラッグ＆ドロップ</strong>: パネルを自由に移動でき、その位置は保存されます。</li>
+            <li><strong>展開 / 最小化</strong>: クリックで詳細表示とアイコン表示（最小化）を切り替え、状態は保存されます。</li>
+            <li><strong>画像一括コピー (Copy All)</strong>: "Images" 行のボタンをクリックすると、表示中の全画像をHTMLタグ（Data
+                URI埋め込み）としてクリップボードにコピーします。初期状態で高さ制限を指定可能です。</li>
+        </ul>
+
+        <h2>3. 技術仕様</h2>
+
+        <h3>3.1 動作環境</h3>
+        <ul>
+            <li><strong>実行環境</strong>: TamperMonkey などのユーザースクリプトマネージャー</li>
+            <li><strong>対象URLパターン</strong>: <code>https://gemini.google.com/*</code></li>
+            <li><strong>名前空間</strong>: <code>userscript.moukaeritai.work</code></li>
+        </ul>
+
+        <h3>3.2 自動アップデート (Automatic Updates)</h3>
+        <p>本スクリプトは GitHub 上の raw ファイルを参照して自動更新されます。</p>
+        <ul>
+            <li><strong>Update URL</strong>: <a
+                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js">https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js</a>
+            </li>
+        </ul>
+
+        <h2>4. 開発プロセス</h2>
+
+        <h3>4.1 DOM解析と実装方針</h3>
+        <p>GeminiのDOM構造は複雑なSPAであるため、以下の手順で解析とメンテナンスを行っています。</p>
+        <ol>
+            <li>ブラウザ上でのリアルタイムなDOM分析とセレクタ検証。</li>
+            <li>SPAのURL遷移検知に <code>window.navigation</code> API（および <code>setInterval</code> フォールバック）を使用。</li>
+            <li><code>MutationObserver</code> を使用して、動的なメッセージ生成をリアルタイムに反映。</li>
+        </ol>
+
+        <h3>4.2 パフォーマンス最適化</h3>
+        <ul>
+            <li>CPU負荷を抑えるため、チャットページ遷移時のみスクリプトを有効化し、不要なページではクリーンアップ処理を徹底しています。</li>
+        </ul>
+
+        <h3>4.3 関連ファイル</h3>
+        <ul>
+            <li><strong>AGENTS.md</strong>: AIエージェント向けの開発方針・コンテキスト・動的分析手法の記録。</li>
+        </ul>
+
+        <h2>5. プロジェクト管理情報</h2>
+
+        <h3>5.1 作者</h3>
+        <ul>
+            <li><strong>Name</strong>: Takashi Sasaki</li>
+            <li><strong>URL</strong>: <a href="https://x.com/TakashiSasaki">x.com/TakashiSasaki</a></li>
+        </ul>
+
+        <h2>更新履歴 (抜粋)</h2>
+        <ul>
+            <li><strong>v0.1.25</strong>: アーティファクトの二重カウント問題を修正。</li>
+            <li><strong>v0.1.22</strong>: UIのドラッグ＆ドロップ移動および位置の保存に対応。</li>
+            <li><strong>v0.1.21</strong>: UIの最小化ボタン追加と状態保存に対応。</li>
+            <li><strong>v0.1.20</strong>: アーティファクト（Canvas）およびリンクカードのカウントに対応。</li>
+            <li><strong>v0.1.19</strong>: SPAナビゲーション検知を <code>window.navigation</code> API に移行しパフォーマンス向上。</li>
+            <li><strong>v0.1.17</strong>: SPA対応を強化。チャットページでのみ動的に有効化されるように変更。</li>
+            <li><strong>v0.1.16</strong>: 初版リリース。</li>
+        </ul>
+    </div>
+
     <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
     <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
         <p>
