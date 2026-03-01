@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.25
+// @version      0.1.26
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -98,7 +98,7 @@
                 position: fixed;
                 top: 60px;
                 right: 20px;
-                background-color: rgba(30, 31, 32, 0.9); /* Gemini dark theme bg approx */
+                background-color: #1e1f20; /* Solid Gemini dark theme bg */
                 color: #bdc1c6;
                 border-radius: 8px;
                 z-index: 9999;
@@ -357,7 +357,7 @@
                    </div>`
                 : '';
 
-            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.1.25';
+            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.1.26';
             setInnerHTML(contentDiv, `
                 <div style="margin-bottom: 8px; font-weight: bold; border-bottom:1px solid #555; padding-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
                     <span>Gemini Turns</span>
@@ -516,6 +516,7 @@
                     isDragging = true;
                 }
                 if (isDragging) {
+                    container.style.transition = 'none'; // Disable transition while dragging for better responsiveness
                     container.style.right = 'auto'; // Disable default right constraint
                     container.style.left = `${startLeft + dx}px`;
                     container.style.top = `${startTop + dy}px`;
@@ -526,6 +527,7 @@
                 document.removeEventListener('mousemove', onMouseMove);
                 document.removeEventListener('mouseup', onMouseUp);
                 if (isDragging) {
+                    container.style.transition = ''; // Restore transition after dragging
                     localStorage.setItem('gtc-pos-x', container.style.left);
                     localStorage.setItem('gtc-pos-y', container.style.top);
                     // Wait until next tick so the click handler can detect if we were dragging
