@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.20
+// @version      0.1.21
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -216,6 +216,18 @@
                 font-size: 11px;
                 text-align: right;
             }
+            .gtc-minimize-btn {
+                cursor: pointer;
+                padding: 0 6px;
+                border-radius: 4px;
+                user-select: none;
+                transition: background 0.2s;
+                font-size: 14px;
+                line-height: 1;
+            }
+            .gtc-minimize-btn:hover {
+                background: rgba(255,255,255,0.2);
+            }
             /* Modal & Tooltip styles would go here (omitted for initial brevity) */
         `;
         document.head.appendChild(style);
@@ -345,11 +357,14 @@
                    </div>`
                 : '';
 
-            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.1.20';
+            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.1.21';
             setInnerHTML(contentDiv, `
                 <div style="margin-bottom: 8px; font-weight: bold; border-bottom:1px solid #555; padding-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
                     <span>Gemini Turns</span>
-                    <span style="font-size:10px; font-weight:normal; opacity:0.7;">v${scriptVersion}</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:10px; font-weight:normal; opacity:0.7;">v${scriptVersion}</span>
+                        <span id="gtc-minimize-btn" class="gtc-minimize-btn" title="Minimize">−</span>
+                    </div>
                 </div>
                 <div class="gtc-row"><span>User:</span> <span class="gtc-val">${userTurns.length} (${userCharCount.toLocaleString()})</span></div>
                 <div class="gtc-row"><span>Model:</span> <span class="gtc-val">${modelTurns.length} (${modelCharCount.toLocaleString()})</span></div>
@@ -479,12 +494,23 @@
         uiContainer = container; // Store reference
 
         // UI Events
-        container.addEventListener('click', () => {
+        container.addEventListener('click', (e) => {
+            if (e.target.closest('#gtc-minimize-btn')) {
+                // Minimize button clicked
+                container.classList.remove('expanded');
+                localStorage.setItem('gtc-minimized', 'true');
+                e.stopPropagation();
+            } else if (!container.classList.contains('expanded')) {
+                // Clicking the collapsed icon expands it
+                container.classList.add('expanded');
+                localStorage.setItem('gtc-minimized', 'false');
+            }
+        });
+
+        // Restore state
+        if (localStorage.getItem('gtc-minimized') === 'false') {
             container.classList.add('expanded');
-        });
-        container.addEventListener('mouseleave', () => {
-            container.classList.remove('expanded');
-        });
+        }
 
         // Initial run
         setTimeout(updateStats, 500); // Wait a bit for initial load
