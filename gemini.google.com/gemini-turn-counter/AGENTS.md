@@ -22,6 +22,15 @@ Since Google Gemini is a complex SPA with frequently changing CSS classes, AI ag
 *   **Artifacts (Canvas)**: `immersive-entry-chip, entry-chip`
 *   **Link Cards**: `.list-item-container.link, yt-core-attributed-string, [data-test-id="link-preview"]`
 
+## Implementation Details
+
+### SPA Navigation & Routing
+Gemini is a complex SPA. Routing is managed using the modern `window.navigation` API with a lightweight `setInterval` fallback for older browsers. This ensures the script only initializes on `/app/` or `/gem/` chat pages and cleans up correctly when navigating away.
+
+### Reactivity & Performance
+- **MutationObserver**: Used to detect real-time message generation and DOM updates.
+- **Cleanup**: The script proactively removes style elements, UI containers, and disconnects observers when leaving chat pages to minimize memory leaks and CPU overhead.
+
 ### Lessons Learned & Common Gotchas
 
 1.  **Dynamic Tag Names**: Gemini frequently updates custom tag names (e.g., from `entry-chip` to `immersive-entry-chip`). Always use composite selectors to maintain backward compatibility.

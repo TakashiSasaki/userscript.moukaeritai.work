@@ -64,8 +64,8 @@
     </a>
 
     <div id="content">
-        <h1>Gemini Turn Counter 開発ドキュメント</h1>
-        <p>このドキュメントは、Tampermonkey等で動作するユーザースクリプト <code>gemini-turn-counter.user.js</code> の仕様と開発について記述します。</p>
+        <h1>Gemini Turn Counter ユーザードキュメント</h1>
+        <p>このドキュメントは、Google Gemini の利用を便利にするユーザースクリプト <code>gemini-turn-counter.user.js</code> の機能と使い方について説明します。</p>
 
         <h2>1. 概要と目的</h2>
         <p>すでに作成済みの <code>chatgpt-turn-counter</code> と同様に、Google Gemini
@@ -122,24 +122,14 @@
             </li>
         </ul>
 
-        <h2>4. 開発プロセス</h2>
-
-        <h3>4.1 DOM解析と実装方針</h3>
-        <p>GeminiのDOM構造は複雑なSPAであるため、以下の手順で解析とメンテナンスを行っています。</p>
-        <ol>
-            <li>ブラウザ上でのリアルタイムなDOM分析とセレクタ検証。</li>
-            <li>SPAのURL遷移検知に <code>window.navigation</code> API（および <code>setInterval</code> フォールバック）を使用。</li>
-            <li><code>MutationObserver</code> を使用して、動的なメッセージ生成をリアルタイムに反映。</li>
-        </ol>
-
-        <h3>4.2 パフォーマンス最適化</h3>
+        <h2>4. 関連情報</h2>
         <ul>
-            <li>CPU負荷を抑えるため、チャットページ遷移時のみスクリプトを有効化し、不要なページではクリーンアップ処理を徹底しています。</li>
-        </ul>
-
-        <h3>4.3 関連ファイル</h3>
-        <ul>
-            <li><strong>AGENTS.md</strong>: AIエージェント向けの開発方針・コンテキスト・動的分析手法の記録。</li>
+            <li><a
+                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js">スクリプトをインストールする</a>
+            </li>
+            <li><a
+                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter">GitHub
+                    リポジトリ</a></li>
         </ul>
 
         <h2>5. プロジェクト管理情報</h2>
