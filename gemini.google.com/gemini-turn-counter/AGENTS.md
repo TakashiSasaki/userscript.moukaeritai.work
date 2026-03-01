@@ -18,6 +18,12 @@ Since Google Gemini is a complex SPA with frequently changing CSS classes, AI ag
     *   **Reliability**: Does the selector persist across different conversation types?
     *   **Completeness**: Does the source cover all intended data points (e.g., both Canvas files and Link Cards)?
 
-### Example Selectors (as of 2026-03)
-*   **Artifacts (Canvas)**: `button[aria-label*="in Canvas"]`
+### Example Selectors (as of 2026-03-01)
+*   **Artifacts (Canvas)**: `immersive-entry-chip, entry-chip`
 *   **Link Cards**: `.list-item-container.link, yt-core-attributed-string, [data-test-id="link-preview"]`
+
+### Lessons Learned & Common Gotchas
+
+1.  **Dynamic Tag Names**: Gemini frequently updates custom tag names (e.g., from `entry-chip` to `immersive-entry-chip`). Always use composite selectors to maintain backward compatibility.
+2.  **Parent-Child Double Counting**: When using composite selectors or classes (e.g., `.parent, .child`), ensure that selectors do not match both a parent and its child simultaneously. This can lead to inflated counts (e.g., 2x the actual count) if `querySelectorAll().length` is used without filtering.
+3.  **State-Dependent UI Changes**: Opening a side panel (like Canvas) may cause elements (like "Open" buttons) to be removed from the chat flow's DOM. Always target the most stable container element (the "chip") rather than transient interactive elements (the "button") for accurate tracking.
