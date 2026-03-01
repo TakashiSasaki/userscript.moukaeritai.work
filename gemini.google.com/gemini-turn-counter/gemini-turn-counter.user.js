@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.21
+// @version      0.1.22
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -357,7 +357,7 @@
                    </div>`
                 : '';
 
-            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.1.21';
+            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.1.22';
             setInnerHTML(contentDiv, `
                 <div style="margin-bottom: 8px; font-weight: bold; border-bottom:1px solid #555; padding-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
                     <span>Gemini Turns</span>
@@ -494,22 +494,79 @@
         uiContainer = container; // Store reference
 
         // UI Events
+        let isDragging = false;
+        let startX, startY, startLeft, startTop;
+
+        container.addEventListener('mousedown', (e) => {
+            // Ignore drag if clicking interactive elements
+            if (e.target.closest('button, input, .gtc-minimize-btn, .gtc-thumbnail')) return;
+
+            isDragging = false;
+            startX = e.clientX;
+            startY = e.clientY;
+            const rect = container.getBoundingClientRect();
+            startLeft = rect.left;
+            startTop = rect.top;
+
+            const onMouseMove = (eMove) => {
+                const dx = eMove.clientX - startX;
+                const dy = eMove.clientY - startY;
+                // Threshold to differentiate click vs drag
+                if (!isDragging && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
+                    isDragging = true;
+                }
+                if (isDragging) {
+                    container.style.right = 'auto'; // Disable default right constraint
+                    container.style.left = `${startLeft + dx}px`;
+                    container.style.top = `${startTop + dy}px`;
+                }
+            };
+
+            const onMouseUp = () => {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                if (isDragging) {
+                    localStorage.setItem('gtc-pos-x', container.style.left);
+                    localStorage.setItem('gtc-pos-y', container.style.top);
+                    // Wait until next tick so the click handler can detect if we were dragging
+                    setTimeout(() => isDragging = false, 0);
+                }
+            };
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
         container.addEventListener('click', (e) => {
+            if (isDragging) {
+                // Prevent expanding/collapsing if the user just dragged the panel
+                e.stopPropagation();
+                e.preventDefault();
+                return;
+            }
+
             if (e.target.closest('#gtc-minimize-btn')) {
-                // Minimize button clicked
                 container.classList.remove('expanded');
                 localStorage.setItem('gtc-minimized', 'true');
                 e.stopPropagation();
             } else if (!container.classList.contains('expanded')) {
-                // Clicking the collapsed icon expands it
                 container.classList.add('expanded');
                 localStorage.setItem('gtc-minimized', 'false');
             }
         });
 
-        // Restore state
+        // Restore state (expansion)
         if (localStorage.getItem('gtc-minimized') === 'false') {
             container.classList.add('expanded');
+        }
+
+        // Restore state (position)
+        const savedX = localStorage.getItem('gtc-pos-x');
+        const savedY = localStorage.getItem('gtc-pos-y');
+        if (savedX && savedY) {
+            container.style.right = 'auto';
+            container.style.left = savedX;
+            container.style.top = savedY;
         }
 
         // Initial run
