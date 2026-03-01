@@ -4,6 +4,10 @@ This project follows the agent development guidelines outlined in the root [AGEN
 
 Please refer to the root `AGENTS.md` for all operational procedures, including Git practices, documentation structure, and HTML sample preprocessing.
 
+## Mandatory Version Bumping
+
+**Every single change** made to the userscript (`gemini-turn-counter.user.js`), regardless of its size or scope, **MUST** be accompanied by a version bump in the script's metadata header. This ensures that users receive updates via their userscript manager's auto-update feature.
+
 ## Dynamic DOM Analysis
 
 Since Google Gemini is a complex SPA with frequently changing CSS classes, AI agents should utilize dynamic analysis to maintain selector accuracy.
