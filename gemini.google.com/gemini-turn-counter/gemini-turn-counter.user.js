@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.19
+// @version      0.1.20
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -55,7 +55,11 @@
         // Code block selector (based on samples/code-block.html)
         codeBlock: 'code-block',
         // Table selector (based on samples/table-block.html)
-        tableBlock: 'table-block' // or 'table' inside model response
+        tableBlock: 'table-block', // or 'table' inside model response
+        // Artifact selector
+        artifact: 'button[aria-label*="in Canvas"]',
+        // Link Card selector
+        linkCard: '.list-item-container.link, yt-core-attributed-string, [data-test-id="link-preview"]'
     };
 
     // --- State Management ---
@@ -308,6 +312,8 @@
             let modelCharCount = 0;
             let totalCodeBlocks = 0;
             let totalTables = 0;
+            let totalArtifacts = 0;
+            let totalLinkCards = 0;
 
             modelTurns.forEach(turn => {
                 // Model text selector is tricky, it usually contains many nested elements.
@@ -322,6 +328,14 @@
                 // Count Tables
                 const tables = turn.querySelectorAll(SELECTORS.tableBlock);
                 totalTables += tables.length;
+
+                // Count Artifacts
+                const artifacts = turn.querySelectorAll(SELECTORS.artifact);
+                totalArtifacts += artifacts.length;
+
+                // Count Link Cards
+                const linkCards = turn.querySelectorAll(SELECTORS.linkCard);
+                totalLinkCards += linkCards.length;
             });
 
             const imageCount = collectedImages.length;
@@ -331,14 +345,21 @@
                    </div>`
                 : '';
 
+            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.1.20';
             setInnerHTML(contentDiv, `
                 <div style="margin-bottom: 8px; font-weight: bold; border-bottom:1px solid #555; padding-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
                     <span>Gemini Turns</span>
-                    <span style="font-size:10px; font-weight:normal; opacity:0.7;">v0.1.8</span>
+                    <span style="font-size:10px; font-weight:normal; opacity:0.7;">v${scriptVersion}</span>
                 </div>
                 <div class="gtc-row"><span>User:</span> <span class="gtc-val">${userTurns.length} (${userCharCount.toLocaleString()})</span></div>
                 <div class="gtc-row"><span>Model:</span> <span class="gtc-val">${modelTurns.length} (${modelCharCount.toLocaleString()})</span></div>
                 <div class="gtc-row" style="border-top:1px solid #444; margin-top:4px; padding-top:4px;"></div>
+                <div class="gtc-row">
+                     <span>Artifacts (Canvas):</span> <span class="gtc-val">${totalArtifacts}</span>
+                </div>
+                <div class="gtc-row">
+                     <span>Link Cards:</span> <span class="gtc-val">${totalLinkCards}</span>
+                </div>
                 <div class="gtc-row">
                      <span>Code Blocks:</span> <span class="gtc-val">${totalCodeBlocks}</span>
                 </div>
