@@ -4,6 +4,10 @@ This project follows the agent development guidelines outlined in the root [AGEN
 
 Please refer to the root `AGENTS.md` for all operational procedures, including Git practices, documentation structure, HTML sample preprocessing, and **shared technical knowledge base**.
 
+## Mandatory Version Bumping
+
+**Every single change** made to the userscript (`gemini-auto-scroll.user.js`), regardless of its size or scope, **MUST** be accompanied by a version bump in the script's metadata header. This ensures that users receive updates via their userscript manager's auto-update feature.
+
 ## Technical Specification for Gemini Auto-Scroll
 
 ### 1. Verification Logic
