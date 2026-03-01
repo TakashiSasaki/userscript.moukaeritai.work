@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.20
+// @version      0.2.21
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -44,8 +44,6 @@
         document.addEventListener('userscript-ping', report);
         return;
     }
-    if (!/^\/app/.test(location.pathname)) return;
-
     // --- Tampermonkey Menu ---
     if (typeof GM_registerMenuCommand !== 'undefined') {
         GM_registerMenuCommand("現在の会話IDを表示", () => {
@@ -77,7 +75,8 @@
     let policy;
     if (window.trustedTypes && window.trustedTypes.createPolicy) {
         try {
-            policy = window.trustedTypes.createPolicy('geminiAutoScroll', {
+            // Append a unique suffix to avoid "policy already exists" errors upon userscript hot-reloads or multiple injections
+            policy = window.trustedTypes.createPolicy('geminiAutoScroll_' + Math.random().toString(36).substr(2, 9), {
                 createHTML: (string) => string
             });
         } catch (e) {
@@ -95,6 +94,10 @@
 
     let isProcessing = false;
     let lastSelectedIndex = -1;
+    let scrollInterval = null; // Global reference for cleanup
+    let isInitialized = false;
+    let uiObserver = null;
+    let mainInterval = null;
 
     // --- State Management ---
 
@@ -696,7 +699,6 @@
         console.debug('[GeminiAutoScroll] Auto-scroll loop started.');
 
         let container = getScrollContainer();
-        let scrollInterval = null;
 
         const scrollDown = () => {
             if (container && isAutoScrollEnabled()) {
@@ -747,7 +749,7 @@
     let lastUrl = window.location.href;
     let _debounceTimer;
 
-    const uiObserver = new MutationObserver((mutations) => {
+    uiObserver = new MutationObserver((mutations) => {
         createDraggablePanel();
 
         // Check for deletions of the selected item
@@ -803,31 +805,98 @@
         }
     }
 
-    uiObserver.observe(document.body, { childList: true, subtree: true });
+    function initAutoScroll() {
+        if (isInitialized) return;
+        isInitialized = true;
+        console.debug('[GeminiAutoScroll] Initializing (SPA navigated to /app).');
 
-    setInterval(() => {
-        const currentUrl = window.location.href;
-        if (currentUrl !== lastUrl) {
-            lastUrl = currentUrl;
+        uiObserver.observe(document.body, { childList: true, subtree: true });
 
-            // If on root path and Auto-Switch is enabled, trigger selection
-            // But NOT if we are on the /saved-info page
-            const isSavedInfo = currentUrl.includes('/saved-info');
-            if (isAutoSwitchEnabled() && !getConversationIdFromUrl() && !isSavedInfo) {
-                setTimeout(selectNextConversation, 1500); // Wait for list reload
+        mainInterval = setInterval(() => {
+            const currentUrl = window.location.href;
+            if (currentUrl !== lastUrl) {
+                lastUrl = currentUrl;
+
+                // If on root path and Auto-Switch is enabled, trigger selection
+                // But NOT if we are on the /saved-info page
+                const isSavedInfo = currentUrl.includes('/saved-info');
+                if (isAutoSwitchEnabled() && !getConversationIdFromUrl() && !isSavedInfo) {
+                    setTimeout(selectNextConversation, 1500); // Wait for list reload
+                }
+
+                // Re-trigger scroll when URL changes
+                setTimeout(attemptScrollToConversation, 1200);
             }
+            // Also periodically ensure UI is accurate
+            updatePanelUI();
+        }, 1000);
 
-            // Re-trigger scroll when URL changes
-            setTimeout(attemptScrollToConversation, 1200);
+        setTimeout(() => {
+            createDraggablePanel();
+            attemptScrollToConversation();
+        }, 2500);
+    }
+
+    function cleanupAutoScroll() {
+        if (!isInitialized) return;
+        isInitialized = false;
+        isProcessing = false;
+        console.debug('[GeminiAutoScroll] Cleaning up (SPA navigated away from /app).');
+
+        if (mainInterval) {
+            clearInterval(mainInterval);
+            mainInterval = null;
         }
-        // Also periodically ensure UI is accurate
-        updatePanelUI();
-    }, 1000);
 
+        if (scrollInterval) {
+            clearInterval(scrollInterval);
+            scrollInterval = null;
+        }
 
-    setTimeout(() => {
-        createDraggablePanel();
-        attemptScrollToConversation();
-    }, 2500);
+        if (uiObserver) {
+            uiObserver.disconnect();
+        }
+
+        const panel = document.getElementById('gemini-auto-scroll-panel');
+        if (panel) panel.remove();
+
+        const style = document.getElementById('gemini-auto-scroll-styles');
+        if (style) style.remove();
+    }
+
+    // --- SPA Routing Manager ---
+    function checkUrlAndManageScriptState() {
+        const isAppPage = /^\/app/.test(location.pathname);
+        if (isAppPage) {
+            initAutoScroll();
+        } else {
+            cleanupAutoScroll();
+            // Important to always update lastUrl to avoid spurious detection
+            lastUrl = window.location.href;
+        }
+    }
+
+    if (window.navigation) {
+        window.navigation.addEventListener('navigatesuccess', () => {
+            setTimeout(checkUrlAndManageScriptState, 500);
+        });
+        console.debug('[GeminiAutoScroll] Using Navigation API for SPA routing.');
+    } else {
+        // Fallback for older browsers
+        setInterval(() => {
+            if (location.href !== lastUrl) {
+                lastUrl = location.href;
+                setTimeout(checkUrlAndManageScriptState, 500);
+            }
+        }, 500);
+        console.debug('[GeminiAutoScroll] Using setInterval fallback for SPA routing.');
+    }
+
+    // Initial check on load
+    if (document.body) {
+        checkUrlAndManageScriptState();
+    } else {
+        window.addEventListener('DOMContentLoaded', checkUrlAndManageScriptState);
+    }
 
 })();
