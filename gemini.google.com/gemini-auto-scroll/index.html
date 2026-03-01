@@ -151,7 +151,71 @@
         </nav>
 
         <section class="doc-card">
-            <div id="content" class="markdown-body">Loading documentation...</div>
+            <div id="content" class="markdown-body">
+                <h1 id="gemini-auto-scroll-specification">Gemini Auto-Scroll Specification</h1>
+                <p><code>gemini-auto-scroll.user.js</code>
+                    は、Geminiのウェブインターフェースにおいて、会話リストを自動的に延々とスクロールさせ、すべての会話履歴をロードするためのユーザースクリプトである。また、多数の会話履歴を整理する際の作業効率を支援する機能も備えている。
+                </p>
+
+                <h2 id="背景">背景</h2>
+                <p>Geminiで過去の会話を遡りたい場合、手動でスクロールし続ける必要があり手間がかかる。本スクリプトは、全履歴のロードを主目的とした「延々とスクロールする」機能を提供する。特に、会話のバックアップや検索（検索機能はGemini標準搭載）の準備段階として有用である。
+                </p>
+
+                <h2 id="機能概要">機能概要</h2>
+
+                <h3 id="1-フローティング・コントロールパネル">1. フローティング・コントロールパネル</h3>
+                <p>画面右上にドラッグ移動が可能な操作パネルを表示し、以下の機能を一括管理する。</p>
+                <ul>
+                    <li><strong>配置</strong>: 画面内を自由にドラッグ可能。最小化状態でもドラッグ可能。位置は記憶される (<code>localStorage</code>)。</li>
+                    <li><strong>ステータス表示</strong>:
+                        <ul>
+                            <li>ロード済みアイテム数</li>
+                            <li>現在選択中の会話ID</li>
+                            <li>次に選択予定の会話ID（Auto-Switch Next用）</li>
+                        </ul>
+                    </li>
+                    <li><strong>操作スイッチ</strong>:
+                        <ol>
+                            <li><strong>Auto-Scroll</strong>: 自動スクロール機能のON/OFF</li>
+                            <li><strong>Auto-Switch Next</strong>: 会話削除時の自動遷移機能のON/OFF</li>
+                        </ol>
+                    </li>
+                </ul>
+
+                <h3 id="2-機能詳説">2. 機能詳説</h3>
+
+                <h4 id="自動スクロール-auto-scroll">自動スクロール (Auto-Scroll)</h4>
+                <ul>
+                    <li><strong>動作</strong>: 会話リスト（サイドバー）を自動的に下方向へスクロールし続ける。</li>
+                    <li><strong>ロジック</strong>: <code>setInterval</code> を利用し、安全かつ軽量にスクロールを下部へ押し下げる。</li>
+                    <li><strong>安全性</strong>: "Couldn't load recent chats" などのエラーを検知した場合、自動的に停止してアラートを表示する。</li>
+                </ul>
+
+                <h4 id="次へ自動切り替え-auto-switch-next">次へ自動切り替え (Auto-Switch Next)</h4>
+                <ul>
+                    <li><strong>目的</strong>: 会話の整理（削除）作業を高速化する。</li>
+                    <li><strong>動作</strong>: 現在閲覧中の会話を削除したり、URLがルート (<code>/app</code>)
+                        に戻ったりした際、<strong>「次の会話」</strong>（リスト上で同じ位置、または一つ下の項目）を自動的にクリックして開く。</li>
+                    <li><strong>メリット</strong>: 削除のたびに「新しいチャット」画面に戻される標準の挙動を防ぎ、連続して履歴を確認・削除できる。</li>
+                </ul>
+
+                <h3 id="3-ui調整">3. UI調整</h3>
+                <ul>
+                    <li><strong>インデックス表示</strong>: 会話リストの各項目左上に連番（インデックス番号）を表示し、位置関係を把握しやすくする。</li>
+                    <li><strong>スクロールバーの視認性</strong>: Webkit系ブラウザにおいて、スクロールバーを太く、ハイコントラスト（オレンジ色）にして視認性を向上。</li>
+                </ul>
+
+                <h2 id="バージョン履歴主要な変更">バージョン履歴（主要な変更）</h2>
+                <ul>
+                    <li><strong>v0.2.20</strong>: 全面的なリファクタリング。不要なログ機能を削除し、軽量化・UIのコンパクト化（最小化機能）を実現。</li>
+                    <li><strong>v0.2.16</strong>: <code>/saved-info</code> 画面への遷移時に自動切り替え機能が誤作動しないよう修正。</li>
+                    <li><strong>v0.2.15</strong>: 最新の安定版。フローティングパネルUI、Auto-Switch Next機能、ログパネルを完備。</li>
+                    <li><strong>v0.1.32</strong>: スマート選択機能（会話削除後に自動で次の会話を表示）の実装開始。</li>
+                    <li><strong>v0.1.30</strong>: Tampermonkeyメニュー連携。</li>
+                    <li><strong>v0.1.27</strong>: エラースナックバー検知による自動停止機能の実装。</li>
+                    <li><strong>v0.1.22</strong>: 高視認性スクロールバーの導入。</li>
+                </ul>
+            </div>
         </section>
 
         <footer>
@@ -161,24 +225,6 @@
             </p>
         </footer>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            fetch('README.md')
-                .then(response => {
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    return response.text();
-                })
-                .then(text => {
-                    document.getElementById('content').innerHTML = marked.parse(text);
-                })
-                .catch(err => {
-                    document.getElementById('content').innerHTML = `<h3>Error loading document</h3><p>${err.message}</p>`;
-                    console.error('Error fetching markdown:', err);
-                });
-        });
-    </script>
 </body>
 
 </html>
