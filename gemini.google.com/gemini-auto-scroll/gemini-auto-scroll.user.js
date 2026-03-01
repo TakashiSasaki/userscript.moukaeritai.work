@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.18
+// @version      0.2.19
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -196,7 +196,7 @@
                 font-family: 'Google Sans', sans-serif;
                 font-size: 14px;
                 color: #3c4043;
-                width: 280px;
+                width: 260px;
                 backdrop-filter: blur(8px);
                 display: none; /* Initially hidden */
             }
@@ -231,7 +231,7 @@
                 display: block;
             }
             #gemini-auto-scroll-panel .panel-header {
-                padding: 8px 12px;
+                padding: 6px 10px;
                 border-bottom: 1px solid #e0e0e0;
                 cursor: move;
                 user-select: none;
@@ -268,10 +268,10 @@
                 background: rgba(0,0,0,0.1);
             }
             #gemini-auto-scroll-panel .panel-content {
-                padding: 12px;
+                padding: 8px 10px;
                 display: flex;
                 flex-direction: column;
-                gap: 10px;
+                gap: 6px;
             }
             #gemini-auto-scroll-panel .control-row {
                 display: flex;
@@ -318,8 +318,8 @@
                 font-size: 12px;
                 color: #5f6368;
                 border-top: 1px solid #e0e0e0;
-                padding-top: 10px;
-                margin-top: 4px;
+                padding-top: 6px;
+                margin-top: 2px;
             }
              #gemini-auto-scroll-panel .info-row .gtc-badge {
                 font-weight: bold;
@@ -751,6 +751,7 @@
 
         // Toggle Expand/Minimize when clicking minimized body
         panel.addEventListener('click', (e) => {
+            if (hasDragged) return; // Prevent toggle if the user just finished dragging
             if (panel.classList.contains('minimized') && !e.target.closest('button, input, .gtc-minimize-btn')) {
                 togglePanelMinimized();
             }
@@ -765,22 +766,38 @@
         }
 
         const header = panel.querySelector('.panel-header');
+        const summary = panel.querySelector('.minimized-summary');
         let isDragging = false;
-        let offset = { x: 0, y: 0 };
+        let hasDragged = false;
+        let dragOffset = { x: 0, y: 0, startX: 0, startY: 0 };
 
-        header.addEventListener('mousedown', (e) => {
+        const startDrag = (e) => {
+            if (e.button !== 0 || e.target.closest('button, input, .gtc-minimize-btn')) return;
             isDragging = true;
-            offset.x = e.clientX - panel.offsetLeft;
-            offset.y = e.clientY - panel.offsetTop;
+            hasDragged = false;
+            dragOffset.x = e.clientX - panel.offsetLeft;
+            dragOffset.y = e.clientY - panel.offsetTop;
+            dragOffset.startX = e.clientX;
+            dragOffset.startY = e.clientY;
             panel.style.transition = 'none';
             document.body.style.userSelect = 'none';
-        });
+        };
+
+        header.addEventListener('mousedown', startDrag);
+        summary.addEventListener('mousedown', startDrag);
 
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
             e.preventDefault();
-            let newX = e.clientX - offset.x;
-            let newY = e.clientY - offset.y;
+
+            if (!hasDragged && (Math.abs(e.clientX - dragOffset.startX) > 3 || Math.abs(e.clientY - dragOffset.startY) > 3)) {
+                hasDragged = true;
+            }
+
+            if (!hasDragged) return; // Wait until threshold is met to prevent jitter
+
+            let newX = e.clientX - dragOffset.x;
+            let newY = e.clientY - dragOffset.y;
 
             // Clamp position to be within viewport
             newX = Math.max(0, Math.min(newX, window.innerWidth - panel.offsetWidth));
@@ -796,8 +813,12 @@
             isDragging = false;
             panel.style.transition = '';
             document.body.style.userSelect = '';
-            const pos = { top: panel.style.top, left: panel.style.left };
-            await GM_setValue(CONSTANTS.PANEL_POSITION_KEY, pos);
+            if (hasDragged) {
+                const pos = { top: panel.style.top, left: panel.style.left };
+                await GM_setValue(CONSTANTS.PANEL_POSITION_KEY, pos);
+                // Delay clearing hasDragged so the click handler can catch it
+                setTimeout(() => hasDragged = false, 50);
+            }
         });
 
         try {
