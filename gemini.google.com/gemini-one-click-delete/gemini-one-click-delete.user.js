@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.6
+// @version      0.2.7
 // @description  Adds a 1-click panel/shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -44,7 +44,7 @@
     const SELECTORS = {
         // Trigger button (Conversation Options)
         // Shared by Desktop and Mobile
-        actionsMenuButton: 'button[data-test-id="actions-menu-button"], button[aria-label="Open menu for conversation actions."]',
+        actionsMenuButton: 'button[data-test-id="conversation-actions-menu-icon-button"], button[data-test-id="actions-menu-button"], button[aria-label="Open menu for conversation actions."]',
 
         // Menu Containers
         // Desktop: mat-mdc-menu-panel
@@ -227,76 +227,121 @@
             /* --- Draggable Panel Styles --- */
             #gemini-delete-panel {
                 position: fixed;
+                background-color: #ffffff;
+                color: #202124;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                border-radius: 8px;
                 z-index: 10000;
-                background-color: rgba(255, 255, 255, 0.95);
-                border: 1px solid #f8d7da;
-                border-radius: 6px;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-                font-family: 'Google Sans', sans-serif;
-                font-size: 11px;
-                color: #3c4043;
-                width: 200px;
-                backdrop-filter: blur(8px);
+                overflow: hidden;
+                transition: height 0.2s, background-color 0.2s;
+                border: 1px solid #dadce0;
+                font-family: inherit;
                 display: flex;
                 flex-direction: column;
+                font-size: 13px; /* make font smaller */
             }
             #gemini-delete-panel.minimized {
+                height: 36px;
                 width: auto;
-                background-color: #fce8e6;
-                color: #d93025;
-                border: 1px solid #f8d7da;
-                padding: 0 8px;
-                height: 24px;
-                flex-direction: row;
-                align-items: center;
-                justify-content: center;
                 cursor: pointer;
-                font-weight: 500;
-                font-size: 11px;
-                white-space: nowrap;
-                backdrop-filter: none;
             }
-            #gemini-delete-panel.minimized .panel-header, 
-            #gemini-delete-panel.minimized .panel-content { display: none; }
-            #gemini-delete-panel .minimized-summary { display: none; user-select: none; }
-            #gemini-delete-panel.minimized .minimized-summary { display: block; }
-            #gemini-delete-panel .panel-header {
-                padding: 4px 8px;
-                border-bottom: 1px solid #e0e0e0;
-                cursor: move;
-                user-select: none;
+            #gemini-delete-panel.minimized .panel-content {
+                display: none;
+            }
+            #gemini-delete-panel.minimized .panel-header {
+                display: none;
+            }
+            .minimized-summary {
+                display: none;
+                padding: 0 12px;
+                line-height: 36px;
+                font-weight: 500;
+                white-space: nowrap;
+            }
+            #gemini-delete-panel.minimized .minimized-summary {
+                display: block;
+            }
+            .panel-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                background-color: rgba(241, 243, 244, 0.8);
+                padding: 6px 12px; /* reduced padding */
+                background: #f1f3f4;
+                border-bottom: 1px solid #dadce0;
+                cursor: grab;
             }
-            #gemini-delete-panel .panel-header h1 { font-size: 11px; font-weight: 600; margin: 0; line-height: 1; }
-            #gemini-delete-panel .panel-header .version-badge {
-                font-size: 9px; background-color: #fce8e6; color: #d93025; padding: 1px 4px; border-radius: 3px; margin-left: 4px;
+            .panel-header:active {
+                cursor: grabbing;
+            }
+            .panel-header h1 {
+                margin: 0;
+                font-size: 14px;
+                font-weight: 500;
+            }
+            .version-badge {
+                font-size: 10px;
+                color: #5f6368;
+                margin-left: 6px;
             }
             .gdp-minimize-btn {
-                cursor: pointer; padding: 0 4px; border-radius: 4px; user-select: none; transition: background 0.2s;
-                font-size: 14px; line-height: 1; color: #5f6368; font-weight: bold;
+                cursor: pointer;
+                padding: 2px 6px;
+                background: transparent;
+                border: none;
+                color: #5f6368;
+                font-weight: bold;
+                font-size: 16px;
+                line-height: 1;
+                border-radius: 4px;
             }
-            .gdp-minimize-btn:hover { background: rgba(0,0,0,0.1); }
-            #gemini-delete-panel .panel-content { padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; }
-            #gemini-delete-panel .shortcuts-list { font-size: 10px; color: #5f6368; margin: 2px 0 0 0; padding-left: 14px; line-height: 1.3; }
-            .gdp-delete-btn-container { display: flex; justify-content: center; margin-bottom: 4px; padding: 4px 0; }
+            .gdp-minimize-btn:hover {
+                background: rgba(0,0,0,0.05);
+            }
+            .panel-content {
+                padding: 10px 12px; /* reduced padding */
+                display: flex;
+                flex-direction: column;
+                gap: 8px; /* reduced gap */
+            }
             .gdp-main-delete-btn {
-                display: inline-flex; align-items: center; gap: 4px; background-color: #d93025; color: white;
-                border: none; padding: 6px 16px; border-radius: 12px; font-size: 11px; font-weight: bold;
-                cursor: pointer; transition: background-color 0.2s; width: 100%; justify-content: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px; /* reduced gap */
+                width: 100%;
+                background-color: #d93025;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 6px 12px; /* reduced padding */
+                cursor: pointer;
+                font-weight: 500;
+                transition: background-color 0.2s;
             }
-            .gdp-main-delete-btn:hover { background-color: #b31412; }
-            .gdp-main-delete-btn:disabled { background-color: #fce8e6; color: #d93025; opacity:0.5; cursor: not-allowed; }
-            .gdp-main-delete-btn.processing { opacity: 0.5; animation: pulse-red 1s infinite; cursor: wait; }
-
+            .gdp-main-delete-btn:hover:not(:disabled) {
+                background-color: #c5221f;
+            }
+            .gdp-main-delete-btn:disabled {
+                background-color: #f1f3f4;
+                color: #9aa0a6;
+                cursor: not-allowed;
+            }
+            .shortcuts-list {
+                margin: 4px 0 0 0; /* reduced margin */
+                padding-left: 20px;
+                font-size: 11px; /* smaller font */
+                color: #5f6368;
+                line-height: 1.3; /* narrow line height */
+            }
+            .shortcuts-list li {
+                margin-bottom: 2px;
+            }
             @media (prefers-color-scheme: dark) {
-                .gemini-quick-delete-btn { background-color: #4a1a1a; border-color: #662222; color: #e8eaed; }
-                .gemini-quick-delete-btn:hover { background-color: #662222; border-color: #d93025; color: #ff8a80; }
-                .gemini-quick-delete-btn:disabled { background-color: #3c4043; border-color: #5f6368; color: #80868b; }
-                #gemini-delete-panel { background-color: rgba(32, 33, 36, 0.95); border-color: #3c4043; color: #e8eaed; }
-                #gemini-delete-panel .panel-header { background-color: rgba(60, 64, 67, 0.8); border-color: #3c4043; }
+                #gemini-delete-panel { background-color: #202124; color: #e8eaed; border-color: #5f6368; }
+                .panel-header { background-color: #303134; border-bottom-color: #5f6368; }
+                .gdp-minimize-btn, .version-badge { color: #9aa0a6; }
+                .gdp-minimize-btn:hover { background: rgba(255,255,255,0.1); }
+                .gdp-main-delete-btn:disabled { background-color: #3c4043; color: #80868b; }
                 #gemini-delete-panel.minimized { background-color: #4a1a1a; color: #ff8a80; border-color: #662222; }
                 #gemini-delete-panel .shortcuts-list { color: #9aa0a6; }
             }
@@ -609,14 +654,7 @@
         e.preventDefault(); // Prevent bookmarking or other default browser actions
         console.log('Shortcut detected: Triggering 1-Click Delete...');
 
-        // 1. Try to find an existing standard delete button (header)
-        const standardBtn = document.querySelector('.gemini-quick-delete-btn:not(.floating)');
-        if (standardBtn && !standardBtn.disabled) {
-            standardBtn.click();
-            return;
-        }
-
-        // 2. Try global panel delete button
+        // 1. Try global panel delete button
         const panelBtn = document.querySelector('#gdp-global-delete-btn');
         if (panelBtn && !panelBtn.disabled) {
             panelBtn.click();
@@ -664,7 +702,7 @@
             styleElement.remove();
             styleElement = null;
         }
-        document.querySelectorAll('.gemini-quick-delete-btn').forEach(btn => btn.remove());
+
 
         const panel = document.getElementById('gemini-delete-panel');
         if (panel) panel.remove();
