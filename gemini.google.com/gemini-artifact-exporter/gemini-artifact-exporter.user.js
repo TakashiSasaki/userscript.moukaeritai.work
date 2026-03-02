@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.25
+// @version      0.2.26
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -911,11 +911,25 @@
 
     const debouncedUpdate = debounce(updateButtonVisibility, 200);
 
+    let lastUrl = window.location.href;
+
     // Initial check
     updateButtonVisibility();
 
     // Observe DOM changes instead of polling
     const observer = new MutationObserver((mutations) => {
+        if (lastUrl !== window.location.href) {
+            lastUrl = window.location.href;
+            if (scannedArtifacts.length > 0) {
+                scannedArtifacts = [];
+                renderArtifactList();
+                const scanBtn = document.getElementById('gemini-btn-scan');
+                if (scanBtn) {
+                    scanBtn.textContent = 'Scan Artifacts';
+                }
+            }
+        }
+
         // We could try to filter mutations here, but for "sidebar button appearance",
         // essentially any subtree change could be relevant in an SPA.
         // Debouncing protects performance.
