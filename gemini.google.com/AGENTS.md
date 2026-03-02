@@ -32,3 +32,11 @@ Gemini heavily enforces `TrustedTypes` policies to protect against DOM XSS.
 ### 5. Mandatory Headers
 *   **`@noframes`**: User scripts for `gemini.google.com` must include `// @noframes` in their metadata. This prevents scripts from loading twice (once in the main window and once in the internal `/_/bscframe` iframe).
 *   **Version Bumping**: Every internal logic or functionality update **must** include a version bump (`// @version`) within the userscript metadata block so that Tampermonkey correctly pulls the update.
+
+### 6. Documentation Pages (index.html)
+*   **No README.md**: Do not use `README.md` for individual script documentation within this directory.
+*   **index.html**: Each userscript directory must have an `index.html` file written in raw HTML (no markdown parsing libraries).
+*   **Required Elements in index.html**: The `index.html` must include a `<link rel="canonical" href="..." />`, an installation button (`<a class="install-button">`), the script's version, and the script's last modified date dynamically fetched from the `.user.js` metadata.
+
+### 7. Git Practices
+*   **Clean Up**: Always act tidy. After committing using a `commit_message.txt` file, remember to delete the `commit_message.txt` file.

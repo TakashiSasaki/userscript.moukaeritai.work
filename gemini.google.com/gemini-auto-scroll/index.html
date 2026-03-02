@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini Auto-Scroll - Moukaeritai</title>
+    <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/index.html" rel="canonical" />
     <!-- Github Markdown CSS for styling -->
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
@@ -78,59 +79,63 @@
         </svg>
         userscript.moukaeritai.work
     </a>
-    <div id="content">Loading documentation...</div>
+    <div id="content">
+        <h1>Gemini Auto-Scroll</h1>
+        <p>Geminiのウェブインターフェースにおいて、会話リストを自動的に延々とスクロールさせ、すべての会話履歴をロードするためのユーザースクリプトです。</p>
 
-    <!-- Marked library for parsing markdown -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <div id="script-info"
+            style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
+            <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
+            <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
+        </div>
+
+        <a href="gemini-auto-scroll.user.js" class="install-button">スクリプトをインストール</a>
+
+        <h2>背景</h2>
+        <p>Geminiで過去の会話を遡りたい場合、手動でスクロールし続ける必要があり手間がかかります。本スクリプトは、全履歴のロードを主目的とした「延々とスクロールする」機能を提供します。特に、会話のバックアップや検索の準備段階として有用です。
+        </p>
+
+        <h2>機能概要</h2>
+
+        <h3>1. フローティング・コントロールパネル</h3>
+        <p>画面右上にドラッグ移動が可能な操作パネルを表示し、以下の機能を一括管理します。</p>
+        <ul>
+            <li><strong>自由な配置</strong>: 画面内を自由にドラッグ可能。位置は記憶されます (<code>localStorage</code>)。</li>
+            <li><strong>ステータス表示</strong>: ロード済みアイテム数、現在選択中の会話IDなどをリアルタイムに表示。</li>
+            <li><strong>操作スイッチ</strong>: Auto-Scroll と Auto-Switch Next の ON/OFF を切り替え可能。</li>
+        </ul>
+
+        <h3>2. 機能詳説</h3>
+
+        <h4>自動スクロール (Auto-Scroll)</h4>
+        <ul>
+            <li><strong>動作</strong>: 会話リスト（サイドバー）を自動的に下方向へスクロールし続けます。</li>
+            <li><strong>安全性</strong>: "Couldn't load recent chats" などのエラーを検知した場合、自動的に停止してアラートでお知らせします。</li>
+        </ul>
+
+        <h4>次へ自動切り替え (Auto-Switch Next)</h4>
+        <ul>
+            <li><strong>目的</strong>: 会話の整理（削除）作業を高速化します。</li>
+            <li><strong>動作</strong>: 現在閲覧中の会話を削除した際、自動的に次の会話を読み込みます。削除のたびにトップページに飛ばされる標準の挙動を防ぎ、スムーズな整理が可能です。</li>
+        </ul>
+
+        <h3>3. UI調整</h3>
+        <ul>
+            <li><strong>インデックス表示</strong>: 会話リストに連番を表示し、位置関係を把握しやすくします。</li>
+            <li><strong>高視認性スクロールバー</strong>: スクロールバーの色を際立たせ、現在のロード状況を視覚的に分かりやすくします。</li>
+        </ul>
+
+        <h2>更新履歴</h2>
+        <ul>
+            <li><strong>v0.2.22</strong>: 最終更新日のメタデータ表示に対応。</li>
+            <li><strong>v0.2.21</strong>: Navigation API を利用した SPA ルーティングの安定性向上。</li>
+            <li><strong>v0.2.20</strong>: UI のリファクタリング、最小化機能の導入。</li>
+            <li><strong>v0.1.27</strong>: エラー検知によるセーフティ停止機能を実装。</li>
+        </ul>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const markdown = `
-# Gemini Auto-Scroll
-
-Geminiのウェブインターフェースにおいて、会話リストを自動的に延々とスクロールさせ、すべての会話履歴をロードするためのユーザースクリプトです。
-
-<div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
-    <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
-    <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
-</div>
-
-<a href="gemini-auto-scroll.user.js" class="install-button">スクリプトをインストール</a>
-
-## 背景
-
-Geminiで過去の会話を遡りたい場合、手動でスクロールし続ける必要があり手間がかかります。本スクリプトは、全履歴のロードを主目的とした「延々とスクロールする」機能を提供します。特に、会話のバックアップや検索の準備段階として有用です。
-
-## 機能概要
-
-### 1. フローティング・コントロールパネル
-画面右上にドラッグ移動が可能な操作パネルを表示し、以下の機能を一括管理します。
-* **自由な配置**: 画面内を自由にドラッグ可能。位置は記憶されます (\`localStorage\`)。
-* **ステータス表示**: ロード済みアイテム数、現在選択中の会話IDなどをリアルタイムに表示。
-* **操作スイッチ**: Auto-Scroll と Auto-Switch Next の ON/OFF を切り替え可能。
-
-### 2. 機能詳説
-
-#### 自動スクロール (Auto-Scroll)
-* **動作**: 会話リスト（サイドバー）を自動的に下方向へスクロールし続けます。
-* **安全性**: "Couldn't load recent chats" などのエラーを検知した場合、自動的に停止してアラートでお知らせします。
-
-#### 次へ自動切り替え (Auto-Switch Next)
-* **目的**: 会話の整理（削除）作業を高速化します。
-* **動作**: 現在閲覧中の会話を削除した際、自動的に次の会話を読み込みます。削除のたびにトップページに飛ばされる標準の挙動を防ぎ、スムーズな整理が可能です。
-
-### 3. UI調整
-* **インデックス表示**: 会話リストに連番を表示し、位置関係を把握しやすくします。
-* **高視認性スクロールバー**: スクロールバーの色を際立たせ、現在のロード状況を視覚的に分かりやすくします。
-
-## 更新履歴
-* **v0.2.22**: 最終更新日のメタデータ表示に対応。
-* **v0.2.21**: Navigation API を利用した SPA ルーティングの安定性向上。
-* **v0.2.20**: UI のリファクタリング、最小化機能の導入。
-* **v0.1.27**: エラー検知によるセーフティ停止機能を実装。
-`;
-            document.getElementById('content').innerHTML = marked.parse(markdown);
-
-            // Fetch version from script metadata
             try {
                 const response = await fetch('gemini-auto-scroll.user.js');
                 if (response.ok) {
@@ -141,7 +146,6 @@ Geminiで過去の会話を遡りたい場合、手動でスクロールし続�
                         const version = versionMatch[1];
                         const date = dateMatch ? dateMatch[1] : '不明';
 
-                        // Update info labels
                         const verEl = document.getElementById('ver-info');
                         const dateEl = document.getElementById('date-info');
                         if (verEl) verEl.textContent = `v${version}`;

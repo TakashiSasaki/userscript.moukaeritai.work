@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini Artifact Exporter - Moukaeritai</title>
+    <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/index.html"
+        rel="canonical" />
     <!-- Github Markdown CSS for styling -->
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
@@ -78,65 +80,67 @@
         </svg>
         userscript.moukaeritai.work
     </a>
-    <div id="content">Loading documentation...</div>
+    <div id="content">
+        <h1>Gemini Artifact Exporter</h1>
+        <p>Google Gemini のサイドバーに表示されるすべての「記事 (Article)」タイプのアーティファクトを、Google ドキュメントへ一括でエクスポートするユーザースクリプトです。</p>
 
-    <!-- Marked library for parsing markdown -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <div id="script-info"
+            style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
+            <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
+            <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
+        </div>
+
+        <a href="gemini-artifact-exporter.user.js" class="install-button">スクリプトをインストール</a>
+
+        <h2>概要</h2>
+        <p>Geminiの会話ページ（例: <code>https://gemini.google.com/app/xxxxxxxx</code>）を開くと、画面上にドラッグ可能な「Artifact
+            Exporter」コントロールパネルが表示されます。<br>
+            このパネルを使用して、会話内に生成された複数の記事を一括で保存できます。</p>
+
+        <h2>主な機能</h2>
+        <ul>
+            <li><strong>アーティファクトのスキャン</strong>: 会話内にあるすべての「記事」タイプアーティファクトを自動検出し、リスト表示します。</li>
+            <li><strong>一括エクスポート</strong>: リストから選択した記事を、一つずつ順番に Google ドキュメントへエクスポートします。</li>
+            <li><strong>スタック回避ロジック</strong>: GeminiのUIバグ（処理完了後に背景やトーストが残る現象）を自動で検知・解決し、連続したエクスポート処理を維持します。</li>
+            <li><strong>設定の保存</strong>: コントロールパネルの位置やタイムアウト設定はブラウザに保存され、次回アクセス時も維持されます。</li>
+        </ul>
+
+        <h2>使い方</h2>
+        <ol>
+            <li><strong>インストール</strong>: Tampermonkey 等のマネージャにスクリプトをインストールします。</li>
+            <li><strong>ページを開く</strong>: アーティファクトを含むGeminiの会話ページを開きます。</li>
+            <li><strong>スキャン</strong>: パネルの <strong><code>Scan Artifacts</code></strong> ボタンをクリックして記事一覧を取得します。</li>
+            <li><strong>選択</strong>: エクスポートしたい記事にチェックを入れます（デフォルトで全選択）。</li>
+            <li><strong>実行</strong>: <strong><code>Export Selected</code></strong> ボタンをクリックしてエクスポートを開始します。</li>
+            <li><strong>完了待機</strong>: 順番に処理が実行されます。処理中はタブを閉じないでください。</li>
+        </ol>
+
+        <h2>コントロールパネルの項目</h2>
+        <ul>
+            <li><strong><code>Scan Artifacts</code></strong>: サイドバーからエクスポート可能な記事を再スキャンします。別の会話に移動した際などに使用してください。</li>
+            <li><strong><code>Export Selected</code></strong>: 選択中のアイテムのエクスポートを開始します。実行中は <code>Cancel Export</code>
+                ボタンに変わり、途中で停止できます。</li>
+            <li><strong><code>Timeout (s)</code></strong>: 各アーティファクトの処理において、Google
+                ドキュメント側の応答を待機する最大秒数です（デフォルト10秒）。通信環境や記事の長さに応じて調整してください。</li>
+        </ul>
+
+        <h2>注意事項</h2>
+        <ul>
+            <li><strong>Google ログイン</strong>: 事前に Google ドキュメントが利用可能なアカウントでログインしている必要があります。</li>
+            <li><strong>UIの自動操作</strong>: このスクリプトは Gemini の標準機能を自動でクリックして操作します。処理中に手動でメニューを操作すると干渉する場合があります。</li>
+            <li><strong>処理時間</strong>: 記事の数が多い場合、完了まで数分かかることがあります。</li>
+        </ul>
+
+        <h2>更新履歴</h2>
+        <ul>
+            <li><strong>v0.2.35</strong>: 内部処理の安定性を向上。</li>
+            <li><strong>v0.2.34</strong>: Gemini側のUIスタックバグに対するアグレッシブなクリーンアップ機能を実装。</li>
+            <li><strong>v0.2.20</strong>: タイムアウト設定機能を追加。</li>
+        </ul>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const markdown = `
-# Gemini Artifact Exporter
-
-Google Gemini のサイドバーに表示されるすべての「記事 (Article)」タイプのアーティファクトを、Google ドキュメントへ一括でエクスポートするユーザースクリプトです。
-
-<div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
-    <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
-    <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
-</div>
-
-<a href="gemini-artifact-exporter.user.js" class="install-button">スクリプトをインストール</a>
-
-## 概要
-
-Geminiの会話ページ（例: \`https://gemini.google.com/app/xxxxxxxx\`）を開くと、画面上にドラッグ可能な「Artifact Exporter」コントロールパネルが表示されます。
-このパネルを使用して、会話内に生成された複数の記事を一括で保存できます。
-
-## 主な機能
-
-*   **アーティファクトのスキャン**: 会話内にあるすべての「記事」タイプアーティファクトを自動検出し、リスト表示します。
-*   **一括エクスポート**: リストから選択した記事を、一つずつ順番に Google ドキュメントへエクスポートします。
-*   **スタック回避ロジック**: GeminiのUIバグ（処理完了後に背景やトーストが残る現象）を自動で検知・解決し、連続したエクスポート処理を維持します。
-*   **設定の保存**: コントロールパネルの位置やタイムアウト設定はブラウザに保存され、次回アクセス時も維持されます。
-
-## 使い方
-
-1.  **インストール**: Tampermonkey 等のマネージャにスクリプトをインストールします。
-2.  **ページを開く**: アーティファクトを含むGeminiの会話ページを開きます。
-3.  **スキャン**: パネルの **\`Scan Artifacts\`** ボタンをクリックして記事一覧を取得します。
-4.  **選択**: エクスポートしたい記事にチェックを入れます（デフォルトで全選択）。
-5.  **実行**: **\`Export Selected\`** ボタンをクリックしてエクスポートを開始します。
-6.  **完了待機**: 順番に処理が実行されます。処理中はタブを閉じないでください。
-
-## コントロールパネルの項目
-
-*   **\`Scan Artifacts\`**: サイドバーからエクスポート可能な記事を再スキャンします。別の会話に移動した際などに使用してください。
-*   **\`Export Selected\`**: 選択中のアイテムのエクスポートを開始します。実行中は \`Cancel Export\` ボタンに変わり、途中で停止できます。
-*   **\`Timeout (s)\`**: 各アーティファクトの処理において、Google ドキュメント側の応答を待機する最大秒数です（デフォルト10秒）。通信環境や記事の長さに応じて調整してください。
-
-## 注意事項
-
-*   **Google ログイン**: 事前に Google ドキュメントが利用可能なアカウントでログインしている必要があります。
-*   **UIの自動操作**: このスクリプトは Gemini の標準機能を自動でクリックして操作します。処理中に手動でメニューを操作すると干渉する場合があります。
-*   **処理時間**: 記事の数が多い場合、完了まで数分かかることがあります。
-
-## 更新履歴
-*   **v0.2.35**: 内部処理の安定性を向上。
-*   **v0.2.34**: Gemini側のUIスタックバグに対するアグレッシブなクリーンアップ機能を実装。
-*   **v0.2.20**: タイムアウト設定機能を追加。
-`;
-            document.getElementById('content').innerHTML = marked.parse(markdown);
-
-            // Fetch version from script metadata
             try {
                 const response = await fetch('gemini-artifact-exporter.user.js');
                 if (response.ok) {
@@ -147,13 +151,11 @@ Geminiの会話ページ（例: \`https://gemini.google.com/app/xxxxxxxx\`）を
                         const version = versionMatch[1];
                         const date = dateMatch ? dateMatch[1] : '不明';
 
-                        // Update info labels
                         const verEl = document.getElementById('ver-info');
                         const dateEl = document.getElementById('date-info');
                         if (verEl) verEl.textContent = `v${version}`;
                         if (dateEl) dateEl.textContent = date;
 
-                        // Update button text
                         const installBtn = document.querySelector('.install-button');
                         if (installBtn) {
                             installBtn.textContent = `スクリプトをインストール (v${version})`;

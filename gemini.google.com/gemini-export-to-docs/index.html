@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini 1-Click Export to Docs - Moukaeritai</title>
+    <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/index.html"
+        rel="canonical" />
     <!-- Github Markdown CSS for styling -->
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
@@ -78,107 +80,136 @@
         </svg>
         userscript.moukaeritai.work
     </a>
-    <div id="content">Loading documentation...</div>
+    <div id="content">
+        <h1>Gemini 1-Click Export to Docs</h1>
 
-    <!-- Marked library for parsing markdown -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <p>Geminiのウェブアプリケーション（SPA）において、会話の特定のターンまたはキャンバスをGoogle Docsにエクスポートする操作を簡略化するユーザースクリプトです。</p>
+
+        <div id="script-info"
+            style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
+            <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
+            <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
+        </div>
+
+        <a href="gemini-export-to-docs.user.js" class="install-button">スクリプトをインストール</a>
+
+        <h2>目的</h2>
+        <p>標準機能では複数回のクリック（メニュー展開など）が必要ですが、これを「1クリック」または「キーボードショートカット」で実行できる機能を追加します。<br>
+            本ユーザースクリプトはTampermonkeyでの利用を想定し、ファイル名は <code>gemini-export-to-docs.user.js</code> とします。</p>
+
+        <h2>経緯</h2>
+        <p>以前作成したスクリプトの課題（DOM要素検出の不安定さ、イベントトリガーの信頼性）を解消するため、ゼロベースで再設計・実装を行う。</p>
+
+        <h2>ユーザースクリプト情報</h2>
+        <ul>
+            <li><strong>Match URL</strong>: <code>https://gemini.google.com/*</code>
+                （スクリプト内部でURLを監視し、チャットページでのみ動的に有効化されます。現在、<code>/app/</code> および <code>/gem/</code> のパス形式に対応しています。）</li>
+        </ul>
+
+        <h2>技術仕様</h2>
+
+        <h3>1. セレクタ戦略</h3>
+        <p>Geminiは動的なSPAであるため、以下の優先順位で要素を特定する。</p>
+        <ol>
+            <li><strong>data-test-id属性</strong>: Googleがテスト用に付与している不変性の高い属性（例:
+                <code>data-test-id="more-menu-button"</code>）。
+            </li>
+            <li><strong>アイコンフォント</strong>: ボタンを特定できない場合、<code>mat-icon</code> の名前（<code>docs</code>など）を補助的に使用する。</li>
+            <li><strong>DOM構造</strong>: 親要素（<code>response-container</code>）からの相対位置など。</li>
+        </ol>
+
+        <h3>2. 自動化ロジックフロー</h3>
+
+        <h4>ターンエクスポート</h4>
+        <ol>
+            <li><strong>トリガー</strong>: スクリプトが「︙」ボタン（<code>more-menu-button</code>）をクリック。</li>
+            <li><strong>メニュー待機</strong>: メニューパネルが表示されるのを待機（<code>waitForElement</code>）。</li>
+            <li><strong>エクスポート実行</strong>:
+                <ul>
+                    <li><strong>PC版</strong>: メニュー内の「Export to Docs」ボタンを即座にクリック。</li>
+                    <li><strong>モバイル版</strong>: 「Export to...」ボタンをクリック → サブメニュー待機 → 「Export to Docs」をクリック。</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h4>キャンバスエクスポート</h4>
+        <ol>
+            <li><strong>オープン</strong>: キャンバスが閉じていれば開く。</li>
+            <li><strong>共有</strong>: キャンバス内の「共有（Share）」ボタンをクリック。</li>
+            <li><strong>エクスポート</strong>: 共有メニュー内の「Export to Docs」をクリック。</li>
+        </ol>
+
+        <h3>3. 機能要件</h3>
+
+        <h4>A. 1クリックボタン（UI注入）</h4>
+        <ul>
+            <li><strong>配置</strong>:
+                <ul>
+                    <li>各レスポンスの下部（フッター）にある「︙」メニューボタンの隣。</li>
+                    <li>各レスポンスの上部（ヘッダー）にあるコントロールエリア。</li>
+                    <li>キャンバスの「Open」チップの隣。</li>
+                </ul>
+            </li>
+            <li><strong>状態同期</strong>: 同一レスポンスに対して複数のボタンがある場合、一つがクリックされると全てが「完了状態（緑色チェック）」に同期される。</li>
+        </ul>
+
+        <h4>B. キーボードショートカット (<code>Ctrl + E</code>)</h4>
+        <ul>
+            <li><strong>機能</strong>: ページ内で <strong>最初に見つかった</strong> 会話のレスポンス（通常は最初のターン）を対象にエクスポートを実行する。</li>
+            <li><strong>動作条件</strong>: テキスト入力エリア（<code>input</code>, <code>textarea</code>,
+                <code>contenteditable</code>）にフォーカスがない場合のみ発火する。
+            </li>
+            <li><strong>フィードバック</strong>: 通常のボタンクリックと同様、処理中はオーバーレイを表示し、完了後に成功ステータスへ更新する。</li>
+        </ul>
+
+        <h3>4. SPA（シングルページアプリケーション）対応とパフォーマンス</h3>
+        <ul>
+            <li>GeminiはSPAであるため、ページ遷移を検知してスクリプトの機能を動的に制御します。</li>
+            <li><strong>有効化</strong>: チャットページ (<code>/app/...</code> または <code>/gem/...</code> )
+                に遷移した際に、エクスポートボタンやショートカット機能が自動的に有効になります。</li>
+            <li><strong>無効化（クリーンアップ）</strong>: チャットページから他のページ（ホームページなど）に移動すると、追加したボタンや機能はすべて削除され、リソースを解放します。</li>
+            <li>これにより、スクリプトが必要な場面でのみ動作し、サイト全体のパフォーマンスへの影響を最小限に抑えます。</li>
+        </ul>
+
+        <h3>5. セキュリティと安定性（Reliability）</h3>
+        <ul>
+            <li><strong>Trusted Types対応</strong>: <code>innerHTML</code> の使用を禁止し、<code>document.createElementNS</code>
+                等でDOMを構築する。</li>
+            <li><strong>Trusted Click</strong>: <code>MouseEvent</code> の <code>view</code> プロパティを <code>null</code>
+                に設定することで、ブラウザのセキュリティ制約による <code>TypeError</code> を回避する。</li>
+            <li><strong>Wait処理</strong>: 非同期DOM更新に対応するため、単純な <code>querySelector</code> ではなく、タイムアウト付きのリトライ待機ロジックを実装する。
+            </li>
+        </ul>
+
+        <h2>UI仕様</h2>
+        <ul>
+            <li><strong>ボタンデザイン</strong>:
+                <ul>
+                    <li>初期状態: 薄い緑色の背景 (<code>#e6f4ea</code>) にDocsアイコン。</li>
+                    <li>処理中: 全画面オーバーレイとスピナーを表示。</li>
+                    <li>完了状態: 濃い緑色 (<code>#1e8e3e</code>) に変化し、アイコンがチェックマークになる。</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h2>更新履歴</h2>
+        <ul>
+            <li><strong>v0.1.22</strong>: SPA対応を強化。<code>/app/</code> および <code>/gem/</code>
+                の両方のURL形式に対応し、チャットページでのみ機能が動的に有効化・無効化されるように変更し、パフォーマンスを向上。</li>
+            <li><strong>v0.1.21</strong>: <code>simulateClick</code> の <code>view</code> プロパティを <code>null</code>
+                に変更し、Trusted Typesエラーを回避。</li>
+            <li><strong>v0.1.20</strong>: キャンバスの <code>view-report-button</code> にエクスポートボタンを注入する機能を追加。</li>
+            <li><strong>v0.1.19</strong>: キーボードショートカット (Ctrl+E) を実装。</li>
+            <li><strong>v0.1.18</strong>: UI注入ロジックをリファクタリングし、各レスポンスの上部にもボタンを追加。</li>
+            <li><strong>v0.1.17</strong>: モバイル版Geminiの「Export to...」の中間ボタンに対応。</li>
+            <li><strong>v0.1.16</strong>: <code>waitForElement</code> の信頼性を向上させ、<code>simulateClick</code> に
+                <code>mousedown</code>/<code>mouseup</code> イベントを追加。
+            </li>
+        </ul>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const markdown = `
-# Gemini 1-Click Export to Docs
-
-Geminiのウェブアプリケーション（SPA）において、会話の特定のターンまたはキャンバスをGoogle Docsにエクスポートする操作を簡略化するユーザースクリプトです。
-
-<div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
-    <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
-    <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
-</div>
-
-<a href="gemini-export-to-docs.user.js" class="install-button">スクリプトをインストール</a>
-
-# 目的
-
-標準機能では複数回のクリック（メニュー展開など）が必要ですが、これを「1クリック」または「キーボードショートカット」で実行できる機能を追加します。
-本ユーザースクリプトはTampermonkeyでの利用を想定し、ファイル名は \`gemini-export-to-docs.user.js\` とします。
-
-# 経緯
-以前作成したスクリプトの課題（DOM要素検出の不安定さ、イベントトリガーの信頼性）を解消するため、ゼロベースで再設計・実装を行う。
-
-# ユーザースクリプト情報
-
-*   **Match URL**: \`https://gemini.google.com/*\` （スクリプト内部でURLを監視し、チャットページでのみ動的に有効化されます。現在、\`/app/\` および \`/gem/\` のパス形式に対応しています。）
-
-# 技術仕様
-
-## 1. セレクタ戦略
-Geminiは動的なSPAであるため、以下の優先順位で要素を特定する。
-1.  **data-test-id属性**: Googleがテスト用に付与している不変性の高い属性（例: \`data-test-id="more-menu-button"\`）。
-2.  **アイコンフォント**: ボタンを特定できない場合、\`mat-icon\` の名前（\`docs\`など）を補助的に使用する。
-3.  **DOM構造**: 親要素（\`response-container\`）からの相対位置など。
-
-## 2. 自動化ロジックフロー
-
-### ターンエクスポート
-1.  **トリガー**: スクリプトが「︙」ボタン（\`more-menu-button\`）をクリック。
-2.  **メニュー待機**: メニューパネルが表示されるのを待機（\`waitForElement\`）。
-3.  **エクスポート実行**:
-    *   **PC版**: メニュー内の「Export to Docs」ボタンを即座にクリック。
-    *   **モバイル版**: 「Export to...」ボタンをクリック → サブメニュー待機 → 「Export to Docs」をクリック。
-
-### キャンバスエクスポート
-1.  **オープン**: キャンバスが閉じていれば開く。
-2.  **共有**: キャンバス内の「共有（Share）」ボタンをクリック。
-3.  **エクスポート**: 共有メニュー内の「Export to Docs」をクリック。
-
-## 3. 機能要件
-
-### A. 1クリックボタン（UI注入）
-*   **配置**:
-    *   各レスポンスの下部（フッター）にある「︙」メニューボタンの隣。
-    *   各レスポンスの上部（ヘッダー）にあるコントロールエリア。
-    *   キャンバスの「Open」チップの隣。
-*   **状態同期**: 同一レスポンスに対して複数のボタンがある場合、一つがクリックされると全てが「完了状態（緑色チェック）」に同期される。
-
-### B. キーボードショートカット (\`Ctrl + E\`)
-*   **機能**: ページ内で **最初に見つかった** 会話のレスポンス（通常は最初のターン）を対象にエクスポートを実行する。
-*   **動作条件**: テキスト入力エリア（\`input\`, \`textarea\`, \`contenteditable\`）にフォーカスがない場合のみ発火する。
-*   **フィードバック**: 通常のボタンクリックと同様、処理中はオーバーレイを表示し、完了後に成功ステータスへ更新する。
-
-## 4. SPA（シングルページアプリケーション）対応とパフォーマンス
-*   GeminiはSPAであるため、ページ遷移を検知してスクリプトの機能を動的に制御します。
-*   **有効化**: チャットページ (\`/app/...\` または \`/gem/...\` ) に遷移した際に、エクスポートボタンやショートカット機能が自動的に有効になります。
-*   **無効化（クリーンアップ）**: チャットページから他のページ（ホームページなど）に移動すると、追加したボタンや機能はすべて削除され、リソースを解放します。
-*   これにより、スクリプトが必要な場面でのみ動作し、サイト全体のパフォーマンスへの影響を最小限に抑えます。
-
-## 5. セキュリティと安定性（Reliability）
-
-*   **Trusted Types対応**: \`innerHTML\` の使用を禁止し、\`document.createElementNS\` 等でDOMを構築する。
-*   **Trusted Click**: \`MouseEvent\` の \`view\` プロパティを \`null\` に設定することで、ブラウザのセキュリティ制約による \`TypeError\` を回避する。
-*   **Wait処理**: 非同期DOM更新に対応するため、単純な \`querySelector\` ではなく、タイムアウト付きのリトライ待機ロジックを実装する。
-
-# UI仕様
-
-*   **ボタンデザイン**:
-    *   初期状態: 薄い緑色の背景 (\`#e6f4ea\`) にDocsアイコン。
-    *   処理中: 全画面オーバーレイとスピナーを表示。
-    *   完了状態: 濃い緑色 (\`#1e8e3e\`) に変化し、アイコンがチェックマークになる。
-
-# リポジトリ
-
-*   **GitHub**: [userscript.moukaeritai.work](https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/gemini.google.com/gemini-export-to-docs)
-
-## 更新履歴
-*   **v0.1.22**: SPA対応を強化。\`/app/\` および \`/gem/\` の両方のURL形式に対応し、チャットページでのみ機能が動的に有効化・無効化されるように変更し、パフォーマンスを向上。
-*   **v0.1.21**: \`simulateClick\` の \`view\` プロパティを \`null\` に変更し、Trusted Typesエラーを回避。
-*   **v0.1.20**: キャンバスの \`view-report-button\` にエクスポートボタンを注入する機能を追加。
-*   **v0.1.19**: キーボードショートカット (Ctrl+E) を実装。
-*   **v0.1.18**: UI注入ロジックをリファクタリングし、各レスポンスの上部にもボタンを追加。
-*   **v0.1.17**: モバイル版Geminiの「Export to...」の中間ボタンに対応。
-*   **v0.1.16**: \`waitForElement\` の信頼性を向上させ、\`simulateClick\` に \`mousedown\`/\`mouseup\` イベントを追加。
-`;
-            document.getElementById('content').innerHTML = marked.parse(markdown);
-
-            // Fetch version from script metadata
             try {
                 const response = await fetch('gemini-export-to-docs.user.js');
                 if (response.ok) {
@@ -189,7 +220,6 @@ Geminiは動的なSPAであるため、以下の優先順位で要素を特定�
                         const version = versionMatch[1];
                         const date = dateMatch ? dateMatch[1] : '不明';
 
-                        // Update info labels
                         const verEl = document.getElementById('ver-info');
                         const dateEl = document.getElementById('date-info');
                         if (verEl) verEl.textContent = `v${version}`;
