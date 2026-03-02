@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.31
+// @version      0.2.32
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -225,7 +225,10 @@
                 };
                 document.addEventListener('visibilitychange', onVisibilityChange);
 
-                while (isCreating && waitCheck < 60) { // Wait up to 30 seconds
+                const timeoutSeconds = parseInt(GM_getValue(TIMEOUT_SECONDS_KEY, 10), 10);
+                const maxChecks = timeoutSeconds * 2; // Assuming 500ms sleep per check
+
+                while (isCreating && waitCheck < maxChecks) {
                     await sleep(500);
                     waitCheck++;
 
@@ -511,31 +514,9 @@
 
             await processArtifact(selectedTitles[i], isDryRun);
 
-            // Cooldown except for last
+            // Small UI sleep before starting the next item to allow memory / UI catchup
             if (i < selectedTitles.length - 1) {
-                if (cancelExport) {
-                    log('Batch export cancelled by user.');
-                    if (progressEl) progressEl.textContent = 'Cancelled';
-                    setTimeout(() => { if (progressEl) progressEl.textContent = ''; }, 3000);
-                    finishExport();
-                    return;
-                }
-
-                const currentCooldown = parseInt(GM_getValue(COOLDOWN_SECONDS_KEY, 3), 10);
-                log(`Cooldown before next item (${currentCooldown}s)...`);
-                if (progressEl) progressEl.textContent = `Cooldown (${currentCooldown}s)...`;
-
-                const startTime = Date.now();
-                const cooldownMs = currentCooldown * 1000;
-
-                while (Date.now() - startTime < cooldownMs) {
-                    if (cancelExport) break;
-                    if (progressEl) {
-                        const remaining = Math.ceil((cooldownMs - (Date.now() - startTime)) / 1000);
-                        progressEl.textContent = `Cooldown (${remaining}s)...`;
-                    }
-                    await sleep(100);
-                }
+                await sleep(500);
             }
         }
 
@@ -553,7 +534,7 @@
     const LOG_PANEL_POSITION_KEY = 'gemini-exporter-log-pos';
     const LOG_PANEL_VISIBLE_KEY = 'gemini-exporter-log-visible';
     const DRY_RUN_KEY = 'gemini-exporter-dry-run';
-    const COOLDOWN_SECONDS_KEY = 'gemini-exporter-cooldown-seconds';
+    const TIMEOUT_SECONDS_KEY = 'gemini-exporter-timeout-seconds';
 
     function makePanelDraggable(panel, handle, storageKey) {
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
@@ -813,7 +794,7 @@
             return container;
         };
 
-        const createCooldownInput = (key, text, defaultValue) => {
+        const createNumberInput = (key, text, defaultValue, minVal) => {
             const container = document.createElement('label');
             container.style.cssText = `
                 display: flex;
@@ -828,7 +809,7 @@
             `;
             const numberInput = document.createElement('input');
             numberInput.type = 'number';
-            numberInput.min = '3'; // Minimum value
+            numberInput.min = minVal.toString();
             numberInput.style.cssText = `
                 width: 50px;
                 background-color: rgba(0,0,0,0.3);
@@ -842,8 +823,8 @@
 
             numberInput.onchange = (e) => {
                 let value = parseInt(e.target.value, 10);
-                if (isNaN(value) || value < 3) {
-                    value = 3;
+                if (isNaN(value) || value < minVal) {
+                    value = minVal;
                     e.target.value = value;
                 }
                 GM_setValue(key, value);
@@ -856,11 +837,11 @@
 
         const logToggle = createToggle(LOG_PANEL_VISIBLE_KEY, 'Show Log Panel', false);
         const dryRunToggle = createToggle(DRY_RUN_KEY, 'Dry Run', true);
-        const cooldownInput = createCooldownInput(COOLDOWN_SECONDS_KEY, 'Cooldown (s)', 3);
+        const timeoutInput = createNumberInput(TIMEOUT_SECONDS_KEY, 'Timeout (s)', 10, 1);
 
         togglesContainer.appendChild(dryRunToggle);
         togglesContainer.appendChild(logToggle);
-        togglesContainer.appendChild(cooldownInput);
+        togglesContainer.appendChild(timeoutInput);
 
 
         const progressDisplay = document.createElement('div');
