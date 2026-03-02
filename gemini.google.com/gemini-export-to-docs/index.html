@@ -51,6 +51,22 @@
             color: white;
             text-decoration: none;
         }
+
+        .install-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #2ea44f;
+            color: white !important;
+            font-weight: 600;
+            border-radius: 6px;
+            text-decoration: none !important;
+            margin: 20px 0;
+            transition: background-color 0.2s;
+        }
+
+        .install-button:hover {
+            background-color: #2c974b;
+        }
     </style>
 </head>
 
@@ -67,15 +83,23 @@
     <!-- Marked library for parsing markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const markdown = `
 # Gemini 1-Click Export to Docs
 
+Geminiのウェブアプリケーション（SPA）において、会話の特定のターンまたはキャンバスをGoogle Docsにエクスポートする操作を簡略化するユーザースクリプトです。
+
+<div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
+    <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
+    <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
+</div>
+
+<a href="gemini-export-to-docs.user.js" class="install-button">スクリプトをインストール</a>
+
 # 目的
 
-Geminiのウェブアプリケーション（SPA）において、会話の特定のターンまたはキャンバスをGoogle Docsにエクスポートする操作を簡略化する。
-標準機能では複数回のクリック（メニュー展開など）が必要だが、これを「1クリック」または「キーボードショートカット」で実行できる機能を追加する。
-本ユーザースクリプトはTampermonkeyでの利用を想定し、ファイル名は \`gemini-export-to-docs.user.js\` とする。
+標準機能では複数回のクリック（メニュー展開など）が必要ですが、これを「1クリック」または「キーボードショートカット」で実行できる機能を追加します。
+本ユーザースクリプトはTampermonkeyでの利用を想定し、ファイル名は \`gemini-export-to-docs.user.js\` とします。
 
 # 経緯
 以前作成したスクリプトの課題（DOM要素検出の不安定さ、イベントトリガーの信頼性）を解消するため、ゼロベースで再設計・実装を行う。
@@ -153,6 +177,33 @@ Geminiは動的なSPAであるため、以下の優先順位で要素を特定�
 *   **v0.1.16**: \`waitForElement\` の信頼性を向上させ、\`simulateClick\` に \`mousedown\`/\`mouseup\` イベントを追加。
 `;
             document.getElementById('content').innerHTML = marked.parse(markdown);
+
+            // Fetch version from script metadata
+            try {
+                const response = await fetch('gemini-export-to-docs.user.js');
+                if (response.ok) {
+                    const text = await response.text();
+                    const versionMatch = text.match(/\/\/ @version\s+([\d.]+)/);
+                    const dateMatch = text.match(/\/\/ @lastModified\s+([\d-]+)/);
+                    if (versionMatch) {
+                        const version = versionMatch[1];
+                        const date = dateMatch ? dateMatch[1] : '不明';
+
+                        // Update info labels
+                        const verEl = document.getElementById('ver-info');
+                        const dateEl = document.getElementById('date-info');
+                        if (verEl) verEl.textContent = `v${version}`;
+                        if (dateEl) dateEl.textContent = date;
+
+                        const installBtn = document.querySelector('.install-button');
+                        if (installBtn) {
+                            installBtn.textContent = `スクリプトをインストール (v${version})`;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not fetch script version:', e);
+            }
         });
     </script>
     <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">

@@ -89,6 +89,11 @@
 
 Google Gemini のサイドバーに表示されるすべての「記事 (Article)」タイプのアーティファクトを、Google ドキュメントへ一括でエクスポートするユーザースクリプトです。
 
+<div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
+    <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
+    <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
+</div>
+
 <a href="gemini-artifact-exporter.user.js" class="install-button">スクリプトをインストール</a>
 
 ## 概要
@@ -140,10 +145,18 @@ Geminiの会話ページ（例: \`https://gemini.google.com/app/xxxxxxxx\`）を
                     const dateMatch = text.match(/\/\/ @lastModified\s+([\d-]+)/);
                     if (versionMatch) {
                         const version = versionMatch[1];
-                        const date = dateMatch ? ` (${dateMatch[1]})` : '';
+                        const date = dateMatch ? dateMatch[1] : '不明';
+
+                        // Update info labels
+                        const verEl = document.getElementById('ver-info');
+                        const dateEl = document.getElementById('date-info');
+                        if (verEl) verEl.textContent = `v${version}`;
+                        if (dateEl) dateEl.textContent = date;
+
+                        // Update button text
                         const installBtn = document.querySelector('.install-button');
                         if (installBtn) {
-                            installBtn.textContent = `スクリプトをインストール (v${version}${date})`;
+                            installBtn.textContent = `スクリプトをインストール (v${version})`;
                         }
                     }
                 }
