@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.1
+// @version      0.3.2
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -61,17 +61,12 @@
 
         responseHeader: '.response-container-header', // Header area code (fallback if needed)
 
-        // Canvas selectors
-        canvasOpenButton: 'button[data-test-id="view-report-button"]', // "Open" button for canvas
-        canvasShareButton: 'button[data-test-id="share-button"]', // Share button inside canvas
-
         // General
         // Updated to include 'actions-bottom-sheet' for mobile view
         menuPanel: '.mat-mdc-menu-panel, .mat-mdc-bottom-sheet-container, actions-bottom-sheet', // Panel that appears
 
         // Injection targets
         // We will try to inject next to the trigger button for turns
-        // And next to the open button for canvas
     };
 
     /**
@@ -432,52 +427,6 @@
     }
 
     /**
-     * Flow: Export a Canvas
-     * 1. Check if canvas is active. If not, click "Open".
-     * 2. Click "Share" (top right of canvas).
-     * 3. Wait for options.
-     * 4. Click "Export to Docs".
-     */
-    async function handleCanvasExport(openBtn) {
-        console.log('Starting Canvas Export...');
-
-        // 1. Ensure Canvas is Open
-        // We assume if we clicked the buttons next to "Open", we might need to open it.
-        // However, if the canvas is already open, the "Share" button should be visible elsewhere.
-        // But the user requested the button be placed *next to the Open button*.
-
-        simulateClick(openBtn);
-        // Wait a bit for the canvas to slide in
-        await sleep(1000);
-
-        // 2. Find Share button in the canvas toolbar
-        // The canvas usually lives in a side panel or overlay
-        // We search document-wide because it might be in a portal
-        const shareBtn = await waitForElement(SELECTORS.canvasShareButton);
-        if (!shareBtn) throw new Error('Canvas Share button not found (is the canvas open?)');
-
-        simulateClick(shareBtn);
-
-        // 3. Wait for menu
-        const menu = await waitForElement(SELECTORS.menuPanel);
-        if (!menu) throw new Error('Share menu did not appear');
-
-        // 4. Click Export
-        const exportBtn = await waitForElement(SELECTORS.exportToDocsButton, 2000, menu);
-        if (!exportBtn) {
-            const buttons = Array.from(menu.querySelectorAll('button'));
-            const textMatch = buttons.find(b => b.textContent.includes('Docs') || b.textContent.includes('Export'));
-            if (textMatch) {
-                simulateClick(textMatch);
-                return;
-            }
-            throw new Error('Export button not found in share menu');
-        }
-        simulateClick(exportBtn);
-        console.log('Canvas Export Clicked');
-    }
-
-    /**
      * Main logic to inject buttons
      */
     function processNodes() {
@@ -513,17 +462,6 @@
                     container.appendChild(btn);
                 }
             }
-        });
-
-        // B. Handle Canvas "Open" Buttons
-        const openButtons = document.querySelectorAll(SELECTORS.canvasOpenButton);
-        openButtons.forEach(openBtn => {
-            const container = openBtn.parentElement;
-            if (!container || container.querySelector('.gemini-quick-export-btn')) return;
-
-            const btn = createExportButton(() => handleCanvasExport(openBtn));
-            // Canvas Open button is often in a specific "chip" or card.
-            container.appendChild(btn);
         });
     }
 
