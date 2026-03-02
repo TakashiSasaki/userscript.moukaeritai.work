@@ -83,7 +83,7 @@
     <!-- Marked library for parsing markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const markdown = `
 # Gemini Artifact Exporter
 
@@ -130,6 +130,24 @@ Geminiの会話ページ（例: \`https://gemini.google.com/app/xxxxxxxx\`）を
 *   **v0.2.20**: タイムアウト設定機能を追加。
 `;
             document.getElementById('content').innerHTML = marked.parse(markdown);
+
+            // Fetch version from script metadata
+            try {
+                const response = await fetch('gemini-artifact-exporter.user.js');
+                if (response.ok) {
+                    const text = await response.text();
+                    const versionMatch = text.match(/\/\/ @version\s+([\d.]+)/);
+                    if (versionMatch) {
+                        const version = versionMatch[1];
+                        const installBtn = document.querySelector('.install-button');
+                        if (installBtn) {
+                            installBtn.textContent = `スクリプトをインストール (v${version})`;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not fetch script version:', e);
+            }
         });
     </script>
     <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
