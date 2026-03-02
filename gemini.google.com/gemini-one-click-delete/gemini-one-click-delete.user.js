@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.4
+// @version      0.2.5
 // @description  Adds a 1-click button to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -10,6 +10,8 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
 // @grant        GM_info
+// @grant        GM_setValue
+// @grant        GM_getValue
 // ==/UserScript==
 
 (function () {
@@ -75,6 +77,44 @@
     let keydownListener = null;
     let styleElement = null;
     let isInitialized = false;
+
+    const STORAGE_KEYS = {
+        PANEL_MINIMIZED: 'gemini_delete_panel_minimized',
+        PANEL_POS_X: 'gemini_delete_panel_pos_x',
+        PANEL_POS_Y: 'gemini_delete_panel_pos_y'
+    };
+
+    let policy;
+    if (window.trustedTypes && window.trustedTypes.createPolicy) {
+        try {
+            policy = window.trustedTypes.createPolicy('geminiDeletePanel_' + Math.random().toString(36).substr(2, 9), {
+                createHTML: (string) => string
+            });
+        } catch (e) {
+            console.error('Failed to create TrustedTypes policy', e);
+        }
+    }
+
+    function setInnerHTML(element, html) {
+        if (policy) {
+            element.innerHTML = policy.createHTML(html);
+        } else {
+            element.innerHTML = html;
+        }
+    }
+
+    function isPanelMinimized() {
+        return GM_getValue(STORAGE_KEYS.PANEL_MINIMIZED, false);
+    }
+
+    function togglePanelMinimized() {
+        const isMin = !isPanelMinimized();
+        GM_setValue(STORAGE_KEYS.PANEL_MINIMIZED, isMin);
+        const panel = document.getElementById('gemini-delete-panel');
+        if (panel) {
+            panel.classList.toggle('minimized', isMin);
+        }
+    }
 
     /**
      * Sleep helper
@@ -159,7 +199,9 @@
      * Style injection
      */
     function addStyles() {
+        if (document.getElementById('gemini-delete-styles')) return;
         const style = document.createElement('style');
+        style.id = 'gemini-delete-styles';
         style.textContent = `
             .gemini-quick-delete-btn {
                 display: inline-flex;
@@ -168,8 +210,8 @@
                 min-width: 32px;
                 height: 32px;
                 border-radius: 16px;
-                border: 1px solid #ffcccc; /* Light red border */
-                background-color: #ffe6e6; /* Light red background */
+                border: 1px solid #ffcccc;
+                background-color: #ffe6e6;
                 cursor: pointer;
                 margin-left: 8px;
                 color: #5f6368;
@@ -178,52 +220,90 @@
                 z-index: 1000;
                 pointer-events: auto;
             }
-            .gemini-quick-delete-btn:hover {
-                background-color: #ffcccc; /* Slightly darker light red on hover */
+            .gemini-quick-delete-btn:hover { background-color: #ffcccc; color: #d93025; border-color: #d93025; }
+            .gemini-quick-delete-btn.processing { opacity: 0.5; padding: 4px; border-radius: 4px; animation: pulse-red 1s infinite; cursor: wait; }
+            .gemini-quick-delete-btn:disabled { background-color: #f0f0f0; border-color: #ccc; color: #aaa; cursor: help; }
+
+            /* --- Draggable Panel Styles --- */
+            #gemini-delete-panel {
+                position: fixed;
+                z-index: 10000;
+                background-color: rgba(255, 255, 255, 0.95);
+                border: 1px solid #f8d7da;
+                border-radius: 6px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                font-family: 'Google Sans', sans-serif;
+                font-size: 11px;
+                color: #3c4043;
+                width: 200px;
+                backdrop-filter: blur(8px);
+                display: flex;
+                flex-direction: column;
+            }
+            #gemini-delete-panel.minimized {
+                width: auto;
+                background-color: #fce8e6;
                 color: #d93025;
-                border-color: #d93025;
+                border: 1px solid #f8d7da;
+                padding: 0 8px;
+                height: 24px;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                font-weight: 500;
+                font-size: 11px;
+                white-space: nowrap;
+                backdrop-filter: none;
             }
-            .gemini-quick-delete-btn.processing {
-                opacity: 0.5;
-                cursor: not-allowed;
-                animation: pulse-red 1s infinite;
+            #gemini-delete-panel.minimized .panel-header, 
+            #gemini-delete-panel.minimized .panel-content { display: none; }
+            #gemini-delete-panel .minimized-summary { display: none; user-select: none; }
+            #gemini-delete-panel.minimized .minimized-summary { display: block; }
+            #gemini-delete-panel .panel-header {
+                padding: 4px 8px;
+                border-bottom: 1px solid #e0e0e0;
+                cursor: move;
+                user-select: none;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background-color: rgba(241, 243, 244, 0.8);
             }
-            .gemini-quick-delete-btn.floating {
-                position: absolute;
-                top: 10px;
-                right: 20px;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            #gemini-delete-panel .panel-header h1 { font-size: 11px; font-weight: 600; margin: 0; line-height: 1; }
+            #gemini-delete-panel .panel-header .version-badge {
+                font-size: 9px; background-color: #fce8e6; color: #d93025; padding: 1px 4px; border-radius: 3px; margin-left: 4px;
             }
-            .gemini-quick-delete-btn:disabled {
-                background-color: #f0f0f0;
-                border-color: #ccc;
-                color: #aaa;
-                cursor: help; /* Show help cursor to indicate tooltip */
+            .gdp-minimize-btn {
+                cursor: pointer; padding: 0 4px; border-radius: 4px; user-select: none; transition: background 0.2s;
+                font-size: 14px; line-height: 1; color: #5f6368; font-weight: bold;
             }
+            .gdp-minimize-btn:hover { background: rgba(0,0,0,0.1); }
+            #gemini-delete-panel .panel-content { padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; }
+            #gemini-delete-panel .shortcuts-list { font-size: 10px; color: #5f6368; margin: 2px 0 0 0; padding-left: 14px; line-height: 1.3; }
+            .gdp-delete-btn-container { display: flex; justify-content: center; margin-bottom: 4px; padding: 4px 0; }
+            .gdp-main-delete-btn {
+                display: inline-flex; align-items: center; gap: 4px; background-color: #d93025; color: white;
+                border: none; padding: 6px 16px; border-radius: 12px; font-size: 11px; font-weight: bold;
+                cursor: pointer; transition: background-color 0.2s; width: 100%; justify-content: center;
+            }
+            .gdp-main-delete-btn:hover { background-color: #b31412; }
+            .gdp-main-delete-btn:disabled { background-color: #fce8e6; color: #d93025; opacity:0.5; cursor: not-allowed; }
+            .gdp-main-delete-btn.processing { opacity: 0.5; animation: pulse-red 1s infinite; cursor: wait; }
+
             @media (prefers-color-scheme: dark) {
-                .gemini-quick-delete-btn {
-                    background-color: #4a1a1a; /* Dark red background */
-                    border-color: #662222; /* Dark red border */
-                    color: #e8eaed; /* Light text */
-                }
-                .gemini-quick-delete-btn:hover {
-                    background-color: #662222;
-                    border-color: #d93025;
-                    color: #ff8a80; /* Lighter red text on hover */
-                }
-                .gemini-quick-delete-btn:disabled {
-                    background-color: #3c4043;
-                    border-color: #5f6368;
-                    color: #80868b;
-                }
+                .gemini-quick-delete-btn { background-color: #4a1a1a; border-color: #662222; color: #e8eaed; }
+                .gemini-quick-delete-btn:hover { background-color: #662222; border-color: #d93025; color: #ff8a80; }
+                .gemini-quick-delete-btn:disabled { background-color: #3c4043; border-color: #5f6368; color: #80868b; }
+                #gemini-delete-panel { background-color: rgba(32, 33, 36, 0.95); border-color: #3c4043; color: #e8eaed; }
+                #gemini-delete-panel .panel-header { background-color: rgba(60, 64, 67, 0.8); border-color: #3c4043; }
+                #gemini-delete-panel.minimized { background-color: #4a1a1a; color: #ff8a80; border-color: #662222; }
+                #gemini-delete-panel .shortcuts-list { color: #9aa0a6; }
             }
-            @keyframes pulse-red {
-                0% { opacity: 1; }
-                50% { opacity: 0.5; }
-                100% { opacity: 1; }
-            }
+            @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         `;
         document.head.appendChild(style);
+        return style;
     }
 
     /**
@@ -321,35 +401,174 @@
     }
 
     /**
-     * Update Floating Button State
+     * Update State for Global Panel
      */
-    function updateFloatingButton(btn, conversationId) {
+    function updatePanelState(conversationId) {
+        const panel = document.getElementById('gemini-delete-panel');
+        if (!panel) return;
+
+        const delBtn = panel.querySelector('#gdp-global-delete-btn');
+        if (!delBtn) return;
+
         if (!conversationId) {
-            btn.style.display = 'none';
+            delBtn.disabled = true;
+            delBtn.title = 'No conversation selected';
             return;
         }
-        btn.style.display = 'inline-flex';
 
         const sidebarItem = findSidebarItem(conversationId);
         if (sidebarItem) {
-            btn.disabled = false;
-            btn.title = '1-Click Delete Conversation';
-            // We need to find the specific menu trigger WITHIN the sidebar item
+            delBtn.disabled = false;
+            delBtn.title = '1-Click Delete Conversation';
             const trigger = sidebarItem.querySelector(SELECTORS.actionsMenuButton);
             if (trigger) {
-                btn._targetTrigger = trigger;
+                delBtn._targetTrigger = trigger;
             } else {
-                btn.disabled = true;
-                btn.title = 'Menu button not found in sidebar item';
+                delBtn.disabled = true;
+                delBtn.title = 'Menu button not found in sidebar item';
             }
         } else {
-            btn.disabled = true;
-            btn.title = 'Scroll sidebar to load this conversation for deletion';
+            delBtn.disabled = true;
+            delBtn.title = 'Scroll sidebar to load this conversation for deletion';
         }
     }
 
     /**
-     * Inject buttons into DOM
+     * Create the Global Draggable Panel
+     */
+    function createDraggablePanel() {
+        if (document.getElementById('gemini-delete-panel')) return;
+
+        const panel = document.createElement('div');
+        panel.id = 'gemini-delete-panel';
+        if (isPanelMinimized()) panel.classList.add('minimized');
+
+        const version = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.2.5';
+
+        setInnerHTML(panel, `
+            <div class="minimized-summary">1-Click Delete v${version}</div>
+            <div class="panel-header">
+                <div style="display:flex; align-items:center;">
+                    <h1>1-Click Delete</h1><span class="version-badge">v${version}</span>
+                </div>
+                <span class="gdp-minimize-btn" title="Minimize">−</span>
+            </div>
+            <div class="panel-content">
+                <div class="gdp-delete-btn-container">
+                    <button class="gdp-main-delete-btn" id="gdp-global-delete-btn" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" height="16" viewBox="0 -960 960 960" width="16" fill="currentColor">
+                            <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/>
+                        </svg>
+                        Delete Current Chat
+                    </button>
+                </div>
+                <div>
+                   <span style="font-weight:600;font-size:10px;">Shortcuts:</span>
+                   <ul class="shortcuts-list">
+                       <li>Ctrl + D</li>
+                       <li>Ctrl + Shift + Backspace</li>
+                   </ul>
+                </div>
+            </div>
+        `);
+
+        document.body.appendChild(panel);
+
+        // Position logic
+        let left = GM_getValue(STORAGE_KEYS.PANEL_POS_X, window.innerWidth - 220);
+        let top = GM_getValue(STORAGE_KEYS.PANEL_POS_Y, 80);
+
+        left = Math.max(0, Math.min(left, window.innerWidth - panel.offsetWidth || window.innerWidth));
+        top = Math.max(0, Math.min(top, window.innerHeight - panel.offsetHeight || window.innerHeight));
+
+        panel.style.left = `${left}px`;
+        panel.style.top = `${top}px`;
+
+        // Event listeners
+        const delBtn = panel.querySelector('#gdp-global-delete-btn');
+        delBtn.addEventListener('click', async (e) => {
+            e.preventDefault(); e.stopPropagation();
+            if (delBtn.disabled || delBtn.classList.contains('processing')) return;
+            if (delBtn._targetTrigger) {
+                delBtn.classList.add('processing');
+                try {
+                    await handleDelete(delBtn._targetTrigger);
+                } catch (err) {
+                    console.error('Delete failed:', err);
+                    alert('Failed to delete conversation.');
+                } finally {
+                    delBtn.classList.remove('processing');
+                }
+            }
+        });
+
+        let hasDragged = false;
+
+        panel.addEventListener('click', (e) => {
+            if (hasDragged) return;
+            if (panel.classList.contains('minimized') && !e.target.closest('button, input, .gdp-minimize-btn')) {
+                togglePanelMinimized();
+            }
+        });
+
+        panel.querySelector('.gdp-minimize-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            togglePanelMinimized();
+        });
+
+        // Drag Logic
+        const header = panel.querySelector('.panel-header');
+        const summary = panel.querySelector('.minimized-summary');
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0, startX: 0, startY: 0 };
+
+        const startDrag = (e) => {
+            if (e.button !== 0 || e.target.closest('button, input, .gdp-minimize-btn')) return;
+            isDragging = true;
+            hasDragged = false;
+            dragOffset.x = e.clientX - panel.offsetLeft;
+            dragOffset.y = e.clientY - panel.offsetTop;
+            dragOffset.startX = e.clientX;
+            dragOffset.startY = e.clientY;
+            panel.style.transition = 'none';
+            document.body.style.userSelect = 'none';
+        };
+
+        header.addEventListener('mousedown', startDrag);
+        summary.addEventListener('mousedown', startDrag);
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+
+            if (!hasDragged && (Math.abs(e.clientX - dragOffset.startX) > 3 || Math.abs(e.clientY - dragOffset.startY) > 3)) {
+                hasDragged = true;
+            }
+            if (!hasDragged) return;
+
+            let newX = Math.max(0, Math.min(e.clientX - dragOffset.x, window.innerWidth - panel.offsetWidth));
+            let newY = Math.max(0, Math.min(e.clientY - dragOffset.y, window.innerHeight - panel.offsetHeight));
+
+            panel.style.left = `${newX}px`;
+            panel.style.top = `${newY}px`;
+            panel.style.right = 'auto'; // Break fixed right position
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!isDragging) return;
+            isDragging = false;
+            panel.style.transition = '';
+            document.body.style.userSelect = '';
+            if (hasDragged) {
+                GM_setValue(STORAGE_KEYS.PANEL_POS_X, panel.offsetLeft);
+                GM_setValue(STORAGE_KEYS.PANEL_POS_Y, panel.offsetTop);
+            }
+            setTimeout(() => { hasDragged = false; }, 50);
+        });
+    }
+
+    /**
+     * Inject buttons and update panel state
      */
     function processNodes() {
         // 1. Standard Header processing (existing logic)
@@ -363,40 +582,17 @@
             const container = triggerBtn.parentElement;
             if (!container || container.querySelector('.gemini-quick-delete-btn')) return;
 
-            // Create and inject
+            // Create and inject standard header button
             const deleteBtn = createDeleteButton(() => handleDelete(triggerBtn));
             container.appendChild(deleteBtn);
         });
 
-        // 2. Search View Processing (Floating Button)
+        // 2. Panel Creation and Update
         const chatWindow = document.querySelector(SELECTORS.chatContainer);
         if (chatWindow) {
-            // Check if we have a standard header button already.
-            const hasStandardHeader = Array.from(targets).some(t =>
-                !t.closest('bard-sidenav') && !t.closest('side-navigation-content')
-            );
-
-            // Only add floating button if standard header button is missing
-            if (!hasStandardHeader) {
-                let floatingBtn = document.querySelector('.gemini-quick-delete-btn.floating');
-                if (!floatingBtn) {
-                    floatingBtn = createDeleteButton(async () => {
-                        if (floatingBtn._targetTrigger) {
-                            await handleDelete(floatingBtn._targetTrigger);
-                        }
-                    }, true); // true = isFloating
-
-                    // Ensure relative positioning for absolute child
-                    if (getComputedStyle(chatWindow).position === 'static') {
-                        chatWindow.style.position = 'relative';
-                    }
-                    chatWindow.appendChild(floatingBtn);
-                }
-
-                // Update state
-                const conversationId = getConversationIdFromMainView();
-                updateFloatingButton(floatingBtn, conversationId);
-            }
+            createDraggablePanel();
+            const conversationId = getConversationIdFromMainView();
+            updatePanelState(conversationId);
         }
     }
 
@@ -425,10 +621,10 @@
             return;
         }
 
-        // 2. Try floating button (search view context)
-        const floatingBtn = document.querySelector('.gemini-quick-delete-btn.floating');
-        if (floatingBtn && !floatingBtn.disabled && floatingBtn.style.display !== 'none') {
-            floatingBtn.click();
+        // 2. Try global panel delete button
+        const panelBtn = document.querySelector('#gdp-global-delete-btn');
+        if (panelBtn && !panelBtn.disabled) {
+            panelBtn.click();
             return;
         }
 
@@ -474,6 +670,9 @@
             styleElement = null;
         }
         document.querySelectorAll('.gemini-quick-delete-btn').forEach(btn => btn.remove());
+
+        const panel = document.getElementById('gemini-delete-panel');
+        if (panel) panel.remove();
 
         isInitialized = false;
     }
