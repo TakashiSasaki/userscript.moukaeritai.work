@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.34
+// @version      0.2.35
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -497,6 +497,23 @@
             if (progressEl) progressEl.textContent = `${i + 1} / ${selectedTitles.length}`;
 
             await processArtifact(selectedTitles[i]);
+
+            // Mark as done in the UI
+            const checkbox = Array.from(listContainer.querySelectorAll('.artifact-cb')).find(cb => cb.value === selectedTitles[i]);
+            if (checkbox && checkbox.parentNode) {
+                checkbox.parentNode.style.textDecoration = 'line-through';
+                checkbox.parentNode.style.opacity = '0.5';
+                // Find the text node to append the checkmark
+                const nodes = Array.from(checkbox.parentNode.childNodes);
+                for (let node of nodes) {
+                    if (node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0) {
+                        if (!node.textContent.includes('✅')) {
+                            node.textContent = ' ✅ ' + node.textContent;
+                        }
+                        break;
+                    }
+                }
+            }
 
             // Small UI sleep before starting the next item to allow memory / UI catchup
             if (i < selectedTitles.length - 1) {
