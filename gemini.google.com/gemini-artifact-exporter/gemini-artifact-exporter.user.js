@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.33
+// @version      0.2.34
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -125,7 +125,7 @@
         return foundChip;
     }
 
-    async function processArtifact(targetTitle, isDryRun) {
+    async function processArtifact(targetTitle) {
         let chip = findChipByTitle(targetTitle);
 
         if (!chip) {
@@ -196,63 +196,57 @@
                 throw new Error("Export to Docs button not found in menu.");
             }
 
-            if (isDryRun) {
-                log('[DRY RUN] Skipping final export click.');
-                exportBtn.style.border = '2px solid yellow'; // Visual feedback for testing
-                await sleep(1000);
-            } else {
-                await sleep(500); // Wait for menu animation to settle before clicking the target
-                exportBtn.click();
-                log('Export to Docs button clicked. Waiting for completion...');
+            await sleep(500); // Wait for menu animation to settle before clicking the target
+            exportBtn.click();
+            log('Export to Docs button clicked. Waiting for completion...');
 
-                let isCreating = true;
-                let waitCheck = 0;
-                let docsOpened = false;
+            let isCreating = true;
+            let waitCheck = 0;
+            let docsOpened = false;
 
-                const onVisibilityChange = () => {
-                    if (document.hidden) {
-                        docsOpened = true;
-                    }
-                };
-                document.addEventListener('visibilitychange', onVisibilityChange);
+            const onVisibilityChange = () => {
+                if (document.hidden) {
+                    docsOpened = true;
+                }
+            };
+            document.addEventListener('visibilitychange', onVisibilityChange);
 
-                const timeoutSeconds = parseInt(GM_getValue(TIMEOUT_SECONDS_KEY, 10), 10);
-                const maxChecks = timeoutSeconds * 2; // Assuming 500ms sleep per check
+            const timeoutSeconds = parseInt(GM_getValue(TIMEOUT_SECONDS_KEY, 10), 10);
+            const maxChecks = timeoutSeconds * 2; // Assuming 500ms sleep per check
 
-                while (isCreating && waitCheck < maxChecks) {
-                    await sleep(500);
-                    waitCheck++;
+            while (isCreating && waitCheck < maxChecks) {
+                await sleep(500);
+                waitCheck++;
 
-                    if (docsOpened) {
-                        log('Success: New tab opened (Google Docs).');
-                        isCreating = false;
-                        break;
-                    }
-
-                    const overlays = Array.from(document.querySelectorAll('.cdk-overlay-container, mat-snack-bar-container'));
-                    const overlayText = overlays.map(o => o.textContent).join(' ');
-
-                    if (overlayText.includes('作成されました') || overlayText.includes('Document created')) {
-                        log('Success: Document created toast detected.');
-                        isCreating = false;
-
-                        // Attempt to dismiss the toast to clear the UI
-                        const toastBtns = document.querySelectorAll('mat-snack-bar-container button');
-                        toastBtns.forEach(btn => btn.click());
-                        break;
-                    } else if (overlayText.includes('作成しています') || overlayText.includes('Creating document')) {
-                        if (waitCheck % 4 === 0) log('Still creating document...');
-                    } else {
-                        // If we don't see any export-related text after a short while, we assume it's done or dismissed
-                        if (waitCheck > 10) {
-                            log('No export progress toast visible. Assuming completion.');
-                            isCreating = false;
-                        }
-                    }
+                if (docsOpened) {
+                    log('Success: New tab opened (Google Docs).');
+                    isCreating = false;
+                    break;
                 }
 
-                document.removeEventListener('visibilitychange', onVisibilityChange);
+                const overlays = Array.from(document.querySelectorAll('.cdk-overlay-container, mat-snack-bar-container'));
+                const overlayText = overlays.map(o => o.textContent).join(' ');
+
+                if (overlayText.includes('作成されました') || overlayText.includes('Document created')) {
+                    log('Success: Document created toast detected.');
+                    isCreating = false;
+
+                    // Attempt to dismiss the toast to clear the UI
+                    const toastBtns = document.querySelectorAll('mat-snack-bar-container button');
+                    toastBtns.forEach(btn => btn.click());
+                    break;
+                } else if (overlayText.includes('作成しています') || overlayText.includes('Creating document')) {
+                    if (waitCheck % 4 === 0) log('Still creating document...');
+                } else {
+                    // If we don't see any export-related text after a short while, we assume it's done or dismissed
+                    if (waitCheck > 10) {
+                        log('No export progress toast visible. Assuming completion.');
+                        isCreating = false;
+                    }
+                }
             }
+
+            document.removeEventListener('visibilitychange', onVisibilityChange);
 
             // Gemini Bug Workaround: Forcefully clear all overlays if they are stuck
             log('Aggressively clearing stuck overlays to prevent UI block...');
@@ -469,8 +463,7 @@
             scanBtn.style.opacity = '0.5';
         }
 
-        const isDryRun = GM_getValue(DRY_RUN_KEY, true);
-        log(`Batch export started. ${isDryRun ? '[DRY RUN]' : '[LIVE RUN]'}`);
+        log('Batch export started.');
 
         const finishExport = () => {
             isExporting = false;
@@ -503,7 +496,7 @@
             log(statusText);
             if (progressEl) progressEl.textContent = `${i + 1} / ${selectedTitles.length}`;
 
-            await processArtifact(selectedTitles[i], isDryRun);
+            await processArtifact(selectedTitles[i]);
 
             // Small UI sleep before starting the next item to allow memory / UI catchup
             if (i < selectedTitles.length - 1) {
@@ -522,7 +515,6 @@
 
     // --- UI Injection & Control ---
     const PANEL_POSITION_KEY = 'gemini-exporter-panel-pos';
-    const DRY_RUN_KEY = 'gemini-exporter-dry-run';
     const TIMEOUT_SECONDS_KEY = 'gemini-exporter-timeout-seconds';
 
     function makePanelDraggable(panel, handle, storageKey) {
@@ -663,30 +655,6 @@
         togglesContainer.style.cssText = `display: flex; flex-direction: column; gap: 4px;`;
 
 
-        const createToggle = (key, text, defaultValue) => {
-            const container = document.createElement('label');
-            container.style.cssText = `
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                cursor: pointer;
-                font-family: 'Google Sans', sans-serif;
-                font-size: 13px;
-                color: rgba(255, 255, 255, 0.8);
-                padding: 2px 8px;
-            `;
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.checked = GM_getValue(key, defaultValue);
-
-            checkbox.onchange = (e) => {
-                GM_setValue(key, e.target.checked);
-            };
-            container.appendChild(checkbox);
-            container.appendChild(document.createTextNode(text));
-            return container;
-        };
-
         const createNumberInput = (key, text, defaultValue, minVal) => {
             const container = document.createElement('label');
             container.style.cssText = `
@@ -728,10 +696,8 @@
             return container;
         };
 
-        const dryRunToggle = createToggle(DRY_RUN_KEY, 'Dry Run', true);
         const timeoutInput = createNumberInput(TIMEOUT_SECONDS_KEY, 'Timeout (s)', 10, 1);
 
-        togglesContainer.appendChild(dryRunToggle);
         togglesContainer.appendChild(timeoutInput);
 
 
