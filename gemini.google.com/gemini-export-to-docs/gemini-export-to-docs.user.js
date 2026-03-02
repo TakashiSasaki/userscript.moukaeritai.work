@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.0
+// @version      0.3.0
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -51,12 +51,14 @@
     // --- Selectors (based on provided samples) ---
     const SELECTORS = {
         // Turn selectors
-        turnContainer: 'response-container, .response-container', // Broad container to watch
+        // Turn selectors
+        turnContainer: 'model-response, response-container, .response-container', // Broad container to watch
+        presentedContainer: '.presented-response-container', // Most stable selector for the model's response wrapper
         moreMenuButton: 'button[data-test-id="more-menu-button"]', // The trigger "..."
         exportToDocsButton: 'button[data-test-id="export-to-docs-button"]', // The target in the menu
         exportIntermediateButton: 'button[data-test-id="export-button"]', // Mobile "Export to..." button
 
-        responseHeader: '.response-container-header', // Header area for top button
+        responseHeader: '.response-container-header', // Header area code (fallback if needed)
 
         // Canvas selectors
         canvasOpenButton: 'button[data-test-id="view-report-button"]', // "Open" button for canvas
@@ -126,7 +128,29 @@
                 z-index: 1000;
             }
             .gemini-quick-export-btn:hover {
-                background-color: #ceead6; /* Slightly darker green */
+                background-color: var(--mdc-icon-button-hover-state-layer-color, rgba(68, 71, 70, 0.08));
+            }
+            .gemini-quick-export-btn.top-right {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                z-index: 10;
+                background-color: rgba(255, 255, 255, 0.8);
+                backdrop-filter: blur(4px);
+            }
+            .gemini-quick-export-btn.bottom-right {
+                position: absolute;
+                bottom: 8px;
+                right: 8px;
+                z-index: 10;
+                background-color: rgba(255, 255, 255, 0.8);
+                backdrop-filter: blur(4px);
+            }
+            @media (prefers-color-scheme: dark) {
+                .gemini-quick-export-btn.top-right,
+                .gemini-quick-export-btn.bottom-right {
+                    background-color: rgba(30, 30, 30, 0.8);
+                }
             }
             .gemini-quick-export-btn.exported {
                 background-color: #1e8e3e; /* Google Green */
@@ -179,12 +203,6 @@
         return style;
     }
 
-    /**
-     * Create the SVG icon element safely
-     */
-    /**
-     * Create the SVG icon element safely
-     */
     /**
      * Create the SVG icon element safely
      */
@@ -254,9 +272,10 @@
     /**
      * Create the export button
      */
-    function createExportButton(onClick) {
+    function createExportButton(onClick, positionClass = null) {
         const btn = document.createElement('button');
         btn.className = 'gemini-quick-export-btn';
+        if (positionClass) btn.classList.add(positionClass);
         btn.title = '1-Click Export to Docs';
 
         // Initial Icon
@@ -462,27 +481,35 @@
      */
     function processNodes() {
         // A. Handle Turn Buttons
-        // Find all "More" buttons
+        // Find all "More" buttons to know what to click
         const moreButtons = document.querySelectorAll(SELECTORS.moreMenuButton);
         moreButtons.forEach(moreBtn => {
-            // 1. Bottom Injection (Existing)
-            // Check if we already injected
-            const container = moreBtn.parentElement;
-            if (container && !container.querySelector('.gemini-quick-export-btn')) {
-                const btn = createExportButton(() => handleTurnExport(moreBtn));
-                container.appendChild(btn);
-            }
-
-            // 2. Top Injection (New)
-            // Navigate up to the main container
+            // Find the stable model response container
             const root = moreBtn.closest(SELECTORS.turnContainer);
-            if (root) {
-                const header = root.querySelector(SELECTORS.responseHeader);
-                // Check if header exists and doesn't have our button
-                if (header && !header.querySelector('.gemini-quick-export-btn')) {
+            if (!root) return;
+
+            const presentedContainer = root.querySelector(SELECTORS.presentedContainer);
+            if (presentedContainer) {
+                // Ensure the container is positioned relatively so absolute buttons adhere to it
+                if (getComputedStyle(presentedContainer).position === 'static') {
+                    presentedContainer.style.position = 'relative';
+                }
+
+                // Check if we already injected into this container
+                if (!presentedContainer.querySelector('.gemini-quick-export-btn.top-right')) {
+                    const topBtn = createExportButton(() => handleTurnExport(moreBtn), 'top-right');
+                    presentedContainer.appendChild(topBtn);
+                }
+                if (!presentedContainer.querySelector('.gemini-quick-export-btn.bottom-right')) {
+                    const bottomBtn = createExportButton(() => handleTurnExport(moreBtn), 'bottom-right');
+                    presentedContainer.appendChild(bottomBtn);
+                }
+            } else {
+                // Fallback to original injection if presentedContainer is not found
+                const container = moreBtn.parentElement;
+                if (container && !container.querySelector('.gemini-quick-export-btn')) {
                     const btn = createExportButton(() => handleTurnExport(moreBtn));
-                    // Usually header has controls. We append to the header.
-                    header.appendChild(btn);
+                    container.appendChild(btn);
                 }
             }
         });
