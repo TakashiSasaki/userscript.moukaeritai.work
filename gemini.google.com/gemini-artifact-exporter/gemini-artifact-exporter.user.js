@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.30
+// @version      0.2.31
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -261,17 +261,20 @@
             }
 
             // Gemini Bug Workaround: Forcefully clear all overlays if they are stuck
-            const overlayContainer = document.querySelector('.cdk-overlay-container');
-            if (overlayContainer) {
-                if (overlayContainer.childNodes.length > 0) {
-                    log('Clearing stuck overlays to prevent UI block...');
-                    while (overlayContainer.firstChild) {
-                        overlayContainer.removeChild(overlayContainer.firstChild);
-                    }
+            log('Aggressively clearing stuck overlays to prevent UI block...');
+            const stuckElements = document.querySelectorAll('.cdk-overlay-backdrop, [id^="cdk-overlay-"], .mat-mdc-snack-bar-container, .cdk-global-overlay-wrapper');
+            let clearedCount = 0;
+            stuckElements.forEach(el => {
+                if (el && el.parentNode) {
+                    el.parentNode.removeChild(el);
+                    clearedCount++;
                 }
+            });
+            if (clearedCount > 0) {
+                log(`Cleared ${clearedCount} stuck overlay elements.`);
             }
 
-            // aggressive cleanup fallback
+            // aggressive cleanup fallback for panels
             document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
 
             log(`--- Finished processing: "${title}" ---`);
