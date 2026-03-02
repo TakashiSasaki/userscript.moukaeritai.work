@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.20
+// @version      0.2.21
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -14,6 +14,7 @@
 // @grant        GM_info
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
+// @noframes
 // ==/UserScript==
 
 (function () {
@@ -45,18 +46,13 @@
     }
 
     const SELECTORS = {
-        SIDEBAR_BUTTON: 'button[data-test-id="studio-sidebar-button"]',
-        SIDEBAR: 'context-sidebar',
-        SIDEBAR_CHIP: 'sidebar-immersive-chip',
-        CHIP_CONTAINER: '.container',
-        CHIP_TITLE: '.immersive-title',
-        CHIP_SUBTITLE: '.immersive-subtitle',
-        CHIP_ICON_CONTAINER: '.icon-container mat-icon',
-        IMMERSIVE_PANEL: 'immersive-panel',
-        PANEL_TITLE: 'immersive-panel h2.title-text',
-        PANEL_CLOSE_BUTTON: 'immersive-panel button[data-test-id="close-button"]',
-        SHARE_BUTTON: 'button[data-test-id="share-button"]',
-        EXPORT_BUTTON: 'button[data-test-id="export-to-docs-button"]',
+        ACTIONS_MENU_BUTTON: 'conversation-actions-icon button',
+        FILES_MENU_ITEM: '.mat-mdc-menu-item:has(mat-icon[fonticon="home_storage"])',
+        SIDEBAR_CHIP: 'button.container:has(mat-icon[fonticon="article"])',
+        CHIP_TITLE: 'div:nth-child(2) > div:first-child',
+        CHIP_ICON_CONTAINER: 'mat-icon',
+        SHARE_BUTTON: 'button.share-button, button:has(mat-icon[fonticon="share"])',
+        EXPORT_BUTTON: 'button[data-test-id="export-to-docs-button"], .mat-mdc-menu-item:has(mat-icon[fonticon="docs"])',
         MENU_PANEL: '.mat-mdc-menu-panel'
     };
 
@@ -139,7 +135,6 @@
     }
 
     async function processArtifact(targetTitle, isDryRun) {
-        // Always re-query the chip to avoid stale element references
         let chip = findChipByTitle(targetTitle);
 
         if (!chip) {
@@ -147,94 +142,30 @@
             return;
         }
 
-        const titleEl = chip.querySelector(SELECTORS.CHIP_TITLE);
-        const title = titleEl.textContent.trim();
-
+        const title = targetTitle;
         log(`--- Start processing artifact: "${title}" ---`);
 
-        // 0. Ensure no panel is currently open
-        if (document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
-            log('Cleanup: Closing existing panel before opening next one.');
-            const existingCloseBtn = document.querySelector(SELECTORS.PANEL_CLOSE_BUTTON);
-            if (existingCloseBtn) {
-                existingCloseBtn.click();
-                await sleep(1500); // Wait for close animation
-            }
-        }
+        chip.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        await sleep(500);
 
-        // 1. Click to open with Retry Logic
-        let panelOpened = false;
-        let clickAttempts = 0;
+        log(`Clicking chip "${title}"...`);
+        chip.click();
 
-        while (!panelOpened && clickAttempts < 3) {
-            clickAttempts++;
-            log(`Attempt ${clickAttempts}: Clicking chip "${title}"...`);
+        // 2. Wait for Canvas switch 
+        // We assume Canvas is fast. 
+        await sleep(2000);
 
-            // Re-find chip in case of DOM updates during wait
-            chip = findChipByTitle(targetTitle);
-            if (!chip) {
-                log('Error: Chip lost from DOM during retry.');
-                return;
-            }
-
-            chip.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            await sleep(500);
-
-            const clickable = chip.querySelector(SELECTORS.CHIP_CONTAINER) || chip;
-            clickable.click();
-
-            // Wait for panel to appear
-            let panelWait = 0;
-            while (panelWait < 15 && !document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
-                await sleep(200);
-                panelWait++;
-            }
-
-            if (document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
-                panelOpened = true;
-                log('Panel element detected.');
-            } else {
-                log('Panel did not appear after click. Retrying...');
-                await sleep(1000);
-            }
-        }
-
-        if (!panelOpened) {
-            log(`CRITICAL ERROR: Failed to open panel for "${title}" after ${clickAttempts} clicks.`);
-            return; // Skip this item
-        }
-
-        // 2. Wait for Title Match
+        // 3. Click Share
         try {
-            log(`Waiting for title match. Target: "${title}"`);
-            let retries = 0;
-            let matched = false;
-            while (retries < 30) {
-                const panelTitleEl = document.querySelector(SELECTORS.PANEL_TITLE);
-                const currentPanelTitle = panelTitleEl ? panelTitleEl.textContent.trim() : '(null)';
-
-                // Allow exact match or if current title contains the target (sometimes titles are truncated/formatted)
-                if (currentPanelTitle === title || currentPanelTitle.includes(title)) {
-                    matched = true;
-                    log(`Success: Title matched after ${retries} retries.`);
-                    break;
-                }
-                if (retries % 5 === 0) log(`Retry ${retries}: Current title is "${currentPanelTitle}"`);
-                await sleep(500);
-                retries++;
-            }
-            if (!matched) throw new Error(`Timeout waiting for panel title match. Expected: "${title}"`);
-
-            // 3. Click Share
             log('Attempting to click Share button...');
-            const shareBtn = await waitForElement(SELECTORS.SHARE_BUTTON, document.querySelector(SELECTORS.IMMERSIVE_PANEL));
-            await sleep(1000);
+            const shareBtn = await waitForElement(SELECTORS.SHARE_BUTTON, document, 5000);
+            await sleep(1000); // UI stabilization
             shareBtn.click();
             log('Share button clicked.');
 
             // 4. Click Export to Docs
             log('Waiting for Export to Docs button in menu...');
-            const exportBtn = await waitForElement(SELECTORS.EXPORT_BUTTON);
+            const exportBtn = await waitForElement(SELECTORS.EXPORT_BUTTON, document, 5000);
             await sleep(1000);
 
             if (isDryRun) {
@@ -245,29 +176,13 @@
                 log('Export to Docs button clicked.');
             }
 
-
             log(`Wait ${isDryRun ? '1s' : '5s'} for processing...`);
             await sleep(isDryRun ? 1000 : 5000);
-
-            // 6. Close Panel
-            const closeBtn = document.querySelector(SELECTORS.PANEL_CLOSE_BUTTON);
-            if (closeBtn) {
-                log('Requesting panel close...');
-                closeBtn.click();
-                let closeRetries = 0;
-                while (closeRetries < 20 && document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
-                    await sleep(500);
-                    closeRetries++;
-                }
-                log(document.querySelector(SELECTORS.IMMERSIVE_PANEL) ? 'Warning: Panel still in DOM after close request.' : 'Confirmed: Panel removed from DOM.');
-            }
 
             log(`--- Finished processing: "${title}" ---`);
 
         } catch (e) {
             log(`CRITICAL ERROR during processing "${title}": ${e.message}`);
-            const closeBtn = document.querySelector(SELECTORS.PANEL_CLOSE_BUTTON);
-            if (closeBtn) closeBtn.click();
         }
     }
 
@@ -316,52 +231,37 @@
             return;
         }
 
-        log('Querying for sidebar element...');
-        let sidebar = document.querySelector(SELECTORS.SIDEBAR);
-        if (sidebar) {
-            log(' -> Sidebar found.');
-        } else {
-            log(' -> Sidebar not found. Attempting to open it...');
-            const toggleBtn = document.querySelector(SELECTORS.SIDEBAR_BUTTON);
-            if (toggleBtn) {
-                log(' -> Found sidebar toggle button. Clicking it...');
-                toggleBtn.click();
-                try {
-                    sidebar = await waitForElement(SELECTORS.SIDEBAR, document, 3000);
-                    log(' -> Sidebar appeared after click.');
-                } catch (e) {
-                    log('ERROR: Sidebar did not appear after clicking toggle button.');
-                    alert('Could not open sidebar.');
-                    isExporting = false;
-                    if (btn) {
-                        btn.textContent = 'Export All Articles';
-                        btn.style.backgroundColor = '#1a73e8';
-                        btn.onmouseover = () => { btn.style.backgroundColor = '#1b66c9'; };
-                        btn.onmouseout = () => { btn.style.backgroundColor = '#1a73e8'; };
-                    }
-                    return;
-                }
-            } else {
-                log('ERROR: Sidebar toggle button not found.');
-                alert('Sidebar toggle button not found.');
-                isExporting = false;
-                if (btn) {
-                    btn.textContent = 'Export All Articles';
-                    btn.style.backgroundColor = '#1a73e8';
-                    btn.onmouseover = () => { btn.style.backgroundColor = '#1b66c9'; };
-                    btn.onmouseout = () => { btn.style.backgroundColor = '#1a73e8'; };
-                }
-                return;
-            }
+        log('Opening files panel via actions menu...');
+        const actionMenuBtn = document.querySelector(SELECTORS.ACTIONS_MENU_BUTTON);
+        if (!actionMenuBtn) {
+            log('Abort: Action menu button not found.');
+            finishExport();
+            return;
         }
 
-        const chips = Array.from(sidebar.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
+        actionMenuBtn.click();
+        let filesMenuItem;
+        try {
+            const menu = await waitForElement(SELECTORS.MENU_PANEL, document, 3000);
+            filesMenuItem = menu.querySelector(SELECTORS.FILES_MENU_ITEM);
+            if (!filesMenuItem) throw new Error('Files menu item not found');
+        } catch (e) {
+            log('ERROR: Could not find Files menu in the action list.');
+            alert('Could not open files list.');
+            document.querySelector('.cdk-overlay-backdrop')?.click(); // close menu
+            finishExport();
+            return;
+        }
+
+        filesMenuItem.click();
+        await sleep(1500); // Wait for panel to load
+
+        const chips = Array.from(document.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
 
         const articleTitles = [];
         chips.forEach(chip => {
-            const icon = chip.querySelector(SELECTORS.CHIP_ICON_CONTAINER);
             const titleEl = chip.querySelector(SELECTORS.CHIP_TITLE);
-            if (icon && icon.getAttribute('fonticon') === 'article' && titleEl) {
+            if (titleEl) {
                 articleTitles.push(titleEl.textContent.trim());
             }
         });
@@ -389,11 +289,6 @@
                 btn.onmouseout = () => { btn.style.backgroundColor = '#1a73e8'; };
             }
             return;
-        }
-
-        if (document.querySelector(SELECTORS.IMMERSIVE_PANEL)) {
-            document.querySelector(SELECTORS.PANEL_CLOSE_BUTTON)?.click();
-            await sleep(1500);
         }
 
         const progressEl = document.getElementById('gemini-batch-export-progress');
@@ -781,11 +676,11 @@
 
     function updateButtonVisibility() {
         // Required element for this script to work
-        const sidebarButtonExists = document.querySelector(SELECTORS.SIDEBAR_BUTTON) !== null;
+        const actionsMenuExists = document.querySelector(SELECTORS.ACTIONS_MENU_BUTTON) !== null;
 
         // If the essential element is missing, we consider the script inactive/hidden
         // regardless of the URL check, although typically they go hand-in-hand.
-        const shouldActive = isConversationPage() && sidebarButtonExists;
+        const shouldActive = isConversationPage() && actionsMenuExists;
 
         const panel = document.getElementById('gemini-batch-export-panel');
         if (!panel) {
