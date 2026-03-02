@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.2
+// @version      0.2.3
 // @description  Adds a 1-click button to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -43,7 +43,7 @@
     const SELECTORS = {
         // Trigger button (Conversation Options)
         // Shared by Desktop and Mobile
-        actionsMenuButton: 'button[data-test-id="actions-menu-button"]',
+        actionsMenuButton: 'button[data-test-id="actions-menu-button"], button[aria-label="Open menu for conversation actions."]',
 
         // Menu Containers
         // Desktop: mat-mdc-menu-panel
@@ -53,13 +53,13 @@
         // Delete Button inside Menu
         // Primary strategy: data-test-id="delete-button"
         // Fallback checks for text content "Delete"
-        deleteMenuItem: 'button[data-test-id="delete-button"]',
+        deleteMenuItem: 'button[data-test-id="delete-button"], button[role="menuitem"]',
 
         // Confirmation Dialog
         dialogContainer: 'mat-dialog-container',
 
         // Confirm Button inside Dialog
-        confirmButton: 'button[data-test-id="confirm-button"]',
+        confirmButton: 'button[data-test-id="confirm-button"], button.mat-mdc-button.mat-primary',
 
         // Sidebar Item
         sidebarItem: 'div[data-test-id="conversation"]',
@@ -482,19 +482,32 @@
     }
 
     // --- Entry Point ---
-    // Use a MutationObserver to detect SPA navigation changes.
-    // Observing the body for childList changes is a common way to catch page transitions.
-    const pageObserver = new MutationObserver(checkUrlAndManageScriptState);
+    let lastUrl = window.location.href;
 
+    if (window.navigation) {
+        window.navigation.addEventListener('navigatesuccess', () => {
+            setTimeout(() => {
+                lastUrl = window.location.href;
+                checkUrlAndManageScriptState();
+            }, 500);
+        });
+        console.log('[Gemini 1-Click Delete] Using Navigation API for SPA routing.');
+    } else {
+        // Fallback for older browsers
+        setInterval(() => {
+            if (location.href !== lastUrl) {
+                lastUrl = location.href;
+                setTimeout(checkUrlAndManageScriptState, 500);
+            }
+        }, 500);
+        console.log('[Gemini 1-Click Delete] Using setInterval fallback for SPA routing.');
+    }
+
+    // Initial check on load
     if (document.body) {
-        pageObserver.observe(document.body, { childList: true, subtree: false });
-        // Initial check in case the page is loaded directly.
         checkUrlAndManageScriptState();
     } else {
-        window.addEventListener('DOMContentLoaded', () => {
-            pageObserver.observe(document.body, { childList: true, subtree: false });
-            checkUrlAndManageScriptState();
-        });
+        window.addEventListener('DOMContentLoaded', checkUrlAndManageScriptState);
     }
 
 })();
