@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.32
+// @version      0.2.33
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -60,15 +60,6 @@
         const timestamp = new Date().toISOString().split('T')[1].split('Z')[0];
         const formattedMsg = `[Exporter ${timestamp}] ${msg}`;
         console.log(formattedMsg);
-
-        const logPanelBody = document.getElementById('gemini-log-panel-body');
-        if (logPanelBody && logPanelBody.offsetParent !== null) { // Check if visible
-            const logEntry = document.createElement('div');
-            logEntry.textContent = msg; // Log without the prefix for cleaner UI
-            logEntry.style.cssText = 'padding: 2px 4px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 12px;';
-            logPanelBody.appendChild(logEntry);
-            logPanelBody.scrollTop = logPanelBody.scrollHeight;
-        }
     }
 
     function isConversationPage() {
@@ -531,8 +522,6 @@
 
     // --- UI Injection & Control ---
     const PANEL_POSITION_KEY = 'gemini-exporter-panel-pos';
-    const LOG_PANEL_POSITION_KEY = 'gemini-exporter-log-pos';
-    const LOG_PANEL_VISIBLE_KEY = 'gemini-exporter-log-visible';
     const DRY_RUN_KEY = 'gemini-exporter-dry-run';
     const TIMEOUT_SECONDS_KEY = 'gemini-exporter-timeout-seconds';
 
@@ -582,97 +571,7 @@
         }
     }
 
-    function createLogPanel() {
-        if (document.getElementById('gemini-log-panel')) return;
 
-        const logPanel = document.createElement('div');
-        logPanel.id = 'gemini-log-panel';
-        logPanel.style.cssText = `
-            position: fixed;
-            z-index: 9998; /* Below main panel */
-            width: 400px;
-            height: 300px;
-            background-color: rgba(20, 20, 22, 0.5);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            display: flex;
-            flex-direction: column;
-        `;
-
-        const logHeader = document.createElement('div');
-        logHeader.style.cssText = `
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 12px;
-            cursor: move;
-            color: rgba(255, 255, 255, 0.7);
-            font-weight: 500;
-            font-family: 'Google Sans', sans-serif;
-            font-size: 13px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        `;
-
-        const headerTitle = document.createElement('span');
-        headerTitle.textContent = `${GM_info.script.name} v${GM_info.script.version} - Log`;
-
-        const copyBtn = document.createElement('button');
-        copyBtn.textContent = 'Copy';
-        copyBtn.style.cssText = `
-            background-color: rgba(255,255,255,0.1);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 6px;
-            padding: 2px 8px;
-            font-size: 11px;
-            cursor: pointer;
-        `;
-        copyBtn.onclick = () => {
-            const logBody = document.getElementById('gemini-log-panel-body');
-            if (!logBody) return;
-            navigator.clipboard.writeText(logBody.innerText).then(() => {
-                copyBtn.textContent = 'Copied!';
-                setTimeout(() => {
-                    copyBtn.textContent = 'Copy';
-                }, 1500);
-            }).catch(err => {
-                log('Error copying to clipboard: ' + err);
-                copyBtn.textContent = 'Error!';
-                setTimeout(() => {
-                    copyBtn.textContent = 'Copy';
-                }, 2000);
-            });
-        };
-
-
-        const logBody = document.createElement('div');
-        logBody.id = 'gemini-log-panel-body';
-        logBody.style.cssText = `
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 8px;
-            color: rgba(255, 255, 255, 0.8);
-            font-family: monospace;
-        `;
-
-        logHeader.appendChild(headerTitle);
-        logHeader.appendChild(copyBtn);
-        logPanel.appendChild(logHeader);
-        logPanel.appendChild(logBody);
-        document.body.appendChild(logPanel);
-
-        makePanelDraggable(logPanel, logHeader, LOG_PANEL_POSITION_KEY);
-        const savedPos = GM_getValue(LOG_PANEL_POSITION_KEY, { top: '120px', left: '20px' });
-        logPanel.style.top = savedPos.top;
-        logPanel.style.left = savedPos.left;
-
-        const isVisible = GM_getValue(LOG_PANEL_VISIBLE_KEY, false);
-        logPanel.style.display = isVisible ? 'flex' : 'none';
-
-        return logPanel;
-    }
 
     function createTriggerButtons() {
         if (document.getElementById('gemini-batch-export-panel')) return;
@@ -782,12 +681,6 @@
 
             checkbox.onchange = (e) => {
                 GM_setValue(key, e.target.checked);
-                if (key === LOG_PANEL_VISIBLE_KEY) {
-                    const logPanel = document.getElementById('gemini-log-panel');
-                    if (logPanel) {
-                        logPanel.style.display = e.target.checked ? 'flex' : 'none';
-                    }
-                }
             };
             container.appendChild(checkbox);
             container.appendChild(document.createTextNode(text));
@@ -835,12 +728,10 @@
             return container;
         };
 
-        const logToggle = createToggle(LOG_PANEL_VISIBLE_KEY, 'Show Log Panel', false);
         const dryRunToggle = createToggle(DRY_RUN_KEY, 'Dry Run', true);
         const timeoutInput = createNumberInput(TIMEOUT_SECONDS_KEY, 'Timeout (s)', 10, 1);
 
         togglesContainer.appendChild(dryRunToggle);
-        togglesContainer.appendChild(logToggle);
         togglesContainer.appendChild(timeoutInput);
 
 
@@ -865,7 +756,7 @@
         panel.appendChild(buttonContainer);
         document.body.appendChild(panel);
 
-        createLogPanel(); // Ensure log panel is created
+
 
         makePanelDraggable(panel, header, PANEL_POSITION_KEY);
         const savedPosition = GM_getValue(PANEL_POSITION_KEY, null);
@@ -903,15 +794,7 @@
             panel.style.zIndex = '10000';
         }
 
-        const logPanel = document.getElementById('gemini-log-panel');
-        if (logPanel) {
-            if (shouldShow) {
-                const isVisible = GM_getValue(LOG_PANEL_VISIBLE_KEY, false);
-                logPanel.style.display = isVisible ? 'flex' : 'none';
-            } else {
-                logPanel.style.display = 'none';
-            }
-        }
+
     }
 
     function debounce(func, wait) {
