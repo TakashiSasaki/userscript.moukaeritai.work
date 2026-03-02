@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.26
+// @version      0.2.28
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -198,9 +198,24 @@
 
                 let isCreating = true;
                 let waitCheck = 0;
+                let docsOpened = false;
+
+                const onVisibilityChange = () => {
+                    if (document.hidden) {
+                        docsOpened = true;
+                    }
+                };
+                document.addEventListener('visibilitychange', onVisibilityChange);
+
                 while (isCreating && waitCheck < 60) { // Wait up to 30 seconds
                     await sleep(500);
                     waitCheck++;
+
+                    if (docsOpened) {
+                        log('Success: New tab opened (Google Docs).');
+                        isCreating = false;
+                        break;
+                    }
 
                     const overlays = Array.from(document.querySelectorAll('.cdk-overlay-container, mat-snack-bar-container'));
                     const overlayText = overlays.map(o => o.textContent).join(' ');
@@ -223,13 +238,23 @@
                         }
                     }
                 }
+
+                document.removeEventListener('visibilitychange', onVisibilityChange);
             }
 
-            // aggressive cleanup of any lingering stuck backdrops (menus etc)
-            const remainingBackdrops = document.querySelectorAll('.cdk-overlay-backdrop, .mat-mdc-menu-panel');
-            if (remainingBackdrops.length > 0) {
-                document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
+            // Gemini Bug Workaround: Forcefully clear all overlays if they are stuck
+            const overlayContainer = document.querySelector('.cdk-overlay-container');
+            if (overlayContainer) {
+                if (overlayContainer.childNodes.length > 0) {
+                    log('Clearing stuck overlays to prevent UI block...');
+                    while (overlayContainer.firstChild) {
+                        overlayContainer.removeChild(overlayContainer.firstChild);
+                    }
+                }
             }
+
+            // aggressive cleanup fallback
+            document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
 
             log(`--- Finished processing: "${title}" ---`);
 
@@ -247,7 +272,7 @@
         const exportBtn = document.getElementById('gemini-btn-export');
         if (!listContainer || !exportBtn) return;
 
-        while (listContainer.firstChild) {
+        while (listContainer && listContainer.firstChild) {
             listContainer.removeChild(listContainer.firstChild);
         }
 
