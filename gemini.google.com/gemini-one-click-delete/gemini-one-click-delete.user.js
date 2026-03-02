@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.3
+// @version      0.2.4
 // @description  Adds a 1-click button to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -53,13 +53,13 @@
         // Delete Button inside Menu
         // Primary strategy: data-test-id="delete-button"
         // Fallback checks for text content "Delete"
-        deleteMenuItem: 'button[data-test-id="delete-button"], button[role="menuitem"]',
+        deleteMenuItem: 'button[data-test-id="delete-button"]',
 
         // Confirmation Dialog
         dialogContainer: 'mat-dialog-container',
 
         // Confirm Button inside Dialog
-        confirmButton: 'button[data-test-id="confirm-button"], button.mat-mdc-button.mat-primary',
+        confirmButton: 'button[data-test-id="confirm-button"]',
 
         // Sidebar Item
         sidebarItem: 'div[data-test-id="conversation"]',
@@ -240,13 +240,16 @@
         const menu = await waitForElement(SELECTORS.menuPanel);
         if (!menu) throw new Error('Menu panel did not appear.');
 
+        // Wait for buttons to populate in the dynamic menu
+        await waitForElement('button', 2000, menu);
+
         // 3. Find Delete Button in Menu
         // Try precise selector first
         let deleteBtn = menu.querySelector(SELECTORS.deleteMenuItem);
 
         if (!deleteBtn) {
             // Fallback: search by text/icon
-            const buttons = Array.from(menu.querySelectorAll('button, mat-list-item'));
+            const buttons = Array.from(menu.querySelectorAll('button[role="menuitem"], button, mat-list-item'));
             deleteBtn = buttons.find(b =>
                 b.textContent.includes('Delete') ||
                 b.querySelector('mat-icon[data-mat-icon-name="delete"]')
@@ -262,8 +265,16 @@
         const dialog = await waitForElement(SELECTORS.dialogContainer);
         if (!dialog) throw new Error('Confirmation dialog did not appear.');
 
+        // Wait for buttons to populate in the dialog
+        await waitForElement('button', 2000, dialog);
+
         // 6. Find Confirm Button
-        const confirmBtn = await waitForElement(SELECTORS.confirmButton, 2000, dialog);
+        let confirmBtn = dialog.querySelector(SELECTORS.confirmButton);
+        if (!confirmBtn) {
+            const dialogBtns = Array.from(dialog.querySelectorAll('button'));
+            confirmBtn = dialogBtns.find(b => b.textContent.includes('Delete') || b.classList.contains('mat-primary'));
+        }
+
         if (!confirmBtn) throw new Error('Confirm button not found in dialog.');
 
         // 7. Click Confirm
