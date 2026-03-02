@@ -162,6 +162,15 @@
             <li><strong>フィードバック</strong>: 通常のボタンクリックと同様、処理中はオーバーレイを表示し、完了後に成功ステータスへ更新する。</li>
         </ul>
 
+        <h4>C. 1ターン専用オートエクスポート＆削除</h4>
+        <ul>
+            <li><strong>機能</strong>: 会話が1ターン（プロンプト1回、回答1回）のみの場合に、画面右下に専用のパネルを表示します。</li>
+            <li><strong>自動削除連動</strong>: 「Export & Delete」ボタンをクリックすると、Google
+                Docsへのエクスポートが実行され、その後指定した秒数が経過すると、<code>gemini-one-click-delete</code> と連携して会話を自動的に削除します。</li>
+            <li><strong>待機時間の調整</strong>: 削除までの待機時間（秒）はパネル上で自由に変更可能（デフォルト3秒、ブラウザに保存）です。</li>
+            <li><strong>自動消滅</strong>: 会話が2ターン以上に増えた場合や、他のページに移動した場合は、自動的にこのパネルは消去されます。</li>
+        </ul>
+
         <h3>4. SPA（シングルページアプリケーション）対応とパフォーマンス</h3>
         <ul>
             <li>GeminiはSPAであるため、ページ遷移を検知してスクリプトの機能を動的に制御します。</li>
@@ -194,17 +203,9 @@
 
         <h2>更新履歴</h2>
         <ul>
-            <li><strong>v0.1.22</strong>: SPA対応を強化。<code>/app/</code> および <code>/gem/</code>
-                の両方のURL形式に対応し、チャットページでのみ機能が動的に有効化・無効化されるように変更し、パフォーマンスを向上。</li>
-            <li><strong>v0.1.21</strong>: <code>simulateClick</code> の <code>view</code> プロパティを <code>null</code>
-                に変更し、Trusted Typesエラーを回避。</li>
-            <li><strong>v0.1.20</strong>: キャンバスの <code>view-report-button</code> にエクスポートボタンを注入する機能を追加。</li>
-            <li><strong>v0.1.19</strong>: キーボードショートカット (Ctrl+E) を実装。</li>
-            <li><strong>v0.1.18</strong>: UI注入ロジックをリファクタリングし、各レスポンスの上部にもボタンを追加。</li>
-            <li><strong>v0.1.17</strong>: モバイル版Geminiの「Export to...」の中間ボタンに対応。</li>
-            <li><strong>v0.1.16</strong>: <code>waitForElement</code> の信頼性を向上させ、<code>simulateClick</code> に
-                <code>mousedown</code>/<code>mouseup</code> イベントを追加。
-            </li>
+            <li><strong>v0.3.3</strong>: 1ターンの会話専用の「Export & Delete」フローティングUIを追加。削除待機時間を調整可能に。</li>
+            <li><strong>v0.3.2</strong>: モデル回答のヘッダー・フッターに固定配置するUIへ刷新。パスワード入力時などに無効化する処理を追加。</li>
+            <li><strong>v0.1.22</strong>: SPA対応を強化。</li>
         </ul>
     </div>
 
