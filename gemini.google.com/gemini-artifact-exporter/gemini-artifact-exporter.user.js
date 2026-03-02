@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.29
+// @version      0.2.30
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -138,7 +138,24 @@
         let chip = findChipByTitle(targetTitle);
 
         if (!chip) {
-            log(`ERROR: Chip with title "${targetTitle}" not found in DOM. Skipping.`);
+            log(`Chip "${targetTitle}" not found. Re-opening files panel...`);
+            const actionMenuBtn = document.querySelector(SELECTORS.ACTIONS_MENU_BUTTON);
+            if (actionMenuBtn) {
+                actionMenuBtn.click();
+                try {
+                    const menu = await waitForElement(SELECTORS.MENU_PANEL, document, 3000);
+                    const filesMenuItem = menu.querySelector(SELECTORS.FILES_MENU_ITEM);
+                    if (filesMenuItem) filesMenuItem.click();
+                    await sleep(1500); // Wait for panel to open
+                    chip = findChipByTitle(targetTitle);
+                } catch (e) {
+                    log('Warning: Failed to repoen files panel.');
+                }
+            }
+        }
+
+        if (!chip) {
+            log(`ERROR: Chip with title "${targetTitle}" not found in DOM even after opening panel. Skipping.`);
             return;
         }
 
@@ -457,20 +474,6 @@
 
         const isDryRun = GM_getValue(DRY_RUN_KEY, true);
         log(`Batch export started. ${isDryRun ? '[DRY RUN]' : '[LIVE RUN]'}`);
-
-        // Reopen files panel to make sure chips are available
-        const actionMenuBtn = document.querySelector(SELECTORS.ACTIONS_MENU_BUTTON);
-        if (actionMenuBtn) {
-            actionMenuBtn.click();
-            try {
-                const menu = await waitForElement(SELECTORS.MENU_PANEL, document, 3000);
-                const filesMenuItem = menu.querySelector(SELECTORS.FILES_MENU_ITEM);
-                if (filesMenuItem) filesMenuItem.click();
-                await sleep(1500); // Wait for panel to open
-            } catch (e) {
-                log('Warning: Failed to reopen files panel automatically.');
-            }
-        }
 
         const finishExport = () => {
             isExporting = false;
