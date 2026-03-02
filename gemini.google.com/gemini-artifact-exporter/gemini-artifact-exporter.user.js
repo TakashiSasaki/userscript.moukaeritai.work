@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.36
-// @lastModified 2026-03-02
+// @version      0.2.37
+// @lastModified 2026-03-03
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -532,7 +532,9 @@
 
         const AUTO_DELETE_KEY = 'gemini-exporter-auto-delete';
         if (GM_getValue(AUTO_DELETE_KEY, false) && !cancelExport) {
-            log('Auto-delete enabled. Requesting gemini-one-click-delete to delete conversation.');
+            log('Auto-delete enabled. Waiting 1s before requesting conversation deletion...');
+            await sleep(1000);
+            log('Requesting gemini-one-click-delete to delete conversation.');
             window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete'));
         }
     }
