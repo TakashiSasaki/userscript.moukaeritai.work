@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.1.23
+// @version      0.2.0
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -96,13 +96,11 @@
      */
     function simulateClick(element) {
         if (!element) return;
-        ['mousedown', 'mouseup', 'click'].forEach(eventType => {
-            element.dispatchEvent(new MouseEvent(eventType, {
-                view: null,
-                bubbles: true,
-                cancelable: true
-            }));
-        });
+        element.dispatchEvent(new MouseEvent('click', {
+            view: null,
+            bubbles: true,
+            cancelable: true
+        }));
     }
 
     /**
@@ -550,6 +548,25 @@
     let styleElement = null;
     let isInitialized = false;
 
+    let policy;
+    if (window.trustedTypes && window.trustedTypes.createPolicy) {
+        try {
+            policy = window.trustedTypes.createPolicy('geminiExportDocs_' + Math.random().toString(36).substr(2, 9), {
+                createHTML: (string) => string
+            });
+        } catch (e) {
+            console.error('Failed to create TrustedTypes policy', e);
+        }
+    }
+
+    function setInnerHTML(element, html) {
+        if (policy) {
+            element.innerHTML = policy.createHTML(html);
+        } else {
+            element.innerHTML = html;
+        }
+    }
+
     /**
      * Main initialization for the script's features.
      */
@@ -610,19 +627,32 @@
     }
 
     // --- Entry Point ---
-    // Use a MutationObserver to detect SPA navigation changes.
-    // Observing the body for childList changes is a common way to catch page transitions.
-    const pageObserver = new MutationObserver(checkUrlAndManageScriptState);
+    let lastUrl = window.location.href;
 
+    if (window.navigation) {
+        window.navigation.addEventListener('navigatesuccess', () => {
+            setTimeout(() => {
+                lastUrl = window.location.href;
+                checkUrlAndManageScriptState();
+            }, 500);
+        });
+        console.log('[Gemini 1-Click Export to Docs] Using Navigation API for SPA routing.');
+    } else {
+        // Fallback for older browsers
+        setInterval(() => {
+            if (location.href !== lastUrl) {
+                lastUrl = location.href;
+                setTimeout(checkUrlAndManageScriptState, 500);
+            }
+        }, 500);
+        console.log('[Gemini 1-Click Export to Docs] Using setInterval fallback for SPA routing.');
+    }
+
+    // Initial check on load
     if (document.body) {
-        pageObserver.observe(document.body, { childList: true, subtree: false });
-        // Initial check in case the page is loaded directly.
         checkUrlAndManageScriptState();
     } else {
-        window.addEventListener('DOMContentLoaded', () => {
-            pageObserver.observe(document.body, { childList: true, subtree: false });
-            checkUrlAndManageScriptState();
-        });
+        window.addEventListener('DOMContentLoaded', checkUrlAndManageScriptState);
     }
 
 })();
