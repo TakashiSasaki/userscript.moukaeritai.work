@@ -2,6 +2,7 @@
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
 // @version      0.2.35
+// @lastModified 2026-03-02
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki

@@ -137,11 +137,13 @@ Geminiの会話ページ（例: \`https://gemini.google.com/app/xxxxxxxx\`）を
                 if (response.ok) {
                     const text = await response.text();
                     const versionMatch = text.match(/\/\/ @version\s+([\d.]+)/);
+                    const dateMatch = text.match(/\/\/ @lastModified\s+([\d-]+)/);
                     if (versionMatch) {
                         const version = versionMatch[1];
+                        const date = dateMatch ? ` (${dateMatch[1]})` : '';
                         const installBtn = document.querySelector('.install-button');
                         if (installBtn) {
-                            installBtn.textContent = `スクリプトをインストール (v${version})`;
+                            installBtn.textContent = `スクリプトをインストール (v${version}${date})`;
                         }
                     }
                 }
