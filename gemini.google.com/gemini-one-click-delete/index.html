@@ -62,43 +62,94 @@
         </svg>
         userscript.moukaeritai.work
     </a>
-    <div id="content">Loading documentation...</div>
+    <div id="content">
+        <h1 id="gemini-one-click-deleteuserjs">gemini-one-click-delete.user.js</h1>
 
-    <!-- Marked library for parsing markdown -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Fetch the markdown file located in the same directory
-            fetch('README.md')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(text => {
-                    // Parse markdown to HTML using 'marked' library
-                    document.getElementById('content').innerHTML = marked.parse(text);
-                })
-                .catch(err => {
-                    // Display friendly error message (likely CORS if opened directly)
-                    document.getElementById('content').innerHTML = `
-                        <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 1em; border-radius: 4px;">
-                            <h3 style="margin-top: 0;">Error loading document</h3>
-                            <p>${err.message}</p>
-                            <hr>
-                            <p><strong>注意:</strong> このファイルをローカルファイルシステム (file://) から直接開いている場合、ブラウザのセキュリティポリシー(CORS)により外部ファイルの読み込みがブロックされることがあります。</p>
-                            <p>以下のいずれかの方法で閲覧してください：</p>
-                            <ul>
-                                <li>ローカルサーバーを起動してアクセスする (例: <code>python -m http.server</code> や <code>npx http-server</code>)</li>
-                                <li>VSCodeの "Live Server" 拡張機能を使用する</li>
-                            </ul>
-                        </div>
-                    `;
-                    console.error('Error fetching markdown:', err);
-                });
-        });
-    </script>
+        <h2 id="このユーザースクリプトの目的">このユーザースクリプトの目的</h2>
+        <p>GeminiのWeb SPAページにおいて、現在の会話を削除するために複数回のクリック（メニューを開く → 削除を選択 → 確認ダイアログ）が必要です。<br>
+            本スクリプトは、これらの手順を自動化し、<strong>1クリック</strong> または <strong>キーボードショートカット</strong> で即座に会話を削除できる機能を追加します。<br>
+            Tampermonkey 上で動作することを想定しています。</p>
+
+        <h2 id="ユーザースクリプト情報">ユーザースクリプト情報</h2>
+        <ul>
+            <li><strong>Namespace</strong>: <code>https://userscript.moukaeritai.work/</code></li>
+            <li><strong>Match URL</strong>: <code>https://gemini.google.com/*</code>
+                （スクリプト内部でURLを監視し、チャットページでのみ動的に有効化されます。現在、<code>/app/</code> および <code>/gem/</code> のパス形式に対応しています。）</li>
+            <li><strong>GitHub</strong>: <a
+                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete">userscript.moukaeritai.work</a>
+            </li>
+        </ul>
+
+        <h2 id="機能仕様">機能仕様</h2>
+
+        <h3 id="1-1クリック削除ボタンの注入">1. 1クリック削除ボタンの注入</h3>
+        <p>以下の場所に「ゴミ箱」アイコンの削除ボタンを自動的に追加します。</p>
+        <ul>
+            <li><strong>標準ビュー（デスクトップ/モバイル共通）</strong>:
+                <ul>
+                    <li>画面上部（ヘッダー部分）にある「・・・（オプション）」メニューボタンの隣に配置されます。</li>
+                </ul>
+            </li>
+            <li><strong>検索結果ビュー（またはヘッダーがない場合）</strong>:
+                <ul>
+                    <li>画面右上に「フローティングボタン」として配置されます。</li>
+                    <li>このボタンは、現在表示中の会話IDを検知し、サイドバー内の対応する削除メニューを自動的に操作します。</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3 id="2-キーボードショートカット">2. キーボードショートカット</h3>
+        <ul>
+            <li><strong>ショートカット</strong>: <code>Ctrl + D</code> （Macの場合は <code>Meta + D</code> も可）</li>
+            <li><strong>動作</strong>:
+                <ul>
+                    <li>ショートカットキーが押されると、画面上の削除ボタン（標準またはフローティング）をプログラム的にクリックします。</li>
+                    <li><strong>安全性</strong>: テキスト入力エリア（<code>input</code>, <code>textarea</code>,
+                        <code>contenteditable</code>）での入力中はショートカットを無効化します。</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3 id="3-spa（シングルページアプリケーション）対応とパフォーマンス">3. SPA（シングルページアプリケーション）対応とパフォーマンス</h3>
+        <ul>
+            <li>GeminiはSPAであるため、ページ遷移を検知してスクリプトの機能を動的に制御します。</li>
+            <li><strong>有効化</strong>: チャットページ (<code>/app/...</code> または <code>/gem/...</code> )
+                に遷移した際に、削除ボタンやショートカット機能が自動的に有効になります。</li>
+            <li><strong>無効化（クリーンアップ）</strong>: チャットページから他のページ（ホームページなど）に移動すると、追加したボタンや機能はすべて削除され、リソースを解放します。</li>
+            <li>これにより、スクリプトが必要な場面でのみ動作し、サイト全体のパフォーマンスへの影響を最小限に抑えます。</li>
+        </ul>
+
+        <h3 id="4-エラーハンドリング">4. エラーハンドリング</h3>
+        <ul>
+            <li><strong>Trusted Types 対応</strong>: <code>simulateClick</code> 関数において <code>MouseEvent</code> の
+                <code>view</code> プロパティを <code>null</code> に設定することで、ブラウザのセキュリティポリシー（Trusted Types）によるエラーを回避しています。</li>
+            <li><strong>待機ロジック</strong>: メニューパネルや確認ダイアログが表示されるのを動的かつ堅牢に待機します。</li>
+        </ul>
+
+        <h2 id="技術的詳細">技術的詳細</h2>
+
+        <h3 id="dom操作の流れ（削除フロー）">DOM操作の流れ（削除フロー）</h3>
+        <p>ボタン（またはショートカット）が押されると、以下の手順が高速に実行されます：</p>
+        <ol>
+            <li>トリガーとなる「・・・」メニューボタンをクリック。</li>
+            <li>表示されたメニューパネル（<code>.mat-mdc-menu-panel</code> /
+                <code>.mat-bottom-sheet-container</code>）から「削除（Delete）」ボタンを探索してクリック。</li>
+            <li>表示された確認ダイアログ（<code>mat-dialog-container</code>）内の「確認（Confirm）」ボタンを待機してクリック。</li>
+        </ol>
+
+        <h2 id="更新履歴">更新履歴</h2>
+        <ul>
+            <li><strong>v0.2.4</strong>: アーティファクトがある際にメニュー項目が増えても「Delete」を正確に特定できるようロジックを強化。</li>
+            <li><strong>v0.2.3</strong>: 最新のGemini UIセレクタ（ARIAラベル等）に対応。SPAルーティング検知に Navigation API を導入。</li>
+            <li><strong>v0.1.18</strong>: SPA対応強化に伴う内部変更。本バージョンが0.1.x系列の最終版となります。今後の開発は0.2.0から開始します。</li>
+            <li><strong>v0.1.17</strong>: <code>/gem/</code>から始まるURL形式のチャットページにも対応。</li>
+            <li><strong>v0.1.16</strong>: SPA対応の強化。チャットページでのみ機能が動的に有効化・無効化されるようにし、パフォーマンスを向上。</li>
+            <li><strong>v0.1.12</strong>: ボタンのクリック処理を簡略化（<code>mousedown</code>, <code>mouseup</code>
+                を削除）。ダークモード表示時のボタンスタイルを改善。</li>
+            <li><strong>v0.1.10</strong>: <code>Ctrl + D</code> ショートカットの実装。フローティングボタンと標準ボタンのどちらもトリガー可能。</li>
+            <li><strong>v0.1.9</strong>: <code>simulateClick</code> の <code>TypeError</code> 修正（Trusted Types対応）。</li>
+        </ul>
+    </div>
     <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
     <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
         <p>
