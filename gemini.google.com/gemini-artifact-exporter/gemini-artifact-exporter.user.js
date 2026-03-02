@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.35
+// @version      0.2.36
 // @lastModified 2026-03-02
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -529,6 +529,12 @@
 
         log('BATCH EXPORT COMPLETED.');
         finishExport();
+
+        const AUTO_DELETE_KEY = 'gemini-exporter-auto-delete';
+        if (GM_getValue(AUTO_DELETE_KEY, false) && !cancelExport) {
+            log('Auto-delete enabled. Requesting gemini-one-click-delete to delete conversation.');
+            window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete'));
+        }
     }
 
     // --- UI Injection & Control ---
@@ -714,8 +720,43 @@
             return container;
         };
 
-        const timeoutInput = createNumberInput(TIMEOUT_SECONDS_KEY, 'Timeout (s)', 10, 1);
+        const createCheckboxInput = (key, text, defaultValue) => {
+            const container = document.createElement('label');
+            container.style.cssText = `
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                cursor: pointer;
+                font-family: 'Google Sans', sans-serif;
+                font-size: 13px;
+                color: rgba(255, 255, 255, 0.8);
+                padding: 2px 8px;
+            `;
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.style.cssText = `
+                width: 16px;
+                height: 16px;
+                cursor: pointer;
+                accent-color: #1a73e8;
+            `;
+            checkbox.checked = GM_getValue(key, defaultValue);
 
+            checkbox.onchange = (e) => {
+                GM_setValue(key, e.target.checked);
+            };
+
+            container.appendChild(document.createTextNode(text));
+            container.appendChild(checkbox);
+            return container;
+        };
+
+        const timeoutInput = createNumberInput(TIMEOUT_SECONDS_KEY, 'Timeout (s)', 10, 1);
+        const AUTO_DELETE_KEY = 'gemini-exporter-auto-delete';
+        const autoDeleteInput = createCheckboxInput(AUTO_DELETE_KEY, 'Auto-Delete Chat', false);
+
+        togglesContainer.appendChild(autoDeleteInput);
         togglesContainer.appendChild(timeoutInput);
 
 
