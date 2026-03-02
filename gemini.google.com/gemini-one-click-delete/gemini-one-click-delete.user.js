@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.5
-// @description  Adds a 1-click button to delete the current Gemini conversation.
+// @version      0.2.6
+// @description  Adds a 1-click panel/shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
@@ -403,34 +403,46 @@
     /**
      * Update State for Global Panel
      */
-    function updatePanelState(conversationId) {
+    function updatePanelState() {
         const panel = document.getElementById('gemini-delete-panel');
         if (!panel) return;
 
         const delBtn = panel.querySelector('#gdp-global-delete-btn');
         if (!delBtn) return;
 
-        if (!conversationId) {
-            delBtn.disabled = true;
-            delBtn.title = 'No conversation selected';
+        // Try to find the standard header actions menu trigger (three dots)
+        const headerTriggers = Array.from(document.querySelectorAll(SELECTORS.actionsMenuButton))
+            .filter(t => !t.closest('bard-sidenav') && !t.closest('side-navigation-content'));
+
+        if (headerTriggers.length > 0) {
+            // Header button is available, we can delete the current conversation
+            delBtn.disabled = false;
+            delBtn.title = '1-Click Delete Current Chat';
+            delBtn._targetTrigger = headerTriggers[0];
             return;
         }
 
-        const sidebarItem = findSidebarItem(conversationId);
-        if (sidebarItem) {
-            delBtn.disabled = false;
-            delBtn.title = '1-Click Delete Conversation';
-            const trigger = sidebarItem.querySelector(SELECTORS.actionsMenuButton);
-            if (trigger) {
-                delBtn._targetTrigger = trigger;
-            } else {
-                delBtn.disabled = true;
-                delBtn.title = 'Menu button not found in sidebar item';
+        // Fallback: If header is not available (e.g., search view or no active chat), check sidebar
+        const match = location.pathname.match(/^\/(app|gem)\/([a-f0-9]{16})/);
+        const conversationId = match ? match[2] : null;
+
+        if (conversationId) {
+            const sidebarItem = findSidebarItem(conversationId);
+            if (sidebarItem) {
+                const trigger = sidebarItem.querySelector(SELECTORS.actionsMenuButton);
+                if (trigger) {
+                    delBtn.disabled = false;
+                    delBtn.title = '1-Click Delete (via Sidebar)';
+                    delBtn._targetTrigger = trigger;
+                    return;
+                }
             }
-        } else {
-            delBtn.disabled = true;
-            delBtn.title = 'Scroll sidebar to load this conversation for deletion';
         }
+
+        // No targets found
+        delBtn.disabled = true;
+        delBtn.title = 'No active conversation found or menu missing';
+        delBtn._targetTrigger = null;
     }
 
     /**
@@ -455,7 +467,7 @@
             </div>
             <div class="panel-content">
                 <div class="gdp-delete-btn-container">
-                    <button class="gdp-main-delete-btn" id="gdp-global-delete-btn" disabled>
+                    <button class="gdp-main-delete-btn" id="gdp-global-delete-btn">
                         <svg xmlns="http://www.w3.org/2000/svg" height="16" viewBox="0 -960 960 960" width="16" fill="currentColor">
                             <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/>
                         </svg>
@@ -571,28 +583,11 @@
      * Inject buttons and update panel state
      */
     function processNodes() {
-        // 1. Standard Header processing (existing logic)
-        const targets = document.querySelectorAll(SELECTORS.actionsMenuButton);
-        targets.forEach(triggerBtn => {
-            // Check if inside sidebar
-            if (triggerBtn.closest('bard-sidenav') || triggerBtn.closest('side-navigation-content')) {
-                return;
-            }
-
-            const container = triggerBtn.parentElement;
-            if (!container || container.querySelector('.gemini-quick-delete-btn')) return;
-
-            // Create and inject standard header button
-            const deleteBtn = createDeleteButton(() => handleDelete(triggerBtn));
-            container.appendChild(deleteBtn);
-        });
-
-        // 2. Panel Creation and Update
+        // Panel Creation and State Update (Standalone buttons are now removed in favor of the panel)
         const chatWindow = document.querySelector(SELECTORS.chatContainer);
         if (chatWindow) {
             createDraggablePanel();
-            const conversationId = getConversationIdFromMainView();
-            updatePanelState(conversationId);
+            updatePanelState();
         }
     }
 
