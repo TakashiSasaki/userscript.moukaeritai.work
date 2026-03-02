@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.38
+// @version      0.2.39
 // @lastModified 2026-03-03
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -811,9 +811,12 @@
         // Required element for this script to work
         const actionsMenuExists = document.querySelector(SELECTORS.ACTIONS_MENU_BUTTON) !== null;
 
-        // If the essential element is missing, we consider the script inactive/hidden
-        // regardless of the URL check, although typically they go hand-in-hand.
-        const shouldActive = isConversationPage() && actionsMenuExists;
+        // Check if there are any article artifacts actually present in the chat stream
+        // This is the trigger to show/hide the UI.
+        const hasArtifacts = document.querySelector('mat-icon[fonticon="article"], .mat-icon[fonticon="article"]') !== null;
+
+        // If the essential element is missing or no artifacts are found, we hide the panel
+        const shouldActive = isConversationPage() && actionsMenuExists && hasArtifacts;
 
         const panel = document.getElementById('gemini-batch-export-panel');
         if (!panel) {
@@ -831,8 +834,6 @@
             panel.style.backgroundColor = 'rgba(28, 28, 30, 0.7)';
             panel.style.zIndex = '10000';
         }
-
-
     }
 
     function debounce(func, wait) {
