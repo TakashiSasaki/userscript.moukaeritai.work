@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.28
+// @version      0.2.29
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -146,20 +146,20 @@
         log(`--- Start processing artifact: "${title}" ---`);
 
         chip.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        await sleep(500);
+        await sleep(1000);
 
         log(`Clicking chip "${title}"...`);
         chip.click();
 
-        // 2. Wait for Canvas switch 
-        // We assume Canvas is fast. 
-        await sleep(2000);
+        // 2. Wait for Canvas switch
+        log('Waiting for canvas to load...');
+        await sleep(3000); // Increased wait time for canvas initialization
 
         // 3. Click Share
         try {
             log('Attempting to click Share button...');
             const shareBtn = await waitForElement(SELECTORS.SHARE_BUTTON, document, 5000);
-            await sleep(1000); // UI stabilization
+            await sleep(1500); // UI stabilization
             shareBtn.click();
             log('Share button clicked.');
 
@@ -193,6 +193,7 @@
                 exportBtn.style.border = '2px solid yellow'; // Visual feedback for testing
                 await sleep(1000);
             } else {
+                await sleep(500); // Wait for menu animation to settle before clicking the target
                 exportBtn.click();
                 log('Export to Docs button clicked. Waiting for completion...');
 
