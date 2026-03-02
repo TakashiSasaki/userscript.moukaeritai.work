@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.24
+// @version      0.2.25
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -191,13 +191,45 @@
             if (isDryRun) {
                 log('[DRY RUN] Skipping final export click.');
                 exportBtn.style.border = '2px solid yellow'; // Visual feedback for testing
+                await sleep(1000);
             } else {
                 exportBtn.click();
-                log('Export to Docs button clicked.');
+                log('Export to Docs button clicked. Waiting for completion...');
+
+                let isCreating = true;
+                let waitCheck = 0;
+                while (isCreating && waitCheck < 60) { // Wait up to 30 seconds
+                    await sleep(500);
+                    waitCheck++;
+
+                    const overlays = Array.from(document.querySelectorAll('.cdk-overlay-container, mat-snack-bar-container'));
+                    const overlayText = overlays.map(o => o.textContent).join(' ');
+
+                    if (overlayText.includes('作成されました') || overlayText.includes('Document created')) {
+                        log('Success: Document created toast detected.');
+                        isCreating = false;
+
+                        // Attempt to dismiss the toast to clear the UI
+                        const toastBtns = document.querySelectorAll('mat-snack-bar-container button');
+                        toastBtns.forEach(btn => btn.click());
+                        break;
+                    } else if (overlayText.includes('作成しています') || overlayText.includes('Creating document')) {
+                        if (waitCheck % 4 === 0) log('Still creating document...');
+                    } else {
+                        // If we don't see any export-related text after a short while, we assume it's done or dismissed
+                        if (waitCheck > 10) {
+                            log('No export progress toast visible. Assuming completion.');
+                            isCreating = false;
+                        }
+                    }
+                }
             }
 
-            log(`Wait ${isDryRun ? '1s' : '5s'} for processing...`);
-            await sleep(isDryRun ? 1000 : 5000);
+            // aggressive cleanup of any lingering stuck backdrops (menus etc)
+            const remainingBackdrops = document.querySelectorAll('.cdk-overlay-backdrop, .mat-mdc-menu-panel');
+            if (remainingBackdrops.length > 0) {
+                document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
+            }
 
             log(`--- Finished processing: "${title}" ---`);
 
