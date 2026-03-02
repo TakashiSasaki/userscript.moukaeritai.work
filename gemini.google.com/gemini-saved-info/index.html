@@ -4,180 +4,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Saved Info Helper - Documentation</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Gemini Saved Info Helper - Moukaeritai</title>
+    <!-- Github Markdown CSS for styling -->
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
     <style>
-        :root {
-            --primary: #4e95ff;
-            --primary-dark: #3a7bd5;
-            --bg-gradient: linear-gradient(135.2deg, rgba(7, 12, 23, 1) 1.2%, rgba(13, 33, 64, 1) 98.1%);
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --text-main: #ffffff;
-            --text-dim: #b0b8c4;
-        }
-
         body {
-            font-family: 'Outfit', sans-serif;
-            margin: 0;
-            padding: 0;
-            background: var(--bg-gradient);
-            background-attachment: fixed;
-            color: var(--text-main);
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 1000px;
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
             margin: 0 auto;
-            padding: 4rem 2rem;
+            padding: 45px;
         }
 
-        .doc-card {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 3rem;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        @media (max-width: 767px) {
+            body {
+                padding: 15px;
+            }
         }
 
-        .markdown-body {
-            background: transparent !important;
-            color: var(--text-main) !important;
-            font-family: inherit !important;
-        }
-
-        .markdown-body h1,
-        .markdown-body h2,
-        .markdown-body h3 {
-            color: white !important;
-            border-bottom: 1px solid var(--glass-border) !important;
-        }
-
-        .markdown-body code {
-            background-color: rgba(255, 255, 255, 0.1) !important;
-            color: var(--primary) !important;
-            border-radius: 4px;
-        }
-
-        .markdown-body pre {
-            background-color: rgba(0, 0, 0, 0.3) !important;
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-        }
-
-        .markdown-body a {
-            color: var(--primary) !important;
-        }
-
-        .top-nav {
-            position: absolute;
-            top: 2rem;
-            left: 2rem;
-            z-index: 10;
-        }
-
-        .top-nav-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            color: var(--text-dim);
-            font-weight: 400;
-            padding: 8px 16px;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 50px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .top-nav-link:hover {
+        .home-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #24292e;
             color: white;
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateX(-5px);
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        footer {
-            text-align: center;
-            margin-top: 4rem;
-            padding-bottom: 3rem;
-            color: var(--text-dim);
-            font-weight: 300;
+        .home-button svg {
+            fill: currentColor;
         }
 
-        footer a {
-            color: var(--primary);
+        .home-button:hover {
+            background-color: #0366d6;
+            color: white;
             text-decoration: none;
         }
 
-        #content {
-            min-height: 200px;
+        .install-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #2ea44f;
+            color: white !important;
+            font-weight: 600;
+            border-radius: 6px;
+            text-decoration: none !important;
+            margin: 20px 0;
+            transition: background-color 0.2s;
         }
 
-        @media (max-width: 768px) {
-            .container {
-                padding: 2rem 1rem;
-            }
-
-            .doc-card {
-                padding: 1.5rem;
-            }
-
-            .top-nav {
-                position: static;
-                margin-bottom: 2rem;
-                display: flex;
-                justify-content: center;
-            }
+        .install-button:hover {
+            background-color: #2c974b;
         }
     </style>
 </head>
 
-<body>
-    <div class="container">
-        <nav class="top-nav">
-            <a class="top-nav-link" href="../index.html">
-                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
-                    <path
-                        d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-                </svg>
-                Back to Home
-            </a>
-        </nav>
+<body class="markdown-body">
+    <a href="https://userscript.moukaeritai.work/" class="home-button">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
+            <path
+                d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
+        </svg>
+        userscript.moukaeritai.work
+    </a>
+    <div id="content">Loading documentation...</div>
 
-        <section class="doc-card">
-            <div id="content" class="markdown-body">Loading documentation...</div>
-        </section>
-
-        <footer>
-            <p>
-                <small>Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a> | <a
-                        href="https://userscript.moukaeritai.work/">moukaeritai.work</a></small>
-            </p>
-        </footer>
-    </div>
-
+    <!-- Marked library for parsing markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            fetch('README.md')
-                .then(response => {
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    return response.text();
-                })
-                .then(text => {
-                    document.getElementById('content').innerHTML = marked.parse(text);
-                })
-                .catch(err => {
-                    document.getElementById('content').innerHTML = `<h3>Error loading document</h3><p>${err.message}</p>`;
-                    console.error('Error fetching markdown:', err);
-                });
+        document.addEventListener('DOMContentLoaded', async () => {
+            const markdown = `
+# Gemini Saved Info Helper
+
+GeminiのウェブUIにおいて、ユーザーのカスタムインストラクションやユーザープロファイルを保存する画面 (\`/saved-info\`) の使いやすさを向上させるユーザースクリプトです。
+
+<div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
+    <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
+    <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
+</div>
+
+<a href="gemini-saved-info.user.js" class="install-button">スクリプトをインストール</a>
+
+## 機能 (Features)
+
+*   **連番表示:** 各カスタムインストラクションの先頭に連番を振り、視認性を向上させます。
+*   **クリップボードコピー:** 各インストラクションの3ドットメニューの横にコピーボタンを追加します。ボタンをクリックすると、そのインストラクションのテキスト内容がクリップボードにコピーされます。
+*   **一括コピー:** 複数のインストラクションがある場合、ヘッダー部分に "Copy all" ボタンを追加し、全体を形式に沿ってコピーできます。
+
+## 実装詳細 (Implementation Details)
+
+### SPA対応および動的更新ロジック
+
+*   **ページ監視:** \`MutationObserver\` で \`document.body\` を監視し、SPAによるページ遷移を検知します。
+*   **UI更新:** リストに変更が加わるたびに再描画され、UIの整合性が常に保たれます。
+`;
+            document.getElementById('content').innerHTML = marked.parse(markdown);
+
+            // Fetch version from script metadata
+            try {
+                const response = await fetch('gemini-saved-info.user.js');
+                if (response.ok) {
+                    const text = await response.text();
+                    const versionMatch = text.match(/\/\/ @version\s+([\d.]+)/);
+                    const dateMatch = text.match(/\/\/ @lastModified\s+([\d-]+)/);
+                    if (versionMatch) {
+                        const version = versionMatch[1];
+                        const date = dateMatch ? dateMatch[1] : '不明';
+
+                        // Update info labels
+                        const verEl = document.getElementById('ver-info');
+                        const dateEl = document.getElementById('date-info');
+                        if (verEl) verEl.textContent = `v${version}`;
+                        if (dateEl) dateEl.textContent = date;
+
+                        const installBtn = document.querySelector('.install-button');
+                        if (installBtn) {
+                            installBtn.textContent = `スクリプトをインストール (v${version})`;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not fetch script version:', e);
+            }
         });
     </script>
+    <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
+    <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
+        <p>
+            Hosted on GitHub Pages |
+            <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
+            Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
+        </p>
+    </footer>
 </body>
 
 </html>

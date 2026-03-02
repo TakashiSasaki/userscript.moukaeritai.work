@@ -2,6 +2,7 @@
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
 // @version      0.2.8
+// @lastModified 2026-03-02
 // @description  Adds a 1-click panel/shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
