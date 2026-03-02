@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.23
+// @version      0.2.24
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -215,7 +215,9 @@
         const exportBtn = document.getElementById('gemini-btn-export');
         if (!listContainer || !exportBtn) return;
 
-        listContainer.innerHTML = '';
+        while (listContainer.firstChild) {
+            listContainer.removeChild(listContainer.firstChild);
+        }
 
         if (scannedArtifacts.length === 0) {
             listContainer.style.display = 'none';
@@ -323,9 +325,14 @@
         }
 
         filesMenuItem.click();
-        await sleep(1500); // Wait for panel to load
 
-        const chips = Array.from(document.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
+        log('Waiting for chips to load in panel...');
+        let chips = [];
+        for (let i = 0; i < 20; i++) {
+            await sleep(250);
+            chips = Array.from(document.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
+            if (chips.length > 0) break;
+        }
 
         scannedArtifacts = [];
         chips.forEach(chip => {
