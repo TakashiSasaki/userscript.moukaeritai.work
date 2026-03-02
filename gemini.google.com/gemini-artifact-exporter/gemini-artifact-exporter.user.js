@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.21
+// @version      0.2.22
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -51,7 +51,7 @@
         SIDEBAR_CHIP: 'button.container:has(mat-icon[fonticon="article"])',
         CHIP_TITLE: 'div:nth-child(2) > div:first-child',
         CHIP_ICON_CONTAINER: 'mat-icon',
-        SHARE_BUTTON: 'button.share-button, button:has(mat-icon[fonticon="share"])',
+        SHARE_BUTTON: 'extended-response-panel share-button button, extended-response-panel button:has(mat-icon[fonticon="share"])',
         EXPORT_BUTTON: 'button[data-test-id="export-to-docs-button"], .mat-mdc-menu-item:has(mat-icon[fonticon="docs"])',
         MENU_PANEL: '.mat-mdc-menu-panel'
     };
@@ -165,8 +165,28 @@
 
             // 4. Click Export to Docs
             log('Waiting for Export to Docs button in menu...');
-            const exportBtn = await waitForElement(SELECTORS.EXPORT_BUTTON, document, 5000);
-            await sleep(1000);
+            let exportBtn = null;
+            let exportRetries = 0;
+
+            while (!exportBtn && exportRetries < 20) {
+                const candidates = Array.from(document.querySelectorAll(SELECTORS.EXPORT_BUTTON));
+
+                // Fallback to text matching if strict CSS selectors fail
+                const allMenuButtons = Array.from(document.querySelectorAll('.mat-mdc-menu-item, button[role="menuitem"]'));
+                exportBtn = candidates.find(b => b.offsetParent !== null) ||
+                    allMenuButtons.find(b => {
+                        const text = b.textContent.toLowerCase();
+                        return (text.includes('export to docs') || text.includes('ドキュメントにエクスポート')) && b.offsetParent !== null;
+                    });
+
+                if (exportBtn) break;
+                await sleep(250);
+                exportRetries++;
+            }
+
+            if (!exportBtn) {
+                throw new Error("Export to Docs button not found in menu.");
+            }
 
             if (isDryRun) {
                 log('[DRY RUN] Skipping final export click.');
