@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.22
+// @version      0.2.23
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -208,45 +208,86 @@
 
     let isExporting = false;
     let cancelExport = false;
+    let scannedArtifacts = [];
 
-    async function runBatchExport() {
-        if (isExporting) {
-            cancelExport = true;
-            log('Cancellation requested by user.');
-            const btn = document.querySelector('#gemini-batch-export-panel button');
-            if (btn) btn.textContent = 'Stopping...';
+    function renderArtifactList() {
+        const listContainer = document.getElementById('gemini-artifact-list-container');
+        const exportBtn = document.getElementById('gemini-btn-export');
+        if (!listContainer || !exportBtn) return;
+
+        listContainer.innerHTML = '';
+
+        if (scannedArtifacts.length === 0) {
+            listContainer.style.display = 'none';
+            exportBtn.style.display = 'none';
+            alert('No "Article" type artifacts found in the sidebar.');
             return;
         }
 
-        isExporting = true;
-        cancelExport = false;
+        listContainer.style.display = 'flex';
+        exportBtn.style.display = 'block';
 
-        const btn = document.querySelector('#gemini-batch-export-panel button');
-        if (btn) {
-            btn.textContent = 'Cancel Export';
-            btn.style.backgroundColor = '#d93025'; // Red color
-            btn.onmouseover = () => { btn.style.backgroundColor = '#a50e0e'; };
-            btn.onmouseout = () => { btn.style.backgroundColor = '#d93025'; };
+        const selectAllLabel = document.createElement('label');
+        selectAllLabel.style.cssText = `display:flex; align-items:center; gap:8px; font-size:13px; font-weight:bold; color:white; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 4px; cursor: pointer;`;
+        const selectAllCb = document.createElement('input');
+        selectAllCb.type = 'checkbox';
+        selectAllCb.checked = true;
+        selectAllCb.onchange = (e) => {
+            const cbs = listContainer.querySelectorAll('.artifact-cb');
+            cbs.forEach(cb => { cb.checked = e.target.checked; });
+        };
+        selectAllLabel.appendChild(selectAllCb);
+        selectAllLabel.appendChild(document.createTextNode('Select All'));
+        listContainer.appendChild(selectAllLabel);
+
+        const scrollArea = document.createElement('div');
+        scrollArea.style.cssText = `max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-right: 4px;`;
+
+        scannedArtifacts.forEach((title, index) => {
+            const label = document.createElement('label');
+            label.style.cssText = `display:flex; align-items:center; gap:8px; font-size:12px; color:rgba(255,255,255,0.8); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;`;
+            label.title = title;
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.className = 'artifact-cb';
+            cb.value = title;
+            cb.checked = true;
+            cb.onchange = () => {
+                const allCbs = scrollArea.querySelectorAll('.artifact-cb');
+                const allChecked = Array.from(allCbs).every(c => c.checked);
+                selectAllCb.checked = allChecked;
+            };
+            label.appendChild(cb);
+            label.appendChild(document.createTextNode(`${index + 1}. ${title}`));
+            scrollArea.appendChild(label);
+        });
+
+        listContainer.appendChild(scrollArea);
+    }
+
+    async function scanArtifacts() {
+        const scanBtn = document.getElementById('gemini-btn-scan');
+        if (scanBtn) {
+            scanBtn.textContent = 'Scanning...';
+            scanBtn.style.pointerEvents = 'none';
+            scanBtn.style.opacity = '0.7';
         }
+
         const logPanelBody = document.getElementById('gemini-log-panel-body');
         if (logPanelBody) {
-            // Clear previous logs safely without using innerHTML to avoid TrustedHTML violation
             while (logPanelBody.firstChild) {
                 logPanelBody.removeChild(logPanelBody.firstChild);
             }
         }
 
-        const isDryRun = GM_getValue(DRY_RUN_KEY, true);
-        log(`Batch export started. ${isDryRun ? '[DRY RUN]' : '[LIVE RUN]'}`);
+        log('Scanning artifacts...');
 
         if (!isConversationPage()) {
             log('Abort: Not on a conversation page.');
-            isExporting = false;
-            if (btn) {
-                btn.textContent = 'Export All Articles';
-                btn.style.backgroundColor = '#1a73e8';
-                btn.onmouseover = () => { btn.style.backgroundColor = '#1b66c9'; };
-                btn.onmouseout = () => { btn.style.backgroundColor = '#1a73e8'; };
+            if (scanBtn) {
+                scanBtn.textContent = 'Scan Artifacts';
+                scanBtn.style.pointerEvents = 'auto';
+                scanBtn.style.opacity = '1';
             }
             return;
         }
@@ -255,7 +296,11 @@
         const actionMenuBtn = document.querySelector(SELECTORS.ACTIONS_MENU_BUTTON);
         if (!actionMenuBtn) {
             log('Abort: Action menu button not found.');
-            finishExport();
+            if (scanBtn) {
+                scanBtn.textContent = 'Scan Artifacts';
+                scanBtn.style.pointerEvents = 'auto';
+                scanBtn.style.opacity = '1';
+            }
             return;
         }
 
@@ -269,7 +314,11 @@
             log('ERROR: Could not find Files menu in the action list.');
             alert('Could not open files list.');
             document.querySelector('.cdk-overlay-backdrop')?.click(); // close menu
-            finishExport();
+            if (scanBtn) {
+                scanBtn.textContent = 'Scan Artifacts';
+                scanBtn.style.pointerEvents = 'auto';
+                scanBtn.style.opacity = '1';
+            }
             return;
         }
 
@@ -278,42 +327,105 @@
 
         const chips = Array.from(document.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
 
-        const articleTitles = [];
+        scannedArtifacts = [];
         chips.forEach(chip => {
             const titleEl = chip.querySelector(SELECTORS.CHIP_TITLE);
             if (titleEl) {
-                articleTitles.push(titleEl.textContent.trim());
+                scannedArtifacts.push(titleEl.textContent.trim());
             }
         });
 
-        log(`Found ${articleTitles.length} article artifacts.`);
+        log(`Found ${scannedArtifacts.length} article artifacts.`);
+
+        // Close right side menu to clean up UI
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
+        const backdrop = document.querySelector('.mat-drawer-backdrop');
+        if (backdrop && backdrop.offsetParent !== null) {
+            backdrop.click();
+        }
+
+        renderArtifactList();
+
+        if (scanBtn) {
+            scanBtn.textContent = 'Rescan Artifacts';
+            scanBtn.style.pointerEvents = 'auto';
+            scanBtn.style.opacity = '1';
+        }
+    }
+
+    async function runBatchExport() {
+        if (isExporting) {
+            cancelExport = true;
+            log('Cancellation requested by user.');
+            const btn = document.getElementById('gemini-btn-export');
+            if (btn) btn.textContent = 'Stopping...';
+            return;
+        }
+
+        const listContainer = document.getElementById('gemini-artifact-list-container');
+        if (!listContainer) return;
+
+        const selectedTitles = Array.from(listContainer.querySelectorAll('.artifact-cb:checked')).map(cb => cb.value);
+
+        if (selectedTitles.length === 0) {
+            alert('No artifacts selected for export.');
+            return;
+        }
+
+        isExporting = true;
+        cancelExport = false;
+
+        const btn = document.getElementById('gemini-btn-export');
+        if (btn) {
+            btn.textContent = 'Cancel Export';
+            btn.style.backgroundColor = '#d93025'; // Red color
+            btn.onmouseover = () => { btn.style.backgroundColor = '#a50e0e'; };
+            btn.onmouseout = () => { btn.style.backgroundColor = '#d93025'; };
+        }
+
+        listContainer.querySelectorAll('input').forEach(inp => inp.disabled = true);
+        const scanBtn = document.getElementById('gemini-btn-scan');
+        if (scanBtn) {
+            scanBtn.style.pointerEvents = 'none';
+            scanBtn.style.opacity = '0.5';
+        }
+
+        const isDryRun = GM_getValue(DRY_RUN_KEY, true);
+        log(`Batch export started. ${isDryRun ? '[DRY RUN]' : '[LIVE RUN]'}`);
+
+        // Reopen files panel to make sure chips are available
+        const actionMenuBtn = document.querySelector(SELECTORS.ACTIONS_MENU_BUTTON);
+        if (actionMenuBtn) {
+            actionMenuBtn.click();
+            try {
+                const menu = await waitForElement(SELECTORS.MENU_PANEL, document, 3000);
+                const filesMenuItem = menu.querySelector(SELECTORS.FILES_MENU_ITEM);
+                if (filesMenuItem) filesMenuItem.click();
+                await sleep(1500); // Wait for panel to open
+            } catch (e) {
+                log('Warning: Failed to reopen files panel automatically.');
+            }
+        }
 
         const finishExport = () => {
             isExporting = false;
             cancelExport = false;
             if (btn) {
-                btn.textContent = 'Export All Articles';
+                btn.textContent = 'Export Selected';
                 btn.style.backgroundColor = '#1a73e8';
                 btn.onmouseover = () => { btn.style.backgroundColor = '#1b66c9'; };
                 btn.onmouseout = () => { btn.style.backgroundColor = '#1a73e8'; };
+            }
+            listContainer.querySelectorAll('input').forEach(inp => inp.disabled = false);
+            if (scanBtn) {
+                scanBtn.style.pointerEvents = 'auto';
+                scanBtn.style.opacity = '1';
             }
         };
 
-        if (articleTitles.length === 0) {
-            alert('No "Article" type artifacts found in the sidebar.');
-            isExporting = false;
-            if (btn) {
-                btn.textContent = 'Export All Articles';
-                btn.style.backgroundColor = '#1a73e8';
-                btn.onmouseover = () => { btn.style.backgroundColor = '#1b66c9'; };
-                btn.onmouseout = () => { btn.style.backgroundColor = '#1a73e8'; };
-            }
-            return;
-        }
-
         const progressEl = document.getElementById('gemini-batch-export-progress');
 
-        for (let i = 0; i < articleTitles.length; i++) {
+        for (let i = 0; i < selectedTitles.length; i++) {
             if (cancelExport) {
                 log('Batch export cancelled by user.');
                 if (progressEl) progressEl.textContent = 'Cancelled';
@@ -322,15 +434,15 @@
                 return;
             }
 
-            const statusText = `Processing ${i + 1}/${articleTitles.length}: ${articleTitles[i]}`;
+            const statusText = `Processing ${i + 1}/${selectedTitles.length}: ${selectedTitles[i]}`;
             log(statusText);
-            if (progressEl) progressEl.textContent = `${i + 1} / ${articleTitles.length}`;
+            if (progressEl) progressEl.textContent = `${i + 1} / ${selectedTitles.length}`;
 
-            await processArtifact(articleTitles[i], isDryRun);
+            await processArtifact(selectedTitles[i], isDryRun);
 
-            // Only cooldown if it's not the last item
-            if (i < articleTitles.length - 1) {
-                if (cancelExport) { // Check again before cooldown
+            // Cooldown except for last
+            if (i < selectedTitles.length - 1) {
+                if (cancelExport) {
                     log('Batch export cancelled by user.');
                     if (progressEl) progressEl.textContent = 'Cancelled';
                     setTimeout(() => { if (progressEl) progressEl.textContent = ''; }, 3000);
@@ -338,24 +450,19 @@
                     return;
                 }
 
-                // Read cooldown settings freshly for every iteration to allow dynamic adjustment
                 const currentCooldown = parseInt(GM_getValue(COOLDOWN_SECONDS_KEY, 3), 10);
                 log(`Cooldown before next item (${currentCooldown}s)...`);
                 if (progressEl) progressEl.textContent = `Cooldown (${currentCooldown}s)...`;
 
-                // Active wait to allow quicker cancellation response (Wall-clock time based)
                 const startTime = Date.now();
                 const cooldownMs = currentCooldown * 1000;
 
                 while (Date.now() - startTime < cooldownMs) {
                     if (cancelExport) break;
-
-                    // Update progress display with remaining time
                     if (progressEl) {
                         const remaining = Math.ceil((cooldownMs - (Date.now() - startTime)) / 1000);
                         progressEl.textContent = `Cooldown (${remaining}s)...`;
                     }
-
                     await sleep(100);
                 }
             }
@@ -557,10 +664,34 @@
             padding: 0 12px;
         `;
 
-        const btn = document.createElement('button');
-        btn.textContent = 'Export All Articles';
-        btn.title = 'すべての「記事」アーティファクトをGoogle Docsにエクスポートします。';
-        btn.style.cssText = `
+        const scanBtn = document.createElement('button');
+        scanBtn.id = 'gemini-btn-scan';
+        scanBtn.textContent = 'Scan Artifacts';
+        scanBtn.title = 'アーティファクトの一覧を取得します。';
+        scanBtn.style.cssText = `
+            padding: 10px 16px;
+            background-color: #3c4043;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 24px;
+            cursor: pointer;
+            font-family: 'Google Sans', sans-serif;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            transition: background-color 0.2s;
+        `;
+        scanBtn.onmouseover = () => { scanBtn.style.backgroundColor = '#5f6368'; };
+        scanBtn.onmouseout = () => { scanBtn.style.backgroundColor = '#3c4043'; };
+        scanBtn.onclick = () => scanArtifacts();
+
+        const listContainer = document.createElement('div');
+        listContainer.id = 'gemini-artifact-list-container';
+        listContainer.style.cssText = `display:none; flex-direction:column; padding: 4px 8px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);`;
+
+        const exportBtn = document.createElement('button');
+        exportBtn.id = 'gemini-btn-export';
+        exportBtn.textContent = 'Export Selected';
+        exportBtn.title = '選択したアーティファクトをGoogle Docsにエクスポートします。';
+        exportBtn.style.cssText = `
             padding: 10px 16px;
             background-color: #1a73e8;
             color: white;
@@ -570,12 +701,11 @@
             font-family: 'Google Sans', sans-serif;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
             transition: background-color 0.2s;
+            display: none;
         `;
-        btn.onmouseover = () => { btn.style.backgroundColor = '#1b66c9'; };
-        btn.onmouseout = () => { btn.style.backgroundColor = '#1a73e8'; };
-
-
-        btn.onclick = () => runBatchExport();
+        exportBtn.onmouseover = () => { exportBtn.style.backgroundColor = '#1b66c9'; };
+        exportBtn.onmouseout = () => { exportBtn.style.backgroundColor = '#1a73e8'; };
+        exportBtn.onclick = () => runBatchExport();
 
         // --- Toggles Container ---
         const togglesContainer = document.createElement('div');
@@ -673,7 +803,9 @@
             height: 1.2em; /* Reserve height to prevent layout shift */
         `;
 
-        buttonContainer.appendChild(btn);
+        buttonContainer.appendChild(scanBtn);
+        buttonContainer.appendChild(listContainer);
+        buttonContainer.appendChild(exportBtn);
         buttonContainer.appendChild(progressDisplay);
         buttonContainer.appendChild(togglesContainer);
 
