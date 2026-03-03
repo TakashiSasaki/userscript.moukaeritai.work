@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Turn Counter - Documentation</title>
+    <title>Gemini Turn Counter - Moukaeritai</title>
+    <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/index.html" rel="canonical" />
     <!-- Github Markdown CSS for styling -->
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
@@ -51,6 +52,22 @@
             color: white;
             text-decoration: none;
         }
+
+        .install-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #2ea44f;
+            color: white !important;
+            font-weight: 600;
+            border-radius: 6px;
+            text-decoration: none !important;
+            margin: 20px 0;
+            transition: background-color 0.2s;
+        }
+
+        .install-button:hover {
+            background-color: #2c974b;
+        }
     </style>
 </head>
 
@@ -62,96 +79,94 @@
         </svg>
         userscript.moukaeritai.work
     </a>
+    <div id="content">Loading documentation...</div>
 
-    <div id="content">
-        <h1>Gemini Turn Counter ユーザードキュメント</h1>
-        <p>このドキュメントは、Google Gemini の利用を便利にするユーザースクリプト <code>gemini-turn-counter.user.js</code> の機能と使い方について説明します。</p>
+    <!-- Marked library for parsing markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const markdown = `
+# Gemini Turn Counter
 
-        <h2>1. 概要と目的</h2>
-        <p>すでに作成済みの <code>chatgpt-turn-counter</code> と同様に、Google Gemini
-            上での会話において、メッセージ数（ターン数）や文字数をリアルタイムにカウントし、画面上に表示することを目的としています。</p>
+Google Gemini 上での会話において、メッセージ数（ターン数）や文字数をリアルタイムにカウントし、画面上に表示するためのユーザースクリプトです。
 
-        <h2>2. 機能一覧</h2>
+<div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
+    <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
+    <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
+</div>
 
-        <h3>2.1 カウンター機能 (Turn Counter)</h3>
-        <p>以下の要素をカウントし、表示します。</p>
-        <ul>
-            <li><strong>ユーザー送信数 (User)</strong>: ユーザーがメッセージを送信した回数
-                <ul>
-                    <li><strong>文字数表示</strong>: テキストノードの合計文字数を併記 (例: <code>5 (1,234 chars)</code>)。</li>
-                </ul>
-            </li>
-            <li><strong>モデル応答数 (Model)</strong>: Geminiがレスポンスを返した回数
-                <ul>
-                    <li><strong>文字数表示</strong>: 応答メッセージの合計文字数を併記。</li>
-                </ul>
-            </li>
-            <li><strong>画像送信数 (Images)</strong>: ユーザーが送信した画像の数
-                <ul>
-                    <li><strong>サムネイル表示</strong>: 送信画像を縮小表示し、ホバーで詳細を確認可能。</li>
-                </ul>
-            </li>
-            <li><strong>アーティファクト / リンクカード数</strong>: 応答に含まれるキャンバス（Artifacts）やリンクカードの数。</li>
-            <li><strong>コードブロック / テーブル数</strong>: 応答に含まれるコードブロックやテーブルの数。</li>
-        </ul>
+<a href="gemini-turn-counter.user.js" class="install-button">スクリプトをインストール</a>
 
-        <h3>2.2 ユーザーインターフェイス (UI)</h3>
-        <p><code>chatgpt-turn-counter</code> のデザインをベースに、Gemini向けに最適化されています。</p>
-        <ul>
-            <li><strong>初期状態</strong>: 画面右上に浮動パネルとして表示。</li>
-            <li><strong>ドラッグ＆ドロップ</strong>: パネルを自由に移動でき、その位置は保存されます。</li>
-            <li><strong>展開 / 最小化</strong>: クリックで詳細表示とアイコン表示（最小化）を切り替え、状態は保存されます。</li>
-            <li><strong>画像一括コピー (Copy All)</strong>: "Images" 行のボタンをクリックすると、表示中の全画像をHTMLタグ（Data
-                URI埋め込み）としてクリップボードにコピーします。初期状態で高さ制限を指定可能です。</li>
-        </ul>
+## 1. 概要と目的
 
-        <h2>3. 技術仕様</h2>
+すでに作成済みの \`chatgpt-turn-counter\` と同様に、Google Gemini 上での会話において、メッセージ数や文字数をリアルタイムにカウントし、画面上に表示することを目的としています。
 
-        <h3>3.1 動作環境</h3>
-        <ul>
-            <li><strong>実行環境</strong>: TamperMonkey などのユーザースクリプトマネージャー</li>
-            <li><strong>対象URLパターン</strong>: <code>https://gemini.google.com/*</code></li>
-            <li><strong>名前空間</strong>: <code>userscript.moukaeritai.work</code></li>
-        </ul>
+## 2. 機能一覧
 
-        <h3>3.2 自動アップデート (Automatic Updates)</h3>
-        <p>本スクリプトは GitHub 上の raw ファイルを参照して自動更新されます。</p>
-        <ul>
-            <li><strong>Update URL</strong>: <a
-                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js">https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js</a>
-            </li>
-        </ul>
+### 2.1 カウンター機能 (Turn Counter)
+以下の要素をカウントし、表示します。
 
-        <h2>4. 関連情報</h2>
-        <ul>
-            <li><a
-                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js">スクリプトをインストールする</a>
-            </li>
-            <li><a
-                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter">GitHub
-                    リポジトリ</a></li>
-        </ul>
+*   **ユーザー送信数 (User)**: ユーザーがメッセージを送信した回数
+    *   **文字数表示**: テキストノードの合計文字数を併記
+*   **モデル応答数 (Model)**: Geminiがレスポンスを返した回数
+    *   **文字数表示**: 応答メッセージの合計文字数を併記
+*   **画像送信数 (Images)**: ユーザーが送信した画像の数
+    *   **サムネイル表示**: 送信画像を縮小表示し、ホバーで詳細を確認可能
+*   **アーティファクト / リンクカード数**: 応答に含まれるキャンバス（Artifacts）やリンクカードの数
+*   **コードブロック / テーブル数**: 応答に含まれるコードブロックやテーブルの数
 
-        <h2>5. プロジェクト管理情報</h2>
+### 2.2 ユーザーインターフェイス (UI)
+\`chatgpt-turn-counter\` のデザインをベースに、Gemini向けに最適化されています。
 
-        <h3>5.1 作者</h3>
-        <ul>
-            <li><strong>Name</strong>: Takashi Sasaki</li>
-            <li><strong>URL</strong>: <a href="https://x.com/TakashiSasaki">x.com/TakashiSasaki</a></li>
-        </ul>
+*   **初期状態**: 画面右上に浮動パネルとして表示
+*   **ドラッグ＆ドロップ**: パネルを自由に移動でき、その位置は保存されます
+*   **展開 / 最小化**: クリックで詳細表示とアイコン表示（最小化）を切り替えられます
+*   **画像一括コピー (Copy All)**: "Images" 行のボタンをクリックすると、表示中の全画像をHTMLタグ（Data URI埋め込み）としてクリップボードにコピーします
 
-        <h2>更新履歴 (抜粋)</h2>
-        <ul>
-            <li><strong>v0.1.25</strong>: アーティファクトの二重カウント問題を修正。</li>
-            <li><strong>v0.1.22</strong>: UIのドラッグ＆ドロップ移動および位置の保存に対応。</li>
-            <li><strong>v0.1.21</strong>: UIの最小化ボタン追加と状態保存に対応。</li>
-            <li><strong>v0.1.20</strong>: アーティファクト（Canvas）およびリンクカードのカウントに対応。</li>
-            <li><strong>v0.1.19</strong>: SPAナビゲーション検知を <code>window.navigation</code> API に移行しパフォーマンス向上。</li>
-            <li><strong>v0.1.17</strong>: SPA対応を強化。チャットページでのみ動的に有効化されるように変更。</li>
-            <li><strong>v0.1.16</strong>: 初版リリース。</li>
-        </ul>
-    </div>
+## 3. 技術仕様
 
+*   **対象URLパターン**: \`https://gemini.google.com/*\`
+*   **名前空間**: \`userscript.moukaeritai.work\`
+*   **自動アップデート (Automatic Updates)**: GitHub 上の raw ファイルを参照して自動更新されます。
+
+## 更新履歴
+*   **v0.1.29**: インストール用の動的ドキュメントページへのアップデート。
+*   **v0.1.25**: アーティファクトの二重カウント問題を修正。
+*   **v0.1.22**: UIのドラッグ＆ドロップ移動および位置の保存に対応。
+*   **v0.1.21**: UIの最小化ボタン追加と状態保存に対応。
+*   **v0.1.20**: アーティファクト（Canvas）およびリンクカードのカウントに対応。
+*   **v0.1.19**: SPAナビゲーション検知を \`window.navigation\` API に移行しパフォーマンス向上。
+`;
+            document.getElementById('content').innerHTML = marked.parse(markdown);
+
+            // Fetch version from script metadata
+            try {
+                const response = await fetch('gemini-turn-counter.user.js');
+                if (response.ok) {
+                    const text = await response.text();
+                    const versionMatch = text.match(/\/\/ @version\s+([\d.]+)/);
+                    const dateMatch = text.match(/\/\/ @lastModified\s+([\d-]+)/);
+                    if (versionMatch) {
+                        const version = versionMatch[1];
+                        const date = dateMatch ? dateMatch[1] : '不明';
+
+                        // Update info labels
+                        const verEl = document.getElementById('ver-info');
+                        const dateEl = document.getElementById('date-info');
+                        if (verEl) verEl.textContent = `v${version}`;
+                        if (dateEl) dateEl.textContent = date;
+
+                        const installBtn = document.querySelector('.install-button');
+                        if (installBtn) {
+                            installBtn.textContent = `スクリプトをインストール (v${version})`;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not fetch script version:', e);
+            }
+        });
+    </script>
     <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
     <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
         <p>

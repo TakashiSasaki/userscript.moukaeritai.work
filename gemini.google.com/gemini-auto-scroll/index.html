@@ -4,229 +4,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Auto-Scroll - Documentation</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
-    <!-- Github Markdown CSS for content -->
+    <title>Gemini Auto-Scroll - Moukaeritai</title>
+    <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/index.html" rel="canonical" />
+    <!-- Github Markdown CSS for styling -->
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
     <style>
-        :root {
-            --primary: #4e95ff;
-            --primary-dark: #3a7bd5;
-            --bg-gradient: linear-gradient(135.2deg, rgba(7, 12, 23, 1) 1.2%, rgba(13, 33, 64, 1) 98.1%);
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --text-main: #ffffff;
-            --text-dim: #b0b8c4;
-        }
-
         body {
-            font-family: 'Outfit', sans-serif;
-            margin: 0;
-            padding: 0;
-            background: var(--bg-gradient);
-            background-attachment: fixed;
-            color: var(--text-main);
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 1000px;
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
             margin: 0 auto;
-            padding: 4rem 2rem;
+            padding: 45px;
         }
 
-        .doc-card {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 3rem;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        @media (max-width: 767px) {
+            body {
+                padding: 15px;
+            }
         }
 
-        .markdown-body {
-            background: transparent !important;
-            color: var(--text-main) !important;
-            font-family: inherit !important;
-        }
-
-        .markdown-body h1,
-        .markdown-body h2,
-        .markdown-body h3 {
-            color: white !important;
-            border-bottom: 1px solid var(--glass-border) !important;
-        }
-
-        .markdown-body code {
-            background-color: rgba(255, 255, 255, 0.1) !important;
-            color: var(--primary) !important;
-            border-radius: 4px;
-        }
-
-        .markdown-body pre {
-            background-color: rgba(0, 0, 0, 0.3) !important;
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-        }
-
-        .markdown-body a {
-            color: var(--primary) !important;
-        }
-
-        .top-nav {
-            position: absolute;
-            top: 2rem;
-            left: 2rem;
-            z-index: 10;
-        }
-
-        .top-nav-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            color: var(--text-dim);
-            font-weight: 400;
-            padding: 8px 16px;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 50px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .top-nav-link:hover {
+        .home-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #24292e;
             color: white;
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateX(-5px);
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        footer {
-            text-align: center;
-            margin-top: 4rem;
-            padding-bottom: 3rem;
-            color: var(--text-dim);
-            font-weight: 300;
+        .home-button svg {
+            fill: currentColor;
         }
 
-        footer a {
-            color: var(--primary);
+        .home-button:hover {
+            background-color: #0366d6;
+            color: white;
             text-decoration: none;
         }
 
-        #content {
-            min-height: 200px;
+        .install-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #2ea44f;
+            color: white !important;
+            font-weight: 600;
+            border-radius: 6px;
+            text-decoration: none !important;
+            margin: 20px 0;
+            transition: background-color 0.2s;
         }
 
-        @media (max-width: 768px) {
-            .container {
-                padding: 2rem 1rem;
-            }
-
-            .doc-card {
-                padding: 1.5rem;
-            }
-
-            .top-nav {
-                position: static;
-                margin-bottom: 2rem;
-                display: flex;
-                justify-content: center;
-            }
+        .install-button:hover {
+            background-color: #2c974b;
         }
     </style>
 </head>
 
-<body>
-    <div class="container">
-        <nav class="top-nav">
-            <a class="top-nav-link" href="../index.html">
-                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
-                    <path
-                        d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-                </svg>
-                Back to Home
-            </a>
-        </nav>
+<body class="markdown-body">
+    <a href="https://userscript.moukaeritai.work/" class="home-button">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
+            <path
+                d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
+        </svg>
+        userscript.moukaeritai.work
+    </a>
+    <div id="content">
+        <h1>Gemini Auto-Scroll</h1>
+        <p>Geminiのウェブインターフェースにおいて、会話リストを自動的に延々とスクロールさせ、すべての会話履歴をロードするためのユーザースクリプトです。</p>
 
-        <section class="doc-card">
-            <div id="content" class="markdown-body">
-                <h1 id="gemini-auto-scroll-specification">Gemini Auto-Scroll Specification</h1>
-                <p><code>gemini-auto-scroll.user.js</code>
-                    は、Geminiのウェブインターフェースにおいて、会話リストを自動的に延々とスクロールさせ、すべての会話履歴をロードするためのユーザースクリプトである。また、多数の会話履歴を整理する際の作業効率を支援する機能も備えている。
-                </p>
+        <div id="script-info"
+            style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
+            <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
+            <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
+        </div>
 
-                <h2 id="背景">背景</h2>
-                <p>Geminiで過去の会話を遡りたい場合、手動でスクロールし続ける必要があり手間がかかる。本スクリプトは、全履歴のロードを主目的とした「延々とスクロールする」機能を提供する。特に、会話のバックアップや検索（検索機能はGemini標準搭載）の準備段階として有用である。
-                </p>
+        <a href="gemini-auto-scroll.user.js" class="install-button">スクリプトをインストール</a>
 
-                <h2 id="機能概要">機能概要</h2>
+        <h2>背景</h2>
+        <p>Geminiで過去の会話を遡りたい場合、手動でスクロールし続ける必要があり手間がかかります。本スクリプトは、全履歴のロードを主目的とした「延々とスクロールする」機能を提供します。特に、会話のバックアップや検索の準備段階として有用です。
+        </p>
 
-                <h3 id="1-フローティング・コントロールパネル">1. フローティング・コントロールパネル</h3>
-                <p>画面右上にドラッグ移動が可能な操作パネルを表示し、以下の機能を一括管理する。</p>
-                <ul>
-                    <li><strong>配置</strong>: 画面内を自由にドラッグ可能。最小化状態でもドラッグ可能。位置は記憶される (<code>localStorage</code>)。</li>
-                    <li><strong>ステータス表示</strong>:
-                        <ul>
-                            <li>ロード済みアイテム数</li>
-                            <li>現在選択中の会話ID</li>
-                            <li>次に選択予定の会話ID（Auto-Switch Next用）</li>
-                        </ul>
-                    </li>
-                    <li><strong>操作スイッチ</strong>:
-                        <ol>
-                            <li><strong>Auto-Scroll</strong>: 自動スクロール機能のON/OFF</li>
-                            <li><strong>Auto-Switch Next</strong>: 会話削除時の自動遷移機能のON/OFF</li>
-                        </ol>
-                    </li>
-                </ul>
+        <h2>機能概要</h2>
 
-                <h3 id="2-機能詳説">2. 機能詳説</h3>
+        <h3>1. フローティング・コントロールパネル</h3>
+        <p>画面右上にドラッグ移動が可能な操作パネルを表示し、以下の機能を一括管理します。</p>
+        <ul>
+            <li><strong>自由な配置</strong>: 画面内を自由にドラッグ可能。位置は記憶されます (<code>localStorage</code>)。</li>
+            <li><strong>ステータス表示</strong>: ロード済みアイテム数、現在選択中の会話IDなどをリアルタイムに表示。</li>
+            <li><strong>操作スイッチ</strong>: Auto-Scroll と Auto-Switch Next の ON/OFF を切り替え可能。</li>
+        </ul>
 
-                <h4 id="自動スクロール-auto-scroll">自動スクロール (Auto-Scroll)</h4>
-                <ul>
-                    <li><strong>動作</strong>: 会話リスト（サイドバー）を自動的に下方向へスクロールし続ける。</li>
-                    <li><strong>ロジック</strong>: <code>setInterval</code> を利用し、安全かつ軽量にスクロールを下部へ押し下げる。</li>
-                    <li><strong>安全性</strong>: "Couldn't load recent chats" などのエラーを検知した場合、自動的に停止してアラートを表示する。</li>
-                </ul>
+        <h3>2. 機能詳説</h3>
 
-                <h4 id="次へ自動切り替え-auto-switch-next">次へ自動切り替え (Auto-Switch Next)</h4>
-                <ul>
-                    <li><strong>目的</strong>: 会話の整理（削除）作業を高速化する。</li>
-                    <li><strong>動作</strong>: 現在閲覧中の会話を削除したり、URLがルート (<code>/app</code>)
-                        に戻ったりした際、<strong>「次の会話」</strong>（リスト上で同じ位置、または一つ下の項目）を自動的にクリックして開く。</li>
-                    <li><strong>メリット</strong>: 削除のたびに「新しいチャット」画面に戻される標準の挙動を防ぎ、連続して履歴を確認・削除できる。</li>
-                </ul>
+        <h4>自動スクロール (Auto-Scroll)</h4>
+        <ul>
+            <li><strong>動作</strong>: 会話リスト（サイドバー）を自動的に下方向へスクロールし続けます。</li>
+            <li><strong>安全性</strong>: "Couldn't load recent chats" などのエラーを検知した場合、自動的に停止してアラートでお知らせします。</li>
+        </ul>
 
-                <h3 id="3-ui調整">3. UI調整</h3>
-                <ul>
-                    <li><strong>インデックス表示</strong>: 会話リストの各項目左上に連番（インデックス番号）を表示し、位置関係を把握しやすくする。</li>
-                    <li><strong>スクロールバーの視認性</strong>: Webkit系ブラウザにおいて、スクロールバーを太く、ハイコントラスト（オレンジ色）にして視認性を向上。</li>
-                </ul>
+        <h4>次へ自動切り替え (Auto-Switch Next)</h4>
+        <ul>
+            <li><strong>目的</strong>: 会話の整理（削除）作業を高速化します。</li>
+            <li><strong>動作</strong>: 現在閲覧中の会話を削除した際、自動的に次の会話を読み込みます。削除のたびにトップページに飛ばされる標準の挙動を防ぎ、スムーズな整理が可能です。</li>
+        </ul>
 
-                <h2 id="バージョン履歴主要な変更">バージョン履歴（主要な変更）</h2>
-                <ul>
-                    <li><strong>v0.2.21</strong>: SPAルーティングの改善。ルート (<code>/</code>) から遷移した際にもスクリプトが正しくロードされるように
-                        Navigation API ベースの初期化機構を導入。</li>
-                    <li><strong>v0.2.20</strong>: 全面的なリファクタリング。不要なログ機能を削除し、軽量化・UIのコンパクト化（最小化機能）を実現。</li>
-                    <li><strong>v0.2.16</strong>: <code>/saved-info</code> 画面への遷移時に自動切り替え機能が誤作動しないよう修正。</li>
-                    <li><strong>v0.2.15</strong>: 最新の安定版。フローティングパネルUI、Auto-Switch Next機能、ログパネルを完備。</li>
-                    <li><strong>v0.1.32</strong>: スマート選択機能（会話削除後に自動で次の会話を表示）の実装開始。</li>
-                    <li><strong>v0.1.30</strong>: Tampermonkeyメニュー連携。</li>
-                    <li><strong>v0.1.27</strong>: エラースナックバー検知による自動停止機能の実装。</li>
-                    <li><strong>v0.1.22</strong>: 高視認性スクロールバーの導入。</li>
-                </ul>
-            </div>
-        </section>
+        <h3>3. UI調整</h3>
+        <ul>
+            <li><strong>インデックス表示</strong>: 会話リストに連番を表示し、位置関係を把握しやすくします。</li>
+            <li><strong>高視認性スクロールバー</strong>: スクロールバーの色を際立たせ、現在のロード状況を視覚的に分かりやすくします。</li>
+        </ul>
 
-        <footer>
-            <p>
-                <small>Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a> | <a
-                        href="https://userscript.moukaeritai.work/">moukaeritai.work</a></small>
-            </p>
-        </footer>
+        <h2>更新履歴</h2>
+        <ul>
+            <li><strong>v0.2.22</strong>: 最終更新日のメタデータ表示に対応。</li>
+            <li><strong>v0.2.21</strong>: Navigation API を利用した SPA ルーティングの安定性向上。</li>
+            <li><strong>v0.2.20</strong>: UI のリファクタリング、最小化機能の導入。</li>
+            <li><strong>v0.1.27</strong>: エラー検知によるセーフティ停止機能を実装。</li>
+        </ul>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('gemini-auto-scroll.user.js');
+                if (response.ok) {
+                    const text = await response.text();
+                    const versionMatch = text.match(/\/\/ @version\s+([\d.]+)/);
+                    const dateMatch = text.match(/\/\/ @lastModified\s+([\d-]+)/);
+                    if (versionMatch) {
+                        const version = versionMatch[1];
+                        const date = dateMatch ? dateMatch[1] : '不明';
+
+                        const verEl = document.getElementById('ver-info');
+                        const dateEl = document.getElementById('date-info');
+                        if (verEl) verEl.textContent = `v${version}`;
+                        if (dateEl) dateEl.textContent = date;
+
+                        const installBtn = document.querySelector('.install-button');
+                        if (installBtn) {
+                            installBtn.textContent = `スクリプトをインストール (v${version})`;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not fetch script version:', e);
+            }
+        });
+    </script>
+    <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
+    <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
+        <p>
+            Hosted on GitHub Pages |
+            <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
+            Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
+        </p>
+    </footer>
 </body>
 
 </html>

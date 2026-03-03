@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.35
+// @version      0.2.39
+// @lastModified 2026-03-03
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -137,7 +138,7 @@
                     const menu = await waitForElement(SELECTORS.MENU_PANEL, document, 3000);
                     const filesMenuItem = menu.querySelector(SELECTORS.FILES_MENU_ITEM);
                     if (filesMenuItem) filesMenuItem.click();
-                    await sleep(1500); // Wait for panel to open
+                    await sleep(parseFloat(GM_getValue(REOPEN_DELAY_KEY, 1.5)) * 1000); // Wait for panel to open
                     chip = findChipByTitle(targetTitle);
                 } catch (e) {
                     log('Warning: Failed to repoen files panel.');
@@ -154,20 +155,20 @@
         log(`--- Start processing artifact: "${title}" ---`);
 
         chip.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        await sleep(1000);
+        await sleep(500);
 
         log(`Clicking chip "${title}"...`);
         chip.click();
 
         // 2. Wait for Canvas switch
         log('Waiting for canvas to load...');
-        await sleep(3000); // Increased wait time for canvas initialization
+        await sleep(parseFloat(GM_getValue(CANVAS_INIT_DELAY_KEY, 3.0)) * 1000); // Wait time for canvas initialization
 
         // 3. Click Share
         try {
             log('Attempting to click Share button...');
             const shareBtn = await waitForElement(SELECTORS.SHARE_BUTTON, document, 5000);
-            await sleep(1500); // UI stabilization
+            await sleep(500); // UI stabilization
             shareBtn.click();
             log('Share button clicked.');
 
@@ -239,7 +240,8 @@
                     if (waitCheck % 4 === 0) log('Still creating document...');
                 } else {
                     // If we don't see any export-related text after a short while, we assume it's done or dismissed
-                    if (waitCheck > 10) {
+                    const autoCompleteTimeout = parseFloat(GM_getValue(AUTO_COMPLETE_DELAY_KEY, 5.0));
+                    if (waitCheck > (autoCompleteTimeout * 2)) {
                         log('No export progress toast visible. Assuming completion.');
                         isCreating = false;
                     }
@@ -528,11 +530,23 @@
 
         log('BATCH EXPORT COMPLETED.');
         finishExport();
+
+        const AUTO_DELETE_KEY = 'gemini-exporter-auto-delete';
+        if (GM_getValue(AUTO_DELETE_KEY, false) && !cancelExport) {
+            log('Auto-delete enabled. Waiting 1s before requesting conversation deletion...');
+            await sleep(1000);
+            log('Requesting gemini-one-click-delete to delete conversation.');
+            window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete'));
+        }
     }
 
     // --- UI Injection & Control ---
     const PANEL_POSITION_KEY = 'gemini-exporter-panel-pos';
     const TIMEOUT_SECONDS_KEY = 'gemini-exporter-timeout-seconds';
+    const REOPEN_DELAY_KEY = 'gemini-exporter-reopen-delay';
+    const CANVAS_INIT_DELAY_KEY = 'gemini-exporter-canvas-init-delay';
+    const AUTO_COMPLETE_DELAY_KEY = 'gemini-exporter-auto-complete-delay';
+    const AUTO_DELETE_KEY = 'gemini-exporter-auto-delete';
 
     function makePanelDraggable(panel, handle, storageKey) {
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
@@ -672,7 +686,7 @@
         togglesContainer.style.cssText = `display: flex; flex-direction: column; gap: 4px;`;
 
 
-        const createNumberInput = (key, text, defaultValue, minVal) => {
+        const createNumberInput = (key, text, defaultValue, minVal, step = 1) => {
             const container = document.createElement('label');
             container.style.cssText = `
                 display: flex;
@@ -688,6 +702,7 @@
             const numberInput = document.createElement('input');
             numberInput.type = 'number';
             numberInput.min = minVal.toString();
+            numberInput.step = step.toString();
             numberInput.style.cssText = `
                 width: 50px;
                 background-color: rgba(0,0,0,0.3);
@@ -700,7 +715,7 @@
             numberInput.value = GM_getValue(key, defaultValue);
 
             numberInput.onchange = (e) => {
-                let value = parseInt(e.target.value, 10);
+                let value = parseFloat(e.target.value);
                 if (isNaN(value) || value < minVal) {
                     value = minVal;
                     e.target.value = value;
@@ -713,9 +728,49 @@
             return container;
         };
 
-        const timeoutInput = createNumberInput(TIMEOUT_SECONDS_KEY, 'Timeout (s)', 10, 1);
+        const createCheckboxInput = (key, text, defaultValue) => {
+            const container = document.createElement('label');
+            container.style.cssText = `
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                cursor: pointer;
+                font-family: 'Google Sans', sans-serif;
+                font-size: 13px;
+                color: rgba(255, 255, 255, 0.8);
+                padding: 2px 8px;
+            `;
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.style.cssText = `
+                width: 16px;
+                height: 16px;
+                cursor: pointer;
+                accent-color: #1a73e8;
+            `;
+            checkbox.checked = GM_getValue(key, defaultValue);
 
+            checkbox.onchange = (e) => {
+                GM_setValue(key, e.target.checked);
+            };
+
+            container.appendChild(document.createTextNode(text));
+            container.appendChild(checkbox);
+            return container;
+        };
+
+        const timeoutInput = createNumberInput(TIMEOUT_SECONDS_KEY, 'Doc Wait (s)', 10, 1);
+        const autoDeleteInput = createCheckboxInput(AUTO_DELETE_KEY, 'Auto-Delete Chat', false);
+        const reopenDelayInput = createNumberInput(REOPEN_DELAY_KEY, 'Panel Reopen (s)', 1.5, 0, 0.5);
+        const canvasInitDelayInput = createNumberInput(CANVAS_INIT_DELAY_KEY, 'Canvas Init (s)', 3.0, 0, 0.5);
+        const autoCompleteDelayInput = createNumberInput(AUTO_COMPLETE_DELAY_KEY, 'Auto Complete (s)', 5.0, 0, 0.5);
+
+        togglesContainer.appendChild(autoDeleteInput);
         togglesContainer.appendChild(timeoutInput);
+        togglesContainer.appendChild(reopenDelayInput);
+        togglesContainer.appendChild(canvasInitDelayInput);
+        togglesContainer.appendChild(autoCompleteDelayInput);
 
 
         const progressDisplay = document.createElement('div');
@@ -756,9 +811,12 @@
         // Required element for this script to work
         const actionsMenuExists = document.querySelector(SELECTORS.ACTIONS_MENU_BUTTON) !== null;
 
-        // If the essential element is missing, we consider the script inactive/hidden
-        // regardless of the URL check, although typically they go hand-in-hand.
-        const shouldActive = isConversationPage() && actionsMenuExists;
+        // Check if there are any article artifacts actually present in the chat stream
+        // This is the trigger to show/hide the UI.
+        const hasArtifacts = document.querySelector('mat-icon[fonticon="article"], .mat-icon[fonticon="article"]') !== null;
+
+        // If the essential element is missing or no artifacts are found, we hide the panel
+        const shouldActive = isConversationPage() && actionsMenuExists && hasArtifacts;
 
         const panel = document.getElementById('gemini-batch-export-panel');
         if (!panel) {
@@ -776,8 +834,6 @@
             panel.style.backgroundColor = 'rgba(28, 28, 30, 0.7)';
             panel.style.zIndex = '10000';
         }
-
-
     }
 
     function debounce(func, wait) {

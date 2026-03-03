@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini 1-Click Export to Docs - Moukaeritai</title>
+    <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/index.html"
+        rel="canonical" />
     <!-- Github Markdown CSS for styling -->
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
@@ -51,6 +53,23 @@
             color: white;
             text-decoration: none;
         }
+
+        .install-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #2ea44f !important;
+            color: white !important;
+            font-weight: 600;
+            border-radius: 6px;
+            text-decoration: none !important;
+            margin: 20px 0;
+            transition: background-color 0.2s;
+            border: 1px solid rgba(27, 31, 35, .15);
+        }
+
+        .install-button:hover {
+            background-color: #2c974b;
+        }
     </style>
 </head>
 
@@ -62,41 +81,166 @@
         </svg>
         userscript.moukaeritai.work
     </a>
-    <div id="content">Loading documentation...</div>
+    <div id="content">
+        <h1>Gemini 1-Click Export to Docs</h1>
 
-    <!-- Marked library for parsing markdown -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <p>Geminiのウェブアプリケーション（SPA）において、会話の特定のターンまたはキャンバスをGoogle Docsにエクスポートする操作を簡略化するユーザースクリプトです。</p>
+
+        <div id="script-info"
+            style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
+            <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
+            <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
+        </div>
+
+        <a href="gemini-export-to-docs.user.js" class="install-button">スクリプトをインストール</a>
+
+        <h2>目的</h2>
+        <p>標準機能では複数回のクリック（メニュー展開など）が必要ですが、これを「1クリック」または「キーボードショートカット」で実行できる機能を追加します。<br>
+            本ユーザースクリプトはTampermonkeyでの利用を想定し、ファイル名は <code>gemini-export-to-docs.user.js</code> とします。</p>
+
+        <h2>経緯</h2>
+        <p>以前作成したスクリプトの課題（DOM要素検出の不安定さ、イベントトリガーの信頼性）を解消するため、ゼロベースで再設計・実装を行う。</p>
+
+        <h2>ユーザースクリプト情報</h2>
+        <ul>
+            <li><strong>Match URL</strong>: <code>https://gemini.google.com/*</code>
+                （スクリプト内部でURLを監視し、チャットページでのみ動的に有効化されます。現在、<code>/app/</code> および <code>/gem/</code> のパス形式に対応しています。）</li>
+        </ul>
+
+        <h2>技術仕様</h2>
+
+        <h3>1. セレクタ戦略</h3>
+        <p>Geminiは動的なSPAであるため、以下の優先順位で要素を特定する。</p>
+        <ol>
+            <li><strong>data-test-id属性</strong>: Googleがテスト用に付与している不変性の高い属性（例:
+                <code>data-test-id="more-menu-button"</code>）。
+            </li>
+            <li><strong>アイコンフォント</strong>: ボタンを特定できない場合、<code>mat-icon</code> の名前（<code>docs</code>など）を補助的に使用する。</li>
+            <li><strong>DOM構造</strong>: 親要素（<code>response-container</code>）からの相対位置など。</li>
+        </ol>
+
+        <h3>2. 自動化ロジックフロー</h3>
+
+        <h4>ターンエクスポート</h4>
+        <ol>
+            <li><strong>トリガー</strong>: スクリプトが「︙」ボタン（<code>more-menu-button</code>）をクリック。</li>
+            <li><strong>メニュー待機</strong>: メニューパネルが表示されるのを待機（<code>waitForElement</code>）。</li>
+            <li><strong>エクスポート実行</strong>:
+                <ul>
+                    <li><strong>PC版</strong>: メニュー内の「Export to Docs」ボタンを即座にクリック。</li>
+                    <li><strong>モバイル版</strong>: 「Export to...」ボタンをクリック → サブメニュー待機 → 「Export to Docs」をクリック。</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h4>キャンバスエクスポート</h4>
+        <ol>
+            <li><strong>オープン</strong>: キャンバスが閉じていれば開く。</li>
+            <li><strong>共有</strong>: キャンバス内の「共有（Share）」ボタンをクリック。</li>
+            <li><strong>エクスポート</strong>: 共有メニュー内の「Export to Docs」をクリック。</li>
+        </ol>
+
+        <h3>3. 機能要件</h3>
+
+        <h4>A. 1クリックボタン（UI注入）</h4>
+        <ul>
+            <li><strong>配置</strong>:
+                <ul>
+                    <li>各レスポンスの下部（フッター）にある「︙」メニューボタンの隣。</li>
+                    <li>各レスポンスの上部（ヘッダー）にあるコントロールエリア。</li>
+                    <li>キャンバスの「Open」チップの隣。</li>
+                </ul>
+            </li>
+            <li><strong>状態同期</strong>: 同一レスポンスに対して複数のボタンがある場合、一つがクリックされると全てが「完了状態（緑色チェック）」に同期される。</li>
+        </ul>
+
+        <h4>B. キーボードショートカット (<code>Ctrl + E</code>)</h4>
+        <ul>
+            <li><strong>機能</strong>: ページ内で <strong>最初に見つかった</strong> 会話のレスポンス（通常は最初のターン）を対象にエクスポートを実行する。</li>
+            <li><strong>動作条件</strong>: テキスト入力エリア（<code>input</code>, <code>textarea</code>,
+                <code>contenteditable</code>）にフォーカスがない場合のみ発火する。
+            </li>
+            <li><strong>フィードバック</strong>: 通常のボタンクリックと同様、処理中はオーバーレイを表示し、完了後に成功ステータスへ更新する。</li>
+        </ul>
+
+        <h4>C. 1ターン専用オートエクスポート＆削除</h4>
+        <ul>
+            <li><strong>機能</strong>: 会話が1ターン（プロンプト1回、回答1回）のみの場合に、画面右下に専用のパネルを表示します。</li>
+            <li><strong>自動削除連動</strong>: 「Export & Delete」ボタンをクリックすると、Google
+                Docsへのエクスポートが実行され、その後指定した秒数が経過すると、<code>gemini-one-click-delete</code> と連携して会話を自動的に削除します。</li>
+            <li><strong>待機時間の調整</strong>: 削除までの待機時間（秒）はパネル上で自由に変更可能（デフォルト3秒、ブラウザに保存）です。</li>
+            <li><strong>自動消滅</strong>: 会話が2ターン以上に増えた場合や、他のページに移動した場合は、自動的にこのパネルは消去されます。</li>
+        </ul>
+
+        <h3>4. SPA（シングルページアプリケーション）対応とパフォーマンス</h3>
+        <ul>
+            <li>GeminiはSPAであるため、ページ遷移を検知してスクリプトの機能を動的に制御します。</li>
+            <li><strong>有効化</strong>: チャットページ (<code>/app/...</code> または <code>/gem/...</code> )
+                に遷移した際に、エクスポートボタンやショートカット機能が自動的に有効になります。</li>
+            <li><strong>無効化（クリーンアップ）</strong>: チャットページから他のページ（ホームページなど）に移動すると、追加したボタンや機能はすべて削除され、リソースを解放します。</li>
+            <li>これにより、スクリプトが必要な場面でのみ動作し、サイト全体のパフォーマンスへの影響を最小限に抑えます。</li>
+        </ul>
+
+        <h3>5. セキュリティと安定性（Reliability）</h3>
+        <ul>
+            <li><strong>Trusted Types対応</strong>: <code>innerHTML</code> の使用を禁止し、<code>document.createElementNS</code>
+                等でDOMを構築する。</li>
+            <li><strong>Trusted Click</strong>: <code>MouseEvent</code> の <code>view</code> プロパティを <code>null</code>
+                に設定することで、ブラウザのセキュリティ制約による <code>TypeError</code> を回避する。</li>
+            <li><strong>Wait処理</strong>: 非同期DOM更新に対応するため、単純な <code>querySelector</code> ではなく、タイムアウト付きのリトライ待機ロジックを実装する。
+            </li>
+        </ul>
+
+        <h2>UI仕様</h2>
+        <ul>
+            <li><strong>ボタンデザイン</strong>:
+                <ul>
+                    <li>初期状態: 薄い緑色の背景 (<code>#e6f4ea</code>) にDocsアイコン。</li>
+                    <li>処理中: 全画面オーバーレイとスピナーを表示。</li>
+                    <li>完了状態: 濃い緑色 (<code>#1e8e3e</code>) に変化し、アイコンがチェックマークになる。</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h2>更新履歴</h2>
+        <ul>
+            <li><strong>v0.4.3</strong>: 1-Turn Auto Export パネル上にスクリプトのバージョンを表示するように改善。</li>
+            <li><strong>v0.4.2</strong>: 会話削除後や別のチャットへの移動時に「Deleting...」のままUIがスタックする問題に対応するため、SPA遷移時の完全リセット処理を追加。</li>
+            <li><strong>v0.4.1</strong>: 初回ロード時のスキャンをポーリング方式（最大5秒待機）に変更し、描画が遅い環境でも確実にUIが注入されるよう改善。</li>
+            <li><strong>v0.4.0</strong>: Geminiの最新UI（タグ名ベースのセレクタ）に対応し、ボタンやパネルが表示されない問題を根本修正。</li>
+            <li><strong>v0.3.9</strong>: AI回答の検出ロジックを改善し、一部の環境でボタンやパネルが表示されない問題を修正。</li>
+            <li><strong>v0.3.8</strong>: 1ターン判定用のセレクタ変更に伴う退行バグ（各ターンのエクスポートボタンが消える問題）を修正。</li>
+            <li><strong>v0.3.6</strong>: MutationObserverの負荷を軽減（デバウンス処理の改善）し、初回ロード時の検出漏れを修正。</li>
+            <li><strong>v0.3.3</strong>: 1ターンの会話専用の「Export & Delete」フローティングUIを追加。削除待機時間を調整可能に。</li>
+        </ul>
+    </div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Fetch the markdown file located in the same directory
-            fetch('README.md')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('gemini-export-to-docs.user.js');
+                if (response.ok) {
+                    const text = await response.text();
+                    const versionMatch = text.match(/\/\/ @version\s+([\d.]+)/);
+                    const dateMatch = text.match(/\/\/ @lastModified\s+([\d-]+)/);
+                    if (versionMatch) {
+                        const version = versionMatch[1];
+                        const date = dateMatch ? dateMatch[1] : '不明';
+
+                        const verEl = document.getElementById('ver-info');
+                        const dateEl = document.getElementById('date-info');
+                        if (verEl) verEl.textContent = `v${version}`;
+                        if (dateEl) dateEl.textContent = date;
+
+                        const installBtn = document.querySelector('.install-button');
+                        if (installBtn) {
+                            installBtn.textContent = `スクリプトをインストール (v${version})`;
+                        }
                     }
-                    return response.text();
-                })
-                .then(text => {
-                    // Parse markdown to HTML using 'marked' library
-                    document.getElementById('content').innerHTML = marked.parse(text);
-                })
-                .catch(err => {
-                    // Display friendly error message (likely CORS if opened directly)
-                    document.getElementById('content').innerHTML = `
-                        <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 1em; border-radius: 4px;">
-                            <h3 style="margin-top: 0;">Error loading document</h3>
-                            <p>${err.message}</p>
-                            <hr>
-                            <p><strong>注意:</strong> このファイルをローカルファイルシステム (file://) から直接開いている場合、ブラウザのセキュリティポリシー(CORS)により外部ファイルの読み込みがブロックされることがあります。</p>
-                            <p>以下のいずれかの方法で閲覧してください：</p>
-                            <ul>
-                                <li>ローカルサーバーを起動してアクセスする (例: <code>python -m http.server</code> や <code>npx http-server</code>)</li>
-                                <li>VSCodeの "Live Server" 拡張機能を使用する</li>
-                            </ul>
-                        </div>
-                    `;
-                    console.error('Error fetching markdown:', err);
-                });
+                }
+            } catch (e) {
+                console.warn('Could not fetch script version:', e);
+            }
         });
     </script>
     <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">

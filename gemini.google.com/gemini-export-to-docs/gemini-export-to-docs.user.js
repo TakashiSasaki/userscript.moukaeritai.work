@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.2
+// @version      0.4.3
+// @lastModified 2026-03-03
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -10,6 +11,8 @@
 // @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js
+// @grant        GM_setValue
+// @grant        GM_getValue
 // @grant        GM_info
 // @noframes
 // ==/UserScript==
@@ -54,7 +57,8 @@
         // Turn selectors
         // Turn selectors
         turnContainer: 'model-response, response-container, .response-container', // Broad container to watch
-        presentedContainer: '.presented-response-container', // Most stable selector for the model's response wrapper
+        aiTurnContainer: 'model-response', // Specifically AI response tags
+        presentedContainer: '.presented-response-container, message-content, .message-content', // Most stable selector for the model's response wrapper
         moreMenuButton: 'button[data-test-id="more-menu-button"]', // The trigger "..."
         exportToDocsButton: 'button[data-test-id="export-to-docs-button"]', // The target in the menu
         exportIntermediateButton: 'button[data-test-id="export-button"]', // Mobile "Export to..." button
@@ -193,6 +197,86 @@
             @keyframes spin {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
+            }
+            /* 1-Turn Panel */
+            #gemini-one-turn-panel {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background-color: rgba(28, 28, 30, 0.85);
+                backdrop-filter: blur(12px) saturate(180%);
+                -webkit-backdrop-filter: blur(12px) saturate(180%);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                border-radius: 12px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+                padding: 12px;
+                display: none;
+                flex-direction: column;
+                gap: 10px;
+                z-index: 9999;
+                font-family: 'Google Sans', sans-serif;
+                min-width: 200px;
+                color: white;
+            }
+            #gemini-one-turn-panel.visible {
+                display: flex;
+            }
+            .one-turn-header {
+                font-size: 13px;
+                font-weight: 600;
+                color: rgba(255, 255, 255, 0.9);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding-bottom: 6px;
+                margin-bottom: 2px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .one-turn-version {
+                font-size: 10px;
+                color: rgba(255, 255, 255, 0.5);
+                font-weight: 400;
+            }
+            .one-turn-controls {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                font-size: 12px;
+                color: rgba(255, 255, 255, 0.7);
+            }
+            .one-turn-controls input {
+                width: 45px;
+                background: rgba(0,0,0,0.3);
+                border: 1px solid rgba(255,255,255,0.2);
+                border-radius: 4px;
+                color: white;
+                padding: 2px 4px;
+                text-align: center;
+            }
+            #gemini-btn-one-turn-exec {
+                background-color: #1a73e8;
+                color: white;
+                border: none;
+                border-radius: 20px;
+                padding: 8px 16px;
+                font-size: 13px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: background-color 0.2s, transform 0.1s;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+            }
+            #gemini-btn-one-turn-exec:hover {
+                background-color: #1b66c9;
+            }
+            #gemini-btn-one-turn-exec:active {
+                transform: scale(0.98);
+            }
+            #gemini-btn-one-turn-exec:disabled {
+                background-color: #5f6368;
+                cursor: not-allowed;
             }
         `;
         document.head.appendChild(style);
@@ -463,6 +547,121 @@
                 }
             }
         });
+
+        // B. Handle 1-Turn Panel Visibility
+        updateOneTurnVisibility();
+    }
+
+    const AUTO_DELETE_DELAY_KEY = 'gemini-export-auto-delete-delay';
+
+    // Simple debounce function to reduce polling frequency on DOM mutations
+    function debounce(func, wait) {
+        let timeout;
+        return function () {
+            const context = this, args = arguments;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), wait);
+        };
+    }
+
+    const debouncedProcessNodes = debounce(processNodes, 500);
+
+    function updateOneTurnVisibility() {
+        const turns = document.querySelectorAll(SELECTORS.aiTurnContainer);
+        // Note: Gemini UI can be slow to update styles/classes. 
+        // We'll count anything that looks like a model response.
+        const activeTurns = turns;
+
+        console.log(`[Gemini 1-Turn] Found ${activeTurns.length} active AI turns using ${SELECTORS.aiTurnContainer}`);
+
+        // A 1-turn conversation usually has exactly 1 model-response
+        const isOneTurn = activeTurns.length === 1;
+
+        let panel = document.getElementById('gemini-one-turn-panel');
+        if (isOneTurn) {
+            if (!panel) {
+                panel = createOneTurnPanel();
+            }
+            panel.classList.add('visible');
+        } else if (panel) {
+            panel.classList.remove('visible');
+        }
+    }
+
+    function createOneTurnPanel() {
+        const panel = document.createElement('div');
+        panel.id = 'gemini-one-turn-panel';
+
+        const header = document.createElement('div');
+        header.className = 'one-turn-header';
+        header.textContent = '1-Turn Auto Export';
+
+        const versionSpan = document.createElement('span');
+        versionSpan.className = 'one-turn-version';
+        versionSpan.textContent = `v${GM_info.script.version}`;
+        header.appendChild(versionSpan);
+
+        const controls = document.createElement('div');
+        controls.className = 'one-turn-controls';
+        controls.textContent = 'Wait (sec): ';
+
+        const delayInput = document.createElement('input');
+        delayInput.type = 'number';
+        delayInput.min = '0';
+        delayInput.value = GM_getValue(AUTO_DELETE_DELAY_KEY, 3);
+        delayInput.onchange = () => GM_setValue(AUTO_DELETE_DELAY_KEY, parseInt(delayInput.value, 10) || 0);
+        controls.appendChild(delayInput);
+
+        const execBtn = document.createElement('button');
+        execBtn.id = 'gemini-btn-one-turn-exec';
+        const iconSpan = document.createElement('span');
+        iconSpan.style.display = 'flex';
+        iconSpan.appendChild(createIconElement(DOCS_ICON_PATH));
+        execBtn.appendChild(iconSpan);
+        execBtn.appendChild(document.createTextNode('Export & Delete'));
+
+        execBtn.onclick = async () => {
+            const moreBtn = document.querySelector(SELECTORS.moreMenuButton);
+            if (!moreBtn) {
+                alert('Could not find export menu.');
+                return;
+            }
+
+            execBtn.disabled = true;
+            showOverlay();
+            try {
+                // 1. Export
+                await handleTurnExport(moreBtn);
+
+                // 2. Countdown & Wait
+                let delay = parseInt(delayInput.value, 10);
+                if (isNaN(delay)) delay = 3;
+
+                for (let i = delay; i > 0; i--) {
+                    execBtn.textContent = `Deleting in ${i}s...`;
+                    await sleep(1000);
+                }
+                execBtn.textContent = 'Deleting...';
+
+                // 3. Dispatch Delete Event
+                console.log('[Gemini 1-Turn Export] Requesting conversation deletion.');
+                window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete'));
+
+            } catch (err) {
+                console.error('1-Turn auto process failed:', err);
+                alert('Process failed. See console.');
+                execBtn.disabled = false;
+                execBtn.textContent = 'Export & Delete';
+            } finally {
+                hideOverlay();
+            }
+        };
+
+        panel.appendChild(header);
+        panel.appendChild(controls);
+        panel.appendChild(execBtn);
+        document.body.appendChild(panel);
+        return panel;
     }
 
     /**
@@ -541,9 +740,23 @@
         console.log('[Gemini 1-Click Export to Docs] Initializing...');
 
         styleElement = addStyles(); // addStyles() needs to return the style element
-        processNodes(); // Initial run
 
-        mainObserver = new MutationObserver(processNodes);
+        // Initial run - robust polling to wait for Gemini's asynchronous rendering
+        let attempts = 0;
+        const maxAttempts = 10; // 5 seconds max (10 * 500ms)
+        const checkInterval = setInterval(() => {
+            attempts++;
+            const hasTurns = document.querySelector(SELECTORS.aiTurnContainer);
+
+            if (hasTurns || attempts >= maxAttempts) {
+                clearInterval(checkInterval);
+                console.log(`[Gemini 1-Click Export] Running initial scan after ${attempts * 0.5}s... (Found: ${!!hasTurns})`);
+                processNodes(); // Run the scan now that DOM is likely ready, or we timed out
+            }
+        }, 500);
+
+        // Future updates - use debounced version to handle streaming content/DOM changes efficiently
+        mainObserver = new MutationObserver(debouncedProcessNodes);
         mainObserver.observe(document.body, { childList: true, subtree: true });
 
         keydownListener = handleKeyboardShortcut;
@@ -575,6 +788,8 @@
         const overlay = document.getElementById('gemini-export-overlay');
         if (overlay) overlay.remove();
 
+        const oneTurnPanel = document.getElementById('gemini-one-turn-panel');
+        if (oneTurnPanel) oneTurnPanel.remove();
 
         isInitialized = false;
     }
@@ -582,8 +797,14 @@
     /**
      * Checks the URL and runs init or cleanup accordingly.
      */
-    function checkUrlAndManageScriptState() {
+    function checkUrlAndManageScriptState(prevUrl, currentUrl) {
         const isChatPage = /^\/(app|gem)\/[a-f0-9]{16}/.test(location.pathname);
+
+        // Force a UI reset if transitioning between different pages (to clear "Deleting..." states etc.)
+        if (prevUrl && currentUrl && prevUrl !== currentUrl && isInitialized) {
+            console.log('[Gemini 1-Click Export to Docs] URL changed, forcing UI reset.');
+            cleanup();
+        }
 
         if (isChatPage) {
             initMainFunctionality();
@@ -598,8 +819,9 @@
     if (window.navigation) {
         window.navigation.addEventListener('navigatesuccess', () => {
             setTimeout(() => {
+                const prevUrl = lastUrl;
                 lastUrl = window.location.href;
-                checkUrlAndManageScriptState();
+                checkUrlAndManageScriptState(prevUrl, lastUrl);
             }, 500);
         });
         console.log('[Gemini 1-Click Export to Docs] Using Navigation API for SPA routing.');
@@ -607,8 +829,9 @@
         // Fallback for older browsers
         setInterval(() => {
             if (location.href !== lastUrl) {
+                const prevUrl = lastUrl;
                 lastUrl = location.href;
-                setTimeout(checkUrlAndManageScriptState, 500);
+                setTimeout(() => checkUrlAndManageScriptState(prevUrl, lastUrl), 500);
             }
         }, 500);
         console.log('[Gemini 1-Click Export to Docs] Using setInterval fallback for SPA routing.');
@@ -616,9 +839,9 @@
 
     // Initial check on load
     if (document.body) {
-        checkUrlAndManageScriptState();
+        checkUrlAndManageScriptState(null, lastUrl);
     } else {
-        window.addEventListener('DOMContentLoaded', checkUrlAndManageScriptState);
+        window.addEventListener('DOMContentLoaded', () => checkUrlAndManageScriptState(null, lastUrl));
     }
 
 })();

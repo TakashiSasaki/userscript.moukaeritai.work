@@ -2,6 +2,7 @@
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
 // @version      0.1.9
+// @lastModified 2026-03-02
 // @description  Adds serial numbers and copy buttons to custom instructions on Gemini.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki

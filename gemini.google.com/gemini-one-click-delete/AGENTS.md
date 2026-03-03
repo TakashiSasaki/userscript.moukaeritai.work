@@ -29,5 +29,26 @@ Gemini heavily enforces `TrustedTypes` policies to protect against DOM XSS.
 *   **Simulating Clicks**: When simulating `MouseEvent`s programmatically, always set `view: null` within the event dictionary. Omitting this triggers a non-trusted-event violation in Gemini's runtime context.
 *   **DOM Injection**: Prefer native DOM creation (`document.createElementNS`, `document.createElement`) over assigning raw strings to `innerHTML`.
 
-### 5. Mandatory Version Bumping
+### 5. Inter-script Communication
+This script listens for a `gemini-one-click-delete:request-delete` CustomEvent on the `window` object.
+*   **Trigger**: Other userscripts (like `gemini-export-to-docs` or `gemini-artifact-exporter`) dispatch this event to request the deletion of the current conversation after an export is completed.
+*   **Handling**: Upon receiving the event, the script waits for 1 second (safety delay) and then attempts to trigger the 1-click delete logic if a valid conversation is detected.
+
+### 6. Mandatory Version Bumping
 Every internal logic or functionality update **must** include a version bump (`// @version`) within the userscript metadata block so that Tampermonkey correctly pulls the update.
+
+### 7. Documentation Migration (Native HTML)
+As of v0.2.10, `index.html` has been migrated from a markdown-rendering page (using `marked.js`) to a **Native HTML** structure.
+*   **Purpose**: This removes external CDN dependencies, ensuring the documentation remains accessible even without internet access or if CDNs are blocked.
+*   **Maintenance**: Any new documentation sections should be added directly as semantic HTML within the `index.html` file, following the existing GitHub-like styling pattern defined in the `<style>` block.
+
+### 8. UI Preview Screenshots
+The `index.html` includes a "UI プレビュー" section showing the script's visual elements.
+*   **Storage**: Screenshots are stored in the `./screenshots/` directory relative to `index.html`.
+*   **Capture Strategy**: When the UI changes significantly, use the browser subagent to capture **cropped element-level screenshots** (e.g., just the button or just the panel) rather than full-page captures. This keeps the documentation focused and clean.
+*   **Styling**: Use `4em` for the button and `20em` for the panel (or natural size) when embedding to maintain a realistic scale.
+
+### 9. v0.2.10 Enhancements
+*   Enhanced `MutationObserver` with a 500ms debounce to significantly reduce CPU overhead during AI typing.
+*   Implemented a 5-second polling fallback during initial load to ensure UI elements are injected even if Gemini's SPA rendering is delayed.
+*   Improved cleanup logic to ensure all injected elements and listeners are removed during SPA navigation.

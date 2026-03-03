@@ -4,7 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Search Snippet Helper UserScript</title>
+    <title>Gemini Search Snippet Helper - Moukaeritai</title>
+    <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-search-snippet-helper/index.html"
+        rel="canonical" />
     <!-- Github Markdown CSS for styling -->
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
@@ -51,52 +53,98 @@
             color: white;
             text-decoration: none;
         }
+
+        .install-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #2ea44f;
+            color: white !important;
+            font-weight: 600;
+            border-radius: 6px;
+            text-decoration: none !important;
+            margin: 20px 0;
+            transition: background-color 0.2s;
+        }
+
+        .install-button:hover {
+            background-color: #2c974b;
+        }
     </style>
 </head>
 
 <body class="markdown-body">
-    <a href="https://userscript.moukaeritai.work/gemini.google.com/index.html" class="home-button">
+    <a href="https://userscript.moukaeritai.work/" class="home-button">
         <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
             <path
                 d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
         </svg>
-        gemini.google.com
+        userscript.moukaeritai.work
     </a>
     <div id="content">Loading documentation...</div>
 
     <!-- Marked library for parsing markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Fetch the markdown file located in the same directory
-            fetch('README.md')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+        document.addEventListener('DOMContentLoaded', async () => {
+            const markdown = `
+# Gemini Search Snippet Helper
+
+Gemini の検索結果一覧において、各会話カードのタイトルに連番を表示し、視認性と識別性を向上させるユーザースクリプトです。
+
+<div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
+    <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
+    <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
+</div>
+
+<a href="gemini-search-snippet-helper.user.js" class="install-button">スクリプトをインストール</a>
+
+## 機能
+1.  **連番付与**:
+    - 検索結果として表示される会話タイトルの先頭に、\`1.\`, \`2.\` といった連番を追加します。
+    - 連番は小さなモノスペースフォントで、薄い色で表示されます。
+
+2.  **動的更新への追従**:
+    - 無限スクロールによる追加読み込みや、新しい検索によるリストの再描画を \`MutationObserver\` で検知します。
+    - DOM の変更があるたびに番号を再計算・再描画し、常に正しい順序（上から 1, 2, 3...）を維持します。
+
+## 対象 URL
+- \`https://gemini.google.com/search\` (検索結果ページ)
+- \`https://gemini.google.com/app\`
+
+本スクリプトはユーザーが明示的に検索を行ったページ（URLが \`https://gemini.google.com/search\` で始まる場合）でのみ機能を有効化します。
+
+## UI/スタイル
+- タイトルの先頭に要素を追加して描画します。
+- スタイル: \`0.75em\`, 控えめな色あい。
+`;
+            document.getElementById('content').innerHTML = marked.parse(markdown);
+
+            // Fetch version from script metadata
+            try {
+                const response = await fetch('gemini-search-snippet-helper.user.js');
+                if (response.ok) {
+                    const text = await response.text();
+                    const versionMatch = text.match(/\/\/ @version\s+([\d.]+)/);
+                    const dateMatch = text.match(/\/\/ @lastModified\s+([\d-]+)/);
+                    if (versionMatch) {
+                        const version = versionMatch[1];
+                        const date = dateMatch ? dateMatch[1] : '不明';
+
+                        // Update info labels
+                        const verEl = document.getElementById('ver-info');
+                        const dateEl = document.getElementById('date-info');
+                        if (verEl) verEl.textContent = `v${version}`;
+                        if (dateEl) dateEl.textContent = date;
+
+                        const installBtn = document.querySelector('.install-button');
+                        if (installBtn) {
+                            installBtn.textContent = `スクリプトをインストール (v${version})`;
+                        }
                     }
-                    return response.text();
-                })
-                .then(text => {
-                    // Parse markdown to HTML using 'marked' library
-                    document.getElementById('content').innerHTML = marked.parse(text);
-                })
-                .catch(err => {
-                    // Display friendly error message (likely CORS if opened directly)
-                    document.getElementById('content').innerHTML = `
-                        <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 1em; border-radius: 4px;">
-                            <h3 style="margin-top: 0;">Error loading document</h3>
-                            <p>${err.message}</p>
-                            <hr>
-                            <p><strong>注意:</strong> このファイルをローカルファイルシステム (file://) から直接開いている場合、ブラウザのセキュリティポリシー(CORS)により外部ファイルの読み込みがブロックされることがあります。</p>
-                            <p>以下のいずれかの方法で閲覧してください：</p>
-                            <ul>
-                                <li>ローカルサーバーを起動してアクセスする (例: <code>python -m http.server</code> や <code>npx http-server</code>)</li>
-                                <li>VSCodeの "Live Server" 拡張機能を使用する</li>
-                            </ul>
-                        </div>
-                    `;
-                    console.error('Error fetching markdown:', err);
-                });
+                }
+            } catch (e) {
+                console.warn('Could not fetch script version:', e);
+            }
         });
     </script>
     <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">

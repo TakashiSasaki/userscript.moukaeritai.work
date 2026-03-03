@@ -2,6 +2,7 @@
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
 // @version      0.1.29
+// @lastModified 2026-03-02
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*

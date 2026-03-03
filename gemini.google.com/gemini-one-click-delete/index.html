@@ -4,7 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini One Click Delete UserScript</title>
+    <title>Gemini 1-Click Delete Conversation - Moukaeritai</title>
+    <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/index.html"
+        rel="canonical" />
     <!-- Github Markdown CSS for styling -->
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
@@ -51,6 +53,23 @@
             color: white;
             text-decoration: none;
         }
+
+        .install-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #2ea44f !important;
+            color: white !important;
+            font-weight: 600;
+            border-radius: 6px;
+            text-decoration: none !important;
+            margin: 20px 0;
+            transition: background-color 0.2s;
+            border: 1px solid rgba(27, 31, 35, .15);
+        }
+
+        .install-button:hover {
+            background-color: #2c974b;
+        }
     </style>
 </head>
 
@@ -63,93 +82,135 @@
         userscript.moukaeritai.work
     </a>
     <div id="content">
-        <h1 id="gemini-one-click-deleteuserjs">gemini-one-click-delete.user.js</h1>
+        <h1>Gemini 1-Click Delete Conversation</h1>
+        <p>GeminiのWeb SPAページにおいて、現在の会話を削除するための複数回のクリック操作を自動化し、<strong>1クリック</strong> または <strong>キーボードショートカット</strong>
+            で即座に会話を削除できる機能を追加するユーザースクリプトです。</p>
 
-        <h2 id="このユーザースクリプトの目的">このユーザースクリプトの目的</h2>
-        <p>GeminiのWeb SPAページにおいて、現在の会話を削除するために複数回のクリック（メニューを開く → 削除を選択 → 確認ダイアログ）が必要です。<br>
-            本スクリプトは、これらの手順を自動化し、<strong>1クリック</strong> または <strong>キーボードショートカット</strong> で即座に会話を削除できる機能を追加します。<br>
-            Tampermonkey 上で動作することを想定しています。</p>
+        <div id="script-info"
+            style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
+            <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
+            <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
+        </div>
 
-        <h2 id="ユーザースクリプト情報">ユーザースクリプト情報</h2>
+        <a href="gemini-one-click-delete.user.js" class="install-button">スクリプトをインストール</a>
+
+        <h3>UI プレビュー</h3>
+        <div
+            style="display: flex; flex-direction: row; gap: 40px; align-items: center; justify-content: center; margin: 30px 0; flex-wrap: wrap;">
+            <div style="text-align: center;">
+                <p style="font-size: 14px; color: #586069; margin-bottom: 8px;">1-Click Delete ボタン</p>
+                <img src="screenshots/one_click_delete_context.png" alt="1-Click Delete Button"
+                    style="border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid #eaecef;">
+            </div>
+            <div style="text-align: center;">
+                <p style="font-size: 14px; color: #586069; margin-bottom: 8px;">コントロールパネル</p>
+                <img src="screenshots/one_click_delete_states.png" alt="Control Panel"
+                    style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid #dadce0;">
+            </div>
+        </div>
+
+        <h2>目的</h2>
+        <p>Geminiの標準機能では、会話を削除するために「メニューを開く → 削除を選択 → 確認ダイアログ」という手順が必要です。本スクリプトはこれらを自動化し、大幅に手間を削減します。</p>
+
+        <h2>ユーザースクリプト情報</h2>
         <ul>
             <li><strong>Namespace</strong>: <code>https://userscript.moukaeritai.work/</code></li>
             <li><strong>Match URL</strong>: <code>https://gemini.google.com/*</code>
                 （スクリプト内部でURLを監視し、チャットページでのみ動的に有効化されます。現在、<code>/app/</code> および <code>/gem/</code> のパス形式に対応しています。）</li>
-            <li><strong>GitHub</strong>: <a
-                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete">userscript.moukaeritai.work</a>
-            </li>
         </ul>
 
-        <h2 id="機能仕様">機能仕様</h2>
-
-        <h3 id="1-1クリック削除ボタンの注入">1. 1クリック削除ボタンの注入</h3>
+        <h2>機能仕様</h2>
+        <h3>1. 1クリック削除ボタンの注入</h3>
         <p>以下の場所に「ゴミ箱」アイコンの削除ボタンを自動的に追加します。</p>
         <ul>
-            <li><strong>標準ビュー（デスクトップ/モバイル共通）</strong>:
-                <ul>
-                    <li>画面上部（ヘッダー部分）にある「・・・（オプション）」メニューボタンの隣に配置されます。</li>
-                </ul>
-            </li>
+            <li><strong>標準ビュー（デスクトップ/モバイル共通）</strong>: 画面上部（ヘッダー部分）にある「・・・（オプション）」メニューボタンの隣に配置されます。</li>
             <li><strong>検索結果ビュー（またはヘッダーがない場合）</strong>:
-                <ul>
-                    <li>画面右上に「フローティングボタン」として配置されます。</li>
-                    <li>このボタンは、現在表示中の会話IDを検知し、サイドバー内の対応する削除メニューを自動的に操作します。</li>
-                </ul>
+                画面右上に「フローティングボタン」として配置されます。現在表示中の会話IDを検知し、サイドバー内の対応する削除メニューを自動操作します。</li>
+        </ul>
+
+        <h3>2. 他のユーザースクリプトとの連携 (API)</h3>
+        <ul>
+            <li><strong>カスタムイベント</strong>: <code>window</code> オブジェクトに対して
+                <code>gemini-one-click-delete:request-delete</code> イベントを送信することで、外部から会話の削除を要求できます。
+            </li>
+            <li><strong>ユースケース</strong>: <code>Gemini 1-Click Export to Docs</code> や
+                <code>Gemini Artifact Exporter</code> などのエクスポート完了後に、自動的に会話をクリーンアップする用途で使用されます。
             </li>
         </ul>
 
-        <h3 id="2-キーボードショートカット">2. キーボードショートカット</h3>
+        <h3>3. キーボードショートカット</h3>
         <ul>
-            <li><strong>ショートカット</strong>: <code>Ctrl + D</code> （Macの場合は <code>Meta + D</code> も可）</li>
+            <li><strong>ショートカット</strong>: <code>Ctrl + D</code> （Macの場合は <code>Meta + D</code> も可）、または
+                <code>Ctrl + Shift + Backspace</code>
+            </li>
             <li><strong>動作</strong>:
                 <ul>
-                    <li>ショートカットキーが押されると、画面上の削除ボタン（標準またはフローティング）をプログラム的にクリックします。</li>
+                    <li>ショートカットキーが押されると、画面上の削除ボタンをプログラム的にクリックします。</li>
                     <li><strong>安全性</strong>: テキスト入力エリア（<code>input</code>, <code>textarea</code>,
-                        <code>contenteditable</code>）での入力中はショートカットを無効化します。</li>
+                        <code>contenteditable</code>）での入力中はショートカットを無効化します。
+                    </li>
                 </ul>
             </li>
         </ul>
 
-        <h3 id="3-spa（シングルページアプリケーション）対応とパフォーマンス">3. SPA（シングルページアプリケーション）対応とパフォーマンス</h3>
+        <h3>4. SPA（シングルページアプリケーション）対応とパフォーマンス</h3>
         <ul>
             <li>GeminiはSPAであるため、ページ遷移を検知してスクリプトの機能を動的に制御します。</li>
-            <li><strong>有効化</strong>: チャットページ (<code>/app/...</code> または <code>/gem/...</code> )
-                に遷移した際に、削除ボタンやショートカット機能が自動的に有効になります。</li>
+            <li><strong>有効化</strong>: チャットページに遷移した際、削除ボタンやショートカット機能が自動的に有効になります。</li>
             <li><strong>無効化（クリーンアップ）</strong>: チャットページから他のページ（ホームページなど）に移動すると、追加したボタンや機能はすべて削除され、リソースを解放します。</li>
-            <li>これにより、スクリプトが必要な場面でのみ動作し、サイト全体のパフォーマンスへの影響を最小限に抑えます。</li>
         </ul>
 
-        <h3 id="4-エラーハンドリング">4. エラーハンドリング</h3>
+        <h2>注意事項</h2>
         <ul>
-            <li><strong>Trusted Types 対応</strong>: <code>simulateClick</code> 関数において <code>MouseEvent</code> の
-                <code>view</code> プロパティを <code>null</code> に設定することで、ブラウザのセキュリティポリシー（Trusted Types）によるエラーを回避しています。</li>
-            <li><strong>待機ロジック</strong>: メニューパネルや確認ダイアログが表示されるのを動的かつ堅牢に待機します。</li>
+            <li><strong>Trusted Types 対応</strong>: ブラウザのセキュリティポリシーによるエラーを回避するため、内部的にTrusted Typesに対応しています。</li>
+            <li><strong>待機ロジック</strong>: メニューパネルや確認ダイアログの表示を動的かつ堅牢に待機します。</li>
         </ul>
 
-        <h2 id="技術的詳細">技術的詳細</h2>
-
-        <h3 id="dom操作の流れ（削除フロー）">DOM操作の流れ（削除フロー）</h3>
-        <p>ボタン（またはショートカット）が押されると、以下の手順が高速に実行されます：</p>
-        <ol>
-            <li>トリガーとなる「・・・」メニューボタンをクリック。</li>
-            <li>表示されたメニューパネル（<code>.mat-mdc-menu-panel</code> /
-                <code>.mat-bottom-sheet-container</code>）から「削除（Delete）」ボタンを探索してクリック。</li>
-            <li>表示された確認ダイアログ（<code>mat-dialog-container</code>）内の「確認（Confirm）」ボタンを待機してクリック。</li>
-        </ol>
-
-        <h2 id="更新履歴">更新履歴</h2>
+        <h2>更新履歴</h2>
         <ul>
+            <li><strong>v0.2.10</strong>: 外部スクリプトからの削除要求を受け付けるカスタムイベント
+                (<code>gemini-one-click-delete:request-delete</code>) に対応。</li>
+            <li><strong>v0.2.5</strong>: 画面上にフローティングパネルを追加し、ショートカットキーの視認性と操作性を向上。</li>
             <li><strong>v0.2.4</strong>: アーティファクトがある際にメニュー項目が増えても「Delete」を正確に特定できるようロジックを強化。</li>
-            <li><strong>v0.2.3</strong>: 最新のGemini UIセレクタ（ARIAラベル等）に対応。SPAルーティング検知に Navigation API を導入。</li>
-            <li><strong>v0.1.18</strong>: SPA対応強化に伴う内部変更。本バージョンが0.1.x系列の最終版となります。今後の開発は0.2.0から開始します。</li>
-            <li><strong>v0.1.17</strong>: <code>/gem/</code>から始まるURL形式のチャットページにも対応。</li>
-            <li><strong>v0.1.16</strong>: SPA対応の強化。チャットページでのみ機能が動的に有効化・無効化されるようにし、パフォーマンスを向上。</li>
-            <li><strong>v0.1.12</strong>: ボタンのクリック処理を簡略化（<code>mousedown</code>, <code>mouseup</code>
-                を削除）。ダークモード表示時のボタンスタイルを改善。</li>
-            <li><strong>v0.1.10</strong>: <code>Ctrl + D</code> ショートカットの実装。フローティングボタンと標準ボタンのどちらもトリガー可能。</li>
-            <li><strong>v0.1.9</strong>: <code>simulateClick</code> の <code>TypeError</code> 修正（Trusted Types対応）。</li>
+            <li><strong>v0.2.3</strong>: 最新のGemini UIセレクタに対応。SPAルーティング検知に Navigation API を導入。</li>
+            <li><strong>v0.1.18</strong>: SPA対応強化に伴う内部変更。</li>
         </ul>
     </div>
+
+    <!-- Marked library for parsing markdown -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+
+
+            // Fetch version from script metadata
+            try {
+                const response = await fetch('gemini-one-click-delete.user.js');
+                if (response.ok) {
+                    const text = await response.text();
+                    const versionMatch = text.match(/\/\/ @version\s+([\d.]+)/);
+                    const dateMatch = text.match(/\/\/ @lastModified\s+([\d-]+)/);
+                    if (versionMatch) {
+                        const version = versionMatch[1];
+                        const date = dateMatch ? dateMatch[1] : '不明';
+
+                        // Update info labels
+                        const verEl = document.getElementById('ver-info');
+                        const dateEl = document.getElementById('date-info');
+                        if (verEl) verEl.textContent = `v${version}`;
+                        if (dateEl) dateEl.textContent = date;
+
+                        const installBtn = document.querySelector('.install-button');
+                        if (installBtn) {
+                            installBtn.textContent = `スクリプトをインストール (v${version})`;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not fetch script version:', e);
+            }
+        });
+    </script>
     <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
     <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
         <p>

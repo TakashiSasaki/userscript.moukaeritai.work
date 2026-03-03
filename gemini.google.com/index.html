@@ -229,8 +229,47 @@
             transition: color 0.3s ease;
         }
 
-        .social-icon:hover {
+        .tab-btn:hover:not(.active) {
             color: white;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .tab-btn {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text-dim);
+            padding: 12px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 20px rgba(78, 149, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .project-item.hidden {
+            display: none;
         }
 
         @media (max-width: 768px) {
@@ -266,19 +305,25 @@
 
         <header>
             <h1>Gemini App Tools</h1>
-            <p class="header-desc">
+            <p class="header-desc" style="margin-bottom: 3rem;">
                 Google Gemini の体験をより快適に。会話管理、データ出力、UIカスタマイズのための高品質なユーザースクリプト集です。
             </p>
+
+            <div class="tabs">
+                <button class="tab-btn active" data-category="matured">Matured</button>
+                <button class="tab-btn" data-category="beta">Beta</button>
+                <button class="tab-btn" data-category="all">All</button>
+            </div>
         </header>
 
-        <ul class="project-list">
-            <li class="project-item">
+        <ul class="project-list" id="project-list">
+            <li class="project-item" data-category="beta">
                 <div class="project-title">
                     <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
                     <a href="gemini-saved-info/index.html">Saved Info Helper 📋</a>
                 </div>
                 <p class="project-desc">
-                    カスタムインストラクションに連番やコピーボタンを追加し、管理しやすくします。全件コピーも可能です。
+                    Gemini の「保存済みの情報（カスタム指示）」画面に連番とコピーボタンを追加します。複数の指示を使い分ける際の視認性を高め、ワンクリックで内容をクリップボードにコピーできます。
                 </p>
                 <a class="install-button" data-script-name="Gemini Saved Info Helper"
                     href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js"
@@ -286,17 +331,17 @@
                     <svg height="18" viewbox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install (v0.1.6)
+                    Install (v0.1.9)
                 </a>
             </li>
 
-            <li class="project-item">
+            <li class="project-item" data-category="beta">
                 <div class="project-title">
                     <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
                     <a href="gemini-profile-badge/index.html">Profile Badge 📛</a>
                 </div>
                 <p class="project-desc">
-                    Google Gemini のプロファイル覧に、好きな絵文字やテキストでカスタムバッジを表示します。複数のバッジ設定にも対応。
+                    Google Gemini のプロファイル覧に、お好みの絵文字やテキストでカスタムバッジを表示します。複数のアカウントや用途を視覚的に区別するのに役立ち、自分好みにカスタマイズできます。
                 </p>
                 <a class="install-button" data-script-name="Gemini Profile Badge"
                     href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-profile-badge/gemini-profile-badge.user.js"
@@ -308,13 +353,13 @@
                 </a>
             </li>
 
-            <li class="project-item">
+            <li class="project-item" data-category="matured">
                 <div class="project-title">
                     <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
                     <a href="gemini-one-click-delete/index.html">One Click Delete 🗑️</a>
                 </div>
                 <p class="project-desc">
-                    サイドバーの削除アイコンを探す手間を省きます。現在の会話をワンクリックで即座に削除するボタンを追加します。
+                    ヘッダーメニューの奥にある「削除」機能をフロントへ引き出します。サイドバーを操作することなく、現在の会話をワンクリックまたはキーボードショートカットで即座に削除できるようになります。
                 </p>
                 <a class="install-button" data-script-name="Gemini 1-Click Delete Conversation"
                     href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js"
@@ -322,17 +367,18 @@
                     <svg height="18" viewbox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install (v0.2.1)
+                    Install (v0.2.10)
                 </a>
             </li>
 
-            <li class="project-item">
+            <li class="project-item" data-category="matured">
                 <div class="project-title">
                     <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
                     <a href="gemini-export-to-docs/index.html">Export to Docs 📄</a>
                 </div>
                 <p class="project-desc">
-                    Gemini との会話内容を美しくフォーマットして Google ドキュメントへ直接出力します。Canvas（ドキュメント作成機能）にも対応。
+                    回答内容を美しく整形して Google ドキュメントへ出力。「1-Turn Auto Export」機能により、One Click Delete
+                    と併用して1ターンのみの会話をエクスポート後に即座に削除する流れるような操作が可能です。
                 </p>
                 <a class="install-button" data-script-name="Gemini 1-Click Export to Docs"
                     href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js"
@@ -340,17 +386,18 @@
                     <svg height="18" viewbox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install (v0.1.22)
+                    Install (v0.4.3)
                 </a>
             </li>
 
-            <li class="project-item">
+            <li class="project-item" data-category="matured">
                 <div class="project-title">
                     <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
                     <a href="gemini-artifact-exporter/index.html">Artifact Exporter 📦</a>
                 </div>
                 <p class="project-desc">
-                    Gemini のサイドバーにある Article アーティファクトをまとめて Google Docs にエクスポートします。
+                    サイドバーに表示される Article 形式のアーティファクトを Google ドキュメントにまとめてエクスポート。One Click Delete
+                    との併用で、エクスポート完了後に会話を自動削除する連携も可能です。
                 </p>
                 <a class="install-button" data-script-name="Gemini Artifact Exporter"
                     href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js"
@@ -358,17 +405,17 @@
                     <svg height="18" viewbox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install (v0.1.14)
+                    Install (v0.2.39)
                 </a>
             </li>
 
-            <li class="project-item">
+            <li class="project-item" data-category="matured">
                 <div class="project-title">
                     <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
                     <a href="gemini-auto-scroll/index.html">Auto-Scroll 📜</a>
                 </div>
                 <p class="project-desc">
-                    会話履歴が膨大な場合に。サイドバーを自動で一番下までスクロールし続け、過去のすべての会話履歴を読み込みます。
+                    サイドバーを自動で末尾までスクロールし続け、過去の膨大な会話履歴をすべて読み込みます。会話削除時に空の画面ではなく「次の会話」を自動で開く機能も備えており、連続した削除・整理作業を効率化します。
                 </p>
                 <a class="install-button" data-script-name="Gemini Auto-Scroll"
                     href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js"
@@ -376,17 +423,17 @@
                     <svg height="18" viewbox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install (v0.1.37)
+                    Install (v0.2.22)
                 </a>
             </li>
 
-            <li class="project-item">
+            <li class="project-item" data-category="matured">
                 <div class="project-title">
                     <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
                     <a href="gemini-turn-counter/index.html">Turn Counter 🔢</a>
                 </div>
                 <p class="project-desc">
-                    会話のターン数、文字数、画像数をリアルタイムに計測します。利用制限の把握や、長文作成の進捗確認に最適です。
+                    ターン数、文字、画像、コード、テーブル、各アーティファクト数をリアルタイムに計測。主に Gemini の各モデルのコンテキストウィンドウ消費量を見積もるために設計されています。
                 </p>
                 <a class="install-button" data-script-name="Gemini Turn Counter"
                     href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js"
@@ -394,16 +441,16 @@
                     <svg height="18" viewbox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install (v0.1.17)
+                    Install (v0.1.29)
                 </a>
             </li>
-            <li class="project-item">
+            <li class="project-item" data-category="beta">
                 <div class="project-title">
                     <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
                     <a href="gemini-search-snippet-helper/index.html">Search Snippet Helper 🔢</a>
                 </div>
                 <p class="project-desc">
-                    Gemini の検索結果一覧において、各会話カードのタイトルに連番を表示し、視認性と識別性を向上させるユーザースクリプトです。
+                    検索結果一覧の各会話カードにタイトルへ連番を表示し、視認性を向上させます。タイトルが似通った過去の会話が多く並ぶ場合でも、番号によって目的の会話を素早く特定・参照できるようになります。
                 </p>
                 <a class="install-button" data-script-name="Gemini Search Snippet Helper"
                     href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-search-snippet-helper/gemini-search-snippet-helper.user.js"
@@ -411,7 +458,7 @@
                     <svg height="18" viewbox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install (v0.1.4)
+                    Install (v0.1.6)
                 </a>
             </li>
         </ul>
@@ -429,12 +476,39 @@
             <p>
                 <small>Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a> | <a
                         href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> | <a
-                        href="https://github.com/codespaces/fuzzy-halibut-qgr4qgggrh494p" target="codespaces">Open in Codespaces</a></small>
+                        href="https://github.com/codespaces/fuzzy-halibut-qgr4qgggrh494p" target="codespaces">Open in
+                        Codespaces</a></small>
             </p>
         </footer>
     </div>
 
     <script>
+        // Category filtering logic
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const projectItems = document.querySelectorAll('.project-item');
+
+        const filterProjects = (category) => {
+            projectItems.forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        };
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const category = btn.dataset.category;
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                filterProjects(category);
+            });
+        });
+
+        // Initialize with default category (matured)
+        filterProjects('matured');
+
         document.addEventListener('userscript-check-installed', (event) => {
             const { name, version } = event.detail;
             const buttons = document.querySelectorAll('.install-button');

@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.8
+// @version      0.2.10
+// @lastModified 2026-03-03
 // @description  Adds a 1-click panel/shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -666,6 +667,27 @@
     }
 
     /**
+     * Handle External Delete Request (e.g. from gemini-artifact-exporter)
+     */
+    async function handleExternalDeleteRequest(e) {
+        console.log('[Gemini 1-Click Delete] Received external delete request.');
+
+        // Safety delay to allow Gemini UI to settle after potential exports
+        await sleep(1000);
+
+        // Ensure panel state is up to date to find targets
+        updatePanelState();
+
+        const panelBtn = document.querySelector('#gdp-global-delete-btn');
+        if (panelBtn && !panelBtn.disabled) {
+            console.log('[Gemini 1-Click Delete] Triggering delete via panel button.');
+            panelBtn.click();
+        } else {
+            console.warn('[Gemini 1-Click Delete] External request ignored: no active conversation or menu missing.');
+        }
+    }
+
+    /**
      * Main initialization for the script's features.
      */
     function initMainFunctionality() {
@@ -680,6 +702,9 @@
 
         keydownListener = handleKeyboardShortcut;
         document.addEventListener('keydown', keydownListener);
+
+        // Listen for requests from other userscripts
+        window.addEventListener('gemini-one-click-delete:request-delete', handleExternalDeleteRequest);
 
         isInitialized = true;
     }
@@ -699,6 +724,9 @@
             document.removeEventListener('keydown', keydownListener);
             keydownListener = null;
         }
+
+        window.removeEventListener('gemini-one-click-delete:request-delete', handleExternalDeleteRequest);
+
         if (styleElement) {
             styleElement.remove();
             styleElement = null;
