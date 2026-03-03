@@ -35,7 +35,8 @@ The following selectors are critical for interacting with the Canvas:
 ### UI Injection
 - **Dual UI Approach**:
     - **In-Header**: Injected directly into the native actions bar for a seamless look.
-    - **Floating**: A fixed `bottom-right` button that appears only when `.ProseMirror` is detected. This addresses the SPA nature of ChatGPT where elements may be re-rendered or hidden during navigation.
+    - **Floating**: A fixed (but movable) button that appears only when `.ProseMirror` is detected.
+    - **Movable Logic**: Implemented with mouse event listeners (`mousedown`, `mousemove`, `mouseup`). It calculates position relative to the `right` and `bottom` edges of the viewport to handle resizing gracefully.
 - **MutationObserver**: Used to detect when the Canvas enters the DOM or the path changes, ensuring buttons are re-injected if lost.
 
 ### Performance and Reliability
