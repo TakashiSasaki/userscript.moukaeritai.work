@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Canvas Exporter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.6.3
+// @version      0.6.5
 // @description  ChatGPTの会話ページでキャンバスの内容をエクスポートする
 // @author       Takashi Sasaki
 // @match        https://chatgpt.com/*
@@ -16,7 +16,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '0.6.3';
+    const VERSION = '0.6.5';
 
     // セレクタの定義
     const CANVAS_MESSAGE_SELECTOR = 'div[id^="textdoc-message-"]';
@@ -71,8 +71,19 @@
         }
     }
 
-    // 画像をArrayBufferとして取得するヘルパー (CORS回避のためGM_xmlhttpRequestを使用)
-    function fetchImageData(url) {
+    // ArrayBufferを安全にBase64文字列に変換するヘルパー（スタックオーバーフロー対策）
+    function arrayBufferToBase64(buffer) {
+        let binary = '';
+        const bytes = new Uint8Array(buffer);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+    }
+
+    // 画像をArrayBufferとして取得し、Base64文字列に変換して返す (CORS・サンドボックス対策)
+    function fetchImageAsBase64(url) {
         return new Promise((resolve, reject) => {
             if (typeof GM_xmlhttpRequest !== 'undefined') {
                 GM_xmlhttpRequest({
@@ -84,7 +95,8 @@
                             const headers = response.responseHeaders || '';
                             const match = headers.match(/content-type:\s*([^\s;]+)/i);
                             const type = match ? match[1].toLowerCase() : '';
-                            resolve({ data: response.response, type: type, size: response.response.byteLength });
+                            const base64Str = arrayBufferToBase64(response.response);
+                            resolve({ base64: base64Str, type: type, size: response.response.byteLength });
                         } else {
                             reject(new Error('HTTP Status ' + response.status));
                         }
@@ -95,7 +107,7 @@
                 });
             } else {
                 fetch(url).then(r => r.arrayBuffer().then(buffer => ({
-                    data: buffer,
+                    base64: arrayBufferToBase64(buffer),
                     type: r.headers.get('content-type') || '',
                     size: buffer.byteLength
                 }))).then(resolve).catch(reject);
@@ -170,7 +182,7 @@
 
             console.log(`[CanvasExporter] Fetching image ${currentImgId}: ${src.substring(0, 50)}...`);
             imgPromises.push(
-                fetchImageData(src).then(result => {
+                fetchImageAsBase64(src).then(result => {
                     let ext = 'png'; // デフォルト
                     if (result.type) {
                         if (result.type.includes('jpeg') || result.type.includes('jpg')) ext = 'jpg';
@@ -184,8 +196,8 @@
 
                     const imgName = `images/image_${currentImgId}.${ext}`;
                     console.log(`[CanvasExporter] Image ${currentImgId} fetched. Size: ${result.size}, adding as: ${imgName}`);
-                    // ArrayBufferを明示的にUint8Arrayにラップして渡す（サンドボックス対策）
-                    zip.file(imgName, new Uint8Array(result.data));
+                    // プリミティブなBase64文字列としてJSZipに渡す（クロスコンテキストのサンドボックス死を完全に回避）
+                    zip.file(imgName, result.base64, { base64: true });
                     hasContent = true;
                 }).catch(e => {
                     console.error(`[CanvasExporter] Failed to fetch image ${currentImgId}:`, src, e);
@@ -218,13 +230,12 @@
         }
 
         try {
-            console.log('[CanvasExporter] Generating ZIP file (type: uint8array, compression: STORE)...');
-            // 処理を軽量化するため圧縮をOFF(STORE)にし、サンドボックスで安全なuint8array形式で生成
-            const uint8array = await zip.generateAsync({
-                type: "uint8array",
-                compression: "STORE"
+            console.log('[CanvasExporter] Generating ZIP file blob...');
+            const content = await zip.generateAsync({
+                type: "blob"
+            }, function updateCallback(metadata) {
+                console.log(`[CanvasExporter] ZIP Progress: ${metadata.percent.toFixed(2)} % | Current File: ${metadata.currentFile || 'none'}`);
             });
-            const content = new Blob([uint8array], { type: "application/zip" });
             console.log(`[CanvasExporter] ZIP blob generated. Size: ${content.size}`);
             downloadBlob(content, `canvas_exports_${date}.zip`);
         } catch (e) {
@@ -364,6 +375,22 @@
             </button>
         `;
 
+        // 状態の復元 (localStorage)
+        const savedPos = localStorage.getItem('canvasExporterFloatingPos');
+        if (savedPos) {
+            try {
+                const pos = JSON.parse(savedPos);
+                if (pos.right && pos.bottom) {
+                    ui.style.right = pos.right;
+                    ui.style.bottom = pos.bottom;
+                    ui.style.left = 'auto'; // デフォルトのleftを上書き
+                    ui.style.top = 'auto';
+                }
+            } catch (e) {
+                console.error("[CanvasExporter] Failed to load floating button position", e);
+            }
+        }
+
         const btn = ui.querySelector('.floating-export-btn');
 
         // ドラッグ移動の実装
@@ -400,6 +427,12 @@
             const onMouseUp = () => {
                 window.removeEventListener('mousemove', onMouseMove);
                 window.removeEventListener('mouseup', onMouseUp);
+                if (isDragging) {
+                    // 移動後に位置を保存
+                    const right = ui.style.right;
+                    const bottom = ui.style.bottom;
+                    localStorage.setItem('canvasExporterFloatingPos', JSON.stringify({ right, bottom }));
+                }
             };
 
             window.addEventListener('mousemove', onMouseMove);

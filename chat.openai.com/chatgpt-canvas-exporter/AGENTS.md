@@ -48,10 +48,10 @@ The following selectors are critical for interacting with the Canvas:
 ## Common Pitfalls & Debugging (UserScript Context)
 
 ### JSZip and Blob/ArrayBuffer Issue
-In UserScript environments (like Tampermonkey), using `Blob` objects across different execution contexts (e.g., from `GM_xmlhttpRequest` to `JSZip`) can cause `JSZip.generateAsync` to hang indefinitely without throwing an error.
-- **Problem**: The internal `FileReader` used by `JSZip` to process Blobs often fails in the restricted sandbox.
-- **Solution**: Always fetch binary data (images, etc.) as `ArrayBuffer` using `responseType: 'arraybuffer'`.
-- **ZIP Generation**: When generating the ZIP, use `{ type: "uint8array" }` instead of `{ type: "blob" }` internally, then manually convert the resulting `Uint8Array` to a `Blob` for download.
+In UserScript environments (like Tampermonkey), passing binary objects (`Blob`, `ArrayBuffer`, or even `Uint8Array`) from `GM_xmlhttpRequest` to `JSZip` can cause `JSZip.generateAsync` to hang indefinitely due to internal cross-context `instanceof` checks failing.
+- **Problem**: The internal `FileReader` or type-checking used by `JSZip` fails in the restricted sandbox.
+- **Solution**: Avoid passing binary objects entirely. Instead, fetch the data as an `ArrayBuffer`, convert it to a primitive **Base64 String** manually, and pass that string to JSZip with `{ base64: true }`.
+- **Example**: `zip.file("image.png", base64String, { base64: true });`
 
 ### GM_download Fallback Timing
 When implementing a fallback for `GM_download` (for environments where it's unsupported or fails), be careful with `URL.revokeObjectURL`.
