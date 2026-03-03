@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Canvas Exporter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.6.1
+// @version      0.6.2
 // @description  ChatGPTの会話ページでキャンバスの内容をエクスポートする
 // @author       Takashi Sasaki
 // @match        https://chatgpt.com/*
@@ -16,7 +16,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '0.6.1';
+    const VERSION = '0.6.2';
 
     // セレクタの定義
     const CANVAS_MESSAGE_SELECTOR = 'div[id^="textdoc-message-"]';
@@ -71,17 +71,20 @@
         }
     }
 
-    // 画像をBlobとして取得するヘルパー (CORS回避のためGM_xmlhttpRequestを使用)
-    function fetchImageAsBlob(url) {
+    // 画像をArrayBufferとして取得するヘルパー (CORS回避のためGM_xmlhttpRequestを使用)
+    function fetchImageData(url) {
         return new Promise((resolve, reject) => {
             if (typeof GM_xmlhttpRequest !== 'undefined') {
                 GM_xmlhttpRequest({
                     method: 'GET',
                     url: url,
-                    responseType: 'blob',
+                    responseType: 'arraybuffer',
                     onload: function (response) {
                         if (response.status >= 200 && response.status < 300) {
-                            resolve(response.response);
+                            const headers = response.responseHeaders || '';
+                            const match = headers.match(/content-type:\s*([^\s;]+)/i);
+                            const type = match ? match[1].toLowerCase() : '';
+                            resolve({ data: response.response, type: type, size: response.response.byteLength });
                         } else {
                             reject(new Error('HTTP Status ' + response.status));
                         }
@@ -91,7 +94,11 @@
                     }
                 });
             } else {
-                fetch(url).then(r => r.blob()).then(resolve).catch(reject);
+                fetch(url).then(r => r.arrayBuffer().then(buffer => ({
+                    data: buffer,
+                    type: r.headers.get('content-type') || '',
+                    size: buffer.byteLength
+                }))).then(resolve).catch(reject);
             }
         });
     }
@@ -163,12 +170,12 @@
 
             console.log(`[CanvasExporter] Fetching image ${currentImgId}: ${src.substring(0, 50)}...`);
             imgPromises.push(
-                fetchImageAsBlob(src).then(blob => {
+                fetchImageData(src).then(result => {
                     let ext = 'png'; // デフォルト
-                    if (blob.type) {
-                        if (blob.type.includes('jpeg') || blob.type.includes('jpg')) ext = 'jpg';
-                        else if (blob.type.includes('webp')) ext = 'webp';
-                        else if (blob.type.includes('gif')) ext = 'gif';
+                    if (result.type) {
+                        if (result.type.includes('jpeg') || result.type.includes('jpg')) ext = 'jpg';
+                        else if (result.type.includes('webp')) ext = 'webp';
+                        else if (result.type.includes('gif')) ext = 'gif';
                     } else {
                         if (src.includes('.jpg') || src.includes('.jpeg')) ext = 'jpg';
                         else if (src.includes('.webp')) ext = 'webp';
@@ -176,8 +183,8 @@
                     }
 
                     const imgName = `images/image_${currentImgId}.${ext}`;
-                    console.log(`[CanvasExporter] Image ${currentImgId} fetched. Size: ${blob.size}, adding as: ${imgName}`);
-                    zip.file(imgName, blob);
+                    console.log(`[CanvasExporter] Image ${currentImgId} fetched. Size: ${result.size}, adding as: ${imgName}`);
+                    zip.file(imgName, result.data);
                     hasContent = true;
                 }).catch(e => {
                     console.error(`[CanvasExporter] Failed to fetch image ${currentImgId}:`, src, e);
@@ -210,8 +217,9 @@
         }
 
         try {
-            console.log('[CanvasExporter] Generating ZIP file blob...');
-            const content = await zip.generateAsync({ type: "blob" });
+            console.log('[CanvasExporter] Generating ZIP file blob (using uint8array to bypass sandboxes)...');
+            const uint8array = await zip.generateAsync({ type: "uint8array" });
+            const content = new Blob([uint8array], { type: "application/zip" });
             console.log(`[CanvasExporter] ZIP blob generated. Size: ${content.size}`);
             downloadBlob(content, `canvas_exports_${date}.zip`);
         } catch (e) {
