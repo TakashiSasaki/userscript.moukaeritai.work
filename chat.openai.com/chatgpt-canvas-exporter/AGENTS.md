@@ -8,50 +8,14 @@ ChatGPT "Canvas" (internally often referred to as `writing-block` or `textdoc`) 
 
 ### DOM Analysis via CDP
 
-To bypass Cloudflare protection and accurately capture the Canvas DOM, we used the **Chrome DevTools Protocol (CDP)**.
+To analyze the live DOM of ChatGPT (which uses complex dynamic loading), use the included PowerShell scripts:
 
-1.  **Capture Strategy**: Used a PowerShell script to fetch the outer HTML while the Canvas was active.
-    - Port: `9222/tcp`
-    - Target: Current active tab at `chatgpt.com`
-2.  **Preprocessing**: The raw HTML was minified. We used a "fixed" version (`samples/multi_canvas_dom_fixed.html`) where long lines were broken at tag boundaries (`>` to `>\n`) to facilitate line-based searching.
+1.  **Capture**: Run `./capture_dom.ps1` to fetch the outer HTML via CDP (Port 9222).
+2.  **Format**: Run `./format_dom.ps1` to add line breaks after tags for easier searching.
 
-### CDP Capture Script (PowerShell)
+Outputs are saved in the `samples/` directory.
 
-To capture the live DOM of the ChatGPT tab via CDP:
-
-```powershell
-$json = Invoke-RestMethod -Uri 'http://localhost:9222/json'
-$target = $json | Where-Object { $_.url -like '*chatgpt.com*' } | Select-Object -First 1
-$wsUrl = $target.webSocketDebuggerUrl
-
-$ws = New-Object System.Net.WebSockets.ClientWebSocket
-$ct = New-Object System.Threading.CancellationTokenSource
-$ws.ConnectAsync($wsUrl, $ct.Token).Wait()
-
-$message = @{ id = 1; method = "Runtime.evaluate"; params = @{ expression = "document.documentElement.outerHTML" } } | ConvertTo-Json -Compress
-$buffer = [System.Text.Encoding]::UTF8.GetBytes($message)
-$ws.SendAsync((New-Object System.ArraySegment[Byte] -ArgumentList @(,$buffer)), [System.Net.WebSockets.WebSocketMessageType]::Text, $true, $ct.Token).Wait()
-
-$receiveBuffer = New-Object Byte[] 2097152 # 2MB
-$result = ""
-do {
-    $task = $ws.ReceiveAsync((New-Object System.ArraySegment[Byte] -ArgumentList @(,$receiveBuffer)), $ct.Token)
-    $task.Wait()
-    $result += [System.Text.Encoding]::UTF8.GetString($receiveBuffer, 0, $task.Result.Count)
-} while (-not $task.Result.EndOfMessage)
-
-$html = ($result | ConvertFrom-Json).result.result.value
-$html | Out-File -FilePath "samples/multi_canvas_dom.html" -Encoding utf8
-$ws.Dispose()
-```
-
-### Formatting Script (PowerShell)
-
-```powershell
-$text = [System.IO.File]::ReadAllText('samples/multi_canvas_dom.html')
-$formatted = $text -replace '>', ">`r`n"
-[System.IO.File]::WriteAllText('samples/multi_canvas_dom_fixed.html', $formatted)
-```
+### Identified Selectors
 
 ### Identified Selectors
 
