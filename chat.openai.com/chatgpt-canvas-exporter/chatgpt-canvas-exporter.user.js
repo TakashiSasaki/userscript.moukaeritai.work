@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         ChatGPT Canvas Exporter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.2
+// @version      0.4.0
 // @description  ChatGPTの会話ページでキャンバスの内容をエクスポートする
 // @author       Takashi Sasaki
 // @match        https://chatgpt.com/*
-// @grant        none
+// @grant        GM_download
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-canvas-exporter/chatgpt-canvas-exporter.user.js
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-canvas-exporter/chatgpt-canvas-exporter.user.js
 // @license      MIT
@@ -14,7 +14,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '0.3.2';
+    const VERSION = '0.4.0';
 
     // セレクタの定義
     const CANVAS_MESSAGE_SELECTOR = 'div[id^="textdoc-message-"]';
@@ -39,10 +39,29 @@
 
         const blob = new Blob([textContent], { type: 'text/markdown;charset=utf-8' });
         const url = URL.createObjectURL(blob);
+
+        if (typeof GM_download !== 'undefined') {
+            GM_download({
+                url: url,
+                name: fileName,
+                saveAs: false, // Dialogスキップを試みる（拡張機能の設定依存）
+                onload: () => URL.revokeObjectURL(url),
+                onerror: (err) => {
+                    console.error('GM_download failed:', err);
+                    URL.revokeObjectURL(url);
+                    fallbackDownload(url, fileName);
+                }
+            });
+        } else {
+            fallbackDownload(url, fileName);
+        }
+    }
+
+    // フォールバック用の標準ダウンロード
+    function fallbackDownload(url, fileName) {
         const a = document.createElement('a');
         a.href = url;
         a.download = fileName;
-
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
