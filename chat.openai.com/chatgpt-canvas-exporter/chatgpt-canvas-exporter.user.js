@@ -1,7 +1,4 @@
-// ==UserScript==
-// @name         ChatGPT Canvas Exporter
-// @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.1
+// @version      0.3.0
 // @description  ChatGPTの会話ページでキャンバスの内容をエクスポートする
 // @author       Takashi Sasaki
 // @match        https://chatgpt.com/*
@@ -13,29 +10,29 @@
 (function () {
     'use strict';
 
-    // セレクタの定義
-    const CANVAS_ACTIONS_SELECTOR = 'div[id^="textdoc-message-"] .flex.items-center.justify-end';
-    const CANVAS_CONTENT_SELECTOR = '.ProseMirror';
-    const CANVAS_TITLE_SELECTOR = 'div[id^="textdoc-message-"] .text-token-text-primary.font-semibold';
+    const VERSION = '0.3.0';
 
-    // エクスポート処理
-    function downloadCanvasContent() {
-        const contentEl = document.querySelector(CANVAS_CONTENT_SELECTOR);
+    // セレクタの定義
+    const CANVAS_MESSAGE_SELECTOR = 'div[id^="textdoc-message-"]';
+    const CANVAS_ACTIONS_SELECTOR = `${CANVAS_MESSAGE_SELECTOR} .flex.items-center.justify-end`;
+    const CANVAS_CONTENT_SELECTOR = '.ProseMirror';
+    const CANVAS_TITLE_SELECTOR = `${CANVAS_MESSAGE_SELECTOR} .text-token-text-primary.font-semibold`;
+
+    // エクスポート処理 (特定の要素から)
+    function downloadCanvasFromElement(messageEl) {
+        const contentEl = messageEl.querySelector(CANVAS_CONTENT_SELECTOR);
+        const titleEl = messageEl.querySelector('.text-token-text-primary.font-semibold');
+
         if (!contentEl) {
-            console.error('Canvas content not found');
-            alert('キャンバスのコンテンツが見つかりませんでした。');
+            console.error('Canvas content not found in element');
             return;
         }
 
         const textContent = contentEl.innerText;
-
-        // タイトルの取得
-        const titleEl = document.querySelector(CANVAS_TITLE_SELECTOR);
         const title = titleEl ? titleEl.innerText.trim() : 'canvas-export';
         const date = new Date().toISOString().slice(0, 10);
         const fileName = `${title}_${date}.md`.replace(/[\\/:*?"<>|]/g, '_');
 
-        // ファイルとしてエクスポート
         const blob = new Blob([textContent], { type: 'text/markdown;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -48,12 +45,23 @@
         URL.revokeObjectURL(url);
     }
 
+    // デフォルトのエクスポート処理 (最新または単一)
+    function downloadCanvasContent() {
+        const messageEls = document.querySelectorAll(CANVAS_MESSAGE_SELECTOR);
+        if (messageEls.length === 0) {
+            alert('キャンバスが見つかりませんでした。');
+            return;
+        }
+        downloadCanvasFromElement(messageEls[messageEls.length - 1]);
+    }
+
     // UIボタンの追加 (Canvasヘッダー内)
     function injectExportButton() {
-        const actionContainers = document.querySelectorAll(CANVAS_ACTIONS_SELECTOR);
+        const messageEls = document.querySelectorAll(CANVAS_MESSAGE_SELECTOR);
 
-        actionContainers.forEach(container => {
-            if (container.querySelector('.canvas-exporter-btn')) return;
+        messageEls.forEach(messageEl => {
+            const container = messageEl.querySelector('.flex.items-center.justify-end');
+            if (!container || container.querySelector('.canvas-exporter-btn')) return;
 
             const btnWrapper = document.createElement('div');
             btnWrapper.className = 'hover:text-token-text-primary canvas-exporter-btn-wrapper';
@@ -70,12 +78,67 @@
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                downloadCanvasContent();
+                downloadCanvasFromElement(messageEl);
             });
 
             btnWrapper.appendChild(btn);
             container.insertBefore(btnWrapper, container.firstChild);
         });
+    }
+
+    // パネルUIの作成/更新
+    function updatePanelUI() {
+        const panel = document.getElementById('canvas-exporter-panel');
+        if (!panel) return;
+
+        const listContainer = panel.querySelector('.canvas-list');
+        listContainer.innerHTML = '';
+
+        const messageEls = document.querySelectorAll(CANVAS_MESSAGE_SELECTOR);
+
+        if (messageEls.length === 0) {
+            listContainer.innerHTML = '<div class="no-canvas">No canvas detected</div>';
+            return;
+        }
+
+        messageEls.forEach((messageEl, index) => {
+            const titleEl = messageEl.querySelector('.text-token-text-primary.font-semibold');
+            const title = titleEl ? titleEl.innerText.trim() : `Canvas ${index + 1}`;
+
+            const item = document.createElement('div');
+            item.className = 'canvas-item';
+            item.innerHTML = `
+                <span class="canvas-item-title" title="${title}">${title}</span>
+                <button class="canvas-item-export-btn">Export</button>
+            `;
+
+            item.querySelector('.canvas-item-export-btn').addEventListener('click', () => {
+                downloadCanvasFromElement(messageEl);
+            });
+
+            listContainer.appendChild(item);
+        });
+    }
+
+    // パネルUIの注入
+    function injectPanelUI() {
+        if (document.getElementById('canvas-exporter-panel')) return;
+
+        const panel = document.createElement('div');
+        panel.id = 'canvas-exporter-panel';
+        panel.innerHTML = `
+            <div class="panel-header">
+                <span class="panel-title">Canvas Exporter v${VERSION}</span>
+                <button class="panel-close-btn">&times;</button>
+            </div>
+            <div class="canvas-list"></div>
+        `;
+
+        panel.querySelector('.panel-close-btn').addEventListener('click', () => {
+            panel.classList.remove('active');
+        });
+
+        document.body.appendChild(panel);
     }
 
     // フローティングUIの追加 (移動可能)
@@ -139,11 +202,18 @@
                 e.preventDefault();
                 e.stopPropagation();
             } else {
-                downloadCanvasContent();
+                const panel = document.getElementById('canvas-exporter-panel');
+                if (panel) {
+                    panel.classList.toggle('active');
+                    if (panel.classList.contains('active')) {
+                        updatePanelUI();
+                    }
+                }
             }
         });
 
         document.body.appendChild(ui);
+        injectPanelUI();
     }
 
     // 動的監視
@@ -152,8 +222,12 @@
         if (document.querySelector(CANVAS_CONTENT_SELECTOR)) {
             injectFloatingUI();
             document.getElementById('canvas-exporter-floating-ui').style.display = 'block';
+            if (document.getElementById('canvas-exporter-panel').classList.contains('active')) {
+                updatePanelUI();
+            }
         } else if (document.getElementById('canvas-exporter-floating-ui')) {
             document.getElementById('canvas-exporter-floating-ui').style.display = 'none';
+            document.getElementById('canvas-exporter-panel').classList.remove('active');
         }
     });
 
@@ -205,6 +279,85 @@
         }
         .floating-export-btn:hover {
             background-color: var(--gpt-surface-secondary, #222);
+        }
+
+        #canvas-exporter-panel {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 300px;
+            max-height: 400px;
+            background-color: var(--gpt-surface-primary, #fff);
+            color: var(--text-primary, #000);
+            border: 1px solid var(--border-medium, #ccc);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            z-index: 10001;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #canvas-exporter-panel.active {
+            display: flex;
+        }
+        .panel-header {
+            padding: 10px;
+            background-color: var(--gpt-surface-secondary, #f0f0f0);
+            border-bottom: 1px solid var(--border-medium, #ccc);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .panel-title {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .panel-close-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--text-secondary, #666);
+        }
+        .canvas-list {
+            padding: 10px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .canvas-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-light, #eee);
+        }
+        .canvas-item:last-child {
+            border-bottom: none;
+        }
+        .canvas-item-title {
+            font-size: 0.85rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-right: 10px;
+        }
+        .canvas-item-export-btn {
+            padding: 4px 8px;
+            background-color: var(--gpt-surface-primary, #000);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+        .canvas-item-export-btn:hover {
+            opacity: 0.8;
+        }
+        .no-canvas {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary, #666);
+            font-size: 0.9rem;
         }
     `;
     document.head.appendChild(style);
