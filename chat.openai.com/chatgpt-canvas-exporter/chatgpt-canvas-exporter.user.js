@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Canvas Exporter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.1
+// @version      0.3.2
 // @description  ChatGPTの会話ページでキャンバスの内容をエクスポートする
 // @author       Takashi Sasaki
 // @match        https://chatgpt.com/*
@@ -14,7 +14,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '0.3.1';
+    const VERSION = '0.3.2';
 
     // セレクタの定義
     const CANVAS_MESSAGE_SELECTOR = 'div[id^="textdoc-message-"]';
@@ -222,16 +222,21 @@
 
     // 動的監視
     const observer = new MutationObserver(() => {
-        injectExportButton();
-        if (document.querySelector(CANVAS_CONTENT_SELECTOR)) {
-            injectFloatingUI();
-            document.getElementById('canvas-exporter-floating-ui').style.display = 'block';
-            if (document.getElementById('canvas-exporter-panel').classList.contains('active')) {
-                updatePanelUI();
+        observer.disconnect();
+        try {
+            injectExportButton();
+            if (document.querySelector(CANVAS_CONTENT_SELECTOR)) {
+                injectFloatingUI();
+                document.getElementById('canvas-exporter-floating-ui').style.display = 'block';
+                if (document.getElementById('canvas-exporter-panel').classList.contains('active')) {
+                    updatePanelUI();
+                }
+            } else if (document.getElementById('canvas-exporter-floating-ui')) {
+                document.getElementById('canvas-exporter-floating-ui').style.display = 'none';
+                document.getElementById('canvas-exporter-panel').classList.remove('active');
             }
-        } else if (document.getElementById('canvas-exporter-floating-ui')) {
-            document.getElementById('canvas-exporter-floating-ui').style.display = 'none';
-            document.getElementById('canvas-exporter-panel').classList.remove('active');
+        } finally {
+            observer.observe(document.body, { childList: true, subtree: true });
         }
     });
 
