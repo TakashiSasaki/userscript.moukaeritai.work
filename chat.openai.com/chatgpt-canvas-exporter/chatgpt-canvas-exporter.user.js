@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         ChatGPT Canvas Exporter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.5.0
+// @version      0.6.0
 // @description  ChatGPTの会話ページでキャンバスの内容をエクスポートする
 // @author       Takashi Sasaki
 // @match        https://chatgpt.com/*
 // @grant        GM_download
+// @grant        GM_xmlhttpRequest
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-canvas-exporter/chatgpt-canvas-exporter.user.js
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-canvas-exporter/chatgpt-canvas-exporter.user.js
@@ -15,7 +16,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '0.5.0';
+    const VERSION = '0.6.0';
 
     // セレクタの定義
     const CANVAS_MESSAGE_SELECTOR = 'div[id^="textdoc-message-"]';
@@ -63,7 +64,32 @@
         }
     }
 
-    // すべてのキャンバスをZIPで一括エクスポート
+    // 画像をBlobとして取得するヘルパー (CORS回避のためGM_xmlhttpRequestを使用)
+    function fetchImageAsBlob(url) {
+        return new Promise((resolve, reject) => {
+            if (typeof GM_xmlhttpRequest !== 'undefined') {
+                GM_xmlhttpRequest({
+                    method: 'GET',
+                    url: url,
+                    responseType: 'blob',
+                    onload: function (response) {
+                        if (response.status >= 200 && response.status < 300) {
+                            resolve(response.response);
+                        } else {
+                            reject(new Error('HTTP Status ' + response.status));
+                        }
+                    },
+                    onerror: function (err) {
+                        reject(err);
+                    }
+                });
+            } else {
+                fetch(url).then(r => r.blob()).then(resolve).catch(reject);
+            }
+        });
+    }
+
+    // すべてのキャンバスと画像をZIPで一括エクスポート
     async function downloadAllAsZip() {
         const messageEls = document.querySelectorAll(CANVAS_MESSAGE_SELECTOR);
         if (messageEls.length === 0) return;
@@ -78,6 +104,7 @@
         let hasContent = false;
         const titleCounts = {}; // ファイル名重複防止用
 
+        // --- 1. キャンバスのエクスポート ---
         messageEls.forEach((messageEl, index) => {
             const contentEl = messageEl.querySelector(CANVAS_CONTENT_SELECTOR);
             const titleEl = messageEl.querySelector('.text-token-text-primary.font-semibold');
@@ -96,11 +123,73 @@
                     titleCounts[title] = 1;
                 }
 
-                zip.file(`${title}.md`, textContent);
+                zip.file(`canvases/${title}.md`, textContent);
             }
         });
 
-        if (!hasContent) return;
+        // --- 2. 会話中の画像のエクスポート ---
+        const imageEls = document.querySelectorAll('article img');
+        const imgPromises = [];
+        const seenSrc = new Set();
+        let imgCount = 0;
+
+        imageEls.forEach((img) => {
+            const src = img.src;
+            if (!src || src.startsWith('data:')) return; // Data URIは除外
+
+            // アバターや小さいUIアイコンを除外
+            if (img.alt === 'User' || img.alt === 'ChatGPT' || img.alt.includes('プロファイル') || src.includes('avatar') || src.includes('profile') || src.includes('favicons') || img.width <= 40 || img.height <= 40) {
+                return;
+            }
+
+            if (seenSrc.has(src)) return;
+            seenSrc.add(src);
+
+            imgCount++;
+            const currentImgId = imgCount;
+
+            imgPromises.push(
+                fetchImageAsBlob(src).then(blob => {
+                    let ext = 'png'; // デフォルト
+                    if (blob.type) {
+                        if (blob.type.includes('jpeg') || blob.type.includes('jpg')) ext = 'jpg';
+                        else if (blob.type.includes('webp')) ext = 'webp';
+                        else if (blob.type.includes('gif')) ext = 'gif';
+                    } else {
+                        if (src.includes('.jpg') || src.includes('.jpeg')) ext = 'jpg';
+                        else if (src.includes('.webp')) ext = 'webp';
+                        else if (src.includes('.gif')) ext = 'gif';
+                    }
+
+                    const imgName = `images/image_${currentImgId}.${ext}`;
+                    zip.file(imgName, blob);
+                    hasContent = true;
+                }).catch(e => {
+                    console.error('Failed to fetch image:', src, e);
+                })
+            );
+        });
+
+        // ボタンの表示をローディング状態にする（オプション）
+        const btn = document.querySelector('.panel-download-all-btn');
+        const originalText = btn ? btn.innerHTML : '';
+        if (btn && imgPromises.length > 0) {
+            btn.innerHTML = 'Downloading images...';
+            btn.disabled = true;
+        }
+
+        // 画像のフェッチを待機
+        await Promise.allSettled(imgPromises);
+
+        if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+
+        if (!hasContent) {
+            alert('エクスポートするコンテンツが見つかりませんでした。');
+            return;
+        }
 
         try {
             const content = await zip.generateAsync({ type: "blob" });
