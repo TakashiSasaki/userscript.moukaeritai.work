@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Canvas Exporter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.6.0
+// @version      0.6.1
 // @description  ChatGPTの会話ページでキャンバスの内容をエクスポートする
 // @author       Takashi Sasaki
 // @match        https://chatgpt.com/*
@@ -16,7 +16,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '0.6.0';
+    const VERSION = '0.6.1';
 
     // セレクタの定義
     const CANVAS_MESSAGE_SELECTOR = 'div[id^="textdoc-message-"]';
@@ -45,21 +45,28 @@
 
     // 共通のBlobダウンロード処理
     function downloadBlob(blob, fileName) {
+        console.log(`[CanvasExporter] downloadBlob started. fileName=${fileName}, blob size=${blob.size}, blob type=${blob.type}`);
         const url = URL.createObjectURL(blob);
 
         if (typeof GM_download !== 'undefined') {
+            console.log('[CanvasExporter] Attempting GM_download...');
             GM_download({
                 url: url,
                 name: fileName,
                 saveAs: false, // Dialogスキップを試みる（拡張機能の設定依存）
-                onload: () => URL.revokeObjectURL(url),
-                onerror: (err) => {
-                    console.error('GM_download failed:', err);
+                onload: () => {
+                    console.log('[CanvasExporter] GM_download succeeded!');
                     URL.revokeObjectURL(url);
+                },
+                onerror: (err) => {
+                    console.error('[CanvasExporter] GM_download failed:', err);
+                    console.log('[CanvasExporter] Attempting fallback download...');
                     fallbackDownload(url, fileName);
+                    // URL is revoked inside fallbackDownload
                 }
             });
         } else {
+            console.log('[CanvasExporter] GM_download not available, falling back immediately.');
             fallbackDownload(url, fileName);
         }
     }
@@ -91,10 +98,13 @@
 
     // すべてのキャンバスと画像をZIPで一括エクスポート
     async function downloadAllAsZip() {
+        console.log('[CanvasExporter] downloadAllAsZip started');
         const messageEls = document.querySelectorAll(CANVAS_MESSAGE_SELECTOR);
+        console.log(`[CanvasExporter] Found ${messageEls.length} canvas message elements.`);
         if (messageEls.length === 0) return;
 
         if (typeof JSZip === 'undefined') {
+            console.error('[CanvasExporter] JSZip is not defined.');
             alert('ZIPライブラリ(JSZip)がロードされていません。ページを開き直して再試行してください。');
             return;
         }
@@ -105,6 +115,7 @@
         const titleCounts = {}; // ファイル名重複防止用
 
         // --- 1. キャンバスのエクスポート ---
+        console.log('[CanvasExporter] Starting canvas extraction...');
         messageEls.forEach((messageEl, index) => {
             const contentEl = messageEl.querySelector(CANVAS_CONTENT_SELECTOR);
             const titleEl = messageEl.querySelector('.text-token-text-primary.font-semibold');
@@ -123,11 +134,13 @@
                     titleCounts[title] = 1;
                 }
 
+                console.log(`[CanvasExporter] Added canvas file: canvases/${title}.md`);
                 zip.file(`canvases/${title}.md`, textContent);
             }
         });
 
         // --- 2. 会話中の画像のエクスポート ---
+        console.log('[CanvasExporter] Starting image extraction...');
         const imageEls = document.querySelectorAll('article img');
         const imgPromises = [];
         const seenSrc = new Set();
@@ -148,6 +161,7 @@
             imgCount++;
             const currentImgId = imgCount;
 
+            console.log(`[CanvasExporter] Fetching image ${currentImgId}: ${src.substring(0, 50)}...`);
             imgPromises.push(
                 fetchImageAsBlob(src).then(blob => {
                     let ext = 'png'; // デフォルト
@@ -162,10 +176,11 @@
                     }
 
                     const imgName = `images/image_${currentImgId}.${ext}`;
+                    console.log(`[CanvasExporter] Image ${currentImgId} fetched. Size: ${blob.size}, adding as: ${imgName}`);
                     zip.file(imgName, blob);
                     hasContent = true;
                 }).catch(e => {
-                    console.error('Failed to fetch image:', src, e);
+                    console.error(`[CanvasExporter] Failed to fetch image ${currentImgId}:`, src, e);
                 })
             );
         });
@@ -179,7 +194,9 @@
         }
 
         // 画像のフェッチを待機
+        console.log(`[CanvasExporter] Waiting for ${imgPromises.length} images to download...`);
         await Promise.allSettled(imgPromises);
+        console.log('[CanvasExporter] Image downloads completed.');
 
         if (btn) {
             btn.innerHTML = originalText;
@@ -187,15 +204,18 @@
         }
 
         if (!hasContent) {
+            console.error('[CanvasExporter] hasContent is false. No canvases or images found.');
             alert('エクスポートするコンテンツが見つかりませんでした。');
             return;
         }
 
         try {
+            console.log('[CanvasExporter] Generating ZIP file blob...');
             const content = await zip.generateAsync({ type: "blob" });
+            console.log(`[CanvasExporter] ZIP blob generated. Size: ${content.size}`);
             downloadBlob(content, `canvas_exports_${date}.zip`);
         } catch (e) {
-            console.error('Failed to generate ZIP', e);
+            console.error('[CanvasExporter] Failed to generate ZIP', e);
             alert('ZIPの生成に失敗しました。');
         }
     }
