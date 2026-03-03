@@ -93,6 +93,20 @@
 
         <a href="gemini-one-click-delete.user.js" class="install-button">スクリプトをインストール</a>
 
+        <h3>UI プレビュー</h3>
+        <div style="display: flex; flex-direction: column; gap: 20px; align-items: center; margin: 30px 0;">
+            <div style="width: 100%; max-width: 800px; text-align: center;">
+                <p style="font-size: 14px; color: #586069; margin-bottom: 8px;">1-Click Delete ボタン（ヘッダー内）とフローティングパネル</p>
+                <img src="screenshots/one_click_delete_context.png" alt="1-Click Delete Context"
+                    style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid #eaecef;">
+            </div>
+            <div style="width: 100%; max-width: 800px; text-align: center;">
+                <p style="font-size: 14px; color: #586069; margin-bottom: 8px;">パネルの状態（通常・最小化）</p>
+                <img src="screenshots/one_click_delete_states.png" alt="Panel States"
+                    style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid #eaecef;">
+            </div>
+        </div>
+
         <h2>目的</h2>
         <p>Geminiの標準機能では、会話を削除するために「メニューを開く → 削除を選択 → 確認ダイアログ」という手順が必要です。本スクリプトはこれらを自動化し、大幅に手間を削減します。</p>
 
@@ -115,20 +129,24 @@
         <h3>2. 他のユーザースクリプトとの連携 (API)</h3>
         <ul>
             <li><strong>カスタムイベント</strong>: <code>window</code> オブジェクトに対して
-                <code>gemini-one-click-delete:request-delete</code> イベントを送信することで、外部から会話の削除を要求できます。</li>
+                <code>gemini-one-click-delete:request-delete</code> イベントを送信することで、外部から会話の削除を要求できます。
+            </li>
             <li><strong>ユースケース</strong>: <code>Gemini 1-Click Export to Docs</code> や
-                <code>Gemini Artifact Exporter</code> などのエクスポート完了後に、自動的に会話をクリーンアップする用途で使用されます。</li>
+                <code>Gemini Artifact Exporter</code> などのエクスポート完了後に、自動的に会話をクリーンアップする用途で使用されます。
+            </li>
         </ul>
 
         <h3>3. キーボードショートカット</h3>
         <ul>
             <li><strong>ショートカット</strong>: <code>Ctrl + D</code> （Macの場合は <code>Meta + D</code> も可）、または
-                <code>Ctrl + Shift + Backspace</code></li>
+                <code>Ctrl + Shift + Backspace</code>
+            </li>
             <li><strong>動作</strong>:
                 <ul>
                     <li>ショートカットキーが押されると、画面上の削除ボタンをプログラム的にクリックします。</li>
                     <li><strong>安全性</strong>: テキスト入力エリア（<code>input</code>, <code>textarea</code>,
-                        <code>contenteditable</code>）での入力中はショートカットを無効化します。</li>
+                        <code>contenteditable</code>）での入力中はショートカットを無効化します。
+                    </li>
                 </ul>
             </li>
         </ul>
