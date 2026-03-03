@@ -69,3 +69,9 @@ When implementing a fallback for `GM_download` (for environments where it's unsu
 ## バージョンのバンプアップについて
 - 少しでもコードに変更があったら、**パッチレベル（末尾の数字）**をバンプアップする。
 - 原則として、機能追加であってもマイナーバージョンは維持し、パッチレベルでの更新を優先する。
+
+## User Landing Page (`index.html`)
+A user-facing landing page has been established at `/index.html` within this project folder.
+- **Purpose**: Serves as the primary distribution page for end-users, outlining features and providing a straightforward installation route.
+- **Design Specifications**: Utilizes modern web design principles (vanilla HTML/CSS) featuring glassmorphism, precise typography via Google Fonts (`Inter`), semantic layout, and responsive micro-animations for an elevated user experience.
+- **Installation Method**: The main CTA button links directly to the `raw` GitHub URL of `chatgpt-canvas-exporter.user.js`. This ensures UserScript managers like Tampermonkey/Violentmonkey automatically intercept the link and present the user with an installation prompt.
