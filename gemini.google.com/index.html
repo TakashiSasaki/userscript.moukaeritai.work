@@ -229,8 +229,47 @@
             transition: color 0.3s ease;
         }
 
-        .social-icon:hover {
+        .tab-btn:hover:not(.active) {
             color: white;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .tab-btn {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text-dim);
+            padding: 12px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 20px rgba(78, 149, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .project-item.hidden {
+            display: none;
         }
 
         @media (max-width: 768px) {
@@ -266,13 +305,19 @@
 
         <header>
             <h1>Gemini App Tools</h1>
-            <p class="header-desc">
+            <p class="header-desc" style="margin-bottom: 3rem;">
                 Google Gemini の体験をより快適に。会話管理、データ出力、UIカスタマイズのための高品質なユーザースクリプト集です。
             </p>
+
+            <div class="tabs">
+                <button class="tab-btn active" data-category="matured">Matured</button>
+                <button class="tab-btn" data-category="beta">Beta</button>
+                <button class="tab-btn" data-category="all">All</button>
+            </div>
         </header>
 
-        <ul class="project-list">
-            <li class="project-item">
+        <ul class="project-list" id="project-list">
+            <li class="project-item" data-category="beta">
                 <div class="project-title">
                     <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
                     <a href="gemini-saved-info/index.html">Saved Info Helper 📋</a>
@@ -429,12 +474,39 @@
             <p>
                 <small>Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a> | <a
                         href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> | <a
-                        href="https://github.com/codespaces/fuzzy-halibut-qgr4qgggrh494p" target="codespaces">Open in Codespaces</a></small>
+                        href="https://github.com/codespaces/fuzzy-halibut-qgr4qgggrh494p" target="codespaces">Open in
+                        Codespaces</a></small>
             </p>
         </footer>
     </div>
 
     <script>
+        // Category filtering logic
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const projectItems = document.querySelectorAll('.project-item');
+
+        const filterProjects = (category) => {
+            projectItems.forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        };
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const category = btn.dataset.category;
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                filterProjects(category);
+            });
+        });
+
+        // Initialize with default category (matured)
+        filterProjects('matured');
+
         document.addEventListener('userscript-check-installed', (event) => {
             const { name, version } = event.detail;
             const buttons = document.querySelectorAll('.install-button');
