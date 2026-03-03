@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.1
+// @version      0.4.2
 // @lastModified 2026-03-03
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
@@ -784,8 +784,14 @@
     /**
      * Checks the URL and runs init or cleanup accordingly.
      */
-    function checkUrlAndManageScriptState() {
+    function checkUrlAndManageScriptState(prevUrl, currentUrl) {
         const isChatPage = /^\/(app|gem)\/[a-f0-9]{16}/.test(location.pathname);
+
+        // Force a UI reset if transitioning between different pages (to clear "Deleting..." states etc.)
+        if (prevUrl && currentUrl && prevUrl !== currentUrl && isInitialized) {
+            console.log('[Gemini 1-Click Export to Docs] URL changed, forcing UI reset.');
+            cleanup();
+        }
 
         if (isChatPage) {
             initMainFunctionality();
@@ -800,8 +806,9 @@
     if (window.navigation) {
         window.navigation.addEventListener('navigatesuccess', () => {
             setTimeout(() => {
+                const prevUrl = lastUrl;
                 lastUrl = window.location.href;
-                checkUrlAndManageScriptState();
+                checkUrlAndManageScriptState(prevUrl, lastUrl);
             }, 500);
         });
         console.log('[Gemini 1-Click Export to Docs] Using Navigation API for SPA routing.');
@@ -809,8 +816,9 @@
         // Fallback for older browsers
         setInterval(() => {
             if (location.href !== lastUrl) {
+                const prevUrl = lastUrl;
                 lastUrl = location.href;
-                setTimeout(checkUrlAndManageScriptState, 500);
+                setTimeout(() => checkUrlAndManageScriptState(prevUrl, lastUrl), 500);
             }
         }, 500);
         console.log('[Gemini 1-Click Export to Docs] Using setInterval fallback for SPA routing.');
@@ -818,9 +826,9 @@
 
     // Initial check on load
     if (document.body) {
-        checkUrlAndManageScriptState();
+        checkUrlAndManageScriptState(null, lastUrl);
     } else {
-        window.addEventListener('DOMContentLoaded', checkUrlAndManageScriptState);
+        window.addEventListener('DOMContentLoaded', () => checkUrlAndManageScriptState(null, lastUrl));
     }
 
 })();
