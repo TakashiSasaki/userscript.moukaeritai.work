@@ -29,5 +29,10 @@ Gemini heavily enforces `TrustedTypes` policies to protect against DOM XSS.
 *   **Simulating Clicks**: When simulating `MouseEvent`s programmatically, always set `view: null` within the event dictionary. Omitting this triggers a non-trusted-event violation in Gemini's runtime context.
 *   **DOM Injection**: Prefer native DOM creation (`document.createElementNS`, `document.createElement`) over assigning raw strings to `innerHTML`.
 
-### 5. Mandatory Version Bumping
+### 5. Inter-script Communication
+This script listens for a `gemini-one-click-delete:request-delete` CustomEvent on the `window` object.
+*   **Trigger**: Other userscripts (like `gemini-export-to-docs` or `gemini-artifact-exporter`) dispatch this event to request the deletion of the current conversation after an export is completed.
+*   **Handling**: Upon receiving the event, the script waits for 1 second (safety delay) and then attempts to trigger the 1-click delete logic if a valid conversation is detected.
+
+### 6. Mandatory Version Bumping
 Every internal logic or functionality update **must** include a version bump (`// @version`) within the userscript metadata block so that Tampermonkey correctly pulls the update.
