@@ -43,8 +43,20 @@ The following selectors are critical for interacting with the Canvas:
 - **Avoid Over-Injection**: The injector checks for the existence of `.canvas-exporter-btn` before prepending.
 - **Filename Sanitization**: Titles are sanitized using `replace(/[\\/:*?"<>|]/g, '_')` to prevent invalid file downloads on Windows.
 
-## Reference Material
 - Refer to `samples/canvas_dom_fixed.html` for a snapshot of the DOM used during initial development.
+
+## Common Pitfalls & Debugging (UserScript Context)
+
+### JSZip and Blob/ArrayBuffer Issue
+In UserScript environments (like Tampermonkey), using `Blob` objects across different execution contexts (e.g., from `GM_xmlhttpRequest` to `JSZip`) can cause `JSZip.generateAsync` to hang indefinitely without throwing an error.
+- **Problem**: The internal `FileReader` used by `JSZip` to process Blobs often fails in the restricted sandbox.
+- **Solution**: Always fetch binary data (images, etc.) as `ArrayBuffer` using `responseType: 'arraybuffer'`.
+- **ZIP Generation**: When generating the ZIP, use `{ type: "uint8array" }` instead of `{ type: "blob" }` internally, then manually convert the resulting `Uint8Array` to a `Blob` for download.
+
+### GM_download Fallback Timing
+When implementing a fallback for `GM_download` (for environments where it's unsupported or fails), be careful with `URL.revokeObjectURL`.
+- **Pitfall**: Calling `revokeObjectURL(url)` in the `onerror` handler *before* triggering the fallback download will result in a silent failure (the browser cannot find the data at the URL).
+- **Correct Pattern**: Pass the URL to the fallback handler and ensure it is revoked only *after* the fallback download has been initiated (e.g., after `a.click()`).
 
 ## バージョンのバンプアップについて
 - 少しでもコードに変更があったら、**パッチレベル（末尾の数字）**をバンプアップする。
