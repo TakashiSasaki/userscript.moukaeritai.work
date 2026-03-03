@@ -17,8 +17,6 @@ Outputs are saved in the `samples/` directory.
 
 ### Identified Selectors
 
-### Identified Selectors
-
 The following selectors are critical for interacting with the Canvas:
 
 -   **Canvas Container (Turn-based)**: `article.has-data-writing-block`
@@ -49,4 +47,5 @@ The following selectors are critical for interacting with the Canvas:
 - Refer to `samples/canvas_dom_fixed.html` for a snapshot of the DOM used during initial development.
 
 ## バージョンのバンプアップについて
-- 少しでもコードに変更があったらパッチレベルをバンプアップする。
+- 少しでもコードに変更があったら、**パッチレベル（末尾の数字）**をバンプアップする。
+- 原則として、機能追加であってもマイナーバージョンは維持し、パッチレベルでの更新を優先する。
