@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.7
+// @version      0.3.8
 // @lastModified 2026-03-03
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
@@ -56,7 +56,8 @@
     const SELECTORS = {
         // Turn selectors
         // Turn selectors
-        turnContainer: 'model-response', // Specifically AI responses
+        turnContainer: 'model-response, response-container, .response-container', // Broad container to watch
+        aiTurnContainer: 'model-response', // Specifically AI responses for 1-turn tracking
         presentedContainer: '.presented-response-container', // Most stable selector for the model's response wrapper
         moreMenuButton: 'button[data-test-id="more-menu-button"]', // The trigger "..."
         exportToDocsButton: 'button[data-test-id="export-to-docs-button"]', // The target in the menu
@@ -558,7 +559,7 @@
     const debouncedProcessNodes = debounce(processNodes, 500);
 
     function updateOneTurnVisibility() {
-        const turns = document.querySelectorAll(SELECTORS.turnContainer);
+        const turns = document.querySelectorAll(SELECTORS.aiTurnContainer);
         // Ensure we only count visible/active responses
         const activeTurns = Array.from(turns).filter(t => t.offsetHeight > 0);
 
