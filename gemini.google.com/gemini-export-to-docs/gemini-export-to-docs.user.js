@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.8
+// @version      0.3.9
 // @lastModified 2026-03-03
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
@@ -57,7 +57,7 @@
         // Turn selectors
         // Turn selectors
         turnContainer: 'model-response, response-container, .response-container', // Broad container to watch
-        aiTurnContainer: 'model-response', // Specifically AI responses for 1-turn tracking
+        aiTurnContainer: 'model-response, .model-response', // Specifically AI responses for 1-turn tracking
         presentedContainer: '.presented-response-container', // Most stable selector for the model's response wrapper
         moreMenuButton: 'button[data-test-id="more-menu-button"]', // The trigger "..."
         exportToDocsButton: 'button[data-test-id="export-to-docs-button"]', // The target in the menu
@@ -560,10 +560,11 @@
 
     function updateOneTurnVisibility() {
         const turns = document.querySelectorAll(SELECTORS.aiTurnContainer);
-        // Ensure we only count visible/active responses
-        const activeTurns = Array.from(turns).filter(t => t.offsetHeight > 0);
+        // Note: Gemini UI can be slow to update styles/classes. 
+        // We'll count anything that looks like a model response.
+        const activeTurns = turns;
 
-        console.log(`[Gemini 1-Turn] Found ${activeTurns.length} active AI turns.`);
+        console.log(`[Gemini 1-Turn] Found ${activeTurns.length} active AI turns using ${SELECTORS.aiTurnContainer}`);
 
         // A 1-turn conversation usually has exactly 1 model-response
         const isOneTurn = activeTurns.length === 1;
