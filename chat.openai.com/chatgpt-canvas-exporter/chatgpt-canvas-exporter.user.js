@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         ChatGPT Canvas Exporter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.6.6
+// @version      0.7.0
 // @description  ChatGPTの会話ページでキャンバスの内容をエクスポートする
 // @author       Takashi Sasaki
 // @match        https://chatgpt.com/*
 // @grant        GM_download
 // @grant        GM_xmlhttpRequest
-// @require      https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js
+// @require      https://cdn.jsdelivr.net/npm/fflate/umd/index.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-canvas-exporter/chatgpt-canvas-exporter.user.js
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-canvas-exporter/chatgpt-canvas-exporter.user.js
 // @license      MIT
@@ -16,7 +16,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '0.6.6';
+    const VERSION = '0.7.0';
 
     // セレクタの定義
     const CANVAS_MESSAGE_SELECTOR = 'div[id^="textdoc-message-"]';
@@ -71,19 +71,8 @@
         }
     }
 
-    // ArrayBufferを安全にBase64文字列に変換するヘルパー（スタックオーバーフロー対策）
-    function arrayBufferToBase64(buffer) {
-        let binary = '';
-        const bytes = new Uint8Array(buffer);
-        const len = bytes.byteLength;
-        for (let i = 0; i < len; i++) {
-            binary += String.fromCharCode(bytes[i]);
-        }
-        return btoa(binary);
-    }
-
-    // 画像をArrayBufferとして取得し、Base64文字列に変換して返す (CORS・サンドボックス対策)
-    function fetchImageAsBase64(url) {
+    // 画像をArrayBufferとして取得するヘルパー (CORS回避のためGM_xmlhttpRequestを使用)
+    function fetchImageData(url) {
         return new Promise((resolve, reject) => {
             if (typeof GM_xmlhttpRequest !== 'undefined') {
                 GM_xmlhttpRequest({
@@ -95,8 +84,7 @@
                             const headers = response.responseHeaders || '';
                             const match = headers.match(/content-type:\s*([^\s;]+)/i);
                             const type = match ? match[1].toLowerCase() : '';
-                            const base64Str = arrayBufferToBase64(response.response);
-                            resolve({ base64: base64Str, type: type, size: response.response.byteLength });
+                            resolve({ data: new Uint8Array(response.response), type: type, size: response.response.byteLength });
                         } else {
                             reject(new Error('HTTP Status ' + response.status));
                         }
@@ -107,7 +95,7 @@
                 });
             } else {
                 fetch(url).then(r => r.arrayBuffer().then(buffer => ({
-                    base64: arrayBufferToBase64(buffer),
+                    data: new Uint8Array(buffer),
                     type: r.headers.get('content-type') || '',
                     size: buffer.byteLength
                 }))).then(resolve).catch(reject);
@@ -122,16 +110,17 @@
         console.log(`[CanvasExporter] Found ${messageEls.length} canvas message elements.`);
         if (messageEls.length === 0) return;
 
-        if (typeof JSZip === 'undefined') {
-            console.error('[CanvasExporter] JSZip is not defined.');
-            alert('ZIPライブラリ(JSZip)がロードされていません。ページを開き直して再試行してください。');
+        if (typeof fflate === 'undefined') {
+            console.error('[CanvasExporter] fflate is not defined.');
+            alert('ZIPライブラリ(fflate)がロードされていません。ページを開き直して再試行してください。');
             return;
         }
 
-        const zip = new JSZip();
+        const zipData = {}; // fflate用のオブジェクト構造
         const date = new Date().toISOString().slice(0, 10);
         let hasContent = false;
         const titleCounts = {}; // ファイル名重複防止用
+        const encoder = new TextEncoder();
 
         // --- 1. キャンバスのエクスポート ---
         console.log('[CanvasExporter] Starting canvas extraction...');
@@ -153,8 +142,9 @@
                     titleCounts[title] = 1;
                 }
 
-                console.log(`[CanvasExporter] Added canvas file: canvases/${title}.md`);
-                zip.file(`canvases/${title}.md`, textContent);
+                const filePath = `canvases/${title}.md`;
+                console.log(`[CanvasExporter] Added canvas file: ${filePath}`);
+                zipData[filePath] = encoder.encode(textContent);
             }
         });
 
@@ -182,7 +172,7 @@
 
             console.log(`[CanvasExporter] Fetching image ${currentImgId}: ${src.substring(0, 50)}...`);
             imgPromises.push(
-                fetchImageAsBase64(src).then(result => {
+                fetchImageData(src).then(result => {
                     let ext = 'png'; // デフォルト
                     if (result.type) {
                         if (result.type.includes('jpeg') || result.type.includes('jpg')) ext = 'jpg';
@@ -196,8 +186,7 @@
 
                     const imgName = `images/image_${currentImgId}.${ext}`;
                     console.log(`[CanvasExporter] Image ${currentImgId} fetched. Size: ${result.size}, adding as: ${imgName}`);
-                    // プリミティブなBase64文字列としてJSZipに渡す（クロスコンテキストのサンドボックス死を完全に回避）
-                    zip.file(imgName, result.base64, { base64: true });
+                    zipData[imgName] = result.data; // Uint8Array
                     hasContent = true;
                 }).catch(e => {
                     console.error(`[CanvasExporter] Failed to fetch image ${currentImgId}:`, src, e);
@@ -230,14 +219,10 @@
         }
 
         try {
-            console.log('[CanvasExporter] Generating ZIP file (type: uint8array, compression: STORE)...');
-            // サンドボックス内でのWebWorkerハングを避けるため、圧縮をOFFにし、コールバックを削除
-            const uint8array = await zip.generateAsync({
-                type: "uint8array",
-                compression: "STORE"
-            });
-            console.log(`[CanvasExporter] ZIP Uint8Array generated. Length: ${uint8array.length}`);
-            const content = new Blob([uint8array], { type: "application/zip" });
+            console.log('[CanvasExporter] Generating ZIP file synchronously using fflate.zipSync...');
+            const zipped = fflate.zipSync(zipData, { level: 0 }); // 無圧縮で即座に生成
+            console.log(`[CanvasExporter] ZIP Uint8Array generated. Length: ${zipped.length}`);
+            const content = new Blob([zipped], { type: "application/zip" });
             console.log(`[CanvasExporter] ZIP blob created. Size: ${content.size}`);
             downloadBlob(content, `canvas_exports_${date}.zip`);
         } catch (e) {
