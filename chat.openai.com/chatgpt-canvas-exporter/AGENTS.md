@@ -10,10 +10,48 @@ ChatGPT "Canvas" (internally often referred to as `writing-block` or `textdoc`) 
 
 To bypass Cloudflare protection and accurately capture the Canvas DOM, we used the **Chrome DevTools Protocol (CDP)**.
 
-1.  **Capture Strategy**: Used a PowerShell script (or manual CDP call) to fetch the outer HTML while the Canvas was active.
+1.  **Capture Strategy**: Used a PowerShell script to fetch the outer HTML while the Canvas was active.
     - Port: `9222/tcp`
     - Target: Current active tab at `chatgpt.com`
-2.  **Preprocessing**: The raw HTML was minified. We used a "fixed" version (`samples/canvas_dom_fixed.html`) where long lines were broken at tag boundaries to facilitate line-based searching (e.g., `grep`, `Select-String`).
+2.  **Preprocessing**: The raw HTML was minified. We used a "fixed" version (`samples/multi_canvas_dom_fixed.html`) where long lines were broken at tag boundaries (`>` to `>\n`) to facilitate line-based searching.
+
+### CDP Capture Script (PowerShell)
+
+To capture the live DOM of the ChatGPT tab via CDP:
+
+```powershell
+$json = Invoke-RestMethod -Uri 'http://localhost:9222/json'
+$target = $json | Where-Object { $_.url -like '*chatgpt.com*' } | Select-Object -First 1
+$wsUrl = $target.webSocketDebuggerUrl
+
+$ws = New-Object System.Net.WebSockets.ClientWebSocket
+$ct = New-Object System.Threading.CancellationTokenSource
+$ws.ConnectAsync($wsUrl, $ct.Token).Wait()
+
+$message = @{ id = 1; method = "Runtime.evaluate"; params = @{ expression = "document.documentElement.outerHTML" } } | ConvertTo-Json -Compress
+$buffer = [System.Text.Encoding]::UTF8.GetBytes($message)
+$ws.SendAsync((New-Object System.ArraySegment[Byte] -ArgumentList @(,$buffer)), [System.Net.WebSockets.WebSocketMessageType]::Text, $true, $ct.Token).Wait()
+
+$receiveBuffer = New-Object Byte[] 2097152 # 2MB
+$result = ""
+do {
+    $task = $ws.ReceiveAsync((New-Object System.ArraySegment[Byte] -ArgumentList @(,$receiveBuffer)), $ct.Token)
+    $task.Wait()
+    $result += [System.Text.Encoding]::UTF8.GetString($receiveBuffer, 0, $task.Result.Count)
+} while (-not $task.Result.EndOfMessage)
+
+$html = ($result | ConvertFrom-Json).result.result.value
+$html | Out-File -FilePath "samples/multi_canvas_dom.html" -Encoding utf8
+$ws.Dispose()
+```
+
+### Formatting Script (PowerShell)
+
+```powershell
+$text = [System.IO.File]::ReadAllText('samples/multi_canvas_dom.html')
+$formatted = $text -replace '>', ">`r`n"
+[System.IO.File]::WriteAllText('samples/multi_canvas_dom_fixed.html', $formatted)
+```
 
 ### Identified Selectors
 
@@ -45,3 +83,6 @@ The following selectors are critical for interacting with the Canvas:
 
 ## Reference Material
 - Refer to `samples/canvas_dom_fixed.html` for a snapshot of the DOM used during initial development.
+
+## バージョンのバンプアップについて
+- 少しでもコードに変更があったらパッチレベルをバンプアップする。
