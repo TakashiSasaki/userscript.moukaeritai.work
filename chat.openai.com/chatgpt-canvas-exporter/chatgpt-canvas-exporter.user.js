@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Canvas Exporter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.6.2
+// @version      0.6.3
 // @description  ChatGPTの会話ページでキャンバスの内容をエクスポートする
 // @author       Takashi Sasaki
 // @match        https://chatgpt.com/*
@@ -16,7 +16,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '0.6.2';
+    const VERSION = '0.6.3';
 
     // セレクタの定義
     const CANVAS_MESSAGE_SELECTOR = 'div[id^="textdoc-message-"]';
@@ -184,7 +184,8 @@
 
                     const imgName = `images/image_${currentImgId}.${ext}`;
                     console.log(`[CanvasExporter] Image ${currentImgId} fetched. Size: ${result.size}, adding as: ${imgName}`);
-                    zip.file(imgName, result.data);
+                    // ArrayBufferを明示的にUint8Arrayにラップして渡す（サンドボックス対策）
+                    zip.file(imgName, new Uint8Array(result.data));
                     hasContent = true;
                 }).catch(e => {
                     console.error(`[CanvasExporter] Failed to fetch image ${currentImgId}:`, src, e);
@@ -217,8 +218,12 @@
         }
 
         try {
-            console.log('[CanvasExporter] Generating ZIP file blob (using uint8array to bypass sandboxes)...');
-            const uint8array = await zip.generateAsync({ type: "uint8array" });
+            console.log('[CanvasExporter] Generating ZIP file (type: uint8array, compression: STORE)...');
+            // 処理を軽量化するため圧縮をOFF(STORE)にし、サンドボックスで安全なuint8array形式で生成
+            const uint8array = await zip.generateAsync({
+                type: "uint8array",
+                compression: "STORE"
+            });
             const content = new Blob([uint8array], { type: "application/zip" });
             console.log(`[CanvasExporter] ZIP blob generated. Size: ${content.size}`);
             downloadBlob(content, `canvas_exports_${date}.zip`);
