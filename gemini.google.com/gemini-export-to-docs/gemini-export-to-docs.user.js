@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.5
+// @version      0.3.6
 // @lastModified 2026-03-03
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
@@ -539,12 +539,8 @@
             }
         });
 
-        // B. Handle 1-Turn Panel Visibility (Debounced to reduce load)
-        if (updateOneTurnVisibilityDebounced) {
-            updateOneTurnVisibilityDebounced();
-        } else {
-            updateOneTurnVisibility();
-        }
+        // B. Handle 1-Turn Panel Visibility
+        updateOneTurnVisibility();
     }
 
     const AUTO_DELETE_DELAY_KEY = 'gemini-export-auto-delete-delay';
@@ -559,7 +555,7 @@
         };
     }
 
-    const updateOneTurnVisibilityDebounced = debounce(updateOneTurnVisibility, 500);
+    const debouncedProcessNodes = debounce(processNodes, 500);
 
     function updateOneTurnVisibility() {
         const turns = document.querySelectorAll(SELECTORS.turnContainer);
@@ -729,9 +725,12 @@
         console.log('[Gemini 1-Click Export to Docs] Initializing...');
 
         styleElement = addStyles(); // addStyles() needs to return the style element
-        processNodes(); // Initial run
 
-        mainObserver = new MutationObserver(processNodes);
+        // Initial run - immediate scan for the current page state
+        processNodes();
+
+        // Future updates - use debounced version to handle streaming content/DOM changes efficiently
+        mainObserver = new MutationObserver(debouncedProcessNodes);
         mainObserver.observe(document.body, { childList: true, subtree: true });
 
         keydownListener = handleKeyboardShortcut;
