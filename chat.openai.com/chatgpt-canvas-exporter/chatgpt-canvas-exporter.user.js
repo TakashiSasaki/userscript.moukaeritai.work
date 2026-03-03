@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         ChatGPT Canvas Exporter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.0
+// @version      0.5.0
 // @description  ChatGPTの会話ページでキャンバスの内容をエクスポートする
 // @author       Takashi Sasaki
 // @match        https://chatgpt.com/*
 // @grant        GM_download
+// @require      https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-canvas-exporter/chatgpt-canvas-exporter.user.js
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-canvas-exporter/chatgpt-canvas-exporter.user.js
 // @license      MIT
@@ -14,7 +15,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '0.4.0';
+    const VERSION = '0.5.0';
 
     // セレクタの定義
     const CANVAS_MESSAGE_SELECTOR = 'div[id^="textdoc-message-"]';
@@ -38,6 +39,11 @@
         const fileName = `${title}_${date}.md`.replace(/[\\/:*?"<>|]/g, '_');
 
         const blob = new Blob([textContent], { type: 'text/markdown;charset=utf-8' });
+        downloadBlob(blob, fileName);
+    }
+
+    // 共通のBlobダウンロード処理
+    function downloadBlob(blob, fileName) {
         const url = URL.createObjectURL(blob);
 
         if (typeof GM_download !== 'undefined') {
@@ -54,6 +60,54 @@
             });
         } else {
             fallbackDownload(url, fileName);
+        }
+    }
+
+    // すべてのキャンバスをZIPで一括エクスポート
+    async function downloadAllAsZip() {
+        const messageEls = document.querySelectorAll(CANVAS_MESSAGE_SELECTOR);
+        if (messageEls.length === 0) return;
+
+        if (typeof JSZip === 'undefined') {
+            alert('ZIPライブラリ(JSZip)がロードされていません。ページを開き直して再試行してください。');
+            return;
+        }
+
+        const zip = new JSZip();
+        const date = new Date().toISOString().slice(0, 10);
+        let hasContent = false;
+        const titleCounts = {}; // ファイル名重複防止用
+
+        messageEls.forEach((messageEl, index) => {
+            const contentEl = messageEl.querySelector(CANVAS_CONTENT_SELECTOR);
+            const titleEl = messageEl.querySelector('.text-token-text-primary.font-semibold');
+
+            if (contentEl) {
+                hasContent = true;
+                const textContent = contentEl.innerText;
+                let title = titleEl ? titleEl.innerText.trim() : `Canvas ${index + 1}`;
+                title = title.replace(/[\\/:*?"<>|]/g, '_');
+
+                // 重複タイトルに連番を付与
+                if (titleCounts[title]) {
+                    titleCounts[title]++;
+                    title = `${title}_${titleCounts[title]}`;
+                } else {
+                    titleCounts[title] = 1;
+                }
+
+                zip.file(`${title}.md`, textContent);
+            }
+        });
+
+        if (!hasContent) return;
+
+        try {
+            const content = await zip.generateAsync({ type: "blob" });
+            downloadBlob(content, `canvas_exports_${date}.zip`);
+        } catch (e) {
+            console.error('Failed to generate ZIP', e);
+            alert('ZIPの生成に失敗しました。');
         }
     }
 
@@ -152,10 +206,20 @@
         panel.innerHTML = `
             <div class="panel-header">
                 <span class="panel-title">Canvas Exporter v${VERSION}</span>
-                <button class="panel-close-btn">&times;</button>
+                <div style="display:flex; gap: 8px; align-items: center;">
+                    <button class="panel-download-all-btn" title="Download All as ZIP" style="display:flex; align-items:center; gap:4px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                        ZIP
+                    </button>
+                    <button class="panel-close-btn">&times;</button>
+                </div>
             </div>
             <div class="canvas-list"></div>
         `;
+
+        panel.querySelector('.panel-download-all-btn').addEventListener('click', () => {
+            downloadAllAsZip();
+        });
 
         panel.querySelector('.panel-close-btn').addEventListener('click', () => {
             panel.classList.remove('active');
@@ -346,6 +410,20 @@
             font-size: 1.2rem;
             cursor: pointer;
             color: var(--text-secondary, #666);
+            display: flex;
+            align-items: center;
+        }
+        .panel-download-all-btn {
+            background-color: var(--gpt-surface-primary, #000);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+        .panel-download-all-btn:hover {
+            opacity: 0.8;
         }
         .canvas-list {
             padding: 10px;
