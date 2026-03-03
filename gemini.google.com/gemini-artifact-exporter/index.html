@@ -120,8 +120,11 @@
             <li><strong><code>Scan Artifacts</code></strong>: サイドバーからエクスポート可能な記事を再スキャンします。別の会話に移動した際などに使用してください。</li>
             <li><strong><code>Export Selected</code></strong>: 選択中のアイテムのエクスポートを開始します。実行中は <code>Cancel Export</code>
                 ボタンに変わり、途中で停止できます。</li>
-            <li><strong><code>Timeout (s)</code></strong>: 各アーティファクトの処理において、Google
-                ドキュメント側の応答を待機する最大秒数です（デフォルト10秒）。通信環境や記事の長さに応じて調整してください。</li>
+            <li><strong><code>Auto-Delete Chat</code></strong>:
+                全エクスポート完了後、会話を自動的に削除します（<code>Gemini 1-Click Delete</code> との連携が必要です）。</li>
+            <li><strong><code>Doc Wait (s)</code></strong>: Google ドキュメントの新規タブが開くのを待機する最大秒数です（デフォルト10秒）。</li>
+            <li><strong><code>Other Weights (s)</code></strong>: サイドバー再開、キャンバス初期化、完了判定などの待機時間を調整できます。通信環境に応じて微調整してください。
+            </li>
         </ul>
 
         <h2>注意事項</h2>
@@ -133,12 +136,10 @@
 
         <h2>更新履歴</h2>
         <ul>
-            <li><strong>v0.2.39</strong>: 画面上にアーティファクトが存在しない場合にパネルを自動で非表示にする機能を追加。</li>
-            <li><strong>v0.2.38</strong>: 各種待機時間（ウェイト/タイムアウト）を調整可能にし、一部の固定待機時間を短縮（500ms）。</li>
-            <li><strong>v0.2.37</strong>: 自動削除イベントのタイミングを調整（1秒の待機を追加）。</li>
-            <li><strong>v0.2.36</strong>: エクスポート完了後の自動削除機能を追加。</li>
-            <li><strong>v0.2.35</strong>: 内部処理の安定性を向上。</li>
-            <li><strong>v0.2.34</strong>: Gemini側のUIスタックバグに対するアグレッシブなクリーンアップ機能を実装。</li>
+            <li><strong>v0.2.39</strong>: 画面上にアーティファクトが存在しない場合にパネルを自動で非表示にする機能を実装。</li>
+            <li><strong>v0.2.38</strong>: 各種待機時間（ウェイト/タイムアウト）を調整可能にし、UIレスポンスを改善。</li>
+            <li><strong>v0.2.36</strong>: エクスポート完了後の会話自動削除機能（カスタムイベント連携）を追加。</li>
+            <li><strong>v0.2.34</strong>: Gemini側のUIスタックバグ（トースト居座り等）に対するアグレッシブなクリーンアップ機能を実装。</li>
             <li><strong>v0.2.20</strong>: タイムアウト設定機能を追加。</li>
         </ul>
     </div>
