@@ -80,68 +80,88 @@
         </svg>
         userscript.moukaeritai.work
     </a>
-    <div id="content">Loading documentation...</div>
+    <div id="content">
+        <h1>Gemini 1-Click Delete Conversation</h1>
+        <p>GeminiのWeb SPAページにおいて、現在の会話を削除するための複数回のクリック操作を自動化し、<strong>1クリック</strong> または <strong>キーボードショートカット</strong>
+            で即座に会話を削除できる機能を追加するユーザースクリプトです。</p>
+
+        <div id="script-info"
+            style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
+            <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
+            <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
+        </div>
+
+        <a href="gemini-one-click-delete.user.js" class="install-button">スクリプトをインストール</a>
+
+        <h2>目的</h2>
+        <p>Geminiの標準機能では、会話を削除するために「メニューを開く → 削除を選択 → 確認ダイアログ」という手順が必要です。本スクリプトはこれらを自動化し、大幅に手間を削減します。</p>
+
+        <h2>ユーザースクリプト情報</h2>
+        <ul>
+            <li><strong>Namespace</strong>: <code>https://userscript.moukaeritai.work/</code></li>
+            <li><strong>Match URL</strong>: <code>https://gemini.google.com/*</code>
+                （スクリプト内部でURLを監視し、チャットページでのみ動的に有効化されます。現在、<code>/app/</code> および <code>/gem/</code> のパス形式に対応しています。）</li>
+        </ul>
+
+        <h2>機能仕様</h2>
+        <h3>1. 1クリック削除ボタンの注入</h3>
+        <p>以下の場所に「ゴミ箱」アイコンの削除ボタンを自動的に追加します。</p>
+        <ul>
+            <li><strong>標準ビュー（デスクトップ/モバイル共通）</strong>: 画面上部（ヘッダー部分）にある「・・・（オプション）」メニューボタンの隣に配置されます。</li>
+            <li><strong>検索結果ビュー（またはヘッダーがない場合）</strong>:
+                画面右上に「フローティングボタン」として配置されます。現在表示中の会話IDを検知し、サイドバー内の対応する削除メニューを自動操作します。</li>
+        </ul>
+
+        <h3>2. 他のユーザースクリプトとの連携 (API)</h3>
+        <ul>
+            <li><strong>カスタムイベント</strong>: <code>window</code> オブジェクトに対して
+                <code>gemini-one-click-delete:request-delete</code> イベントを送信することで、外部から会話の削除を要求できます。</li>
+            <li><strong>ユースケース</strong>: <code>Gemini 1-Click Export to Docs</code> や
+                <code>Gemini Artifact Exporter</code> などのエクスポート完了後に、自動的に会話をクリーンアップする用途で使用されます。</li>
+        </ul>
+
+        <h3>3. キーボードショートカット</h3>
+        <ul>
+            <li><strong>ショートカット</strong>: <code>Ctrl + D</code> （Macの場合は <code>Meta + D</code> も可）、または
+                <code>Ctrl + Shift + Backspace</code></li>
+            <li><strong>動作</strong>:
+                <ul>
+                    <li>ショートカットキーが押されると、画面上の削除ボタンをプログラム的にクリックします。</li>
+                    <li><strong>安全性</strong>: テキスト入力エリア（<code>input</code>, <code>textarea</code>,
+                        <code>contenteditable</code>）での入力中はショートカットを無効化します。</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>4. SPA（シングルページアプリケーション）対応とパフォーマンス</h3>
+        <ul>
+            <li>GeminiはSPAであるため、ページ遷移を検知してスクリプトの機能を動的に制御します。</li>
+            <li><strong>有効化</strong>: チャットページに遷移した際、削除ボタンやショートカット機能が自動的に有効になります。</li>
+            <li><strong>無効化（クリーンアップ）</strong>: チャットページから他のページ（ホームページなど）に移動すると、追加したボタンや機能はすべて削除され、リソースを解放します。</li>
+        </ul>
+
+        <h2>注意事項</h2>
+        <ul>
+            <li><strong>Trusted Types 対応</strong>: ブラウザのセキュリティポリシーによるエラーを回避するため、内部的にTrusted Typesに対応しています。</li>
+            <li><strong>待機ロジック</strong>: メニューパネルや確認ダイアログの表示を動的かつ堅牢に待機します。</li>
+        </ul>
+
+        <h2>更新履歴</h2>
+        <ul>
+            <li><strong>v0.2.10</strong>: 外部スクリプトからの削除要求を受け付けるカスタムイベント
+                (<code>gemini-one-click-delete:request-delete</code>) に対応。</li>
+            <li><strong>v0.2.5</strong>: 画面上にフローティングパネルを追加し、ショートカットキーの視認性と操作性を向上。</li>
+            <li><strong>v0.2.4</strong>: アーティファクトがある際にメニュー項目が増えても「Delete」を正確に特定できるようロジックを強化。</li>
+            <li><strong>v0.2.3</strong>: 最新のGemini UIセレクタに対応。SPAルーティング検知に Navigation API を導入。</li>
+            <li><strong>v0.1.18</strong>: SPA対応強化に伴う内部変更。</li>
+        </ul>
+    </div>
 
     <!-- Marked library for parsing markdown -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const markdown = `
-# Gemini 1-Click Delete Conversation
 
-GeminiのWeb SPAページにおいて、現在の会話を削除するための複数回のクリック操作を自動化し、**1クリック** または **キーボードショートカット** で即座に会話を削除できる機能を追加するユーザースクリプトです。
-
-<div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
-    <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
-    <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
-</div>
-
-<a href="gemini-one-click-delete.user.js" class="install-button">スクリプトをインストール</a>
-
-## 目的
-
-Geminiの標準機能では、会話を削除するために「メニューを開く → 削除を選択 → 確認ダイアログ」という手順が必要です。本スクリプトはこれらを自動化し、大幅に手間を削減します。
-
-## ユーザースクリプト情報
-
-*   **Namespace**: \`https://userscript.moukaeritai.work/\`
-*   **Match URL**: \`https://gemini.google.com/*\`
-    （スクリプト内部でURLを監視し、チャットページでのみ動的に有効化されます。現在、\`/app/\` および \`/gem/\` のパス形式に対応しています。）
-
-## 機能仕様
-
-### 1. 1クリック削除ボタンの注入
-以下の場所に「ゴミ箱」アイコンの削除ボタンを自動的に追加します。
-*   **標準ビュー（デスクトップ/モバイル共通）**: 画面上部（ヘッダー部分）にある「・・・（オプション）」メニューボタンの隣に配置されます。
-*   **検索結果ビュー（またはヘッダーがない場合）**: 画面右上に「フローティングボタン」として配置されます。現在表示中の会話IDを検知し、サイドバー内の対応する削除メニューを自動操作します。
-
-### 2. 他のユーザースクリプトとの連携 (API)
-*   **カスタムイベント**: \`window\` オブジェクトに対して \`gemini-one-click-delete:request-delete\` イベントを送信することで、外部から会話の削除を要求できます。
-*   **ユースケース**: \`Gemini 1-Click Export to Docs\` や \`Gemini Artifact Exporter\` などのエクスポート完了後に、自動的に会話をクリーンアップする用途で使用されます。
-
-### 3. キーボードショートカット
-*   **ショートカット**: \`Ctrl + D\` （Macの場合は \`Meta + D\` も可）、または \`Ctrl + Shift + Backspace\`
-*   **動作**:
-    *   ショートカットキーが押されると、画面上の削除ボタンをプログラム的にクリックします。
-    *   **安全性**: テキスト入力エリア（\`input\`, \`textarea\`, \`contenteditable\`）での入力中はショートカットを無効化します。
-
-### 4. SPA（シングルページアプリケーション）対応とパフォーマンス
-*   GeminiはSPAであるため、ページ遷移を検知してスクリプトの機能を動的に制御します。
-*   **有効化**: チャットページに遷移した際、削除ボタンやショートカット機能が自動的に有効になります。
-*   **無効化（クリーンアップ）**: チャットページから他のページ（ホームページなど）に移動すると、追加したボタンや機能はすべて削除され、リソースを解放します。
-
-## 注意事項
-*   **Trusted Types 対応**: ブラウザのセキュリティポリシーによるエラーを回避するため、内部的にTrusted Typesに対応しています。
-*   **待機ロジック**: メニューパネルや確認ダイアログの表示を動的かつ堅牢に待機します。
-
-## 更新履歴
-*   **v0.2.10**: 外部スクリプトからの削除要求を受け付けるカスタムイベント (`gemini-one - click - delete: request - delete `) に対応。
-*   **v0.2.5**: 画面上にフローティングパネルを追加し、ショートカットキーの視認性と操作性を向上。
-*   **v0.2.4**: アーティファクトがある際にメニュー項目が増えても「Delete」を正確に特定できるようロジックを強化。
-*   **v0.2.3**: 最新のGemini UIセレクタに対応。SPAルーティング検知に Navigation API を導入。
-*   **v0.1.18**: SPA対応強化に伴う内部変更。
-`;
-            document.getElementById('content').innerHTML = marked.parse(markdown);
 
             // Fetch version from script metadata
             try {
