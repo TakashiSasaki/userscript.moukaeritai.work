@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Canvas Exporter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.6.5
+// @version      0.6.6
 // @description  ChatGPTの会話ページでキャンバスの内容をエクスポートする
 // @author       Takashi Sasaki
 // @match        https://chatgpt.com/*
@@ -16,7 +16,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '0.6.5';
+    const VERSION = '0.6.6';
 
     // セレクタの定義
     const CANVAS_MESSAGE_SELECTOR = 'div[id^="textdoc-message-"]';
@@ -230,17 +230,19 @@
         }
 
         try {
-            console.log('[CanvasExporter] Generating ZIP file blob...');
-            const content = await zip.generateAsync({
-                type: "blob"
-            }, function updateCallback(metadata) {
-                console.log(`[CanvasExporter] ZIP Progress: ${metadata.percent.toFixed(2)} % | Current File: ${metadata.currentFile || 'none'}`);
+            console.log('[CanvasExporter] Generating ZIP file (type: uint8array, compression: STORE)...');
+            // サンドボックス内でのWebWorkerハングを避けるため、圧縮をOFFにし、コールバックを削除
+            const uint8array = await zip.generateAsync({
+                type: "uint8array",
+                compression: "STORE"
             });
-            console.log(`[CanvasExporter] ZIP blob generated. Size: ${content.size}`);
+            console.log(`[CanvasExporter] ZIP Uint8Array generated. Length: ${uint8array.length}`);
+            const content = new Blob([uint8array], { type: "application/zip" });
+            console.log(`[CanvasExporter] ZIP blob created. Size: ${content.size}`);
             downloadBlob(content, `canvas_exports_${date}.zip`);
         } catch (e) {
-            console.error('[CanvasExporter] Failed to generate ZIP', e);
-            alert('ZIPの生成に失敗しました。');
+            console.error('[CanvasExporter] Error during ZIP generation:', e);
+            alert('ZIPの生成中にエラーが発生しました: ' + e.message);
         }
     }
 

@@ -51,7 +51,12 @@ The following selectors are critical for interacting with the Canvas:
 In UserScript environments (like Tampermonkey), passing binary objects (`Blob`, `ArrayBuffer`, or even `Uint8Array`) from `GM_xmlhttpRequest` to `JSZip` can cause `JSZip.generateAsync` to hang indefinitely due to internal cross-context `instanceof` checks failing.
 - **Problem**: The internal `FileReader` or type-checking used by `JSZip` fails in the restricted sandbox.
 - **Solution**: Avoid passing binary objects entirely. Instead, fetch the data as an `ArrayBuffer`, convert it to a primitive **Base64 String** manually, and pass that string to JSZip with `{ base64: true }`.
-- **Example**: `zip.file("image.png", base64String, { base64: true });`
+- **Sandbox Stability**: To further prevent JSZip from hanging (which often happens when it tries to spawn Web Workers for compression inside a sandbox), set `compression: "STORE"` and output to `type: "uint8array"`.
+- **Example**: 
+  ```javascript
+  const uint8 = await zip.generateAsync({ type: "uint8array", compression: "STORE" });
+  const blob = new Blob([uint8], { type: "application/zip" });
+  ```
 
 ### GM_download Fallback Timing
 When implementing a fallback for `GM_download` (for environments where it's unsupported or fails), be careful with `URL.revokeObjectURL`.
