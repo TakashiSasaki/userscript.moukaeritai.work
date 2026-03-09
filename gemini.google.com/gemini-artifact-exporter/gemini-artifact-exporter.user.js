@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.44
+// @version      0.2.45
 // @lastModified 2026-03-09
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -118,53 +118,37 @@
 
     async function waitForExportStart(exportBtn, menuPanel, detectTimeoutMs = 2500) {
         const start = Date.now();
-        let docsOpened = false;
 
-        const onVisibilityChange = () => {
-            if (document.hidden) {
-                docsOpened = true;
-            }
-        };
-        document.addEventListener('visibilitychange', onVisibilityChange);
+        while ((Date.now() - start) < detectTimeoutMs) {
+            await sleep(200);
 
-        try {
-            while ((Date.now() - start) < detectTimeoutMs) {
-                await sleep(200);
+            const snackbarTexts = getVisibleSnackbars()
+                .map(el => (el.textContent || '').trim())
+                .filter(Boolean);
 
-                if (docsOpened) {
-                    return { status: 'started', reason: 'tab-hidden' };
-                }
-
-                const snackbarTexts = getVisibleSnackbars()
-                    .map(el => (el.textContent || '').trim())
-                    .filter(Boolean);
-
-                const hasDocsToast = snackbarTexts.some(text =>
-                    text.includes('作成されました') ||
-                    text.includes('Document created') ||
-                    text.includes('作成しています') ||
-                    text.includes('Creating document')
-                );
-                if (hasDocsToast) {
-                    return { status: 'started', reason: 'docs-toast' };
-                }
-
-                const menuStillVisible = Boolean(menuPanel && menuPanel.isConnected && menuPanel.offsetParent !== null);
-                const exportBtnStillVisible = Boolean(exportBtn && exportBtn.isConnected && exportBtn.offsetParent !== null);
-
-                if (!menuStillVisible) {
-                    return { status: 'started', reason: 'menu-closed' };
-                }
-
-                if (!exportBtnStillVisible) {
-                    return { status: 'started', reason: 'export-button-disappeared' };
-                }
+            const hasDocsToast = snackbarTexts.some(text =>
+                text.includes('作成されました') ||
+                text.includes('Document created') ||
+                text.includes('作成しています') ||
+                text.includes('Creating document')
+            );
+            if (hasDocsToast) {
+                return { status: 'started', reason: 'docs-toast' };
             }
 
-            return { status: 'started', reason: 'assumed-after-click' };
-        } finally {
-            document.removeEventListener('visibilitychange', onVisibilityChange);
+            const menuStillVisible = Boolean(menuPanel && menuPanel.isConnected && menuPanel.offsetParent !== null);
+            const exportBtnStillVisible = Boolean(exportBtn && exportBtn.isConnected && exportBtn.offsetParent !== null);
+
+            if (!menuStillVisible) {
+                return { status: 'started', reason: 'menu-closed' };
+            }
+
+            if (!exportBtnStillVisible) {
+                return { status: 'started', reason: 'export-button-disappeared' };
+            }
         }
+
+        return { status: 'started', reason: 'assumed-after-click' };
     }
 
     function clearStuckOverlays(aggressive) {
