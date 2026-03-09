@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Microsoft 365 Copilot Conversation Deleter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.5
+// @version      0.2.6
 // @description  Adds a floating shortcut button to easily delete the currently viewed Copilot conversation in Outlook. Optimized for PWA/Iframe structure.
 // @author       takas
 // @match        https://outlook.office.com/host/*
@@ -16,6 +16,7 @@
     const CONTAINER_ID = 'copilot-deleter-container';
     const BUTTON_ID = 'copilot-conversation-deleter-btn';
     const DRY_RUN_ID = 'copilot-deleter-dry-run';
+    const STORAGE_KEY = 'copilot_deleter_settings';
 
     // DOM Selectors (Supporting both JP and EN)
     const SIDEBAR_EXPAND_SELECTOR = '#sidepaneExpandButton';
@@ -27,6 +28,17 @@
     const DELETE_MENU_ITEM_SELECTOR = 'div[role="menuitem"][aria-label*="削除"], div[role="menuitem"][aria-label*="Delete"]';
 
     let isDryRun = true;
+
+    function saveSettings(settings) {
+        const current = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...current, ...settings }));
+    }
+
+    function loadSettings() {
+        const settings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        if (settings.hasOwnProperty('isDryRun')) isDryRun = settings.isDryRun;
+        return settings;
+    }
 
     /**
      * Helper to find an element across all frames/iframes on the page.
@@ -72,18 +84,25 @@
     function createFloatingUI() {
         if (document.getElementById(CONTAINER_ID)) return;
 
+        const settings = loadSettings();
         const container = document.createElement('div');
         container.id = CONTAINER_ID;
+
+        const pos = settings.position || { bottom: '20px', right: '25px' };
+
         Object.assign(container.style, {
             position: 'fixed',
-            bottom: '20px',
-            right: '25px',
+            bottom: pos.bottom || 'auto',
+            right: pos.right || 'auto',
+            top: pos.top || 'auto',
+            left: pos.left || 'auto',
             zIndex: '2147483647',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-end',
             gap: '8px',
-            fontFamily: '"Segoe UI", "Segoe UI Web", sans-serif'
+            fontFamily: '"Segoe UI", "Segoe UI Web", sans-serif',
+            cursor: 'grab'
         });
 
         const toggleLabel = document.createElement('label');
@@ -109,6 +128,7 @@
         checkbox.checked = isDryRun;
         checkbox.addEventListener('change', (e) => {
             isDryRun = e.target.checked;
+            saveSettings({ isDryRun: isDryRun });
             updateButtonStyle();
         });
 
@@ -161,6 +181,59 @@
         btn.addEventListener('click', handleDeleteChat);
 
         updateButtonStyle();
+
+        // Draggable Logic
+        let isDragging = false;
+        let startX, startY, initialProps;
+
+        container.addEventListener('mousedown', (e) => {
+            if (e.target === checkbox || e.target === btn || e.target === toggleLabel) {
+                if (e.target === toggleLabel) {
+                    // Allow dragging from the label background
+                } else {
+                    return;
+                }
+            }
+            isDragging = true;
+            container.style.cursor = 'grabbing';
+            startX = e.clientX;
+            startY = e.clientY;
+            initialProps = {
+                left: container.offsetLeft,
+                top: container.offsetTop
+            };
+
+            // Switch to absolute positioning relative to viewport for dragging
+            container.style.bottom = 'auto';
+            container.style.right = 'auto';
+            container.style.left = initialProps.left + 'px';
+            container.style.top = initialProps.top + 'px';
+
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            container.style.left = (initialProps.left + dx) + 'px';
+            container.style.top = (initialProps.top + dy) + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!isDragging) return;
+            isDragging = false;
+            container.style.cursor = 'grab';
+
+            saveSettings({
+                position: {
+                    top: container.style.top,
+                    left: container.style.left,
+                    bottom: 'auto',
+                    right: 'auto'
+                }
+            });
+        });
 
         container.appendChild(toggleLabel);
         container.appendChild(btn);
