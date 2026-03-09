@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Microsoft 365 Copilot Conversation Deleter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.6
+// @version      0.2.7
 // @description  Adds a floating shortcut button to easily delete the currently viewed Copilot conversation in Outlook. Optimized for PWA/Iframe structure.
 // @author       takas
 // @match        https://outlook.office.com/host/*
@@ -28,6 +28,7 @@
     const DELETE_MENU_ITEM_SELECTOR = 'div[role="menuitem"][aria-label*="削除"], div[role="menuitem"][aria-label*="Delete"]';
 
     let isDryRun = true;
+    let isDraggingUI = false;
 
     function saveSettings(settings) {
         const current = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
@@ -198,6 +199,7 @@
             container.style.cursor = 'grabbing';
             startX = e.clientX;
             startY = e.clientY;
+            isDraggingUI = true;
             initialProps = {
                 left: container.offsetLeft,
                 top: container.offsetTop
@@ -212,17 +214,24 @@
             e.preventDefault();
         });
 
+        let dragRAF;
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
-            container.style.left = (initialProps.left + dx) + 'px';
-            container.style.top = (initialProps.top + dy) + 'px';
+            if (dragRAF) cancelAnimationFrame(dragRAF);
+
+            dragRAF = requestAnimationFrame(() => {
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                container.style.left = (initialProps.left + dx) + 'px';
+                container.style.top = (initialProps.top + dy) + 'px';
+            });
         });
 
         document.addEventListener('mouseup', () => {
             if (!isDragging) return;
             isDragging = false;
+            isDraggingUI = false;
+            if (dragRAF) cancelAnimationFrame(dragRAF);
             container.style.cursor = 'grab';
 
             saveSettings({
@@ -380,19 +389,25 @@
     }
 
     function init() {
+        let visibilityRAF;
         const checkVisibility = () => {
-            const isOutlook = window.location.host.includes('outlook.office.com');
-            const hasChatUrl = window.location.href.includes('/host/') || window.location.href.includes('/entity');
+            if (isDraggingUI) return;
 
-            // Check if there's actually an active conversation selected in the sidebar
-            const activeChatItem = isOutlook ? findInFrames(ACTIVE_CHAT_ITEM_SELECTOR) : null;
+            if (visibilityRAF) cancelAnimationFrame(visibilityRAF);
+            visibilityRAF = requestAnimationFrame(() => {
+                const isOutlook = window.location.host.includes('outlook.office.com');
+                const hasChatUrl = window.location.href.includes('/host/') || window.location.href.includes('/entity');
 
-            if (isOutlook && hasChatUrl && activeChatItem) {
-                createFloatingUI();
-            } else {
-                const container = document.getElementById(CONTAINER_ID);
-                if (container) container.remove();
-            }
+                // Check if there's actually an active conversation selected in the sidebar
+                const activeChatItem = isOutlook ? findInFrames(ACTIVE_CHAT_ITEM_SELECTOR) : null;
+
+                if (isOutlook && hasChatUrl && activeChatItem) {
+                    createFloatingUI();
+                } else {
+                    const container = document.getElementById(CONTAINER_ID);
+                    if (container) container.remove();
+                }
+            });
         };
 
         const observer = new MutationObserver(checkVisibility);
