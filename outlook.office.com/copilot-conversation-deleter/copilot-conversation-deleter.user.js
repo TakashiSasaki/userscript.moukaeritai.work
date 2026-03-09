@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Microsoft 365 Copilot Conversation Deleter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.0
+// @version      0.2.1
 // @description  Adds a floating shortcut button to easily delete the currently viewed Copilot conversation in Outlook. Optimized for PWA/Iframe structure.
 // @author       takas
 // @match        https://outlook.office.com/host/*
@@ -188,13 +188,16 @@
             }
         }
 
-        // 1. Find the active chat item
+        // 1. Find the active chat item and extract its title
         const activeItem = findInFrames(ACTIVE_CHAT_ITEM_SELECTOR);
         if (!activeItem) {
             console.error(`Copilot Deleter ${modeLabel}: Could not find active chat item.`);
             alert("Active conversation not found in sidebar.");
             return;
         }
+
+        const sidebarTitle = (activeItem.getAttribute('aria-label') || activeItem.innerText || '').trim();
+        console.log(`Copilot Deleter ${modeLabel}: Active Chat Title: "${sidebarTitle}"`);
 
         // 2. Find the "More actions" button sibling
         const parent = activeItem.closest('.fui-SplitNavItem') || activeItem.parentElement;
@@ -224,13 +227,26 @@
             } else {
                 deleteItem.click();
 
-                // 4. Final Confirmation (Highlight for user)
-                await new Promise(r => setTimeout(r, 800));
-                const confirmBtn = findByText(['削除する', 'Delete'], 'button.fui-Button');
-                if (confirmBtn) {
-                    console.log(`Copilot Deleter ${modeLabel}: Found Confirmation button.`);
-                    highlightElement(confirmBtn);
-                    alert("Automation step reached confirmation. Click 'Delete' button to finish.");
+                // 4. Final Confirmation Phase
+                console.log(`Copilot Deleter [ACTUAL]: Waiting for confirmation dialog...`);
+                await new Promise(r => setTimeout(r, 1000));
+
+                const dialogTitleEl = findInFrames('div[role="dialog"] b, div[role="dialog"] span.fui-Text[style*="font-weight: 700"], div[role="dialog"] [style*="font-weight: bold"], div[role="dialog"] [class*="fkhj508"]');
+                const dialogTitle = (dialogTitleEl?.innerText || '').trim();
+                const confirmBtn = findByText(['削除する', 'Delete'], 'button.fui-Button--primary') ||
+                    findByText(['削除する', 'Delete'], 'button.fui-Button');
+
+                if (sidebarTitle && dialogTitle && sidebarTitle.includes(dialogTitle)) {
+                    console.log(`Copilot Deleter [ACTUAL]: Title match confirmed ("${sidebarTitle}" vs "${dialogTitle}"). Auto-confirming...`);
+                    if (confirmBtn) {
+                        confirmBtn.click();
+                        console.log(`Copilot Deleter [ACTUAL]: Deletion confirmed.`);
+                    }
+                } else {
+                    console.warn(`Copilot Deleter [ACTUAL]: Title mismatch or not found. Manual confirmation required.`);
+                    console.info(`Sidebar: "${sidebarTitle}" | Dialog: "${dialogTitle}"`);
+                    if (confirmBtn) highlightElement(confirmBtn);
+                    alert("Title mismatch or could not be verified. Please click 'Delete' manually for safety.");
                 }
             }
         } else if (!isDryRun) {
@@ -240,10 +256,13 @@
 
     function init() {
         const observer = new MutationObserver(() => {
-            const isCopilotPage = window.location.host.includes('outlook.office.com') &&
-                (window.location.href.includes('/host/') || window.location.href.includes('/entity'));
+            const isOutlook = window.location.host.includes('outlook.office.com');
+            const hasChatUrl = window.location.href.includes('/host/') || window.location.href.includes('/entity');
 
-            if (isCopilotPage) {
+            // Check if there's actually an active conversation selected in the sidebar
+            const activeChatItem = isOutlook ? findInFrames(ACTIVE_CHAT_ITEM_SELECTOR) : null;
+
+            if (isOutlook && hasChatUrl && activeChatItem) {
                 createFloatingUI();
             } else {
                 const container = document.getElementById(CONTAINER_ID);
@@ -253,8 +272,8 @@
 
         observer.observe(document.body, { childList: true, subtree: true });
 
-        if (window.location.host.includes('outlook.office.com') &&
-            (window.location.href.includes('/host/') || window.location.href.includes('/entity'))) {
+        // Initial check
+        if (window.location.host.includes('outlook.office.com') && findInFrames(ACTIVE_CHAT_ITEM_SELECTOR)) {
             createFloatingUI();
         }
     }
