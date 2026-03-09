@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.45
-// @lastModified 2026-03-09
+// @version      0.2.46
+// @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -106,9 +106,25 @@
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    /**
+     * More robust visibility check that doesn't rely solely on offsetParent,
+     * which can be null for fixed-position elements or in background tabs.
+     */
+    function isVisible(el) {
+        if (!el || !el.isConnected) return false;
+        const style = window.getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden') return false;
+
+        // offsetParent is null if fixed or if the tab is in background (sometimes)
+        if (el.offsetParent !== null) return true;
+
+        const rect = el.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+    }
+
     function getVisibleSnackbars() {
         return Array.from(document.querySelectorAll('mat-snack-bar-container, .mat-mdc-snack-bar-container'))
-            .filter(el => el.isConnected && (el.offsetParent !== null || window.getComputedStyle(el).position === 'fixed'));
+            .filter(el => isVisible(el));
     }
 
     function dismissSnackbars() {
@@ -136,8 +152,8 @@
                 return { status: 'started', reason: 'docs-toast' };
             }
 
-            const menuStillVisible = Boolean(menuPanel && menuPanel.isConnected && menuPanel.offsetParent !== null);
-            const exportBtnStillVisible = Boolean(exportBtn && exportBtn.isConnected && exportBtn.offsetParent !== null);
+            const menuStillVisible = Boolean(menuPanel && isVisible(menuPanel));
+            const exportBtnStillVisible = Boolean(exportBtn && isVisible(exportBtn));
 
             if (!menuStillVisible) {
                 return { status: 'started', reason: 'menu-closed' };
@@ -246,10 +262,10 @@
 
                 // Fallback to text matching if strict CSS selectors fail
                 const allMenuButtons = Array.from(document.querySelectorAll('.mat-mdc-menu-item, button[role="menuitem"]'));
-                exportBtn = candidates.find(b => b.offsetParent !== null) ||
+                exportBtn = candidates.find(b => isVisible(b)) ||
                     allMenuButtons.find(b => {
                         const text = b.textContent.toLowerCase();
-                        return (text.includes('export to docs') || text.includes('ドキュメントにエクスポート')) && b.offsetParent !== null;
+                        return (text.includes('export to docs') || text.includes('ドキュメントにエクスポート')) && isVisible(b);
                     });
 
                 if (exportBtn) break;
@@ -436,7 +452,7 @@
         // Close right side menu to clean up UI
         document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
         const backdrop = document.querySelector('.mat-drawer-backdrop');
-        if (backdrop && backdrop.offsetParent !== null) {
+        if (backdrop && isVisible(backdrop)) {
             backdrop.click();
         }
 
@@ -518,6 +534,10 @@
             const statusText = `Processing ${i + 1}/${selectedTitles.length}: ${selectedTitles[i]}`;
             log(statusText);
             if (progressEl) progressEl.textContent = `${i + 1} / ${selectedTitles.length}`;
+
+            // Hint to the browser to focus this window before processing.
+            // Helps with background throttling in some browsers.
+            window.focus();
 
             let result = await processArtifact(selectedTitles[i]);
             if (result.status === 'failed' && !cancelExport) {
