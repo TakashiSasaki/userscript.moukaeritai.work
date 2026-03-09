@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Microsoft 365 Copilot Conversation Deleter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.1
+// @version      0.3.2
 // @description  Adds a floating shortcut button to easily delete the currently viewed Copilot conversation in Outlook. Optimized for PWA/Iframe structure.
 // @author       takas
 // @match        https://outlook.office.com/host/*
@@ -13,7 +13,7 @@
     'use strict';
 
     // UI Configuration
-    const SCRIPT_VERSION = '0.3.1';
+    const SCRIPT_VERSION = '0.3.2';
     const CONTAINER_ID = 'copilot-deleter-container';
     const BUTTON_ID = 'copilot-conversation-deleter-btn';
     const DRY_RUN_ID = 'copilot-deleter-dry-run';
@@ -299,18 +299,25 @@
 
         // 1.1 Identify the "next" conversation to select after deletion
         let nextItemToClick = null;
+        let nextItemTitle = null;
         try {
-            // Traverse: .fui-NavSubItem -> .fui-SplitNavItem (or similar) -> li/div wrapper
-            const currentWrapper = activeItem.closest('li') || activeItem.closest('[role="listitem"]') || activeItem.parentElement.parentElement;
-            if (currentWrapper && currentWrapper.nextElementSibling) {
-                // Find the clickable item inside the next sibling wrapper
-                nextItemToClick = currentWrapper.nextElementSibling.querySelector(ACTIVE_CHAT_ITEM_SELECTOR.replace('[aria-current="page"]', '')) ||
-                    currentWrapper.nextElementSibling.querySelector('.fui-NavSubItem') ||
-                    currentWrapper.nextElementSibling.querySelector('button, a');
+            // Find the row containing the active item.
+            // Based on investigation, rows are immediate div siblings inside the drawer body.
+            const row = activeItem.closest('div[role="row"]') || activeItem.closest('.fui-NavDrawerBody > div') || activeItem.parentElement;
+            const nextRow = row ? row.nextElementSibling : null;
+
+            if (nextRow) {
+                // Find the clickable item inside the next sibling row
+                nextItemToClick = nextRow.querySelector(ACTIVE_CHAT_ITEM_SELECTOR.replace('[aria-current="page"]', '')) ||
+                    nextRow.querySelector('.fui-NavSubItem') ||
+                    nextRow.querySelector('button, a');
 
                 if (nextItemToClick) {
-                    console.log(`Copilot Deleter ${modeLabel}: Identified next item to click:`, nextItemToClick.getAttribute('aria-label') || nextItemToClick.innerText);
+                    nextItemTitle = (nextItemToClick.getAttribute('aria-label') || nextItemToClick.innerText || '').trim();
+                    console.log(`Copilot Deleter ${modeLabel}: Identified next item: "${nextItemTitle}"`);
                 }
+            } else {
+                console.log(`Copilot Deleter ${modeLabel}: No next sibling row found (this might be the last item).`);
             }
         } catch (e) {
             console.warn(`Copilot Deleter ${modeLabel}: Failed to identify next item.`, e);
@@ -395,10 +402,28 @@
                                 console.log(`Copilot Deleter [ACTUAL]: Deletion process finished.`);
                                 if (window.copilotDeleter) window.copilotDeleter.setWaitingState(false);
 
-                                // 6. Click the next item if identified
-                                if (nextItemToClick) {
-                                    console.log(`Copilot Deleter [ACTUAL]: Clicking next conversation...`);
-                                    nextItemToClick.click();
+                                // 6. Click the next item if identified (with stabilization delay)
+                                if (nextItemToClick || nextItemTitle) {
+                                    setTimeout(() => {
+                                        console.log(`Copilot Deleter [ACTUAL]: Attempting to click next conversation...`);
+
+                                        // Try stored element if it's still connected
+                                        if (nextItemToClick && document.body.contains(nextItemToClick)) {
+                                            console.log(`Copilot Deleter [ACTUAL]: Clicking stored element.`);
+                                            nextItemToClick.click();
+                                        }
+                                        // Fallback: search by title
+                                        else if (nextItemTitle) {
+                                            console.log(`Copilot Deleter [ACTUAL]: Stored element stale. Searching by title: "${nextItemTitle}"`);
+                                            const fallback = findByText([nextItemTitle], '.fui-NavSubItem');
+                                            if (fallback) {
+                                                console.log(`Copilot Deleter [ACTUAL]: Found fallback. Clicking...`);
+                                                fallback.click();
+                                            } else {
+                                                console.warn(`Copilot Deleter [ACTUAL]: Fallback not found.`);
+                                            }
+                                        }
+                                    }, 500);
                                 }
                             }
                         }, 500);
