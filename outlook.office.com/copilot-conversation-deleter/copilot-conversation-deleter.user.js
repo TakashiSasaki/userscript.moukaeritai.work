@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Microsoft 365 Copilot Conversation Deleter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.4
+// @version      0.3.5
 // @description  Adds a floating shortcut button to easily delete the currently viewed Copilot conversation in Outlook. Optimized for PWA/Iframe structure.
 // @author       takas
 // @match        https://outlook.office.com/host/*
@@ -13,7 +13,7 @@
     'use strict';
 
     // UI Configuration
-    const SCRIPT_VERSION = '0.3.4';
+    const SCRIPT_VERSION = '0.3.5';
     const CONTAINER_ID = 'copilot-deleter-container';
     const BUTTON_ID = 'copilot-conversation-deleter-btn';
     const DRY_RUN_ID = 'copilot-deleter-dry-run';
@@ -29,6 +29,13 @@
     const DELETE_MENU_ITEM_SELECTOR = 'div[role="menuitem"][aria-label*="削除"], div[role="menuitem"][aria-label*="Delete"]';
 
     let isDryRun = true;
+
+    // Shared state for UI updates
+    let copilotDeleterMethods = {
+        setWaitingState: () => { },
+        setNextUpTitle: () => { }
+    };
+
     let isDraggingUI = false;
 
     function saveSettings(settings) {
@@ -141,19 +148,23 @@
         // Next Up Indicator
         const nextUpLabel = document.createElement('div');
         Object.assign(nextUpLabel.style, {
-            fontSize: '10px',
-            color: '#666',
+            fontSize: '11px',
+            color: '#444',
             fontStyle: 'italic',
-            backgroundColor: 'rgba(255, 255, 255, 0.8)',
-            padding: '2px 8px',
-            borderRadius: '10px',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            border: '1px solid #ddd',
+            padding: '4px 10px',
+            borderRadius: '12px',
             maxWidth: '180px',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
-            display: 'none',
-            userSelect: 'none'
+            display: 'block',  // Start visible
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            userSelect: 'none',
+            pointerEvents: 'none'
         });
+        nextUpLabel.textContent = 'Next Up: (Searching...)';
 
         const btn = document.createElement('button');
         btn.id = BUTTON_ID;
@@ -182,30 +193,31 @@
             }
         };
 
+        const setNextUpTitle = (title) => {
+            if (title) {
+                nextUpLabel.textContent = `Next Up: ${title}`;
+            } else {
+                nextUpLabel.textContent = 'Next Up: (End of history)';
+            }
+        };
+
         const setWaitingState = (isWaiting) => {
             btn.disabled = isWaiting;
             if (isWaiting) {
                 btn.style.backgroundColor = '#666';
                 btn.innerHTML = '⏳ Deleting...';
                 btn.style.cursor = 'not-allowed';
-                nextUpLabel.style.display = 'none';
+                nextUpLabel.style.opacity = '0.5';
             } else {
                 updateButtonStyle();
                 btn.style.cursor = 'pointer';
+                nextUpLabel.style.opacity = '1';
             }
         };
 
-        const setNextUpTitle = (title) => {
-            if (title) {
-                nextUpLabel.textContent = `Next Up: ${title}`;
-                nextUpLabel.style.display = 'block';
-            } else {
-                nextUpLabel.textContent = 'Next Up: (End of history)';
-                nextUpLabel.style.display = 'block';
-            }
-        };
-
-        window.copilotDeleter = { setWaitingState, setNextUpTitle };
+        // Export methods internally and to window for debug
+        copilotDeleterMethods = { setWaitingState, setNextUpTitle };
+        window.copilotDeleter = copilotDeleterMethods;
 
         btn.onmousedown = () => btn.style.transform = 'scale(0.96)';
         btn.onmouseup = () => btn.style.transform = 'scale(1)';
@@ -418,7 +430,7 @@
                 if (nSidebar && nDialog && (nSidebar.includes(nDialog) || nDialog.includes(nSidebar))) {
                     console.log(`Copilot Deleter [ACTUAL]: Title match confirmed. Auto-confirming...`);
                     if (confirmBtn) {
-                        if (window.copilotDeleter) window.copilotDeleter.setWaitingState(true);
+                        copilotDeleterMethods.setWaitingState(true);
                         confirmBtn.click();
                         console.log(`Copilot Deleter [ACTUAL]: Deletion confirmed. Waiting for removal...`);
 
@@ -432,7 +444,7 @@
                             if ((!stillPresent && !dialogPresent) || attempts > 20) {
                                 clearInterval(checkRemoval);
                                 console.log(`Copilot Deleter [ACTUAL]: Deletion process finished.`);
-                                if (window.copilotDeleter) window.copilotDeleter.setWaitingState(false);
+                                copilotDeleterMethods.setWaitingState(false);
 
                                 // 6. Click the next item if identified (with stabilization delay)
                                 if (nextItemToClick || nextItemTitle) {
@@ -505,11 +517,9 @@
 
                 if (isOutlook && hasChatUrl && activeChatItem) {
                     createFloatingUI();
-                    if (window.copilotDeleter && window.copilotDeleter.setNextUpTitle) {
-                        const next = findNextItem(activeChatItem);
-                        const title = next ? (next.getAttribute('aria-label') || next.innerText || '').trim() : null;
-                        window.copilotDeleter.setNextUpTitle(title);
-                    }
+                    const next = findNextItem(activeChatItem);
+                    const title = next ? (next.getAttribute('aria-label') || next.innerText || '').trim() : null;
+                    copilotDeleterMethods.setNextUpTitle(title);
                 } else {
                     const container = document.getElementById(CONTAINER_ID);
                     if (container) container.remove();
