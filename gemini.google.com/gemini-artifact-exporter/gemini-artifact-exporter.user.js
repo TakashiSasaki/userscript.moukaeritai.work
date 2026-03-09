@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.40
+// @version      0.2.41
 // @lastModified 2026-03-09
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -62,6 +62,8 @@
         const formattedMsg = `[Exporter ${timestamp}] ${msg}`;
         console.log(formattedMsg);
     }
+
+    log(`Script loaded on ${window.location.href} (readyState=${document.readyState})`);
 
     function isConversationPage() {
         return /\/app\/[a-z0-9]+/.test(window.location.pathname);
@@ -665,7 +667,12 @@
 
 
     function createTriggerButtons() {
-        if (document.getElementById('gemini-batch-export-panel')) return;
+        if (document.getElementById('gemini-batch-export-panel')) {
+            log('Panel already exists. Skipping UI creation.');
+            return;
+        }
+
+        log('Creating Artifact Exporter panel UI.');
 
         const panel = document.createElement('div');
         panel.id = 'gemini-batch-export-panel';
@@ -861,6 +868,7 @@
         panel.appendChild(header);
         panel.appendChild(buttonContainer);
         document.body.appendChild(panel);
+        log('Artifact Exporter panel attached to document body.');
 
 
 
@@ -889,13 +897,21 @@
         const panel = document.getElementById('gemini-batch-export-panel');
         if (!panel) {
             if (shouldActive) {
+                log(`Visibility check passed. Creating panel (url=${window.location.href}).`);
                 createTriggerButtons();
             }
             return;
         }
 
         const shouldShow = shouldActive;
+        const wasHidden = panel.style.display === 'none';
         panel.style.display = shouldShow ? 'flex' : 'none';
+
+        if (shouldShow && wasHidden) {
+            log('Visibility check passed. Showing panel.');
+        } else if (!shouldShow && !wasHidden) {
+            log(`Visibility check failed. Hiding panel (conversation=${isConversationPage()}, actionsMenu=${actionsMenuExists}, hasArtifacts=${hasArtifacts}).`);
+        }
 
         // Force style update to ensure visibility (handle lingering elements or style glitches)
         if (shouldShow) {
@@ -917,11 +933,13 @@
     let lastUrl = window.location.href;
 
     // Initial check
+    log('Running initial visibility check.');
     updateButtonVisibility();
 
     // Observe DOM changes instead of polling
     const observer = new MutationObserver((_mutations) => {
         if (lastUrl !== window.location.href) {
+            log(`URL changed from ${lastUrl} to ${window.location.href}`);
             lastUrl = window.location.href;
             if (scannedArtifacts.length > 0) {
                 scannedArtifacts = [];
@@ -943,6 +961,7 @@
         childList: true,
         subtree: true
     });
+    log('MutationObserver started for panel visibility updates.');
 
 
 })();
