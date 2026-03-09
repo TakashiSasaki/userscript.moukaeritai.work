@@ -103,7 +103,7 @@
             <li><strong>アーティファクトのスキャン</strong>: 会話内にあるすべての「記事」タイプアーティファクトを自動検出し、リスト表示します。</li>
             <li><strong>一括エクスポート</strong>: リストから選択した記事を、一つずつ順番に Google ドキュメントへエクスポートします。</li>
             <li><strong>スタック回避ロジック</strong>: GeminiのUIバグ（処理完了後に背景やトーストが残る現象）を自動で検知・解決し、連続したエクスポート処理を維持します。</li>
-            <li><strong>設定の保存</strong>: コントロールパネルの位置やタイムアウト設定はブラウザに保存され、次回アクセス時も維持されます。</li>
+            <li><strong>設定の保存</strong>: コントロールパネルの位置や待機設定はブラウザに保存され、次回アクセス時も維持されます。</li>
         </ul>
 
         <h2>使い方</h2>
@@ -123,8 +123,8 @@
                 ボタンに変わり、途中で停止できます。</li>
             <li><strong><code>Auto-Delete Chat</code></strong>:
                 全エクスポート完了後、会話を自動的に削除します（<code>Gemini 1-Click Delete</code> との連携が必要です）。</li>
-            <li><strong><code>Doc Wait (s)</code></strong>: Google ドキュメントの新規タブが開くのを待機する最大秒数です（デフォルト10秒）。</li>
-            <li><strong><code>Other Weights (s)</code></strong>: サイドバー再開、キャンバス初期化、完了判定などの待機時間を調整できます。通信環境に応じて微調整してください。
+            <li><strong><code>Export Wait (s)</code></strong>: エクスポート開始後、次のキャンバスへ進むまでの固定待機時間です（デフォルト10秒）。Google Docs 側の読み込みが遅い場合は長めに設定してください。</li>
+            <li><strong><code>Panel Reopen (s)</code></strong> と <strong><code>Canvas Init (s)</code></strong>: Gemini 側UIの表示が遅い環境向けの待機時間です。通常はデフォルトのままで十分です。
             </li>
         </ul>
 
@@ -137,6 +137,7 @@
 
         <h2>更新履歴</h2>
         <ul>
+            <li><strong>v0.2.43</strong>: エクスポート完了検知をやめ、開始シグナル確認後に固定時間待機する方式へ変更。設定項目を <code>Export Wait</code> 中心に整理。</li>
             <li><strong>v0.2.39</strong>: 画面上にアーティファクトが存在しない場合にパネルを自動で非表示にする機能を実装。</li>
             <li><strong>v0.2.38</strong>: 各種待機時間（ウェイト/タイムアウト）を調整可能にし、UIレスポンスを改善。</li>
             <li><strong>v0.2.36</strong>: エクスポート完了後の会話自動削除機能（カスタムイベント連携）を追加。</li>

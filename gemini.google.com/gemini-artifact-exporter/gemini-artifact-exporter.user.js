@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.42
+// @version      0.2.43
 // @lastModified 2026-03-09
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -116,14 +116,9 @@
         toastBtns.forEach(btn => btn.click());
     }
 
-    async function waitForExportCompletion(timeoutSeconds, autoCompleteTimeoutSeconds) {
+    async function waitForExportStart(exportBtn, menuPanel, detectTimeoutMs = 2500) {
         const start = Date.now();
-        const timeoutMs = timeoutSeconds * 1000;
-        const idleThresholdMs = Math.max(1500, autoCompleteTimeoutSeconds * 1000);
-
         let docsOpened = false;
-        let sawCreatingToast = false;
-        let lastProgressAt = Date.now();
 
         const onVisibilityChange = () => {
             if (document.hidden) {
@@ -133,49 +128,40 @@
         document.addEventListener('visibilitychange', onVisibilityChange);
 
         try {
-            while ((Date.now() - start) < timeoutMs) {
-                await sleep(500);
+            while ((Date.now() - start) < detectTimeoutMs) {
+                await sleep(200);
 
                 if (docsOpened) {
-                    return { status: 'success', reason: 'tab-hidden' };
+                    return { status: 'started', reason: 'tab-hidden' };
                 }
 
                 const snackbarTexts = getVisibleSnackbars()
                     .map(el => (el.textContent || '').trim())
                     .filter(Boolean);
 
-                const hasCreatedToast = snackbarTexts.some(text =>
+                const hasDocsToast = snackbarTexts.some(text =>
                     text.includes('作成されました') ||
-                    text.includes('Document created')
-                );
-                if (hasCreatedToast) {
-                    dismissSnackbars();
-                    return { status: 'success', reason: 'created-toast' };
-                }
-
-                const hasCreatingToast = snackbarTexts.some(text =>
+                    text.includes('Document created') ||
                     text.includes('作成しています') ||
                     text.includes('Creating document')
                 );
-
-                if (hasCreatingToast) {
-                    sawCreatingToast = true;
-                    lastProgressAt = Date.now();
-                    continue;
+                if (hasDocsToast) {
+                    return { status: 'started', reason: 'docs-toast' };
                 }
 
-                // If progress toast appeared once and then disappeared, treat it as completion.
-                if (sawCreatingToast && (Date.now() - lastProgressAt) > 1200) {
-                    return { status: 'success', reason: 'progress-toast-disappeared' };
+                const menuStillVisible = Boolean(menuPanel && menuPanel.isConnected && menuPanel.offsetParent !== null);
+                const exportBtnStillVisible = Boolean(exportBtn && exportBtn.isConnected && exportBtn.offsetParent !== null);
+
+                if (!menuStillVisible) {
+                    return { status: 'started', reason: 'menu-closed' };
                 }
 
-                // If no toast feedback is observed for too long, treat as timeout to trigger retry.
-                if (!sawCreatingToast && (Date.now() - start) > idleThresholdMs) {
-                    return { status: 'timeout', reason: 'no-progress-signal' };
+                if (!exportBtnStillVisible) {
+                    return { status: 'started', reason: 'export-button-disappeared' };
                 }
             }
 
-            return { status: 'timeout', reason: 'wait-timeout' };
+            return { status: 'started', reason: 'assumed-after-click' };
         } finally {
             document.removeEventListener('visibilitychange', onVisibilityChange);
         }
@@ -291,30 +277,29 @@
                 throw new Error("Export to Docs button not found in menu.");
             }
 
-            const timeoutSeconds = parseInt(GM_getValue(TIMEOUT_SECONDS_KEY, 10), 10);
-            const autoCompleteTimeout = parseFloat(GM_getValue(AUTO_COMPLETE_DELAY_KEY, 5.0));
-            const completionPromise = waitForExportCompletion(timeoutSeconds, autoCompleteTimeout);
+            const exportMenu = exportBtn.closest(SELECTORS.MENU_PANEL) || document.querySelector(SELECTORS.MENU_PANEL);
+            const startPromise = waitForExportStart(exportBtn, exportMenu);
 
             await sleep(500); // Wait for menu animation to settle before clicking the target
             exportBtn.click();
-            log('Export to Docs button clicked. Waiting for completion...');
+            log('Export to Docs button clicked. Waiting for start signal...');
 
-            const completion = await completionPromise;
+            const startResult = await startPromise;
+            log(`Export start signal detected (${startResult.reason}).`);
 
-            if (completion.status === 'success') {
-                log(`Success: export completion detected (${completion.reason}).`);
-            } else {
-                log(`Warning: export completion timed out (${completion.reason}).`);
-            }
+            const exportWaitSeconds = parseFloat(GM_getValue(EXPORT_WAIT_SECONDS_KEY, 10));
+            log(`Waiting ${exportWaitSeconds}s for Google Docs export to settle...`);
+            await sleep(exportWaitSeconds * 1000);
+            dismissSnackbars();
 
-            // Gemini Bug Workaround: clear overlays, use aggressive mode only on failures/timeouts.
-            clearStuckOverlays(completion.status !== 'success');
+            // Gemini Bug Workaround: clear overlays after the fixed wait window.
+            clearStuckOverlays(false);
 
             // aggressive cleanup fallback for panels
             document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
 
             log(`--- Finished processing: "${title}" ---`);
-            return { status: completion.status, reason: completion.reason, title };
+            return { status: 'success', reason: startResult.reason, title };
 
         } catch (e) {
             log(`CRITICAL ERROR during processing "${title}": ${e.message}`);
@@ -548,7 +533,7 @@
             if (progressEl) progressEl.textContent = `${i + 1} / ${selectedTitles.length}`;
 
             let result = await processArtifact(selectedTitles[i]);
-            if (result.status !== 'success' && !cancelExport) {
+            if (result.status === 'failed' && !cancelExport) {
                 log(`Retrying "${selectedTitles[i]}" once due to ${result.status} (${result.reason})...`);
                 await sleep(1000);
                 result = await processArtifact(selectedTitles[i]);
@@ -610,10 +595,9 @@
 
     // --- UI Injection & Control ---
     const PANEL_POSITION_KEY = 'gemini-exporter-panel-pos';
-    const TIMEOUT_SECONDS_KEY = 'gemini-exporter-timeout-seconds';
+    const EXPORT_WAIT_SECONDS_KEY = 'gemini-exporter-timeout-seconds';
     const REOPEN_DELAY_KEY = 'gemini-exporter-reopen-delay';
     const CANVAS_INIT_DELAY_KEY = 'gemini-exporter-canvas-init-delay';
-    const AUTO_COMPLETE_DELAY_KEY = 'gemini-exporter-auto-complete-delay';
     const AUTO_DELETE_KEY = 'gemini-exporter-auto-delete';
 
     function makePanelDraggable(panel, handle, storageKey) {
@@ -833,17 +817,15 @@
             return container;
         };
 
-        const timeoutInput = createNumberInput(TIMEOUT_SECONDS_KEY, 'Doc Wait (s)', 10, 1);
+        const exportWaitInput = createNumberInput(EXPORT_WAIT_SECONDS_KEY, 'Export Wait (s)', 10, 1);
         const autoDeleteInput = createCheckboxInput(AUTO_DELETE_KEY, 'Auto-Delete Chat', false);
         const reopenDelayInput = createNumberInput(REOPEN_DELAY_KEY, 'Panel Reopen (s)', 1.5, 0, 0.5);
         const canvasInitDelayInput = createNumberInput(CANVAS_INIT_DELAY_KEY, 'Canvas Init (s)', 3.0, 0, 0.5);
-        const autoCompleteDelayInput = createNumberInput(AUTO_COMPLETE_DELAY_KEY, 'Auto Complete (s)', 5.0, 0, 0.5);
 
         togglesContainer.appendChild(autoDeleteInput);
-        togglesContainer.appendChild(timeoutInput);
+        togglesContainer.appendChild(exportWaitInput);
         togglesContainer.appendChild(reopenDelayInput);
         togglesContainer.appendChild(canvasInitDelayInput);
-        togglesContainer.appendChild(autoCompleteDelayInput);
 
 
         const progressDisplay = document.createElement('div');
