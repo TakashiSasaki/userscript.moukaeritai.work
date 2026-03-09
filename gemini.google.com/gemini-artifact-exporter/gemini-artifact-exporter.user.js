@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.39
-// @lastModified 2026-03-03
+// @version      0.2.40
+// @lastModified 2026-03-09
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -106,6 +106,100 @@
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    function getVisibleSnackbars() {
+        return Array.from(document.querySelectorAll('mat-snack-bar-container, .mat-mdc-snack-bar-container'))
+            .filter(el => el.isConnected && (el.offsetParent !== null || window.getComputedStyle(el).position === 'fixed'));
+    }
+
+    function dismissSnackbars() {
+        const toastBtns = document.querySelectorAll('mat-snack-bar-container button, .mat-mdc-snack-bar-container button');
+        toastBtns.forEach(btn => btn.click());
+    }
+
+    async function waitForExportCompletion(timeoutSeconds, autoCompleteTimeoutSeconds) {
+        const start = Date.now();
+        const timeoutMs = timeoutSeconds * 1000;
+        const idleThresholdMs = Math.max(1500, autoCompleteTimeoutSeconds * 1000);
+
+        let docsOpened = false;
+        let sawCreatingToast = false;
+        let lastProgressAt = Date.now();
+
+        const onVisibilityChange = () => {
+            if (document.hidden) {
+                docsOpened = true;
+            }
+        };
+        document.addEventListener('visibilitychange', onVisibilityChange);
+
+        try {
+            while ((Date.now() - start) < timeoutMs) {
+                await sleep(500);
+
+                if (docsOpened) {
+                    return { status: 'success', reason: 'tab-hidden' };
+                }
+
+                const snackbarTexts = getVisibleSnackbars()
+                    .map(el => (el.textContent || '').trim())
+                    .filter(Boolean);
+
+                const hasCreatedToast = snackbarTexts.some(text =>
+                    text.includes('作成されました') ||
+                    text.includes('Document created')
+                );
+                if (hasCreatedToast) {
+                    dismissSnackbars();
+                    return { status: 'success', reason: 'created-toast' };
+                }
+
+                const hasCreatingToast = snackbarTexts.some(text =>
+                    text.includes('作成しています') ||
+                    text.includes('Creating document')
+                );
+
+                if (hasCreatingToast) {
+                    sawCreatingToast = true;
+                    lastProgressAt = Date.now();
+                    continue;
+                }
+
+                // If progress toast appeared once and then disappeared, treat it as completion.
+                if (sawCreatingToast && (Date.now() - lastProgressAt) > 1200) {
+                    return { status: 'success', reason: 'progress-toast-disappeared' };
+                }
+
+                // If no toast feedback is observed for too long, treat as timeout to trigger retry.
+                if (!sawCreatingToast && (Date.now() - start) > idleThresholdMs) {
+                    return { status: 'timeout', reason: 'no-progress-signal' };
+                }
+            }
+
+            return { status: 'timeout', reason: 'wait-timeout' };
+        } finally {
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+        }
+    }
+
+    function clearStuckOverlays(aggressive) {
+        const selectors = aggressive
+            ? '.cdk-overlay-backdrop, [id^="cdk-overlay-"], .mat-mdc-snack-bar-container, .cdk-global-overlay-wrapper, mat-snack-bar-container'
+            : '.cdk-overlay-backdrop, .mat-mdc-snack-bar-container, mat-snack-bar-container';
+
+        const stuckElements = document.querySelectorAll(selectors);
+        let clearedCount = 0;
+        stuckElements.forEach(el => {
+            if (el && el.parentNode) {
+                el.parentNode.removeChild(el);
+                clearedCount++;
+            }
+        });
+
+        if (clearedCount > 0) {
+            log(`Cleared ${clearedCount} overlay elements (aggressive=${aggressive}).`);
+        }
+    }
+
     // --- Core Logic ---
 
     // Find a fresh reference to the chip in the DOM based on its title
@@ -140,7 +234,7 @@
                     if (filesMenuItem) filesMenuItem.click();
                     await sleep(parseFloat(GM_getValue(REOPEN_DELAY_KEY, 1.5)) * 1000); // Wait for panel to open
                     chip = findChipByTitle(targetTitle);
-                } catch (e) {
+                } catch {
                     log('Warning: Failed to repoen files panel.');
                 }
             }
@@ -148,7 +242,7 @@
 
         if (!chip) {
             log(`ERROR: Chip with title "${targetTitle}" not found in DOM even after opening panel. Skipping.`);
-            return;
+            return { status: 'failed', reason: 'chip-not-found', title: targetTitle };
         }
 
         const title = targetTitle;
@@ -197,80 +291,35 @@
                 throw new Error("Export to Docs button not found in menu.");
             }
 
+            const timeoutSeconds = parseInt(GM_getValue(TIMEOUT_SECONDS_KEY, 10), 10);
+            const autoCompleteTimeout = parseFloat(GM_getValue(AUTO_COMPLETE_DELAY_KEY, 5.0));
+            const completionPromise = waitForExportCompletion(timeoutSeconds, autoCompleteTimeout);
+
             await sleep(500); // Wait for menu animation to settle before clicking the target
             exportBtn.click();
             log('Export to Docs button clicked. Waiting for completion...');
 
-            let isCreating = true;
-            let waitCheck = 0;
-            let docsOpened = false;
+            const completion = await completionPromise;
 
-            const onVisibilityChange = () => {
-                if (document.hidden) {
-                    docsOpened = true;
-                }
-            };
-            document.addEventListener('visibilitychange', onVisibilityChange);
-
-            const timeoutSeconds = parseInt(GM_getValue(TIMEOUT_SECONDS_KEY, 10), 10);
-            const maxChecks = timeoutSeconds * 2; // Assuming 500ms sleep per check
-
-            while (isCreating && waitCheck < maxChecks) {
-                await sleep(500);
-                waitCheck++;
-
-                if (docsOpened) {
-                    log('Success: New tab opened (Google Docs).');
-                    isCreating = false;
-                    break;
-                }
-
-                const overlays = Array.from(document.querySelectorAll('.cdk-overlay-container, mat-snack-bar-container'));
-                const overlayText = overlays.map(o => o.textContent).join(' ');
-
-                if (overlayText.includes('作成されました') || overlayText.includes('Document created')) {
-                    log('Success: Document created toast detected.');
-                    isCreating = false;
-
-                    // Attempt to dismiss the toast to clear the UI
-                    const toastBtns = document.querySelectorAll('mat-snack-bar-container button');
-                    toastBtns.forEach(btn => btn.click());
-                    break;
-                } else if (overlayText.includes('作成しています') || overlayText.includes('Creating document')) {
-                    if (waitCheck % 4 === 0) log('Still creating document...');
-                } else {
-                    // If we don't see any export-related text after a short while, we assume it's done or dismissed
-                    const autoCompleteTimeout = parseFloat(GM_getValue(AUTO_COMPLETE_DELAY_KEY, 5.0));
-                    if (waitCheck > (autoCompleteTimeout * 2)) {
-                        log('No export progress toast visible. Assuming completion.');
-                        isCreating = false;
-                    }
-                }
+            if (completion.status === 'success') {
+                log(`Success: export completion detected (${completion.reason}).`);
+            } else {
+                log(`Warning: export completion timed out (${completion.reason}).`);
             }
 
-            document.removeEventListener('visibilitychange', onVisibilityChange);
-
-            // Gemini Bug Workaround: Forcefully clear all overlays if they are stuck
-            log('Aggressively clearing stuck overlays to prevent UI block...');
-            const stuckElements = document.querySelectorAll('.cdk-overlay-backdrop, [id^="cdk-overlay-"], .mat-mdc-snack-bar-container, .cdk-global-overlay-wrapper');
-            let clearedCount = 0;
-            stuckElements.forEach(el => {
-                if (el && el.parentNode) {
-                    el.parentNode.removeChild(el);
-                    clearedCount++;
-                }
-            });
-            if (clearedCount > 0) {
-                log(`Cleared ${clearedCount} stuck overlay elements.`);
-            }
+            // Gemini Bug Workaround: clear overlays, use aggressive mode only on failures/timeouts.
+            clearStuckOverlays(completion.status !== 'success');
 
             // aggressive cleanup fallback for panels
             document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
 
             log(`--- Finished processing: "${title}" ---`);
+            return { status: completion.status, reason: completion.reason, title };
 
         } catch (e) {
             log(`CRITICAL ERROR during processing "${title}": ${e.message}`);
+            clearStuckOverlays(true);
+            return { status: 'failed', reason: e.message, title };
         }
     }
 
@@ -380,7 +429,7 @@
             const menu = await waitForElement(SELECTORS.MENU_PANEL, document, 3000);
             filesMenuItem = menu.querySelector(SELECTORS.FILES_MENU_ITEM);
             if (!filesMenuItem) throw new Error('Files menu item not found');
-        } catch (e) {
+        } catch {
             log('ERROR: Could not find Files menu in the action list.');
             alert('Could not open files list.');
             document.querySelector('.cdk-overlay-backdrop')?.click(); // close menu
@@ -498,11 +547,15 @@
             log(statusText);
             if (progressEl) progressEl.textContent = `${i + 1} / ${selectedTitles.length}`;
 
-            await processArtifact(selectedTitles[i]);
+            let result = await processArtifact(selectedTitles[i]);
+            if (result.status !== 'success' && !cancelExport) {
+                log(`Retrying "${selectedTitles[i]}" once due to ${result.status} (${result.reason})...`);
+                await sleep(1000);
+                result = await processArtifact(selectedTitles[i]);
+            }
 
-            // Mark as done in the UI
             const checkbox = Array.from(listContainer.querySelectorAll('.artifact-cb')).find(cb => cb.value === selectedTitles[i]);
-            if (checkbox && checkbox.parentNode) {
+            if (checkbox && checkbox.parentNode && result.status === 'success') {
                 checkbox.parentNode.style.textDecoration = 'line-through';
                 checkbox.parentNode.style.opacity = '0.5';
                 // Find the text node to append the checkmark
@@ -515,6 +568,21 @@
                         break;
                     }
                 }
+            }
+            if (checkbox && checkbox.parentNode && result.status !== 'success') {
+                checkbox.parentNode.style.textDecoration = 'none';
+                checkbox.parentNode.style.opacity = '1';
+                checkbox.parentNode.title = `Failed: ${result.reason}`;
+                const nodes = Array.from(checkbox.parentNode.childNodes);
+                for (let node of nodes) {
+                    if (node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0) {
+                        if (!node.textContent.includes('[FAILED]')) {
+                            node.textContent = ` [FAILED] ${node.textContent}`;
+                        }
+                        break;
+                    }
+                }
+                log(`Failed to export "${selectedTitles[i]}" after retry.`);
             }
 
             // Small UI sleep before starting the next item to allow memory / UI catchup
@@ -852,7 +920,7 @@
     updateButtonVisibility();
 
     // Observe DOM changes instead of polling
-    const observer = new MutationObserver((mutations) => {
+    const observer = new MutationObserver((_mutations) => {
         if (lastUrl !== window.location.href) {
             lastUrl = window.location.href;
             if (scannedArtifacts.length > 0) {

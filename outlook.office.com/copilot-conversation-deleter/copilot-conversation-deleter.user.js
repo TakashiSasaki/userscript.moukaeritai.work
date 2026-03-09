@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Microsoft 365 Copilot Conversation Deleter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.5
+// @version      0.3.6
 // @description  Adds a floating shortcut button to easily delete the currently viewed Copilot conversation in Outlook. Optimized for PWA/Iframe structure.
 // @author       takas
 // @match        https://outlook.office.com/host/*
@@ -13,7 +13,7 @@
     'use strict';
 
     // UI Configuration
-    const SCRIPT_VERSION = '0.3.5';
+    const SCRIPT_VERSION = '0.3.6';
     const CONTAINER_ID = 'copilot-deleter-container';
     const BUTTON_ID = 'copilot-conversation-deleter-btn';
     const DRY_RUN_ID = 'copilot-deleter-dry-run';
@@ -294,16 +294,24 @@
 
     /**
      * Helper to find the next conversation item in the sidebar
+     * Uses index-based search to skip dividers (<I> tags) or other non-item siblings.
      */
     function findNextItem(activeItem) {
         if (!activeItem) return null;
         try {
-            const row = activeItem.closest('div[role="row"]') || activeItem.closest('.fui-NavDrawerBody > div') || activeItem.parentElement;
-            const nextRow = row ? row.nextElementSibling : null;
-            if (nextRow) {
-                return nextRow.querySelector(ACTIVE_CHAT_ITEM_SELECTOR.replace('[aria-current="page"]', '')) ||
-                    nextRow.querySelector('.fui-NavSubItem') ||
-                    nextRow.querySelector('button, a');
+            // Find the list container
+            const container = activeItem.closest('.fui-NavDrawerBody') || activeItem.ownerDocument;
+
+            // Get all selectable conversation items in the list
+            // We use the selector without the [aria-current] constraint
+            const selector = ACTIVE_CHAT_ITEM_SELECTOR.replace('[aria-current="page"]', '');
+            const allItems = Array.from(container.querySelectorAll(selector));
+
+            // Find current index
+            const currentIndex = allItems.indexOf(activeItem);
+
+            if (currentIndex !== -1 && currentIndex < allItems.length - 1) {
+                return allItems[currentIndex + 1];
             }
         } catch (e) {
             console.error("Copilot Deleter: Error finding next item", e);
