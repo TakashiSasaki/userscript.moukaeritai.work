@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Microsoft 365 Copilot Conversation Deleter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.8
+// @version      0.3.0
 // @description  Adds a floating shortcut button to easily delete the currently viewed Copilot conversation in Outlook. Optimized for PWA/Iframe structure.
 // @author       takas
 // @match        https://outlook.office.com/host/*
@@ -295,6 +295,25 @@
         const sidebarTitle = (activeItem.getAttribute('aria-label') || activeItem.innerText || '').trim();
         console.log(`Copilot Deleter ${modeLabel}: Active Chat Title: "${sidebarTitle}"`);
 
+        // 1.1 Identify the "next" conversation to select after deletion
+        let nextItemToClick = null;
+        try {
+            // Traverse: .fui-NavSubItem -> .fui-SplitNavItem (or similar) -> li/div wrapper
+            const currentWrapper = activeItem.closest('li') || activeItem.closest('[role="listitem"]') || activeItem.parentElement.parentElement;
+            if (currentWrapper && currentWrapper.nextElementSibling) {
+                // Find the clickable item inside the next sibling wrapper
+                nextItemToClick = currentWrapper.nextElementSibling.querySelector(ACTIVE_CHAT_ITEM_SELECTOR.replace('[aria-current="page"]', '')) ||
+                    currentWrapper.nextElementSibling.querySelector('.fui-NavSubItem') ||
+                    currentWrapper.nextElementSibling.querySelector('button, a');
+
+                if (nextItemToClick) {
+                    console.log(`Copilot Deleter ${modeLabel}: Identified next item to click:`, nextItemToClick.getAttribute('aria-label') || nextItemToClick.innerText);
+                }
+            }
+        } catch (e) {
+            console.warn(`Copilot Deleter ${modeLabel}: Failed to identify next item.`, e);
+        }
+
         // 2. Find the "More actions" button sibling
         const parent = activeItem.closest('.fui-SplitNavItem') || activeItem.parentElement;
         const moreBtn = parent.querySelector(SIDEBAR_MORE_SELECTOR);
@@ -373,6 +392,12 @@
                                 clearInterval(checkRemoval);
                                 console.log(`Copilot Deleter [ACTUAL]: Deletion process finished.`);
                                 if (window.copilotDeleter) window.copilotDeleter.setWaitingState(false);
+
+                                // 6. Click the next item if identified
+                                if (nextItemToClick) {
+                                    console.log(`Copilot Deleter [ACTUAL]: Clicking next conversation...`);
+                                    nextItemToClick.click();
+                                }
                             }
                         }, 500);
                     }
