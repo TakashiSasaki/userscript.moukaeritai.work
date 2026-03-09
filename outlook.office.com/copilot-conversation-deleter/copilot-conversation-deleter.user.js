@@ -3,7 +3,7 @@
 // @namespace    https://userscript.moukaeritai.work/
 // @version      0.3.7
 // @description  Adds a floating shortcut button to easily delete the currently viewed Copilot conversation in Outlook. Optimized for PWA/Iframe structure.
-// @author       takas
+// @author       Takashi Sasaki
 // @match        https://outlook.office.com/host/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=office.com
 // @grant        none
