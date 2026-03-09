@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Microsoft 365 Copilot Conversation Deleter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.2
+// @version      0.2.3
 // @description  Adds a floating shortcut button to easily delete the currently viewed Copilot conversation in Outlook. Optimized for PWA/Iframe structure.
 // @author       takas
 // @match        https://outlook.office.com/host/*
@@ -278,7 +278,7 @@
     }
 
     function init() {
-        const observer = new MutationObserver(() => {
+        const checkVisibility = () => {
             const isOutlook = window.location.host.includes('outlook.office.com');
             const hasChatUrl = window.location.href.includes('/host/') || window.location.href.includes('/entity');
 
@@ -291,14 +291,16 @@
                 const container = document.getElementById(CONTAINER_ID);
                 if (container) container.remove();
             }
-        });
+        };
 
+        const observer = new MutationObserver(checkVisibility);
         observer.observe(document.body, { childList: true, subtree: true });
 
+        // Add periodic check because iframe transitions might not trigger mutations in the top window
+        setInterval(checkVisibility, 2000);
+
         // Initial check
-        if (window.location.host.includes('outlook.office.com') && findInFrames(ACTIVE_CHAT_ITEM_SELECTOR)) {
-            createFloatingUI();
-        }
+        checkVisibility();
     }
 
     // Run initialization
