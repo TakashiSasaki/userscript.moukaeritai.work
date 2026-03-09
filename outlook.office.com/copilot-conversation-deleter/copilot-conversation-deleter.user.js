@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Microsoft 365 Copilot Conversation Deleter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.1
+// @version      0.2.2
 // @description  Adds a floating shortcut button to easily delete the currently viewed Copilot conversation in Outlook. Optimized for PWA/Iframe structure.
 // @author       takas
 // @match        https://outlook.office.com/host/*
@@ -231,22 +231,45 @@
                 console.log(`Copilot Deleter [ACTUAL]: Waiting for confirmation dialog...`);
                 await new Promise(r => setTimeout(r, 1000));
 
-                const dialogTitleEl = findInFrames('div[role="dialog"] b, div[role="dialog"] span.fui-Text[style*="font-weight: 700"], div[role="dialog"] [style*="font-weight: bold"], div[role="dialog"] [class*="fkhj508"]');
-                const dialogTitle = (dialogTitleEl?.innerText || '').trim();
+                // Try to find the title in the dialog. It's usually bolded inside the confirmation text.
+                const dialogTitleCandidates = [
+                    'div[role="dialog"] b',
+                    'div[role="dialog"] strong',
+                    'div[role="dialog"] span.fui-Text[style*="font-weight: 700"]',
+                    'div[role="dialog"] [style*="font-weight: bold"]',
+                    'div[role="dialog"] [class*="fkhj508"]'
+                ];
+
+                let dialogTitle = "";
+                for (const sel of dialogTitleCandidates) {
+                    const el = findInFrames(sel);
+                    if (el && el.innerText.trim()) {
+                        dialogTitle = el.innerText.trim();
+                        break;
+                    }
+                }
+
                 const confirmBtn = findByText(['削除する', 'Delete'], 'button.fui-Button--primary') ||
                     findByText(['削除する', 'Delete'], 'button.fui-Button');
 
-                if (sidebarTitle && dialogTitle && sidebarTitle.includes(dialogTitle)) {
-                    console.log(`Copilot Deleter [ACTUAL]: Title match confirmed ("${sidebarTitle}" vs "${dialogTitle}"). Auto-confirming...`);
+                // Robust normalization for comparison
+                const normalize = (s) => (s || '').replace(/\s+/g, '').replace(/[・…？！\?\!]/g, '').toLowerCase();
+                const nSidebar = normalize(sidebarTitle);
+                const nDialog = normalize(dialogTitle);
+
+                console.log(`Copilot Deleter [ACTUAL]: Comparing Normalized Strings: Sidebar("${nSidebar}") vs Dialog("${nDialog}")`);
+
+                if (nSidebar && nDialog && (nSidebar.includes(nDialog) || nDialog.includes(nSidebar))) {
+                    console.log(`Copilot Deleter [ACTUAL]: Title match confirmed. Auto-confirming...`);
                     if (confirmBtn) {
                         confirmBtn.click();
                         console.log(`Copilot Deleter [ACTUAL]: Deletion confirmed.`);
                     }
                 } else {
-                    console.warn(`Copilot Deleter [ACTUAL]: Title mismatch or not found. Manual confirmation required.`);
-                    console.info(`Sidebar: "${sidebarTitle}" | Dialog: "${dialogTitle}"`);
+                    console.warn(`Copilot Deleter [ACTUAL]: Title mismatch. Manual confirmation required.`);
+                    console.info(`Originals -> Sidebar: "${sidebarTitle}" | Dialog: "${dialogTitle}"`);
                     if (confirmBtn) highlightElement(confirmBtn);
-                    alert("Title mismatch or could not be verified. Please click 'Delete' manually for safety.");
+                    alert(`Title mismatch!\nSidebar: "${sidebarTitle}"\nDialog: "${dialogTitle}"\nPlease click 'Delete' manually.`);
                 }
             }
         } else if (!isDryRun) {
