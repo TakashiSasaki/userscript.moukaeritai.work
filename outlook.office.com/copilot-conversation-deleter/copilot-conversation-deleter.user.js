@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Microsoft 365 Copilot Conversation Deleter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.4
+// @version      0.2.5
 // @description  Adds a floating shortcut button to easily delete the currently viewed Copilot conversation in Outlook. Optimized for PWA/Iframe structure.
 // @author       takas
 // @match        https://outlook.office.com/host/*
@@ -142,6 +142,20 @@
             }
         };
 
+        const setWaitingState = (isWaiting) => {
+            btn.disabled = isWaiting;
+            if (isWaiting) {
+                btn.style.backgroundColor = '#666';
+                btn.innerHTML = '⏳ Deleting...';
+                btn.style.cursor = 'not-allowed';
+            } else {
+                updateButtonStyle();
+                btn.style.cursor = 'pointer';
+            }
+        };
+
+        window.copilotDeleter = { setWaitingState };
+
         btn.onmousedown = () => btn.style.transform = 'scale(0.96)';
         btn.onmouseup = () => btn.style.transform = 'scale(1)';
         btn.addEventListener('click', handleDeleteChat);
@@ -262,8 +276,23 @@
                 if (nSidebar && nDialog && (nSidebar.includes(nDialog) || nDialog.includes(nSidebar))) {
                     console.log(`Copilot Deleter [ACTUAL]: Title match confirmed. Auto-confirming...`);
                     if (confirmBtn) {
+                        if (window.copilotDeleter) window.copilotDeleter.setWaitingState(true);
                         confirmBtn.click();
-                        console.log(`Copilot Deleter [ACTUAL]: Deletion confirmed.`);
+                        console.log(`Copilot Deleter [ACTUAL]: Deletion confirmed. Waiting for removal...`);
+
+                        // 5. Detection Logic for completion
+                        let attempts = 0;
+                        const checkRemoval = setInterval(() => {
+                            const stillPresent = findInFrames(ACTIVE_CHAT_ITEM_SELECTOR);
+                            const dialogPresent = findInFrames('div[role="dialog"]');
+                            attempts++;
+
+                            if ((!stillPresent && !dialogPresent) || attempts > 20) {
+                                clearInterval(checkRemoval);
+                                console.log(`Copilot Deleter [ACTUAL]: Deletion process finished.`);
+                                if (window.copilotDeleter) window.copilotDeleter.setWaitingState(false);
+                            }
+                        }, 500);
                     }
                 } else {
                     console.warn(`Copilot Deleter [ACTUAL]: Title mismatch. Manual confirmation required.`);
