@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.43
+// @version      0.2.44
 // @lastModified 2026-03-09
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -324,7 +324,6 @@
         if (scannedArtifacts.length === 0) {
             listContainer.style.display = 'none';
             exportBtn.style.display = 'none';
-            alert('No "Article" type artifacts found in the sidebar.');
             return;
         }
 
@@ -445,6 +444,10 @@
         });
 
         log(`Found ${scannedArtifacts.length} article artifacts.`);
+
+        if (scannedArtifacts.length === 0) {
+            alert('No "Article" type artifacts found in the sidebar.');
+        }
 
         // Close right side menu to clean up UI
         document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
