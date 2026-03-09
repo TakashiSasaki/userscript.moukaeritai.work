@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Microsoft 365 Copilot Conversation Deleter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.2
+// @version      0.3.3
 // @description  Adds a floating shortcut button to easily delete the currently viewed Copilot conversation in Outlook. Optimized for PWA/Iframe structure.
 // @author       takas
 // @match        https://outlook.office.com/host/*
@@ -13,7 +13,7 @@
     'use strict';
 
     // UI Configuration
-    const SCRIPT_VERSION = '0.3.2';
+    const SCRIPT_VERSION = '0.3.3';
     const CONTAINER_ID = 'copilot-deleter-container';
     const BUTTON_ID = 'copilot-conversation-deleter-btn';
     const DRY_RUN_ID = 'copilot-deleter-dry-run';
@@ -405,25 +405,43 @@
                                 // 6. Click the next item if identified (with stabilization delay)
                                 if (nextItemToClick || nextItemTitle) {
                                     setTimeout(() => {
-                                        console.log(`Copilot Deleter [ACTUAL]: Attempting to click next conversation...`);
+                                        console.log(`Copilot Deleter [ACTUAL]: Attempting to navigate to next conversation...`);
+
+                                        const performClick = (el) => {
+                                            if (!el) return false;
+                                            console.log(`Copilot Deleter [ACTUAL]: Focusing and clicking target element.`);
+                                            el.focus();
+                                            el.click();
+                                            return true;
+                                        };
 
                                         // Try stored element if it's still connected
-                                        if (nextItemToClick && document.body.contains(nextItemToClick)) {
-                                            console.log(`Copilot Deleter [ACTUAL]: Clicking stored element.`);
-                                            nextItemToClick.click();
-                                        }
-                                        // Fallback: search by title
-                                        else if (nextItemTitle) {
+                                        let target = (nextItemToClick && document.body.contains(nextItemToClick)) ? nextItemToClick : null;
+
+                                        // Fallback: search by title if stored element is gone
+                                        if (!target && nextItemTitle) {
                                             console.log(`Copilot Deleter [ACTUAL]: Stored element stale. Searching by title: "${nextItemTitle}"`);
-                                            const fallback = findByText([nextItemTitle], '.fui-NavSubItem');
-                                            if (fallback) {
-                                                console.log(`Copilot Deleter [ACTUAL]: Found fallback. Clicking...`);
-                                                fallback.click();
-                                            } else {
-                                                console.warn(`Copilot Deleter [ACTUAL]: Fallback not found.`);
-                                            }
+                                            target = findByText([nextItemTitle], '.fui-NavSubItem');
                                         }
-                                    }, 500);
+
+                                        if (target) {
+                                            performClick(target);
+
+                                            // Retry strategy after another 400ms if navigation didn't trigger
+                                            setTimeout(() => {
+                                                const current = findInFrames(ACTIVE_CHAT_ITEM_SELECTOR);
+                                                const label = target.getAttribute('aria-label') || target.innerText || '';
+                                                if (current !== target && !current?.innerText?.includes(label)) {
+                                                    console.log(`Copilot Deleter [ACTUAL]: Navigation seems stuck. Retrying click...`);
+                                                    performClick(target);
+                                                } else {
+                                                    console.log(`Copilot Deleter [ACTUAL]: Navigation confirmed.`);
+                                                }
+                                            }, 400);
+                                        } else {
+                                            console.warn(`Copilot Deleter [ACTUAL]: Target for navigation not found.`);
+                                        }
+                                    }, 1000); // Increased delay to 1000ms
                                 }
                             }
                         }, 500);
