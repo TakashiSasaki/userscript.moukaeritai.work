@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Microsoft 365 Copilot Conversation Deleter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.6
+// @version      0.3.7
 // @description  Adds a floating shortcut button to easily delete the currently viewed Copilot conversation in Outlook. Optimized for PWA/Iframe structure.
 // @author       takas
 // @match        https://outlook.office.com/host/*
@@ -13,7 +13,7 @@
     'use strict';
 
     // UI Configuration
-    const SCRIPT_VERSION = '0.3.6';
+    const SCRIPT_VERSION = '0.3.7';
     const CONTAINER_ID = 'copilot-deleter-container';
     const BUTTON_ID = 'copilot-conversation-deleter-btn';
     const DRY_RUN_ID = 'copilot-deleter-dry-run';
@@ -37,6 +37,20 @@
     };
 
     let isDraggingUI = false;
+
+    function log(message, details) {
+        const prefix = `[Copilot Deleter v${SCRIPT_VERSION}]`;
+        if (typeof details === 'undefined') {
+            console.log(`${prefix} ${message}`);
+            return;
+        }
+        console.log(`${prefix} ${message}`, details);
+    }
+
+    log('Script loaded.', {
+        href: window.location.href,
+        readyState: document.readyState
+    });
 
     function saveSettings(settings) {
         const current = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
@@ -62,7 +76,7 @@
                 const doc = iframe.contentDocument || iframe.contentWindow.document;
                 el = findInFrames(selector, doc);
                 if (el) return el;
-            } catch (e) {
+            } catch {
                 // Cross-origin iframes will throw error
             }
         }
@@ -85,15 +99,19 @@
                 const doc = iframe.contentDocument || iframe.contentWindow.document;
                 const el = findByText(textArr, selector, doc);
                 if (el) return el;
-            } catch (e) { }
+            } catch { }
         }
         return null;
     }
 
     function createFloatingUI() {
-        if (document.getElementById(CONTAINER_ID)) return;
+        if (document.getElementById(CONTAINER_ID)) {
+            log('Floating UI already exists. Skipping creation.');
+            return;
+        }
 
         const settings = loadSettings();
+        log('Creating floating UI.', { isDryRun, savedPosition: settings.position || null });
         const container = document.createElement('div');
         container.id = CONTAINER_ID;
 
@@ -290,6 +308,7 @@
         container.appendChild(nextUpLabel);
         container.appendChild(btn);
         document.body.appendChild(container);
+        log('Floating UI attached to document body.');
     }
 
     /**
@@ -524,25 +543,41 @@
                 const activeChatItem = isOutlook ? findInFrames(ACTIVE_CHAT_ITEM_SELECTOR) : null;
 
                 if (isOutlook && hasChatUrl && activeChatItem) {
+                    if (!document.getElementById(CONTAINER_ID)) {
+                        log('Visibility check passed. Showing UI.', {
+                            href: window.location.href,
+                            activeTitle: (activeChatItem.getAttribute('aria-label') || activeChatItem.innerText || '').trim()
+                        });
+                    }
                     createFloatingUI();
                     const next = findNextItem(activeChatItem);
                     const title = next ? (next.getAttribute('aria-label') || next.innerText || '').trim() : null;
                     copilotDeleterMethods.setNextUpTitle(title);
                 } else {
                     const container = document.getElementById(CONTAINER_ID);
-                    if (container) container.remove();
+                    if (container) {
+                        log('Visibility check failed. Removing UI.', {
+                            isOutlook,
+                            hasChatUrl,
+                            hasActiveChat: Boolean(activeChatItem)
+                        });
+                        container.remove();
+                    }
                 }
             });
         };
 
         const observer = new MutationObserver(checkVisibility);
         observer.observe(document.body, { childList: true, subtree: true });
+        log('MutationObserver started.');
 
         // Add periodic check because iframe transitions might not trigger mutations in the top window
         setInterval(checkVisibility, 2000);
+        log('Periodic visibility check started.', { intervalMs: 2000 });
 
         // Initial check with a delay to allow the PWA to stabilize
         setTimeout(checkVisibility, 2500);
+        log('Initial visibility check scheduled.', { delayMs: 2500 });
     }
 
     // Run initialization
