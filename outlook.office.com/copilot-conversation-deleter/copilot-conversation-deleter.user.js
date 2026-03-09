@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Microsoft 365 Copilot Conversation Deleter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.3
+// @version      0.3.4
 // @description  Adds a floating shortcut button to easily delete the currently viewed Copilot conversation in Outlook. Optimized for PWA/Iframe structure.
 // @author       takas
 // @match        https://outlook.office.com/host/*
@@ -13,7 +13,7 @@
     'use strict';
 
     // UI Configuration
-    const SCRIPT_VERSION = '0.3.3';
+    const SCRIPT_VERSION = '0.3.4';
     const CONTAINER_ID = 'copilot-deleter-container';
     const BUTTON_ID = 'copilot-conversation-deleter-btn';
     const DRY_RUN_ID = 'copilot-deleter-dry-run';
@@ -138,6 +138,23 @@
         toggleLabel.appendChild(document.createTextNode('Dry Run (Safety On)'));
         toggleLabel.title = `Copilot Deleter v${SCRIPT_VERSION}`;
 
+        // Next Up Indicator
+        const nextUpLabel = document.createElement('div');
+        Object.assign(nextUpLabel.style, {
+            fontSize: '10px',
+            color: '#666',
+            fontStyle: 'italic',
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            padding: '2px 8px',
+            borderRadius: '10px',
+            maxWidth: '180px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            display: 'none',
+            userSelect: 'none'
+        });
+
         const btn = document.createElement('button');
         btn.id = BUTTON_ID;
 
@@ -171,13 +188,24 @@
                 btn.style.backgroundColor = '#666';
                 btn.innerHTML = '⏳ Deleting...';
                 btn.style.cursor = 'not-allowed';
+                nextUpLabel.style.display = 'none';
             } else {
                 updateButtonStyle();
                 btn.style.cursor = 'pointer';
             }
         };
 
-        window.copilotDeleter = { setWaitingState };
+        const setNextUpTitle = (title) => {
+            if (title) {
+                nextUpLabel.textContent = `Next Up: ${title}`;
+                nextUpLabel.style.display = 'block';
+            } else {
+                nextUpLabel.textContent = 'Next Up: (End of history)';
+                nextUpLabel.style.display = 'block';
+            }
+        };
+
+        window.copilotDeleter = { setWaitingState, setNextUpTitle };
 
         btn.onmousedown = () => btn.style.transform = 'scale(0.96)';
         btn.onmouseup = () => btn.style.transform = 'scale(1)';
@@ -247,8 +275,28 @@
         });
 
         container.appendChild(toggleLabel);
+        container.appendChild(nextUpLabel);
         container.appendChild(btn);
         document.body.appendChild(container);
+    }
+
+    /**
+     * Helper to find the next conversation item in the sidebar
+     */
+    function findNextItem(activeItem) {
+        if (!activeItem) return null;
+        try {
+            const row = activeItem.closest('div[role="row"]') || activeItem.closest('.fui-NavDrawerBody > div') || activeItem.parentElement;
+            const nextRow = row ? row.nextElementSibling : null;
+            if (nextRow) {
+                return nextRow.querySelector(ACTIVE_CHAT_ITEM_SELECTOR.replace('[aria-current="page"]', '')) ||
+                    nextRow.querySelector('.fui-NavSubItem') ||
+                    nextRow.querySelector('button, a');
+            }
+        } catch (e) {
+            console.error("Copilot Deleter: Error finding next item", e);
+        }
+        return null;
     }
 
     function highlightElement(el) {
@@ -298,29 +346,13 @@
         console.log(`Copilot Deleter ${modeLabel}: Active Chat Title: "${sidebarTitle}"`);
 
         // 1.1 Identify the "next" conversation to select after deletion
-        let nextItemToClick = null;
+        let nextItemToClick = findNextItem(activeItem);
         let nextItemTitle = null;
-        try {
-            // Find the row containing the active item.
-            // Based on investigation, rows are immediate div siblings inside the drawer body.
-            const row = activeItem.closest('div[role="row"]') || activeItem.closest('.fui-NavDrawerBody > div') || activeItem.parentElement;
-            const nextRow = row ? row.nextElementSibling : null;
-
-            if (nextRow) {
-                // Find the clickable item inside the next sibling row
-                nextItemToClick = nextRow.querySelector(ACTIVE_CHAT_ITEM_SELECTOR.replace('[aria-current="page"]', '')) ||
-                    nextRow.querySelector('.fui-NavSubItem') ||
-                    nextRow.querySelector('button, a');
-
-                if (nextItemToClick) {
-                    nextItemTitle = (nextItemToClick.getAttribute('aria-label') || nextItemToClick.innerText || '').trim();
-                    console.log(`Copilot Deleter ${modeLabel}: Identified next item: "${nextItemTitle}"`);
-                }
-            } else {
-                console.log(`Copilot Deleter ${modeLabel}: No next sibling row found (this might be the last item).`);
-            }
-        } catch (e) {
-            console.warn(`Copilot Deleter ${modeLabel}: Failed to identify next item.`, e);
+        if (nextItemToClick) {
+            nextItemTitle = (nextItemToClick.getAttribute('aria-label') || nextItemToClick.innerText || '').trim();
+            console.log(`Copilot Deleter ${modeLabel}: Identified next item: "${nextItemTitle}"`);
+        } else {
+            console.log(`Copilot Deleter ${modeLabel}: No next sibling row found (this might be the last item).`);
         }
 
         // 2. Find the "More actions" button sibling
@@ -473,6 +505,11 @@
 
                 if (isOutlook && hasChatUrl && activeChatItem) {
                     createFloatingUI();
+                    if (window.copilotDeleter && window.copilotDeleter.setNextUpTitle) {
+                        const next = findNextItem(activeChatItem);
+                        const title = next ? (next.getAttribute('aria-label') || next.innerText || '').trim() : null;
+                        window.copilotDeleter.setNextUpTitle(title);
+                    }
                 } else {
                     const container = document.getElementById(CONTAINER_ID);
                     if (container) container.remove();
