@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Microsoft 365 Copilot Conversation Deleter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.3
+// @version      0.2.4
 // @description  Adds a floating shortcut button to easily delete the currently viewed Copilot conversation in Outlook. Optimized for PWA/Iframe structure.
 // @author       takas
 // @match        https://outlook.office.com/host/*
@@ -19,8 +19,8 @@
 
     // DOM Selectors (Supporting both JP and EN)
     const SIDEBAR_EXPAND_SELECTOR = '#sidepaneExpandButton';
-    // Active chat item in the sidebar
-    const ACTIVE_CHAT_ITEM_SELECTOR = '.fui-NavSubItem[aria-current="page"], .fui-NavItem[aria-current="page"]';
+    // Active chat item in the sidebar (specifically sub-items which are actual conversations)
+    const ACTIVE_CHAT_ITEM_SELECTOR = '.fui-NavSubItem[aria-current="page"]';
     // "More actions" button sibling to the active chat
     const SIDEBAR_MORE_SELECTOR = 'button[aria-label="その他"], button[aria-label="More actions"], button[aria-label="More"]';
     // Menu item for deletion
