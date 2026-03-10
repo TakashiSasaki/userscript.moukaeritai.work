@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.48
+// @version      0.2.49
 // @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -53,7 +53,8 @@
         CHIP_ICON_CONTAINER: 'mat-icon',
         SHARE_BUTTON: 'extended-response-panel share-button button, extended-response-panel button:has(mat-icon[fonticon="share"])',
         EXPORT_BUTTON: 'button[data-test-id="export-to-docs-button"], .mat-mdc-menu-item:has(mat-icon[fonticon="docs"])',
-        MENU_PANEL: '.mat-mdc-menu-panel'
+        MENU_PANEL: '.mat-mdc-menu-panel',
+        CANVAS_CLOSE_BUTTON: 'button[data-test-id="close-button"]'
     };
 
     function log(msg) {
@@ -342,8 +343,16 @@
             // Aggressive cleanup after processing each artifact
             clearStuckOverlays(true);
 
-            // Gemini Bug Workaround: escape key to dismiss any lingering modals
-            document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
+            // Round 4: Explicitly close the Canvas view to restore the standard conversation UI and Files sidebar
+            const closeBtn = document.querySelector(SELECTORS.CANVAS_CLOSE_BUTTON);
+            if (closeBtn) {
+                log(`Closing canvas view to restore sidebar...`);
+                robustClick(closeBtn);
+                await sleep(500); // Wait for slide-out animation
+            } else {
+                // Gemini Bug Workaround: escape key to dismiss any lingering modals if not in Canvas
+                document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
+            }
 
             log(`--- Finished processing: "${title}" ---`);
             return { status: 'success', reason: startResult.reason, title };
