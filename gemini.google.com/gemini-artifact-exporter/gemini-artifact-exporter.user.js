@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.46
+// @version      0.2.47
 // @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -169,7 +169,7 @@
 
     function clearStuckOverlays(aggressive) {
         const selectors = aggressive
-            ? '.cdk-overlay-backdrop, [id^="cdk-overlay-"], .mat-mdc-snack-bar-container, .cdk-global-overlay-wrapper, mat-snack-bar-container'
+            ? '.cdk-overlay-backdrop, .cdk-overlay-container, [id^="cdk-overlay-"], .mat-mdc-snack-bar-container, .cdk-global-overlay-wrapper, mat-snack-bar-container'
             : '.cdk-overlay-backdrop, .mat-mdc-snack-bar-container, mat-snack-bar-container';
 
         const stuckElements = document.querySelectorAll(selectors);
@@ -287,15 +287,18 @@
             const startResult = await startPromise;
             log(`Export start signal detected (${startResult.reason}).`);
 
+            // Immediately clear overlays to unblock UI as soon as export starts
+            clearStuckOverlays(true);
+
             const exportWaitSeconds = parseFloat(GM_getValue(EXPORT_WAIT_SECONDS_KEY, 10));
             log(`Waiting ${exportWaitSeconds}s for Google Docs export to settle...`);
             await sleep(exportWaitSeconds * 1000);
             dismissSnackbars();
 
-            // Gemini Bug Workaround: clear overlays after the fixed wait window.
-            clearStuckOverlays(false);
+            // Aggressive cleanup after processing each artifact
+            clearStuckOverlays(true);
 
-            // aggressive cleanup fallback for panels
+            // Gemini Bug Workaround: escape key to dismiss any lingering modals
             document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
 
             log(`--- Finished processing: "${title}" ---`);
