@@ -35,7 +35,7 @@ Gemini のサイドバーにある「記事 (Article)」タイプのアーティ
 *   このため、完了検知ベースよりも「Export to Docs を押した後に、メニュー閉鎖・ボタン消失・トースト・タブ移動などの開始シグナルを確認し、その後は固定時間待機する」方式の方が、重複エクスポートを避けやすい。
 *   UI設定は増やしすぎないこと。実運用で意味があるのは `Export Wait`, `Panel Reopen`, `Canvas Init`, `Auto-Delete Chat` 程度で、完了判定専用の待機項目はユーザーにとって調整根拠が薄い。
 
-## 技術的知見 (v0.2.48 - v0.2.50) - 2026-03-10
+## 技術的知見 (v0.2.48 - v0.2.53) - 2026-03-10
 
 ### 1. Angular CDK オーバーレイの取り扱い注意点
 *   `clearStuckOverlays` でスタックしたメニュー外装を消去する際、**絶対に `.cdk-overlay-container` や `.cdk-global-overlay-wrapper` をDOMから削除してはならない。**
@@ -50,6 +50,31 @@ Gemini のサイドバーにある「記事 (Article)」タイプのアーティ
 ### 3. バックグラウンドタブでのスロットリング対策
 *   Google Docs が新しいタブで開かれると、Gemini のタブはバックグラウンドに回り、ブラウザによって大幅なイベントスロットリング（数秒〜十数秒単位の遅延）を受ける。
 *   単純な `el.click()` ではイベントがキューに滞留して無視されることがあるため、フォーカスを当てた上で `mousedown` -> `mouseup` -> `click` を連続で dispatch する `robustClick` ヘルパーが必須。また、UI遷移時のウェイト (`sleep`) はフォアグラウンド時の想定よりも長めに確保する必要がある。
+
+### 4. `MouseEvent` の `view` プロパティ禁止 (v0.2.51)
+*   バックグラウンドタブ内で `new MouseEvent('click', { view: window })` を呼ぶと、Chromium が `window` オブジェクトのコンテキストが切り離された状態になっている場合に `Failed to read the 'view' property from 'UIEventInit'` 例外が発生する。
+*   **対策**: `robustClick` 内の `MouseEvent` コンストラクタから `view: window` を完全に削除。`bubbles: true, cancelable: true` のみで十分にイベントは伝播する。
+
+### 5. `sleep` 関数のタイマースロットリング対策 (v0.2.53)
+*   Chromium 系ブラウザ (Edge を含む) は、バックグラウンドタブの `setTimeout` コールバックを最大1分間隔まで遅延させるか、完全にサスペンド（停止）する仕様がある。
+*   `await sleep(1000)` のような単純な `setTimeout` ベースの待機は、タブがバックグラウンドに回った瞬間に永遠に解決されなくなる可能性がある。
+*   **対策**: `sleep` 関数を `setInterval` + `Date.now()` ポーリング方式に変更した。`setInterval` もバックグラウンドでは最小 1 秒間隔に制限されるが、タイムスタンプの比較は正確に機能するため、次の利用可能なティックで確実に Promise が解決される。
+
+### 6. 明示的なUI状態リセット (v0.2.51)
+*   連続エクスポート時の信頼性を最大化するため、各アーティファクトのエクスポート完了後に以下の順序でUI状態を完全にリセットする：
+    1.  Canvas の「閉じる」ボタンをクリック
+    2.  アニメーション完了を待機
+    3.  「Files in this chat」ボタンをクリックしてサイドバーも閉じる
+    4.  残留オーバーレイをスイープ
+*   これにより、次のアーティファクト処理は常に「何も開いていない初期状態」から開始され、状態不整合のリスクが排除される。
+
+## 関連コンポーネント
+
+### Gemini Exported Docs Auto-Closer (companion script)
+*   **場所**: `docs.google.com/gemini-exported-docs-auto-closer/`
+*   **役割**: Microsoft Edge の「スリーピングタブ」機能が非常に強力で、上記のポーリング方式 `sleep` すら完全に凍結してしまう問題への対策。
+*   **動作**: `https://docs.google.com/document/d/*` で動作し、`document.referrer` に `gemini.google.com` が含まれている場合のみ、5秒間のカウントダウン後に `window.close()` を実行する。
+*   **効果**: Docs タブが自動的に閉じることでブラウザのフォーカスが Gemini タブに強制的に戻り、Edge のスリープ状態が解除されてスクリプトが再開する。
 
 # その他
 - コードに少しでも変更を加えた時には必ずバージョンのパッチレベルをバンプアップする。
