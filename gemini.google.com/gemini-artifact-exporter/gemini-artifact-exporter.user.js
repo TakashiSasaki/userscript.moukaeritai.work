@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.51
+// @version      0.2.52
 // @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -356,21 +356,27 @@
             // Round 4 & 5: Explicitly close the Canvas view and the Files sidebar
             const closeBtn = document.querySelector(SELECTORS.CANVAS_CLOSE_BUTTON);
             if (closeBtn) {
-                log(`Closing canvas view...`);
+                log(`[Verify] Canvas close button found. Clicking to close canvas...`);
                 robustClick(closeBtn);
                 await sleep(1000); // Wait for slide-out animation
+                log(`[Verify] Canvas closed. Slide-out animation wait complete.`);
 
                 // Round 5: Explicitly close the Files sidebar to reset state for the next artifact
                 const sidebarToggle = document.querySelector(SELECTORS.FILES_MENU_ITEM) || document.querySelector('button[mattooltip="Files in this chat"], button[aria-label="Files in this chat"]');
                 if (sidebarToggle) {
-                    log(`Closing files sidebar to reset state...`);
+                    log(`[Verify] Files sidebar toggle found. Clicking to close sidebar and reset state...`);
                     robustClick(sidebarToggle);
                     await sleep(500);
+                    log(`[Verify] Files sidebar closed.`);
+                } else {
+                    log(`[Verify/Warning] Files sidebar toggle NOT found. Sidebar state reset skipped.`);
                 }
 
                 // Force clear any lingering backdrop that the toggles missed
+                log(`[Verify] Performing final overlay sweep...`);
                 clearStuckOverlays(false);
             } else {
+                log(`[Verify] Canvas close button NOT found. Assuming Canvas was already closed or missed.`);
                 // Gemini Bug Workaround: escape key to dismiss any lingering modals if not in Canvas
                 document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
             }
