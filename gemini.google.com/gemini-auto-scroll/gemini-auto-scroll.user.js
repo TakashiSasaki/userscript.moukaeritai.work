@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.22
-// @lastModified 2026-03-02
+// @version      0.2.23
+// @lastModified 2026-03-10
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -67,7 +67,6 @@
 
     const CONSTANTS = {
         STORAGE_KEY: 'gemini_auto_scroll_enabled',
-        STORAGE_KEY_AUTOSWITCH: 'gemini_auto_switch_next',
         STORAGE_KEY_MINIMIZED: 'gemini_auto_scroll_minimized',
         PANEL_POSITION_KEY: 'gemini_auto_scroll_panel_position'
     };
@@ -114,17 +113,6 @@
         if (newState) {
             attemptScrollToConversation();
         }
-    }
-
-    function isAutoSwitchEnabled() {
-        // Default to true for better UX in this version
-        return localStorage.getItem(CONSTANTS.STORAGE_KEY_AUTOSWITCH) !== 'false';
-    }
-
-    function toggleAutoSwitch() {
-        const newState = !isAutoSwitchEnabled();
-        localStorage.setItem(CONSTANTS.STORAGE_KEY_AUTOSWITCH, newState);
-        updatePanelUI();
     }
 
     function isPanelMinimized() {
@@ -382,37 +370,6 @@
         return getConversationIdFromUrl();
     }
 
-
-    function findNextConversationId() {
-        const autoSwitchEnabled = isAutoSwitchEnabled();
-        const currentId = getConversationIdFromUrl();
-        const allItems = getConversationItems();
-
-        if (!currentId) {
-            if (autoSwitchEnabled && allItems.length > 0) {
-                let targetIndex = 0;
-                if (lastSelectedIndex >= 0) {
-                    targetIndex = Math.min(lastSelectedIndex, allItems.length - 1);
-                }
-                const nextId = getIdFromItem(allItems[targetIndex]);
-                if (nextId) return nextId;
-            }
-            return null;
-        }
-
-        const currentIndex = allItems.findIndex(item => getIdFromItem(item) === currentId);
-
-        if (currentIndex !== -1) {
-            for (let i = currentIndex + 1; i < allItems.length; i++) {
-                const nextId = getIdFromItem(allItems[i]);
-                if (nextId && nextId !== currentId) {
-                    return nextId;
-                }
-            }
-        }
-        return null;
-    }
-
     function updatePanelUI() {
         const panel = document.getElementById('gemini-auto-scroll-panel');
         if (!panel) return;
@@ -435,19 +392,6 @@
             }
         }
 
-        // Update Auto-Switch UI
-        const switchBtn = panel.querySelector('.switch-toggle');
-        const switchStatusText = panel.querySelector('.switch-status');
-        if (switchBtn && switchStatusText) {
-            const isSwitchEnabled = isAutoSwitchEnabled();
-            switchBtn.className = 'gtc-toggle-btn switch-toggle ' + (isSwitchEnabled ? 'enabled' : 'disabled');
-            switchStatusText.textContent = isSwitchEnabled ? 'ON' : 'OFF';
-            const switchIcon = switchBtn.querySelector('.gtc-icon');
-            if (switchIcon) {
-                setInnerHTML(switchIcon, isSwitchEnabled ? ICONS.CHECKED : ICONS.UNCHECKED);
-            }
-        }
-
         const count = updateConversationIndices();
         const badge = panel.querySelector('.gtc-badge');
         if (badge) {
@@ -464,11 +408,6 @@
         const convIdSpan = panel.querySelector('.conversation-id');
         if (convIdSpan) {
             convIdSpan.textContent = findSelectedConversationId() || 'N/A';
-        }
-
-        const nextConvIdSpan = panel.querySelector('.next-conversation-id');
-        if (nextConvIdSpan) {
-            nextConvIdSpan.textContent = findNextConversationId() || 'N/A';
         }
 
         const items = getConversationItems();
@@ -506,19 +445,9 @@
                         <button class="gtc-toggle-btn scroll-toggle"><span class="gtc-icon"></span></button>
                     </div>
                 </div>
-                <div class="control-row">
-                    <label>Auto-Switch Next</label>
-                    <div class="toggle-switch">
-                        <span class="status-text switch-status">OFF</span>
-                        <button class="gtc-toggle-btn switch-toggle"><span class="gtc-icon"></span></button>
-                    </div>
-                </div>
                 <div class="info-row">
                     <span>Loaded: <span class="gtc-badge">0 items</span></span>
                     <span>ID: <span class="conversation-id">N/A</span></span>
-                </div>
-                <div class="info-row">
-                    <span>Next ID: <span class="next-conversation-id">N/A</span></span>
                 </div>
             </div>
         `);
@@ -529,12 +458,6 @@
             e.preventDefault();
             e.stopPropagation();
             toggleAutoScroll();
-        });
-
-        panel.querySelector('.switch-toggle').addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleAutoSwitch();
         });
 
         // Toggle Expand/Minimize when clicking minimized body
@@ -759,15 +682,7 @@
             for (const removedNode of mutation.removedNodes) {
                 if (removedNode.nodeType === 1) { // Element node
                     const isConversation = removedNode.matches(SELECTORS.CONVERSATION_ITEM) || removedNode.querySelector(SELECTORS.CONVERSATION_ITEM);
-                    const wasSelected = removedNode.classList?.contains('selected') || removedNode.querySelector('.selected');
-
-                    if (isConversation && wasSelected && lastSelectedIndex !== -1) {
-                        console.debug(`[GeminiAutoScroll] Selected conversation (index: ${lastSelectedIndex}) was removed from DOM.`);
-                        if (isAutoSwitchEnabled()) {
-                            // Execute selection in next tick to allow DOM to settle
-                            setTimeout(selectNextConversation, 50);
-                        }
-                    }
+                    // Selection handling removed correctly as per migration to gemini-auto-select-next
                 }
             }
         }
@@ -779,33 +694,7 @@
         }, 500);
     });
 
-    function selectNextConversation(retryCount = 0) {
-        // Use the centralized logic to find the appropriate next ID
-        const nextId = findNextConversationId();
 
-        if (nextId) {
-            // Find the element with this ID and click it
-            const items = getConversationItems();
-            const target = items.find(item => getIdFromItem(item) === nextId);
-
-            if (target) {
-                console.debug(`[GeminiAutoScroll] Target element found for ID ${nextId}. Clicking it.`);
-                target.click();
-            } else {
-                if (retryCount < 5) {
-                    setTimeout(() => selectNextConversation(retryCount + 1), 200);
-                } else {
-                    // Element not found in DOM after retries.
-                    // Navigate directly via URL as last resort.
-                    window.location.href = `https://gemini.google.com/app/${nextId}`;
-                }
-            }
-        } else {
-            if (retryCount < 3) {
-                setTimeout(() => selectNextConversation(retryCount + 1), 200);
-            }
-        }
-    }
 
     function initAutoScroll() {
         if (isInitialized) return;
@@ -818,13 +707,6 @@
             const currentUrl = window.location.href;
             if (currentUrl !== lastUrl) {
                 lastUrl = currentUrl;
-
-                // If on root path and Auto-Switch is enabled, trigger selection
-                // But NOT if we are on the /saved-info page
-                const isSavedInfo = currentUrl.includes('/saved-info');
-                if (isAutoSwitchEnabled() && !getConversationIdFromUrl() && !isSavedInfo) {
-                    setTimeout(selectNextConversation, 1500); // Wait for list reload
-                }
 
                 // Re-trigger scroll when URL changes
                 setTimeout(attemptScrollToConversation, 1200);
