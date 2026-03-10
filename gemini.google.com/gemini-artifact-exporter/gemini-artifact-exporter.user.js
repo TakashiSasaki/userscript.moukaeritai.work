@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.50
+// @version      0.2.51
 // @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -116,8 +116,9 @@
         try {
             el.focus();
             // Dispatched events are sometimes more reliable in throttled tabs than el.click()
-            el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
-            el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
+            // Removed `{ view: window }` because it throws an error in deeply throttled background Chromium tabs.
+            el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+            el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
             el.click();
         } catch (e) {
             log(`Robust click failed: ${e.message}`);
@@ -352,12 +353,23 @@
             // Aggressive cleanup after processing each artifact
             clearStuckOverlays(true);
 
-            // Round 4: Explicitly close the Canvas view to restore the standard conversation UI and Files sidebar
+            // Round 4 & 5: Explicitly close the Canvas view and the Files sidebar
             const closeBtn = document.querySelector(SELECTORS.CANVAS_CLOSE_BUTTON);
             if (closeBtn) {
-                log(`Closing canvas view to restore sidebar...`);
+                log(`Closing canvas view...`);
                 robustClick(closeBtn);
-                await sleep(500); // Wait for slide-out animation
+                await sleep(1000); // Wait for slide-out animation
+
+                // Round 5: Explicitly close the Files sidebar to reset state for the next artifact
+                const sidebarToggle = document.querySelector(SELECTORS.FILES_MENU_ITEM) || document.querySelector('button[mattooltip="Files in this chat"], button[aria-label="Files in this chat"]');
+                if (sidebarToggle) {
+                    log(`Closing files sidebar to reset state...`);
+                    robustClick(sidebarToggle);
+                    await sleep(500);
+                }
+
+                // Force clear any lingering backdrop that the toggles missed
+                clearStuckOverlays(false);
             } else {
                 // Gemini Bug Workaround: escape key to dismiss any lingering modals if not in Canvas
                 document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
