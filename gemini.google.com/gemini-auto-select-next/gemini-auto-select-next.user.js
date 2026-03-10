@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.23
+// @version      0.2.24
 // @lastModified 2026-03-10
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
@@ -279,32 +279,54 @@
     }
 
     uiObserver = new MutationObserver((mutations) => {
-        createDraggablePanel();
+        let runUpdate = false;
+        let triggerSwitch = false;
+
         for (const mutation of mutations) {
-            for (const removedNode of mutation.removedNodes) {
-                if (removedNode.nodeType === 1) {
-                    const isConversation = removedNode.matches(SELECTORS.CONVERSATION_ITEM) || removedNode.querySelector(SELECTORS.CONVERSATION_ITEM);
-                    const wasSelected = removedNode.classList?.contains('selected') || removedNode.querySelector('.selected');
-                    if (isConversation && wasSelected) {
-                        setTimeout(selectNextConversation, 100);
+            if (mutation.type === 'childList') {
+                for (const removedNode of mutation.removedNodes) {
+                    if (removedNode.nodeType === 1) {
+                        const isConversation = removedNode.matches(SELECTORS.CONVERSATION_ITEM) || removedNode.querySelector(SELECTORS.CONVERSATION_ITEM);
+                        const wasSelected = removedNode.classList?.contains('selected') || removedNode.querySelector('.selected');
+
+                        if (isConversation) {
+                            runUpdate = true;
+                            if (wasSelected) triggerSwitch = true;
+                        }
+                    }
+                }
+                for (const addedNode of mutation.addedNodes) {
+                    if (addedNode.nodeType === 1) {
+                        if (addedNode.matches && addedNode.matches(SELECTORS.CONVERSATION_ITEM) || (addedNode.querySelector && addedNode.querySelector(SELECTORS.CONVERSATION_ITEM))) {
+                            runUpdate = true;
+                        }
                     }
                 }
             }
         }
-        updatePanelUI();
+
+        if (runUpdate) updatePanelUI();
+        if (triggerSwitch) setTimeout(selectNextConversation, 100);
     });
 
     function init() {
         if (isInitialized) return;
         isInitialized = true;
         uiObserver.observe(document.body, { childList: true, subtree: true });
+
+        // Initial setup
+        setTimeout(() => {
+            createDraggablePanel();
+            updatePanelUI();
+        }, 1500);
+
+        // Periodic UI check to ensure panel exists
         mainInterval = setInterval(() => {
-            if (isAutoSwitchEnabled() && !getConversationIdFromUrl() && !window.location.href.includes('/saved-info')) {
-                setTimeout(selectNextConversation, 1500);
+            if (!document.getElementById('gemini-auto-switch-panel')) {
+                createDraggablePanel();
             }
             updatePanelUI();
-        }, 1000);
-        setTimeout(createDraggablePanel, 2000);
+        }, 2000);
     }
 
     function checkUrl() {

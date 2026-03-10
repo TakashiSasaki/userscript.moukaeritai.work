@@ -64,6 +64,65 @@
         .install-button:hover {
             background-color: #2c974b;
         }
+
+        /* Changelog specific styles */
+        .section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eaecef;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #24292e;
+        }
+
+        .changelog {
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 15px;
+            background-color: #f6f8fa;
+        }
+
+        .changelog-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #d1d5da;
+        }
+
+        .changelog-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .changelog-version {
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #0366d6;
+            margin-bottom: 5px;
+        }
+
+        .changelog-date {
+            font-size: 0.9em;
+            color: #586069;
+            margin-bottom: 10px;
+        }
+
+        .changelog-list {
+            list-style-type: disc;
+            margin-left: 20px;
+            padding-left: 0;
+            color: #24292e;
+        }
+
+        .changelog-list li {
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 
@@ -94,10 +153,29 @@
             <li><strong>SPA対応</strong>: Geminiの画面遷移を検知し、チャット画面でのみ動作します。</li>
         </ul>
 
-        <h2>更新履歴</h2>
-        <ul>
-            <li><strong>v0.2.23</strong>: <code>Gemini Auto-Scroll</code> から独立したスクリプトとして新規作成。</li>
-        </ul>
+        <div class="section">
+            <h2 class="section-title"><svg fill="currentColor" height="24" viewBox="0 -960 960 960" width="24">
+                    <path
+                        d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T760-80H240Zm280-520v-200H240v640h520v-440H520ZM240-800v200-200 640-640Z" />
+                </svg> 更新履歴</h2>
+            <div class="changelog">
+                <div class="changelog-item">
+                    <div class="changelog-version">v0.2.24</div>
+                    <div class="changelog-date">2026-03-10</div>
+                    <ul class="changelog-list">
+                        <li>Geminiのトップページ（<code>/app</code>）でロードインジケーターが無限に回り続ける不具合を修正しました。</li>
+                        <li>DOM監視ロジックを最適化し、不要なUI更新を削減しました。</li>
+                    </ul>
+                </div>
+                <div class="changelog-item">
+                    <div class="changelog-version">v0.2.23</div>
+                    <div class="changelog-date">2026-03-10</div>
+                    <ul class="changelog-list">
+                        <li><code>Gemini Auto-Scroll</code> から独立したスクリプトとして新規作成。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
