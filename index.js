@@ -1,22 +1,13 @@
-// Tab switching logic
-const tabBtns = document.querySelectorAll('.tab-btn');
-const projectItems = document.querySelectorAll('.project-item');
-
-tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        tabBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const filter = btn.getAttribute('data-filter');
-
-        projectItems.forEach(item => {
-            const category = item.getAttribute('data-category');
-            if (filter === 'all' || filter === category) {
-                item.classList.remove('hidden');
-            } else {
-                item.classList.add('hidden');
-            }
-        });
+// Domain nav smooth scrolling
+const domainLinks = document.querySelectorAll('.domain-nav-link');
+domainLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = link.getAttribute('href').replace('#', '');
+        const target = document.getElementById(targetId);
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth' });
+        }
     });
 });
 

@@ -35,475 +35,606 @@
     </a>
     <h1>Moukaeritai Userscripts</h1>
 
-    <div class="tab-nav">
-        <button class="tab-btn active" data-filter="all">
-            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16">
-                <path
-                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.47-7-7.43 0-.55.08-1.09.23-1.61L11 15v4.93zm6.97-2.61C17.16 15.62 16.03 15 14.82 15H11V4.07c1.37.38 2.53.97 3.47 1.76l-.11.11L18 9.07V9c-.6-.44-1.29-.82-2.04-1.1L18.97 4.07c-2.3-2.1-5.74-2.14-8.08-.07L13 14.82h-1c-.97 0-1.87-.29-2.65-.78L5.07 4.07c-2.1 2.3-2.14 5.74-.07 8.08L14.93 11V7c-.6-.44-1.29-.82-2.04-1.1L18.97 4.07z" />
-            </svg>
-            <span>All</span>
-        </button>
-        <button class="tab-btn" data-filter="onamae">
-            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16">
-                <path
-                    d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z" />
-            </svg>
-            <span>onamae.com</span>
-        </button>
-        <button class="tab-btn" data-filter="openai">
-            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16">
-                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" />
-            </svg>
-            <span>OpenAI</span>
-        </button>
-        <button class="tab-btn" data-filter="gemini">
-            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16">
-                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-            </svg>
-            <span>Gemini</span>
-        </button>
-        <button class="tab-btn" data-filter="grok">
-            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16">
-                <path
-                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-.25 15.75c-2.49 0-4.5-2.01-4.5-4.5s2.01-4.5 4.5-4.5 4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-7.5c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-            </svg>
-            <span>Grok</span>
-        </button>
-        <button class="tab-btn" data-filter="notebooklm">
-            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16">
-                <path
-                    d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 18H8v-2h5v2zm3-4H8v-2h8v2zm0-4H8V8h8v4z" />
-            </svg>
-            <span>NotebookLM</span>
-        </button>
-        <button class="tab-btn" data-filter="youtube">
-            <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16">
-                <path
-                    d="M10 16.5l6-4.5-6-4.5v9zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
-            </svg>
-            <span>YouTube</span>
-        </button>
-    </div>
+    <nav class="domain-nav">
+        <a class="domain-nav-link" href="#gemini">
+            <img alt="gemini.google.com" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=32"
+                width="16" height="16" />
+            gemini.google.com
+            <span class="domain-count">7</span>
+        </a>
+        <a class="domain-nav-link" href="#openai">
+            <img alt="chat.openai.com" src="https://www.google.com/s2/favicons?domain=openai.com&sz=32" width="16"
+                height="16" />
+            chat.openai.com
+            <span class="domain-count">5</span>
+        </a>
+        <a class="domain-nav-link" href="#youtube">
+            <img alt="youtube.com" src="https://www.google.com/s2/favicons?domain=youtube.com&sz=32" width="16"
+                height="16" />
+            youtube.com
+            <span class="domain-count">5</span>
+        </a>
+        <a class="domain-nav-link" href="#notebooklm">
+            <img alt="notebooklm.google.com" src="notebooklm.google.com/notebooklm.svg" width="16" height="16" />
+            notebooklm.google.com
+            <span class="domain-count">2</span>
+        </a>
+        <a class="domain-nav-link" href="#onamae">
+            <img alt="onamae.com" src="https://www.google.com/s2/favicons?domain=onamae.com&sz=32" width="16"
+                height="16" />
+            onamae.com
+            <span class="domain-count">2</span>
+        </a>
+        <a class="domain-nav-link" href="#grok">
+            <img alt="grok.com" src="https://www.google.com/s2/favicons?domain=grok.com&sz=32" width="16" height="16" />
+            grok.com
+            <span class="domain-count">1</span>
+        </a>
+        <a class="domain-nav-link" href="#docs">
+            <img alt="docs.google.com" src="https://www.google.com/s2/favicons?domain=docs.google.com&sz=32" width="16"
+                height="16" />
+            docs.google.com
+            <span class="domain-count">1</span>
+        </a>
+        <a class="domain-nav-link" href="#outlook">
+            <img alt="outlook.office.com" src="https://www.google.com/s2/favicons?domain=outlook.office.com&sz=32"
+                width="16" height="16" />
+            outlook.office.com
+            <span class="domain-count">1</span>
+        </a>
+    </nav>
 
-    <ul class="project-list">
-        <li class="project-item" data-category="onamae">
-            <h3 class="project-title">
-                <img alt="onamae.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=onamae.com&amp;sz=32" />
-                <a href="onamae.com/index.html">お名前.com DNSレコードバックアップ 💾</a>
-            </h3>
-            <p class="project-desc">
-                お名前ドットコムのDNSレコード設定ページからリソースレコード(RR)を自動的に記録・バックアップします。
-            </p>
-            <a class="install-button" data-script-name="お名前.com DNSレコードバックアップ"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/onamae.com/onamae-rr-backup/onamae-rr-backup.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="onamae">
-            <h3 class="project-title">
-                <img alt="onamae.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=onamae.com&amp;sz=32" />
-                <a href="onamae.com/onamae-block-evil/index.html">お名前.com 邪悪広告ブロッカー 🛡️</a>
-            </h3>
-            <p class="project-desc">
-                お名前.com Navi の操作を妨げる「邪悪な」広告や確認ポップアップ、チャットサポート等を自動的に非表示にします。
-            </p>
-            <a class="install-button" data-script-name="お名前.com 邪悪広告ブロッカー"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/onamae.com/onamae-block-evil/onamae-block-evil.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- gemini.google.com -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <section class="domain-section" id="gemini">
+        <h2 class="domain-header">
+            <img alt="gemini.google.com" class="domain-icon"
+                src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
+            gemini.google.com
+        </h2>
+        <ul class="project-list">
+            <li class="project-item" data-category="gemini">
+                <h3 class="project-title">
+                    <img alt="gemini.google.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
+                    <a href="gemini.google.com/index.html">Gemini Artifact Exporter 📦</a>
+                </h3>
+                <p class="project-desc">
+                    Gemini のサイドバーにある Article アーティファクトをまとめて Google Docs にエクスポートします。
+                </p>
+                <a class="install-button" data-script-name="Gemini Artifact Exporter"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+            <li class="project-item" data-category="gemini">
+                <h3 class="project-title">
+                    <img alt="gemini.google.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
+                    <a href="gemini.google.com/index.html">Gemini One Click Delete 🗑️</a>
+                </h3>
+                <p class="project-desc">
+                    Google Gemini の会話をワンクリックで削除する機能を提供します。
+                </p>
+                <a class="install-button" data-script-name="Gemini 1-Click Delete Conversation"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+            <li class="project-item" data-category="gemini">
+                <h3 class="project-title">
+                    <img alt="gemini.google.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
+                    <a href="gemini.google.com/index.html">Gemini Export to Docs 📄</a>
+                </h3>
+                <p class="project-desc">
+                    Google Gemini の会話やキャンバスを、ワンクリックで Google Docs にエクスポートするユーザースクリプトです。
+                </p>
+                <a class="install-button" data-script-name="Gemini 1-Click Export to Docs"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+            <li class="project-item" data-category="gemini">
+                <h3 class="project-title">
+                    <img alt="gemini.google.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
+                    <a href="gemini.google.com/index.html">Gemini Auto-Scroll 📜</a>
+                </h3>
+                <p class="project-desc">
+                    Google Gemini の会話リストを自動スクロールして全履歴をロードします。会話削除後の次スレッド自動選択機能や、動作ログパネルも搭載し、大量の会話管理を強力に支援します。
+                </p>
+                <a class="install-button" data-script-name="Gemini Auto-Scroll"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+            <li class="project-item" data-category="gemini">
+                <h3 class="project-title">
+                    <img alt="gemini.google.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
+                    <a href="gemini.google.com/index.html">Gemini Profile Badge 📛</a>
+                </h3>
+                <p class="project-desc">
+                    Google Geminiのユーザープロファイルに、好きな文字列や絵文字でカスタム「バッジ」を追加します。
+                </p>
+                <a class="install-button" data-script-name="Gemini Profile Badge"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-profile-badge/gemini-profile-badge.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+            <li class="project-item" data-category="gemini">
+                <h3 class="project-title">
+                    <img alt="gemini.google.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
+                    <a href="gemini.google.com/index.html">Gemini Turn Counter 🔢</a>
+                </h3>
+                <p class="project-desc">
+                    Google Gemini 上での会話において、メッセージ数（ターン数）、文字数、画像数をリアルタイムにカウントし表示します。
+                </p>
+                <a class="install-button" data-script-name="Gemini Turn Counter"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+            <li class="project-item" data-category="gemini">
+                <h3 class="project-title">
+                    <img alt="gemini.google.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
+                    <a href="gemini.google.com/index.html">Gemini Search Snippet Helper 🔢</a>
+                </h3>
+                <p class="project-desc">
+                    Gemini の検索結果一覧において、各会話カードのタイトルに連番を表示し、視認性と識別性を向上させるユーザースクリプトです。
+                </p>
+                <a class="install-button" data-script-name="Gemini Search Snippet Helper"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-search-snippet-helper/gemini-search-snippet-helper.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+            <li class="project-item" data-category="gemini">
+                <h3 class="project-title">
+                    <img alt="gemini.google.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
+                    <a href="gemini.google.com/gemini-saved-info/index.html">Gemini Saved Info Helper 📋</a>
+                </h3>
+                <p class="project-desc">
+                    カスタムインストラクションに連番やコピーボタンを追加し、管理しやすくします。全件コピーも可能です。
+                </p>
+                <a class="install-button" data-script-name="Gemini Saved Info Helper"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+        </ul>
+    </section>
 
-        <li class="project-item" data-category="openai">
-            <h3 class="project-title">
-                <img alt="openai.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=openai.com&amp;sz=32" />
-                <a href="chat.openai.com/index.html">ChatGPT Turn Counter 🔢</a>
-            </h3>
-            <p class="project-desc">
-                ChatGPTの会話で、ユーザーとアシスタントのターン数、画像数、文字数、コードブロック数をカウントし、画像をDataURLとしてコピーする機能を提供します。
-            </p>
-            <a class="install-button" data-script-name="ChatGPT Turn Counter"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-turn-counter/chatgpt-turn-counter.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="openai">
-            <h3 class="project-title">
-                <img alt="openai.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=openai.com&amp;sz=32" />
-                <a href="chat.openai.com/index.html">ChatGPT Profile Badge 📛</a>
-            </h3>
-            <p class="project-desc">
-                ChatGPTのユーザープロファイルに、好きな文字列や絵文字でカスタム「バッジ」を追加します。
-            </p>
-            <a class="install-button" data-script-name="ChatGPT Profile Badge"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-profile-badge/chatgpt-profile-badge.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="openai">
-            <h3 class="project-title">
-                <img alt="openai.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=openai.com&amp;sz=32" />
-                <a href="chat.openai.com/chatgpt-conversation-lister/index.html">ChatGPT Conversation Lister 📋</a>
-            </h3>
-            <p class="project-desc">
-                会話履歴のタイトルと ID を取得し、検索や TSV 形式でのリスト化を可能にします。大量の会話を整理するのに最適です。
-            </p>
-            <a class="install-button" data-script-name="ChatGPT Conversation Lister (Unified)"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-conversation-lister/chatgpt-conversation-lister.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="openai">
-            <h3 class="project-title">
-                <img alt="openai.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=openai.com&amp;sz=32" />
-                <a href="chat.openai.com/chatgpt-no-margin/index.html">ChatGPT No Margin ↔️</a>
-            </h3>
-            <p class="project-desc">
-                ChatGPTの会話画面の左右の余白を削除し、画面幅を最大限に活用します。コードブロックや長い文章の視認性が向上します。
-            </p>
-            <a class="install-button" data-script-name="ChatGPT No Margin"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-no-margin/chatgpt-no-margin.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="openai">
-            <h3 class="project-title">
-                <img alt="openai.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=openai.com&amp;sz=32" />
-                <a href="chat.openai.com/index.html">ChatGPT Auto Sender 🚀</a>
-            </h3>
-            <p class="project-desc">
-                ChatGPTで現在の応答が完了した後、次の事前入力されたプロンプトの送信を自動化します。連続したプロンプト入力や自動化された会話に。
-            </p>
-            <a class="install-button" data-script-name="ChatGPT Auto Prompt Sender"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-auto-sender/chatgpt-auto-sender.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="gemini">
-            <h3 class="project-title">
-                <img alt="gemini.google.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
-                <a href="gemini.google.com/index.html">Gemini Profile Badge 📛</a>
-            </h3>
-            <p class="project-desc">
-                Google Geminiのユーザープロファイルに、好きな文字列や絵文字でカスタム「バッジ」を追加します。
-            </p>
-            <a class="install-button" data-script-name="Gemini Profile Badge"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-profile-badge/gemini-profile-badge.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="grok">
-            <h3 class="project-title">
-                <img alt="grok.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=grok.com&amp;sz=32" />
-                <a href="grok.com/grok-copy-all/">Grok Conversation Copy 📋</a>
-            </h3>
-            <p class="project-desc">
-                Grokの会話ページで、全てのコピーボタンを順に押して内容を結合し、クリップボードにコピーします。
-            </p>
-            <a class="install-button" data-script-name="Grok Conversation Copy"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/grok.com/grok-copy-all/grok-copy-all.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="gemini">
-            <h3 class="project-title">
-                <img alt="gemini.google.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
-                <a href="gemini.google.com/index.html">Gemini One Click Delete 🗑️</a>
-            </h3>
-            <p class="project-desc">
-                Google Gemini の会話をワンクリックで削除する機能を提供します。
-            </p>
-            <a class="install-button" data-script-name="Gemini 1-Click Delete Conversation"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="gemini">
-            <h3 class="project-title">
-                <img alt="gemini.google.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
-                <a href="gemini.google.com/index.html">Gemini Export to Docs 📄</a>
-            </h3>
-            <p class="project-desc">
-                Google Gemini の会話やキャンバスを、ワンクリックで Google Docs にエクスポートするユーザースクリプトです。
-            </p>
-            <a class="install-button" data-script-name="Gemini 1-Click Export to Docs"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="gemini">
-            <h3 class="project-title">
-                <img alt="gemini.google.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
-                <a href="gemini.google.com/index.html">Gemini Artifact Exporter 📦</a>
-            </h3>
-            <p class="project-desc">
-                Gemini のサイドバーにある Article アーティファクトをまとめて Google Docs にエクスポートします。
-            </p>
-            <a class="install-button" data-script-name="Gemini Artifact Exporter"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="gemini">
-            <h3 class="project-title">
-                <img alt="gemini.google.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
-                <a href="gemini.google.com/index.html">Gemini Auto-Scroll 📜</a>
-            </h3>
-            <p class="project-desc">
-                Google Gemini の会話リストを自動スクロールして全履歴をロードします。会話削除後の次スレッド自動選択機能や、動作ログパネルも搭載し、大量の会話管理を強力に支援します。
-            </p>
-            <a class="install-button" data-script-name="Gemini Auto-Scroll"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="gemini">
-            <h3 class="project-title">
-                <img alt="gemini.google.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
-                <a href="gemini.google.com/index.html">Gemini Turn Counter 🔢</a>
-            </h3>
-            <p class="project-desc">
-                Google Gemini 上での会話において、メッセージ数（ターン数）、文字数、画像数をリアルタイムにカウントし表示します。
-            </p>
-            <a class="install-button" data-script-name="Gemini Turn Counter"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="gemini">
-            <h3 class="project-title">
-                <img alt="gemini.google.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
-                <a href="gemini.google.com/index.html">Gemini Search Snippet Helper 🔢</a>
-            </h3>
-            <p class="project-desc">
-                Gemini の検索結果一覧において、各会話カードのタイトルに連番を表示し、視認性と識別性を向上させるユーザースクリプトです。
-            </p>
-            <a class="install-button" data-script-name="Gemini Search Snippet Helper"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-search-snippet-helper/gemini-search-snippet-helper.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="gemini">
-            <h3 class="project-title">
-                <img alt="gemini.google.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
-                <a href="gemini.google.com/gemini-saved-info/index.html">Gemini Saved Info Helper 📋</a>
-            </h3>
-            <p class="project-desc">
-                カスタムインストラクションに連番やコピーボタンを追加し、管理しやすくします。全件コピーも可能です。
-            </p>
-            <a class="install-button" data-script-name="Gemini Saved Info Helper"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="notebooklm">
-            <h3 class="project-title">
-                <img alt="notebooklm.google.com" class="project-icon" src="notebooklm.google.com/notebooklm.svg" />
-                <a href="notebooklm.google.com/index.html">NotebookLM Source Management Tools 🛠️</a>
-            </h3>
-            <p class="project-desc">
-                NotebookLM のソースパネルに、連番表示、クイックリネーム、クイック削除ボタンを追加し、ソース管理を効率化します。
-            </p>
-            <a class="install-button" data-script-name="NotebookLM Source Delete Button"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/notebooklm.google.com/notebooklm-source-delete-button/notebooklm-source-delete-button.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="notebooklm">
-            <h3 class="project-title">
-                <img alt="notebooklm.google.com" class="project-icon" src="notebooklm.google.com/notebooklm.svg" />
-                <a href="notebooklm.google.com/index.html">NotebookLM Artifact Delete Button 🗑️</a>
-            </h3>
-            <p class="project-desc">
-                NotebookLM のアーティファクト（Studio）パネルに、各アーティファクトを直接削除するためのボタンを追加します。
-            </p>
-            <a class="install-button" data-script-name="NotebookLM Artifact Delete Button"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/notebooklm.google.com/notebooklm-artifact-delete-button/notebooklm-artifact-delete-button.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- chat.openai.com -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <section class="domain-section" id="openai">
+        <h2 class="domain-header">
+            <img alt="chat.openai.com" class="domain-icon"
+                src="https://www.google.com/s2/favicons?domain=openai.com&amp;sz=32" />
+            chat.openai.com
+        </h2>
+        <ul class="project-list">
+            <li class="project-item" data-category="openai">
+                <h3 class="project-title">
+                    <img alt="openai.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=openai.com&amp;sz=32" />
+                    <a href="chat.openai.com/index.html">ChatGPT Turn Counter 🔢</a>
+                </h3>
+                <p class="project-desc">
+                    ChatGPTの会話で、ユーザーとアシスタントのターン数、画像数、文字数、コードブロック数をカウントし、画像をDataURLとしてコピーする機能を提供します。
+                </p>
+                <a class="install-button" data-script-name="ChatGPT Turn Counter"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-turn-counter/chatgpt-turn-counter.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+            <li class="project-item" data-category="openai">
+                <h3 class="project-title">
+                    <img alt="openai.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=openai.com&amp;sz=32" />
+                    <a href="chat.openai.com/index.html">ChatGPT Profile Badge 📛</a>
+                </h3>
+                <p class="project-desc">
+                    ChatGPTのユーザープロファイルに、好きな文字列や絵文字でカスタム「バッジ」を追加します。
+                </p>
+                <a class="install-button" data-script-name="ChatGPT Profile Badge"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-profile-badge/chatgpt-profile-badge.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+            <li class="project-item" data-category="openai">
+                <h3 class="project-title">
+                    <img alt="openai.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=openai.com&amp;sz=32" />
+                    <a href="chat.openai.com/chatgpt-conversation-lister/index.html">ChatGPT Conversation Lister 📋</a>
+                </h3>
+                <p class="project-desc">
+                    会話履歴のタイトルと ID を取得し、検索や TSV 形式でのリスト化を可能にします。大量の会話を整理するのに最適です。
+                </p>
+                <a class="install-button" data-script-name="ChatGPT Conversation Lister (Unified)"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-conversation-lister/chatgpt-conversation-lister.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+            <li class="project-item" data-category="openai">
+                <h3 class="project-title">
+                    <img alt="openai.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=openai.com&amp;sz=32" />
+                    <a href="chat.openai.com/chatgpt-no-margin/index.html">ChatGPT No Margin ↔️</a>
+                </h3>
+                <p class="project-desc">
+                    ChatGPTの会話画面の左右の余白を削除し、画面幅を最大限に活用します。コードブロックや長い文章の視認性が向上します。
+                </p>
+                <a class="install-button" data-script-name="ChatGPT No Margin"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-no-margin/chatgpt-no-margin.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+            <li class="project-item" data-category="openai">
+                <h3 class="project-title">
+                    <img alt="openai.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=openai.com&amp;sz=32" />
+                    <a href="chat.openai.com/index.html">ChatGPT Auto Sender 🚀</a>
+                </h3>
+                <p class="project-desc">
+                    ChatGPTで現在の応答が完了した後、次の事前入力されたプロンプトの送信を自動化します。連続したプロンプト入力や自動化された会話に。
+                </p>
+                <a class="install-button" data-script-name="ChatGPT Auto Prompt Sender"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-auto-sender/chatgpt-auto-sender.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+        </ul>
+    </section>
 
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- youtube.com -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <section class="domain-section" id="youtube">
+        <h2 class="domain-header">
+            <img alt="youtube.com" class="domain-icon"
+                src="https://www.google.com/s2/favicons?domain=youtube.com&amp;sz=32" />
+            youtube.com
+        </h2>
+        <ul class="project-list">
+            <li class="project-item" data-category="youtube">
+                <h3 class="project-title">
+                    <img alt="youtube.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=youtube.com&amp;sz=32" />
+                    <a href="youtube.com/index.html">YouTube Playlist Saver 📺</a>
+                </h3>
+                <p class="project-desc">
+                    YouTubeプレイリストの動画IDを記録・管理。フィルタリング等のUI機能は独立したスクリプトに分離されました。バックグラウンドで動作します。
+                </p>
+                <a class="install-button" data-script-name="YouTube Playlist Saver"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver/youtube-playlist-saver.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+            <li class="project-item" data-category="youtube">
+                <h3 class="project-title">
+                    <img alt="youtube.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=youtube.com&amp;sz=32" />
+                    <a href="youtube.com/index.html">YouTube Playlist Scroller 📜</a>
+                </h3>
+                <p class="project-desc">
+                    YouTubeプレイリストを自動的にスクロールし、大量の動画があるリストの読み込みを支援します。バックグラウンド動作にも対応。Saverと併用して利用できます。
+                </p>
+                <a class="install-button" data-script-name="YouTube Playlist Scroller"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-scroller/youtube-playlist-scroller.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+            <li class="project-item" data-category="youtube">
+                <h3 class="project-title">
+                    <img alt="youtube.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=youtube.com&amp;sz=32" />
+                    <a href="youtube.com/index.html">YouTube Playlist Filter 🔍</a>
+                </h3>
+                <p class="project-desc">
+                    プレイリストのフィルタリング、スキャン済み範囲（Range）の状態表示を提供します。Saverと連携して動作します。
+                </p>
+                <a class="install-button" data-script-name="YouTube Playlist Filter"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-filter/youtube-playlist-filter.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+            <li class="project-item" data-category="youtube">
+                <h3 class="project-title">
+                    <img alt="youtube.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=youtube.com&amp;sz=32" />
+                    <a href="youtube.com/index.html">YouTube Playlist Remover 🗑️</a>
+                </h3>
+                <p class="project-desc">
+                    プレイリスト内の不要な動画（視聴済みの動画など）を一括削除するツール。フィルタと連携して安全に削除できます。
+                </p>
+                <a class="install-button" data-script-name="YouTube Playlist Remover"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-remover/youtube-playlist-remover.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+            <li class="project-item" data-category="youtube">
+                <h3 class="project-title">
+                    <img alt="youtube.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=youtube.com&amp;sz=32" />
+                    <a href="youtube.com/index.html">YouTube Playlist Lite ⚡</a>
+                </h3>
+                <p class="project-desc">
+                    プレイリストのサムネイルを非表示にして軽量化するツール。大量の動画があるリストの操作を快適にします。
+                </p>
+                <a class="install-button" data-script-name="YouTube Playlist Lite"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-lite/youtube-playlist-lite.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+        </ul>
+    </section>
 
-        <li class="project-item" data-category="youtube">
-            <h3 class="project-title">
-                <img alt="youtube.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=youtube.com&amp;sz=32" />
-                <a href="youtube.com/index.html">YouTube Playlist Saver 📺</a>
-            </h3>
-            <p class="project-desc">
-                YouTubeプレイリストの動画IDを記録・管理。フィルタリング等のUI機能は独立したスクリプトに分離されました。バックグラウンドで動作します。
-            </p>
-            <a class="install-button" data-script-name="YouTube Playlist Saver"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver/youtube-playlist-saver.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- notebooklm.google.com -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <section class="domain-section" id="notebooklm">
+        <h2 class="domain-header">
+            <img alt="notebooklm.google.com" class="domain-icon" src="notebooklm.google.com/notebooklm.svg" />
+            notebooklm.google.com
+        </h2>
+        <ul class="project-list">
+            <li class="project-item" data-category="notebooklm">
+                <h3 class="project-title">
+                    <img alt="notebooklm.google.com" class="project-icon" src="notebooklm.google.com/notebooklm.svg" />
+                    <a href="notebooklm.google.com/index.html">NotebookLM Source Management Tools 🛠️</a>
+                </h3>
+                <p class="project-desc">
+                    NotebookLM のソースパネルに、連番表示、クイックリネーム、クイック削除ボタンを追加し、ソース管理を効率化します。
+                </p>
+                <a class="install-button" data-script-name="NotebookLM Source Delete Button"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/notebooklm.google.com/notebooklm-source-delete-button/notebooklm-source-delete-button.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+            <li class="project-item" data-category="notebooklm">
+                <h3 class="project-title">
+                    <img alt="notebooklm.google.com" class="project-icon" src="notebooklm.google.com/notebooklm.svg" />
+                    <a href="notebooklm.google.com/index.html">NotebookLM Artifact Delete Button 🗑️</a>
+                </h3>
+                <p class="project-desc">
+                    NotebookLM のアーティファクト（Studio）パネルに、各アーティファクトを直接削除するためのボタンを追加します。
+                </p>
+                <a class="install-button" data-script-name="NotebookLM Artifact Delete Button"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/notebooklm.google.com/notebooklm-artifact-delete-button/notebooklm-artifact-delete-button.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+        </ul>
+    </section>
 
-        <li class="project-item" data-category="youtube">
-            <h3 class="project-title">
-                <img alt="youtube.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=youtube.com&amp;sz=32" />
-                <a href="youtube.com/index.html">YouTube Playlist Scroller 📜</a>
-            </h3>
-            <p class="project-desc">
-                YouTubeプレイリストを自動的にスクロールし、大量の動画があるリストの読み込みを支援します。バックグラウンド動作にも対応。Saverと併用して利用できます。
-            </p>
-            <a class="install-button" data-script-name="YouTube Playlist Scroller"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-scroller/youtube-playlist-scroller.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- onamae.com -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <section class="domain-section" id="onamae">
+        <h2 class="domain-header">
+            <img alt="onamae.com" class="domain-icon"
+                src="https://www.google.com/s2/favicons?domain=onamae.com&amp;sz=32" />
+            onamae.com
+        </h2>
+        <ul class="project-list">
+            <li class="project-item" data-category="onamae">
+                <h3 class="project-title">
+                    <img alt="onamae.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=onamae.com&amp;sz=32" />
+                    <a href="onamae.com/index.html">お名前.com DNSレコードバックアップ 💾</a>
+                </h3>
+                <p class="project-desc">
+                    お名前ドットコムのDNSレコード設定ページからリソースレコード(RR)を自動的に記録・バックアップします。
+                </p>
+                <a class="install-button" data-script-name="お名前.com DNSレコードバックアップ"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/onamae.com/onamae-rr-backup/onamae-rr-backup.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+            <li class="project-item" data-category="onamae">
+                <h3 class="project-title">
+                    <img alt="onamae.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=onamae.com&amp;sz=32" />
+                    <a href="onamae.com/onamae-block-evil/index.html">お名前.com 邪悪広告ブロッカー 🛡️</a>
+                </h3>
+                <p class="project-desc">
+                    お名前.com Navi の操作を妨げる「邪悪な」広告や確認ポップアップ、チャットサポート等を自動的に非表示にします。
+                </p>
+                <a class="install-button" data-script-name="お名前.com 邪悪広告ブロッカー"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/onamae.com/onamae-block-evil/onamae-block-evil.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+        </ul>
+    </section>
 
-        <li class="project-item" data-category="youtube">
-            <h3 class="project-title">
-                <img alt="youtube.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=youtube.com&amp;sz=32" />
-                <a href="youtube.com/index.html">YouTube Playlist Filter 🔍</a>
-            </h3>
-            <p class="project-desc">
-                プレイリストのフィルタリング、スキャン済み範囲（Range）の状態表示を提供します。Saverと連携して動作します。
-            </p>
-            <a class="install-button" data-script-name="YouTube Playlist Filter"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-filter/youtube-playlist-filter.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="youtube">
-            <h3 class="project-title">
-                <img alt="youtube.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=youtube.com&amp;sz=32" />
-                <a href="youtube.com/index.html">YouTube Playlist Remover 🗑️</a>
-            </h3>
-            <p class="project-desc">
-                プレイリスト内の不要な動画（視聴済みの動画など）を一括削除するツール。フィルタと連携して安全に削除できます。
-            </p>
-            <a class="install-button" data-script-name="YouTube Playlist Remover"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-remover/youtube-playlist-remover.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-        <li class="project-item" data-category="youtube">
-            <h3 class="project-title">
-                <img alt="youtube.com" class="project-icon"
-                    src="https://www.google.com/s2/favicons?domain=youtube.com&amp;sz=32" />
-                <a href="youtube.com/index.html">YouTube Playlist Lite ⚡</a>
-            </h3>
-            <p class="project-desc">
-                プレイリストのサムネイルを非表示にして軽量化するツール。大量の動画があるリストの操作を快適にします。
-            </p>
-            <a class="install-button" data-script-name="YouTube Playlist Lite"
-                href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-lite/youtube-playlist-lite.user.js"
-                target="_blank">
-                <svg height="16" viewbox="0 0 24 24" width="16">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                Install
-            </a>
-        </li>
-    </ul>
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- grok.com -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <section class="domain-section" id="grok">
+        <h2 class="domain-header">
+            <img alt="grok.com" class="domain-icon"
+                src="https://www.google.com/s2/favicons?domain=grok.com&amp;sz=32" />
+            grok.com
+        </h2>
+        <ul class="project-list">
+            <li class="project-item" data-category="grok">
+                <h3 class="project-title">
+                    <img alt="grok.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=grok.com&amp;sz=32" />
+                    <a href="grok.com/grok-copy-all/">Grok Conversation Copy 📋</a>
+                </h3>
+                <p class="project-desc">
+                    Grokの会話ページで、全てのコピーボタンを順に押して内容を結合し、クリップボードにコピーします。
+                </p>
+                <a class="install-button" data-script-name="Grok Conversation Copy"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/grok.com/grok-copy-all/grok-copy-all.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+        </ul>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- docs.google.com -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <section class="domain-section" id="docs">
+        <h2 class="domain-header">
+            <img alt="docs.google.com" class="domain-icon"
+                src="https://www.google.com/s2/favicons?domain=docs.google.com&amp;sz=32" />
+            docs.google.com
+        </h2>
+        <ul class="project-list">
+            <li class="project-item" data-category="docs">
+                <h3 class="project-title">
+                    <img alt="docs.google.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=docs.google.com&amp;sz=32" />
+                    <a href="docs.google.com/gemini-exported-docs-auto-closer/">Gemini Exported Docs Auto-Closer ⏱️</a>
+                </h3>
+                <p class="project-desc">
+                    Gemini Artifact Exporter によって自動的に開かれた Google ドキュメントのタブを、5秒後に自動で閉じてブラウザのフォーカスを Gemini に戻します。
+                </p>
+                <a class="install-button" data-script-name="Gemini Exported Docs Auto-Closer"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/docs.google.com/gemini-exported-docs-auto-closer/gemini-exported-docs-auto-closer.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+        </ul>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- outlook.office.com -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <section class="domain-section" id="outlook">
+        <h2 class="domain-header">
+            <img alt="outlook.office.com" class="domain-icon"
+                src="https://www.google.com/s2/favicons?domain=outlook.office.com&amp;sz=32" />
+            outlook.office.com
+        </h2>
+        <ul class="project-list">
+            <li class="project-item" data-category="outlook">
+                <h3 class="project-title">
+                    <img alt="outlook.office.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=outlook.office.com&amp;sz=32" />
+                    <a href="outlook.office.com/copilot-conversation-deleter/">Copilot Conversation Deleter 🗑️</a>
+                </h3>
+                <p class="project-desc">
+                    Outlook の Copilot チャットで、会話をワンクリックで削除する機能を提供するユーザースクリプトです。
+                </p>
+                <a class="install-button" data-script-name="Copilot Conversation Deleter"
+                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/outlook.office.com/copilot-conversation-deleter/copilot-conversation-deleter.user.js"
+                    target="_blank">
+                    <svg height="16" viewbox="0 0 24 24" width="16">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    Install
+                </a>
+            </li>
+        </ul>
+    </section>
+
     <footer>
         <hr />
         <p style="display: flex; align-items: center; gap: 8px;">
