@@ -52,3 +52,7 @@ The `index.html` includes a "UI プレビュー" section showing the script's vi
 *   Enhanced `MutationObserver` with a 500ms debounce to significantly reduce CPU overhead during AI typing.
 *   Implemented a 5-second polling fallback during initial load to ensure UI elements are injected even if Gemini's SPA rendering is delayed.
 *   Improved cleanup logic to ensure all injected elements and listeners are removed during SPA navigation.
+
+### 10. v0.2.11 Enhancements
+*   Refactored the UI from a complex floating panel to a standardized, draggable pill-shaped floating button.
+*   Removed minimize/maximize logic and shortcut hint displays from the DOM to simplify the interface.

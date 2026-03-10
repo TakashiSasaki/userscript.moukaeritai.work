@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.10
-// @lastModified 2026-03-03
-// @description  Adds a 1-click panel/shortcut to delete the current Gemini conversation.
+// @version      0.2.11
+// @lastModified 2026-03-10
+// @description  Adds a 1-click floating button with shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
@@ -81,7 +81,6 @@
     let isInitialized = false;
 
     const STORAGE_KEYS = {
-        PANEL_MINIMIZED: 'gemini_delete_panel_minimized',
         PANEL_POS_X: 'gemini_delete_panel_pos_x',
         PANEL_POS_Y: 'gemini_delete_panel_pos_y'
     };
@@ -102,19 +101,6 @@
             element.innerHTML = policy.createHTML(html);
         } else {
             element.innerHTML = html;
-        }
-    }
-
-    function isPanelMinimized() {
-        return GM_getValue(STORAGE_KEYS.PANEL_MINIMIZED, false);
-    }
-
-    function togglePanelMinimized() {
-        const isMin = !isPanelMinimized();
-        GM_setValue(STORAGE_KEYS.PANEL_MINIMIZED, isMin);
-        const panel = document.getElementById('gemini-delete-panel');
-        if (panel) {
-            panel.classList.toggle('minimized', isMin);
         }
     }
 
@@ -226,126 +212,65 @@
             .gemini-quick-delete-btn.processing { opacity: 0.5; padding: 4px; border-radius: 4px; animation: pulse-red 1s infinite; cursor: wait; }
             .gemini-quick-delete-btn:disabled { background-color: #f0f0f0; border-color: #ccc; color: #aaa; cursor: help; }
 
-            /* --- Draggable Panel Styles --- */
+            /* --- Draggable Button Styles --- */
             #gemini-delete-panel {
                 position: fixed;
-                background-color: #ffffff;
-                color: #202124;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                border-radius: 8px;
                 z-index: 10000;
-                overflow: hidden;
-                transition: height 0.2s, background-color 0.2s;
-                border: 1px solid #dadce0;
-                font-family: inherit;
                 display: flex;
-                flex-direction: column;
-                font-size: 13px; /* make font smaller */
-            }
-            #gemini-delete-panel.minimized {
-                height: 36px;
-                width: auto;
-                cursor: pointer;
-            }
-            #gemini-delete-panel.minimized .panel-content {
-                display: none;
-            }
-            #gemini-delete-panel.minimized .panel-header {
-                display: none;
-            }
-            .minimized-summary {
-                display: none;
-                padding: 0 12px;
-                line-height: 36px;
-                font-weight: 500;
-                white-space: nowrap;
-            }
-            #gemini-delete-panel.minimized .minimized-summary {
-                display: block;
-            }
-            .panel-header {
-                display: flex;
-                justify-content: space-between;
                 align-items: center;
-                padding: 6px 12px; /* reduced padding */
-                background: #f1f3f4;
-                border-bottom: 1px solid #dadce0;
-                cursor: grab;
+                gap: 8px;
+                background: rgba(255, 255, 255, 0.9);
+                padding: 6px 12px 6px 8px;
+                border-radius: 24px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                border: 1px solid #dadce0;
+                backdrop-filter: blur(8px);
+                transition: background-color 0.2s;
+                font-family: 'Google Sans', sans-serif;
+                user-select: none;
             }
-            .panel-header:active {
-                cursor: grabbing;
-            }
-            .panel-header h1 {
-                margin: 0;
-                font-size: 14px;
-                font-weight: 500;
-            }
-            .version-badge {
-                font-size: 10px;
-                color: #5f6368;
-                margin-left: 6px;
-            }
-            .gdp-minimize-btn {
-                cursor: pointer;
-                padding: 2px 6px;
-                background: transparent;
-                border: none;
-                color: #5f6368;
-                font-weight: bold;
-                font-size: 16px;
-                line-height: 1;
-                border-radius: 4px;
-            }
-            .gdp-minimize-btn:hover {
-                background: rgba(0,0,0,0.05);
-            }
-            .panel-content {
-                padding: 10px 12px; /* reduced padding */
+            .drag-handle {
+                cursor: move;
+                color: #9aa0a6;
                 display: flex;
-                flex-direction: column;
-                gap: 8px; /* reduced gap */
+                align-items: center;
+                padding: 0 4px;
             }
             .gdp-main-delete-btn {
                 display: flex;
                 align-items: center;
-                justify-content: center;
-                gap: 6px; /* reduced gap */
-                width: 100%;
+                gap: 6px;
                 background-color: #d93025;
                 color: white;
                 border: none;
-                border-radius: 4px;
-                padding: 6px 12px; /* reduced padding */
+                border-radius: 16px;
+                padding: 6px 14px;
                 cursor: pointer;
                 font-weight: 500;
-                transition: background-color 0.2s;
+                font-size: 13px;
+                transition: background-color 0.2s, transform 0.1s;
             }
             .gdp-main-delete-btn:hover:not(:disabled) {
                 background-color: #c5221f;
+            }
+            .gdp-main-delete-btn:active:not(:disabled) {
+                transform: scale(0.98);
             }
             .gdp-main-delete-btn:disabled {
                 background-color: #f1f3f4;
                 color: #9aa0a6;
                 cursor: not-allowed;
             }
-            .shortcuts-list {
-                margin: 4px 0 0 0; /* reduced margin */
-                padding-left: 20px;
-                font-size: 11px; /* smaller font */
-                color: #5f6368;
-                line-height: 1.3; /* narrow line height */
-            }
-            .shortcuts-list li {
-                margin-bottom: 2px;
+            .version-badge {
+                font-size: 11px;
+                color: #7f8c8d;
+                font-family: monospace;
+                padding-right: 4px;
             }
             @media (prefers-color-scheme: dark) {
-                #gemini-delete-panel { background-color: #202124; color: #e8eaed; border-color: #5f6368; }
-                .panel-header { background-color: #303134; border-bottom-color: #5f6368; }
-                .gdp-minimize-btn, .version-badge { color: #9aa0a6; }
-                .gdp-minimize-btn:hover { background: rgba(255,255,255,0.1); }
+                #gemini-delete-panel { background: rgba(32, 33, 36, 0.85); border-color: #5f6368; }
                 .gdp-main-delete-btn:disabled { background-color: #3c4043; color: #80868b; }
-                #gemini-delete-panel.minimized { background-color: #4a1a1a; color: #ff8a80; border-color: #662222; }
-                #gemini-delete-panel .shortcuts-list { color: #9aa0a6; }
+                .version-badge { color: #9aa0a6; }
             }
             @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         `;
@@ -500,35 +425,17 @@
 
         const panel = document.createElement('div');
         panel.id = 'gemini-delete-panel';
-        if (isPanelMinimized()) panel.classList.add('minimized');
-
-        const version = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.2.5';
+        const version = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.2.11';
 
         setInnerHTML(panel, `
-            <div class="minimized-summary">1-Click Delete v${version}</div>
-            <div class="panel-header">
-                <div style="display:flex; align-items:center;">
-                    <h1>1-Click Delete</h1><span class="version-badge">v${version}</span>
-                </div>
-                <span class="gdp-minimize-btn" title="Minimize">−</span>
-            </div>
-            <div class="panel-content">
-                <div class="gdp-delete-btn-container">
-                    <button class="gdp-main-delete-btn" id="gdp-global-delete-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="16" viewBox="0 -960 960 960" width="16" fill="currentColor">
-                            <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/>
-                        </svg>
-                        Delete Current Chat
-                    </button>
-                </div>
-                <div>
-                   <span style="font-weight:600;font-size:10px;">Shortcuts:</span>
-                   <ul class="shortcuts-list">
-                       <li>Ctrl + D</li>
-                       <li>Ctrl + Shift + Backspace</li>
-                   </ul>
-                </div>
-            </div>
+            <div class="drag-handle" title="Drag to move">⠿</div>
+            <button class="gdp-main-delete-btn" id="gdp-global-delete-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" height="16" viewBox="0 -960 960 960" width="16" fill="currentColor">
+                    <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/>
+                </svg>
+                Delete Chat
+            </button>
+            <span class="version-badge">v${version}</span>
         `);
 
         document.body.appendChild(panel);
@@ -561,49 +468,23 @@
             }
         });
 
-        let hasDragged = false;
-
-        panel.addEventListener('click', (e) => {
-            if (hasDragged) return;
-            if (panel.classList.contains('minimized') && !e.target.closest('button, input, .gdp-minimize-btn')) {
-                togglePanelMinimized();
-            }
-        });
-
-        panel.querySelector('.gdp-minimize-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            togglePanelMinimized();
-        });
-
         // Drag Logic
-        const header = panel.querySelector('.panel-header');
-        const summary = panel.querySelector('.minimized-summary');
+        const handle = panel.querySelector('.drag-handle');
         let isDragging = false;
-        let dragOffset = { x: 0, y: 0, startX: 0, startY: 0 };
+        let dragOffset = { x: 0, y: 0 };
 
-        const startDrag = (e) => {
-            if (e.button !== 0 || e.target.closest('button, input, .gdp-minimize-btn')) return;
+        handle.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
             isDragging = true;
-            hasDragged = false;
             dragOffset.x = e.clientX - panel.offsetLeft;
             dragOffset.y = e.clientY - panel.offsetTop;
-            dragOffset.startX = e.clientX;
-            dragOffset.startY = e.clientY;
             panel.style.transition = 'none';
             document.body.style.userSelect = 'none';
-        };
-
-        header.addEventListener('mousedown', startDrag);
-        summary.addEventListener('mousedown', startDrag);
+        });
 
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
             e.preventDefault();
-
-            if (!hasDragged && (Math.abs(e.clientX - dragOffset.startX) > 3 || Math.abs(e.clientY - dragOffset.startY) > 3)) {
-                hasDragged = true;
-            }
-            if (!hasDragged) return;
 
             let newX = Math.max(0, Math.min(e.clientX - dragOffset.x, window.innerWidth - panel.offsetWidth));
             let newY = Math.max(0, Math.min(e.clientY - dragOffset.y, window.innerHeight - panel.offsetHeight));
@@ -618,11 +499,8 @@
             isDragging = false;
             panel.style.transition = '';
             document.body.style.userSelect = '';
-            if (hasDragged) {
-                GM_setValue(STORAGE_KEYS.PANEL_POS_X, panel.offsetLeft);
-                GM_setValue(STORAGE_KEYS.PANEL_POS_Y, panel.offsetTop);
-            }
-            setTimeout(() => { hasDragged = false; }, 50);
+            GM_setValue(STORAGE_KEYS.PANEL_POS_X, panel.offsetLeft);
+            GM_setValue(STORAGE_KEYS.PANEL_POS_Y, panel.offsetTop);
         });
     }
 
