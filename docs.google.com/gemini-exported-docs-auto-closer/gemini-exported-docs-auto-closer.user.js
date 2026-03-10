@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Exported Docs Auto-Closer
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.0
+// @version      0.2.1
 // @lastModified 2026-03-10
 // @description  Automatically closes Google Docs tabs that were opened by the Gemini Artifact Exporter after a configurable delay.
 // @author       Takashi Sasaki
@@ -20,7 +20,7 @@
     // Report version to landing page
     const SCRIPT_NAME = 'Gemini Exported Docs Auto-Closer';
     const reportVersion = () => {
-        const version = typeof GM_info !== 'undefined' ? GM_info.script.version : '0.2.0';
+        const version = typeof GM_info !== 'undefined' ? GM_info.script.version : '0.2.1';
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: { name: SCRIPT_NAME, version: version }
         }));
@@ -46,6 +46,26 @@
 
     // Load position
     const savedPos = GM_getValue('panelPosition', { bottom: '24px', right: '24px' });
+
+    // Trusted Types Policy for Google Docs
+    let policy;
+    if (window.trustedTypes && window.trustedTypes.createPolicy) {
+        try {
+            policy = window.trustedTypes.createPolicy('geminiDocsCloser_' + Math.random().toString(36).substr(2, 9), {
+                createHTML: (string) => string
+            });
+        } catch (e) {
+            console.warn('[Gemini Docs Closer] Failed to create trustedTypes policy', e);
+        }
+    }
+
+    const setInnerHTML = (element, html) => {
+        if (policy) {
+            element.innerHTML = policy.createHTML(html);
+        } else {
+            element.innerHTML = html;
+        }
+    };
 
     // Create UI container (Draggable Panel)
     const panel = document.createElement('div');
@@ -82,7 +102,7 @@
         font-size: 12px;
         color: #aaa;
     `;
-    header.innerHTML = '<span>⠿ Gemini Auto-Closer</span>';
+    setInnerHTML(header, '<span>⠿ Gemini Auto-Closer</span>');
     panel.appendChild(header);
 
     // Body
@@ -109,7 +129,7 @@
         font-size: 12px;
         color: #ccc;
     `;
-    settingsRow.innerHTML = '<span>Wait:</span>';
+    setInnerHTML(settingsRow, '<span>Wait:</span>');
 
     const timeInput = document.createElement('input');
     timeInput.type = 'number';
