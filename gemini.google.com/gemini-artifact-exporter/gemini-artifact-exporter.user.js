@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.49
+// @version      0.2.50
 // @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -187,8 +187,10 @@
     }
 
     function clearStuckOverlays(aggressive) {
+        // CRITICAL BUG FIX: Do NOT delete '.cdk-overlay-container' or '.cdk-global-overlay-wrapper'.
+        // Angular Material CDK requires these to remain in the DOM. Deleting them permanently breaks all menus.
         const selectors = aggressive
-            ? '.cdk-overlay-backdrop, .cdk-overlay-container, [id^="cdk-overlay-"], .mat-mdc-snack-bar-container, .cdk-global-overlay-wrapper, mat-snack-bar-container'
+            ? '.cdk-overlay-backdrop, [id^="cdk-overlay-"], .mat-mdc-snack-bar-container, mat-snack-bar-container'
             : '.cdk-overlay-backdrop, .mat-mdc-snack-bar-container, mat-snack-bar-container';
 
         const stuckElements = document.querySelectorAll(selectors);
@@ -199,6 +201,13 @@
                 clearedCount++;
             }
         });
+
+        // If the container is blocking clicks because a child didn't clean up, we ensure it's unblocked
+        // without destroying the container itself.
+        const cdkContainer = document.querySelector('.cdk-overlay-container');
+        if (cdkContainer && cdkContainer.children.length === 0) {
+            cdkContainer.style.pointerEvents = 'none';
+        }
 
         if (clearedCount > 0) {
             log(`Cleared ${clearedCount} overlay elements (aggressive=${aggressive}).`);
