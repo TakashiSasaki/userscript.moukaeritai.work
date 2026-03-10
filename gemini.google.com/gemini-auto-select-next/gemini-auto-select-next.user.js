@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.24
+// @version      0.2.25
 // @lastModified 2026-03-10
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
@@ -139,8 +139,15 @@
             .gtc-toggle-btn:hover { background: rgba(0,0,0,0.05); }
             .gtc-toggle-btn.enabled { color: #1a73e8; }
             .gtc-toggle-btn.disabled { color: #5f6368; }
+            .manual-next-btn {
+                background: #1a73e8; color: white; border: none; padding: 4px 10px; border-radius: 4px;
+                cursor: pointer; font-size: 11px; margin-top: 8px; width: 100%; transition: background 0.2s;
+            }
+            .manual-next-btn:hover { background: #1557b0; }
             @media (prefers-color-scheme: dark) {
                 #gemini-auto-switch-panel { background: rgba(32, 33, 36, 0.85); color: #e8eaed; border-color: #5f6368; }
+                .manual-next-btn { background: #8ab4f8; color: #202124; }
+                .manual-next-btn:hover { background: #aecbfa; }
             }
         `;
         document.head.appendChild(style);
@@ -237,11 +244,13 @@
                     <span>Enabled</span>
                     <button class="gtc-toggle-btn switch-toggle"></button>
                 </div>
+                <button class="manual-next-btn">⏭️ Skip to Next</button>
             </div>
         `);
         document.body.appendChild(panel);
 
         panel.querySelector('.switch-toggle').addEventListener('click', toggleAutoSwitch);
+        panel.querySelector('.manual-next-btn').addEventListener('click', () => selectNextConversation(0));
 
         // Position persistence
         const savedPos = GM_getValue(CONSTANTS.PANEL_POSITION_KEY, { top: '80px', right: '20px' });
