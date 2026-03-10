@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.47
+// @version      0.2.48
 // @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -211,17 +211,34 @@
 
         if (!chip) {
             log(`Chip "${targetTitle}" not found. Re-opening files panel...`);
+
+            // Round 3: Clear overlays BEFORE clicking action menu
+            clearStuckOverlays(true);
+
             const actionMenuBtn = document.querySelector(SELECTORS.ACTIONS_MENU_BUTTON);
             if (actionMenuBtn) {
                 actionMenuBtn.click();
                 try {
                     const menu = await waitForElement(SELECTORS.MENU_PANEL, document, 3000);
-                    const filesMenuItem = menu.querySelector(SELECTORS.FILES_MENU_ITEM);
-                    if (filesMenuItem) filesMenuItem.click();
-                    await sleep(parseFloat(GM_getValue(REOPEN_DELAY_KEY, 1.5)) * 1000); // Wait for panel to open
-                    chip = findChipByTitle(targetTitle);
-                } catch {
-                    log('Warning: Failed to repoen files panel.');
+
+                    // Round 3: Robust text-based fallback for "Files" menu item
+                    let filesMenuItem = menu.querySelector(SELECTORS.FILES_MENU_ITEM);
+                    if (!filesMenuItem) {
+                        const items = Array.from(menu.querySelectorAll('.mat-mdc-menu-item, button[role="menuitem"]'));
+                        filesMenuItem = items.find(item => {
+                            const text = item.textContent.toLowerCase();
+                            return text.includes('files in this chat') || text.includes('このチャット内のファイル');
+                        });
+                    }
+
+                    if (filesMenuItem) {
+                        filesMenuItem.click();
+                        // Wait for sidebar to transition in and chips to render
+                        await sleep(parseFloat(GM_getValue(REOPEN_DELAY_KEY, 1.5)) * 1000 + 500);
+                        chip = findChipByTitle(targetTitle);
+                    }
+                } catch (err) {
+                    log(`Warning: Failed to reopen files panel: ${err.message}`);
                 }
             }
         }
