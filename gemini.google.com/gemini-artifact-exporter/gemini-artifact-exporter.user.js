@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.52
+// @version      0.2.53
 // @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -105,7 +105,20 @@
     }
 
     async function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        // Round 6: Replace standard setTimeout with background-aware polling.
+        // Chrome aggressively throttles/suspends pure setTimeout in background tabs.
+        // Polling Date.now() ensures that even if interval ticks are delayed to ~1s+,
+        // the math remains correct and it resolves on the next available tick,
+        // rather than being permanently suspended.
+        return new Promise(resolve => {
+            const start = Date.now();
+            const interval = setInterval(() => {
+                if (Date.now() - start >= ms) {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, Math.min(ms, 50)); // Check every 50ms, but don't ping faster than requested ms
+        });
     }
 
     /**
