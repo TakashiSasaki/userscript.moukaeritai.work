@@ -286,7 +286,7 @@
                     <svg height="18" viewbox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install (v0.2.54)
+                    Install
                 </a>
             </li>
 
@@ -304,7 +304,7 @@
                     <svg height="18" viewbox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install (v0.1.8)
+                    Install
                 </a>
             </li>
 
@@ -322,7 +322,7 @@
                     <svg height="18" viewbox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install (v0.1.15)
+                    Install
                 </a>
             </li>
 
@@ -340,7 +340,7 @@
                     <svg height="18" viewbox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install (v0.1.40)
+                    Install
                 </a>
             </li>
             <li class="project-item">
@@ -357,7 +357,7 @@
                     <svg height="18" viewbox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install (v0.1.13)
+                    Install
                 </a>
             </li>
         </ul>
@@ -375,75 +375,13 @@
             <p>
                 <small>Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a> | <a
                         href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> | <a
-                        href="https://github.com/codespaces/fuzzy-halibut-qgr4qgggrh494p" target="codespaces">Open in Codespaces</a></small>
+                        href="https://github.com/codespaces/fuzzy-halibut-qgr4qgggrh494p" target="codespaces">Open in
+                        Codespaces</a></small>
             </p>
         </footer>
     </div>
 
-    <script>
-        document.addEventListener('userscript-check-installed', (event) => {
-            const { name, version } = event.detail;
-            const buttons = document.querySelectorAll('.install-button');
-
-            // Semantic Versioning comparison
-            const compareVersions = (v1, v2) => {
-                if (!v1 || !v2) return 0;
-                const parts1 = v1.split('.').map(Number);
-                const parts2 = v2.split('.').map(Number);
-                for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
-                    const p1 = parts1[i] || 0;
-                    const p2 = parts2[i] || 0;
-                    if (p1 > p2) return 1;
-                    if (p1 < p2) return -1;
-                }
-                return 0;
-            };
-
-            buttons.forEach(btn => {
-                if (btn.getAttribute('data-script-name') === name) {
-                    // Extract version from button text "Install (vX.Y.Z)"
-                    const match = btn.textContent.match(/v(\d+\.\d+\.\d+)/);
-                    const serverVersion = match ? match[1] : null;
-
-                    if (serverVersion && compareVersions(serverVersion, version) > 0) {
-                        // Update available
-                        btn.innerHTML = `<svg height="18" viewBox="0 0 24 24" width="18"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Update (v${serverVersion})`;
-                        btn.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.6)'; // Orange glow
-                        btn.style.background = '#f39c12'; // Orange
-                        btn.classList.remove('installed');
-                        btn.style.pointerEvents = 'auto';
-                    } else {
-                        // Installed and up-to-date
-                        btn.textContent = `Installed (v${version})`;
-                        btn.classList.add('installed');
-                        btn.style.pointerEvents = 'none';
-                        btn.style.background = ''; // Use CSS default for .installed
-                        btn.style.boxShadow = '';
-                    }
-                }
-            });
-        });
-
-        // Initial state: set buttons to "Checking..."
-        const installButtons = document.querySelectorAll('.install-button');
-        installButtons.forEach(btn => {
-            btn.dataset.originalHtml = btn.innerHTML;
-            btn.textContent = 'Checking...';
-            btn.classList.add('installed');
-            btn.style.pointerEvents = 'none';
-        });
-
-        // Ping after a random delay (3-5s)
-        setTimeout(() => {
-            installButtons.forEach(btn => {
-                // Restore original state before pinging
-                btn.innerHTML = btn.dataset.originalHtml;
-                btn.classList.remove('installed');
-                btn.style.pointerEvents = '';
-            });
-            document.dispatchEvent(new CustomEvent('userscript-ping'));
-        }, Math.floor(Math.random() * 2000) + 3000);
-    </script>
+    <script src="../domain-landing.js"></script>
 </body>
 
 </html>

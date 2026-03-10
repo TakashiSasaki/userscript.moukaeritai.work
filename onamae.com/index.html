@@ -154,7 +154,7 @@
                 <svg height="16" viewbox="0 0 24 24" width="16">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                 </svg>
-                Install (v0.0.6)
+                Install
             </a>
         </li>
         <li class="project-item">
@@ -172,7 +172,7 @@
                 <svg height="16" viewbox="0 0 24 24" width="16">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                 </svg>
-                Install (v0.1.10)
+                Install
             </a>
         </li>
     </ul>
@@ -189,26 +189,12 @@
                 </svg>
             </a>
             <small> | <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> | Developed by <a
-                    href="https://x.com/TakashiSasaki">Takashi Sasaki</a> | <a href="https://github.com/codespaces/fuzzy-halibut-qgr4qgggrh494p" target="codespaces">Open in Codespaces</a></small>
+                    href="https://x.com/TakashiSasaki">Takashi Sasaki</a> | <a
+                    href="https://github.com/codespaces/fuzzy-halibut-qgr4qgggrh494p" target="codespaces">Open in
+                    Codespaces</a></small>
         </p>
     </footer>
-    <script>
-        document.addEventListener('userscript-check-installed', (event) => {
-            const { name, version } = event.detail;
-            const buttons = document.querySelectorAll('.install-button');
-            buttons.forEach(btn => {
-                if (btn.getAttribute('data-script-name') === name) {
-                    btn.textContent = `Installed (v${version})`;
-                    btn.style.backgroundColor = '#6c757d';
-                    btn.style.pointerEvents = 'none';
-                    btn.classList.add('installed');
-                }
-            });
-        });
-
-        // Ping userscripts to report themselves
-        document.dispatchEvent(new CustomEvent('userscript-ping'));
-    </script>
+    <script src="../domain-landing.js"></script>
 </body>
 
 </html>
