@@ -45,7 +45,8 @@
     }
 
     const SELECTORS = {
-        ACTIONS_MENU_BUTTON: 'button[data-test-id="conversation-actions-menu-icon-button"]',
+        // Primary (immersive Canvas header) + fallback (standard conversation header)
+        ACTIONS_MENU_BUTTON: 'button[data-test-id="conversation-actions-menu-icon-button"], conversation-actions-icon button',
         FILES_MENU_ITEM: 'button[data-test-id="studio-sidebar-button"]',
         SIDEBAR_CHIP: 'button.container:has(mat-icon[fonticon="article"])',
         CHIP_TITLE: 'div:nth-child(2) > div:first-child',
@@ -458,6 +459,14 @@
         try {
             const menu = await waitForElement(SELECTORS.MENU_PANEL, document, 3000);
             filesMenuItem = menu.querySelector(SELECTORS.FILES_MENU_ITEM);
+            if (!filesMenuItem) {
+                // Text-based fallback
+                const items = Array.from(menu.querySelectorAll('.mat-mdc-menu-item, button[role="menuitem"]'));
+                filesMenuItem = items.find(item => {
+                    const text = item.textContent.toLowerCase();
+                    return text.includes('files in this chat') || text.includes('このチャット内のファイル');
+                });
+            }
             if (!filesMenuItem) throw new Error('Files menu item not found');
         } catch {
             log('ERROR: Could not find Files menu in the action list.');
