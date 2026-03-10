@@ -45,8 +45,8 @@
     }
 
     const SELECTORS = {
-        ACTIONS_MENU_BUTTON: 'conversation-actions-icon button',
-        FILES_MENU_ITEM: '.mat-mdc-menu-item:has(mat-icon[fonticon="home_storage"])',
+        ACTIONS_MENU_BUTTON: 'button[data-test-id="conversation-actions-menu-icon-button"]',
+        FILES_MENU_ITEM: 'button[data-test-id="studio-sidebar-button"]',
         SIDEBAR_CHIP: 'button.container:has(mat-icon[fonticon="article"])',
         CHIP_TITLE: 'div:nth-child(2) > div:first-child',
         CHIP_ICON_CONTAINER: 'mat-icon',
@@ -104,6 +104,23 @@
 
     async function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * More robust click that ensures focus and handles throttled tabs.
+     */
+    function robustClick(el) {
+        if (!el) return;
+        try {
+            el.focus();
+            // Dispatched events are sometimes more reliable in throttled tabs than el.click()
+            el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
+            el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
+            el.click();
+        } catch (e) {
+            log(`Robust click failed: ${e.message}`);
+            el.click();
+        }
     }
 
     /**
@@ -214,16 +231,20 @@
 
             // Round 3: Clear overlays BEFORE clicking action menu
             clearStuckOverlays(true);
+            await sleep(300); // Give UI a moment to settle
 
             const actionMenuBtn = document.querySelector(SELECTORS.ACTIONS_MENU_BUTTON);
             if (actionMenuBtn) {
-                actionMenuBtn.click();
+                log(`Found action menu button: ${actionMenuBtn.getAttribute('aria-label') || 'unlabeled'}`);
+                robustClick(actionMenuBtn);
                 try {
-                    const menu = await waitForElement(SELECTORS.MENU_PANEL, document, 3000);
+                    // Increased timeout for throttled tabs
+                    const menu = await waitForElement(SELECTORS.MENU_PANEL, document, 5000);
 
                     // Round 3: Robust text-based fallback for "Files" menu item
                     let filesMenuItem = menu.querySelector(SELECTORS.FILES_MENU_ITEM);
                     if (!filesMenuItem) {
+                        log("Selector for Files menu item failed. Trying text-based fallback...");
                         const items = Array.from(menu.querySelectorAll('.mat-mdc-menu-item, button[role="menuitem"]'));
                         filesMenuItem = items.find(item => {
                             const text = item.textContent.toLowerCase();
@@ -232,14 +253,19 @@
                     }
 
                     if (filesMenuItem) {
-                        filesMenuItem.click();
+                        log(`Clicking Files menu item: ${filesMenuItem.textContent.trim()}`);
+                        robustClick(filesMenuItem);
                         // Wait for sidebar to transition in and chips to render
-                        await sleep(parseFloat(GM_getValue(REOPEN_DELAY_KEY, 1.5)) * 1000 + 500);
+                        await sleep(parseFloat(GM_getValue(REOPEN_DELAY_KEY, 1.5)) * 1000 + 1000);
                         chip = findChipByTitle(targetTitle);
+                    } else {
+                        log("ERROR: Could not find 'Files' item in menu panel.");
                     }
                 } catch (err) {
                     log(`Warning: Failed to reopen files panel: ${err.message}`);
                 }
+            } else {
+                log(`ERROR: Actions menu button (${SELECTORS.ACTIONS_MENU_BUTTON}) not found.`);
             }
         }
 
