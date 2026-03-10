@@ -2,6 +2,7 @@
  * Shared version-check logic for domain landing pages.
  * Dynamically fetches the latest version from GitHub raw URLs
  * and compares with installed userscript versions.
+ * Injects "Latest" and "Installed" version badges into each card.
  */
 
 const DOWNLOAD_ICON = '<svg height="18" viewBox="0 0 24 24" width="18"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
@@ -31,17 +32,16 @@ async function fetchVersion(url) {
     }
 }
 
-function updateButtonState(btn) {
-    const serverVersion = btn.dataset.serverVersion;
-    const installedVersion = btn.dataset.installedVersion;
+function updateButtonState(item) {
+    const btn = item.querySelector('.install-button');
+    if (!btn) return;
+
+    const serverVersion = item.dataset.serverVersion;
+    const installedVersion = item.dataset.installedVersion;
 
     if (!installedVersion) {
-        // Not installed - show Install with server version
-        if (serverVersion) {
-            btn.innerHTML = `${DOWNLOAD_ICON} Install (v${serverVersion})`;
-        } else {
-            btn.innerHTML = `${DOWNLOAD_ICON} Install`;
-        }
+        // Not installed
+        btn.innerHTML = btn.dataset.originalContent || `${DOWNLOAD_ICON} Install`;
         btn.classList.remove('installed');
         btn.style.pointerEvents = '';
         btn.style.background = '';
@@ -51,14 +51,14 @@ function updateButtonState(btn) {
 
     if (serverVersion && compareVersions(serverVersion, installedVersion) > 0) {
         // Update available
-        btn.innerHTML = `${DOWNLOAD_ICON} Update (v${serverVersion})`;
+        btn.innerHTML = `${DOWNLOAD_ICON} Update`;
         btn.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.6)';
         btn.style.background = '#f39c12';
         btn.classList.remove('installed');
         btn.style.pointerEvents = 'auto';
     } else {
         // Installed & up-to-date
-        btn.textContent = `Installed (v${installedVersion})`;
+        btn.textContent = 'Installed';
         btn.classList.add('installed');
         btn.style.pointerEvents = 'none';
         btn.style.background = '';
@@ -66,34 +66,135 @@ function updateButtonState(btn) {
     }
 }
 
-async function initVersionCheck() {
-    const buttons = document.querySelectorAll('.install-button');
+function injectVersionStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .project-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 12px;
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .version-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .version-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .version-label {
+            min-width: 60px;
+        }
+        .version-badge {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+        .version-badge.latest {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+        }
+        .version-badge.installed {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+        }
+        .version-badge.outdated {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+    `;
+    document.head.appendChild(style);
+}
 
-    // 1. Set initial loading state
-    buttons.forEach(btn => {
-        btn.dataset.originalHtml = btn.innerHTML;
-        btn.innerHTML = `${DOWNLOAD_ICON} Loading...`;
+async function initVersionCheck() {
+    const projectItems = document.querySelectorAll('.project-item');
+
+    // 0. Inject CSS for version badges
+    injectVersionStyles();
+
+    // 1. Inject version badge UI and footer structure
+    projectItems.forEach(item => {
+        const installBtn = item.querySelector('.install-button');
+        if (!installBtn) return;
+
+        // Save original button content
+        installBtn.dataset.originalContent = installBtn.innerHTML;
+
+        // Create footer container
+        const footer = document.createElement('div');
+        footer.className = 'project-footer';
+
+        // Create version info
+        const versionInfo = document.createElement('div');
+        versionInfo.className = 'version-info';
+        versionInfo.innerHTML = `
+            <div class="version-row">
+                <span class="version-label">Latest:</span>
+                <span class="version-badge latest">...</span>
+            </div>
+            <div class="version-row">
+                <span class="version-label">Installed:</span>
+                <span class="version-badge installed">-</span>
+            </div>
+        `;
+
+        // Assemble: versionInfo + button => footer => item
+        footer.appendChild(versionInfo);
+        item.appendChild(footer);
+        footer.appendChild(installBtn);
     });
 
     // 2. Fetch latest versions from GitHub in parallel
-    const promises = Array.from(buttons).map(async btn => {
-        if (btn.href) {
-            const version = await fetchVersion(btn.href);
-            if (version) {
-                btn.dataset.serverVersion = version;
+    const promises = Array.from(projectItems).map(async item => {
+        const btn = item.querySelector('.install-button');
+        if (!btn || !btn.href) return;
+
+        const version = await fetchVersion(btn.href);
+        const badge = item.querySelector('.version-badge.latest');
+
+        if (version) {
+            item.dataset.serverVersion = version;
+            if (badge) {
+                badge.textContent = `v${version}`;
+            }
+        } else {
+            if (badge) {
+                badge.textContent = 'Error';
+                badge.classList.add('outdated');
             }
         }
-        updateButtonState(btn);
+
+        updateButtonState(item);
     });
     await Promise.all(promises);
 
     // 3. Listen for installed userscript reports
     document.addEventListener('userscript-check-installed', (event) => {
         const { name, version } = event.detail;
-        buttons.forEach(btn => {
-            if (btn.getAttribute('data-script-name') === name) {
-                btn.dataset.installedVersion = version;
-                updateButtonState(btn);
+        projectItems.forEach(item => {
+            const btn = item.querySelector('.install-button');
+            if (btn && btn.getAttribute('data-script-name') === name) {
+                item.dataset.installedVersion = version;
+
+                // Update installed badge
+                const badge = item.querySelector('.version-badge.installed');
+                if (badge) {
+                    badge.textContent = `v${version}`;
+                    badge.classList.remove('outdated');
+                }
+
+                updateButtonState(item);
             }
         });
     });
