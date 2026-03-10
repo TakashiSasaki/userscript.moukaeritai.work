@@ -1,14 +1,12 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.3
-// @lastModified 2026-03-03
+// @version      0.4.4
+// @lastModified 2026-03-10
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
-// @match        http://127.0.0.1:5500/*
-// @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js
 // @grant        GM_setValue
@@ -201,8 +199,6 @@
             /* 1-Turn Panel */
             #gemini-one-turn-panel {
                 position: fixed;
-                bottom: 20px;
-                right: 20px;
                 background-color: rgba(28, 28, 30, 0.85);
                 backdrop-filter: blur(12px) saturate(180%);
                 -webkit-backdrop-filter: blur(12px) saturate(180%);
@@ -217,6 +213,7 @@
                 font-family: 'Google Sans', sans-serif;
                 min-width: 200px;
                 color: white;
+                user-select: none;
             }
             #gemini-one-turn-panel.visible {
                 display: flex;
@@ -231,6 +228,7 @@
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
+                cursor: move;
             }
             .one-turn-version {
                 font-size: 10px;
@@ -589,17 +587,54 @@
     }
 
     function createOneTurnPanel() {
+        // Load position
+        const savedPos = GM_getValue('gemini-export-panel-pos', { bottom: '20px', right: '20px' });
+
         const panel = document.createElement('div');
         panel.id = 'gemini-one-turn-panel';
+        if (savedPos.top) panel.style.top = savedPos.top;
+        else panel.style.bottom = savedPos.bottom;
+        if (savedPos.left) panel.style.left = savedPos.left;
+        else panel.style.right = savedPos.right;
 
         const header = document.createElement('div');
         header.className = 'one-turn-header';
-        header.textContent = '1-Turn Auto Export';
+
+        const titleSpan = document.createElement('span');
+        titleSpan.textContent = '⠿ 1-Turn Auto Export';
+        header.appendChild(titleSpan);
 
         const versionSpan = document.createElement('span');
         versionSpan.className = 'one-turn-version';
         versionSpan.textContent = `v${GM_info.script.version}`;
         header.appendChild(versionSpan);
+
+        // Dragging Logic
+        let isDragging = false;
+        let offset = { x: 0, y: 0 };
+
+        header.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            offset.x = e.clientX - panel.offsetLeft;
+            offset.y = e.clientY - panel.offsetTop;
+            panel.style.transition = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            panel.style.bottom = 'auto';
+            panel.style.right = 'auto';
+            panel.style.top = (e.clientY - offset.y) + 'px';
+            panel.style.left = (e.clientX - offset.x) + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                panel.style.transition = '';
+                GM_setValue('gemini-export-panel-pos', { top: panel.style.top, left: panel.style.left });
+            }
+        });
 
         const controls = document.createElement('div');
         controls.className = 'one-turn-controls';
