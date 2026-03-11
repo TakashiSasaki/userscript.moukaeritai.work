@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.12
+// @version      0.4.13
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-12
 // @author       Takashi Sasaki
@@ -619,6 +619,12 @@
         return [...new Set(matches)];
     }
 
+    function extractYoutubeVideoId(url) {
+        if (!url || typeof url !== 'string') return null;
+        const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/);
+        return match ? match[1] : null;
+    }
+
     function updateOneTurnVisibility() {
         const turns = document.querySelectorAll(SELECTORS.aiTurnContainer);
         // Note: Gemini UI can be slow to update styles/classes. 
@@ -650,11 +656,30 @@
                         console.log(`[Gemini 1-Turn] Extracted Prompt URLs:`, userUrls);
                         console.log(`[Gemini 1-Turn] Extracted Response URLs:`, botUrls);
 
-                        if (userUrls.length === 1 && botUrls.includes(userUrls[0])) {
-                            autoExportTriggered = true;
-                            console.log(`[Gemini 1-Turn Auto] Match found! Prompt has exactly 1 URL, and it is present in the response: ${userUrls[0]}`);
-                            
-                            const delayStr = GM_getValue(AUTO_URL_DELAY_KEY, 5);
+                        if (userUrls.length === 1) {
+                            const userYtId = extractYoutubeVideoId(userUrls[0]);
+                            let matchFound = false;
+
+                            for (const botUrl of botUrls) {
+                                if (userUrls[0] === botUrl) {
+                                    matchFound = true;
+                                    break;
+                                }
+                                if (userYtId) {
+                                    const botYtId = extractYoutubeVideoId(botUrl);
+                                    if (botYtId && userYtId === botYtId) {
+                                        matchFound = true;
+                                        console.log(`[Gemini 1-Turn Auto] Match found via YouTube Video ID: ${userYtId}`);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (matchFound) {
+                                autoExportTriggered = true;
+                                console.log(`[Gemini 1-Turn Auto] Match concluded. Prompt had 1 URL matched in response.`);
+                                
+                                const delayStr = GM_getValue(AUTO_URL_DELAY_KEY, 5);
                             let countdown = parseInt(delayStr, 10);
                             if (isNaN(countdown)) countdown = 5;
 
@@ -712,6 +737,7 @@
                                     runExportProcess(0, true, true);
                                 }, countdown * 1000);
                             }
+                        }
                         }
                     }
                 } catch (e) {
