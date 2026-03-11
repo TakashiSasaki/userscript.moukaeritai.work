@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.26
+// @version      0.2.27
 // @lastModified 2026-03-10
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
@@ -23,12 +23,8 @@
         'userscript.moukaeritai.work',
         '127.0.0.1'
     ];
-    const installCheckSuffixes = [
-        '.app.github.dev'
-    ];
 
-    const isInstallCheckHost = installCheckHosts.includes(location.hostname) ||
-        installCheckSuffixes.some(suffix => location.hostname.endsWith(suffix));
+    const isInstallCheckHost = installCheckHosts.includes(location.hostname);
 
     if (isInstallCheckHost) {
         const report = () => {
