@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.53
+// @version      0.2.54
 // @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -230,16 +230,38 @@
 
     // --- Core Logic ---
 
-    // Find a fresh reference to the chip in the DOM based on its title
-    function findChipByTitle(title) {
-        log(`Querying for chip with title: "${title}"`);
-        const chips = Array.from(document.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
-        log(` -> Found ${chips.length} total chips with selector '${SELECTORS.SIDEBAR_CHIP}'.`);
-        const foundChip = chips.find(chip => {
-            const t = chip.querySelector(SELECTORS.CHIP_TITLE);
-            const cleanText = t ? t.textContent.trim() : '';
-            return cleanText === title;
-        });
+    // Find a fresh reference to the chip in the DOM based on its title, scrolling if necessary.
+    async function findChipByTitle(title) {
+        log(`Querying for chip with title: "${title}" by scrolling...`);
+        const scrollContainer = document.querySelector('div.scrollable-container');
+        if (scrollContainer) {
+            scrollContainer.scrollTop = 0;
+            await sleep(300);
+        }
+        
+        let foundChip = null;
+        let lastScrollTop = -1;
+
+        for (let i = 0; i < 50; i++) { // Max 50 scroll attempts
+            const chips = Array.from(document.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
+            foundChip = chips.find(chip => {
+                const t = chip.querySelector(SELECTORS.CHIP_TITLE);
+                const cleanText = t ? t.textContent.trim() : '';
+                return cleanText === title;
+            });
+            
+            if (foundChip) break;
+
+            if (scrollContainer) {
+                if (scrollContainer.scrollTop === lastScrollTop) break; // Reached bottom
+                lastScrollTop = scrollContainer.scrollTop;
+                scrollContainer.scrollBy({ top: 500, behavior: 'smooth' }); // Scroll down
+                await sleep(500); // Wait for DOM update
+            } else {
+                break; // No container to scroll
+            }
+        }
+
         if (foundChip) {
             log(` -> Success: Found matching chip.`);
         } else {
@@ -249,7 +271,7 @@
     }
 
     async function processArtifact(targetTitle) {
-        let chip = findChipByTitle(targetTitle);
+        let chip = await findChipByTitle(targetTitle);
 
         if (!chip) {
             log(`Chip "${targetTitle}" not found. Re-opening files panel...`);
@@ -282,7 +304,7 @@
                         robustClick(filesMenuItem);
                         // Wait for sidebar to transition in and chips to render
                         await sleep(parseFloat(GM_getValue(REOPEN_DELAY_KEY, 1.5)) * 1000 + 1000);
-                        chip = findChipByTitle(targetTitle);
+                        chip = await findChipByTitle(targetTitle);
                     } else {
                         log("ERROR: Could not find 'Files' item in menu panel.");
                     }
@@ -532,20 +554,50 @@
         filesMenuItem.click();
 
         log('Waiting for chips to load in panel...');
-        let chips = [];
+        let initialChips = [];
         for (let i = 0; i < 20; i++) {
             await sleep(250);
-            chips = Array.from(document.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
-            if (chips.length > 0) break;
+            initialChips = Array.from(document.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
+            if (initialChips.length > 0) break;
         }
 
-        scannedArtifacts = [];
-        chips.forEach(chip => {
-            const titleEl = chip.querySelector(SELECTORS.CHIP_TITLE);
-            if (titleEl) {
-                scannedArtifacts.push(titleEl.textContent.trim());
+        const scrollContainer = document.querySelector('div.scrollable-container');
+        const artifactSet = new Set();
+
+        log('Scanning list by scrolling...');
+        if (scrollContainer) {
+            scrollContainer.scrollTop = 0;
+            await sleep(500);
+            let lastScrollTop = -1;
+
+            for (let i = 0; i < 100; i++) { // Auto scroll sweep loop
+                const currentChips = Array.from(document.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
+                currentChips.forEach(chip => {
+                    const titleEl = chip.querySelector(SELECTORS.CHIP_TITLE);
+                    if (titleEl) {
+                        artifactSet.add(titleEl.textContent.trim());
+                    }
+                });
+
+                if (scrollContainer.scrollTop === lastScrollTop) break; // Finished scanning
+                lastScrollTop = scrollContainer.scrollTop;
+                scrollContainer.scrollBy({ top: 500, behavior: 'smooth' });
+                await sleep(500); // Wait for potential network lazy-load
             }
-        });
+
+            // Restore scroll position to top
+            scrollContainer.scrollTop = 0;
+        } else {
+            log('Warning: div.scrollable-container not found. Falling back to static scan.');
+            initialChips.forEach(chip => {
+                const titleEl = chip.querySelector(SELECTORS.CHIP_TITLE);
+                if (titleEl) {
+                    artifactSet.add(titleEl.textContent.trim());
+                }
+            });
+        }
+
+        scannedArtifacts = Array.from(artifactSet);
 
         log(`Found ${scannedArtifacts.length} article artifacts.`);
 
