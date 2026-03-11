@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.7
+// @version      0.4.8
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-12
 // @author       Takashi Sasaki
@@ -621,9 +621,9 @@
                         const userUrls = extractUrls(userText);
                         const botUrls = extractUrls(botText);
 
-                        if (userUrls.length === 1 && botUrls.length === 1 && userUrls[0] === botUrls[0]) {
+                        if (userUrls.length === 1 && botUrls.includes(userUrls[0])) {
                             autoExportTriggered = true;
-                            console.log(`[Gemini 1-Turn Auto] Match found! Both prompt and response contain the exact same single URL: ${userUrls[0]}`);
+                            console.log(`[Gemini 1-Turn Auto] Match found! Prompt has exactly 1 URL, and it is present in the response: ${userUrls[0]}`);
                             
                             // Visual cue before starting
                             const execBtn = document.getElementById('gemini-btn-one-turn-exec');

@@ -18,7 +18,7 @@ This project follows the agent development guidelines outlined in the root [AGEN
 - **Manual Toggle**: Saves the state of the auto-delete checkbox to `gemini-export-auto-delete-toggle` via `GM_setValue` to persist user preference.
 - **Auto(URL) Detection**: 
   - Extracts URLs from `<user-query>` and `<message-content>` tags via regex `/(https?:\/\/[^\s"'<>()]+)/g`.
-  - If enabled via `gemini-export-auto-url-toggle` and exactly one identical URL is found in both, it triggers `runExportProcess` with forced deletion after a configurable delay (`gemini-export-auto-url-delay`).
+  - If enabled via `gemini-export-auto-url-toggle`, and the user query contains exactly ONE URL, and the model response contains that same URL, it triggers `runExportProcess` with forced deletion after a configurable delay (`gemini-export-auto-url-delay`).
   - An `autoExportTriggered` lock prevents infinite trigger loops while tracking the same conversation state.
 - **Initial Positioning**: On load, it checks for `gemini-export-panel-pos` and applies it to the panel's style. Defaults to `bottom: 20px; right: 20px;`.
 
