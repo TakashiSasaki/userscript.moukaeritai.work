@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.6
+// @version      0.4.7
+// @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-12
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -704,7 +705,7 @@
                 // Need to re-read the exact active state instead of hardcoded
                 const deleteCheckbox = document.getElementById('gemini-auto-delete-cb');
                 if (deleteCheckbox) {
-                    execBtn.innerHTML = '';
+                    execBtn.textContent = '';
                     const iconSpan = document.createElement('span');
                     iconSpan.style.display = 'flex';
                     iconSpan.appendChild(createIconElement(DOCS_ICON_PATH));
@@ -732,7 +733,7 @@
         const dragHandle = document.createElement('div');
         dragHandle.className = 'one-turn-drag-handle';
         dragHandle.title = `Gemini 1-Turn Auto Export v${GM_info.script.version}`;
-        dragHandle.innerHTML = '⠿'; // Simple drag icon
+        dragHandle.textContent = '⠿'; // Simple drag icon
 
         // Dragging Logic
         let isDragging = false;
@@ -769,7 +770,10 @@
         manualRow.className = 'one-turn-row';
         
         const manualWaitLabel = document.createElement('label');
-        manualWaitLabel.innerHTML = '<span class="r-label">Wait(s):</span>';
+        const rLabelManual = document.createElement('span');
+        rLabelManual.className = 'r-label';
+        rLabelManual.textContent = 'Wait(s):';
+        manualWaitLabel.appendChild(rLabelManual);
         const manualDelayInput = document.createElement('input');
         manualDelayInput.type = 'number';
         manualDelayInput.min = '0';
@@ -793,7 +797,11 @@
         autoRow.className = 'one-turn-row';
         
         const autoWaitLabel = document.createElement('label');
-        autoWaitLabel.innerHTML = '<span class="r-label" title="Wait time applied when 1 URL matches exactly between prompt and response">Auto(URL):</span>';
+        const rLabelAuto = document.createElement('span');
+        rLabelAuto.className = 'r-label';
+        rLabelAuto.title = 'Wait time applied when 1 URL matches exactly between prompt and response';
+        rLabelAuto.textContent = 'Auto(URL):';
+        autoWaitLabel.appendChild(rLabelAuto);
         const autoDelayInput = document.createElement('input');
         autoDelayInput.type = 'number';
         autoDelayInput.min = '0';
@@ -820,7 +828,7 @@
         execBtn.id = 'gemini-btn-one-turn-exec';
         
         const updateBtnText = () => {
-            execBtn.innerHTML = '';
+            execBtn.textContent = '';
             const iconSpan = document.createElement('span');
             iconSpan.style.display = 'flex';
             iconSpan.appendChild(createIconElement(DOCS_ICON_PATH));
