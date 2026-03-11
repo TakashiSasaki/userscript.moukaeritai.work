@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.3.01
+// @version      0.3.02
 // @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -507,6 +507,79 @@
         listContainer.appendChild(scrollArea);
     }
 
+    // --- Scanning Helpers ---
+
+    function setScanningUIState(isStarting, mode = 'scan') {
+        const scanBtn = document.getElementById('gemini-btn-scan');
+        const deepScanBtn = document.getElementById('gemini-btn-deep-scan');
+        
+        if (isStarting) {
+            if (scanBtn) {
+                scanBtn.textContent = mode === 'scan' ? 'Scanning...' : 'Scan Artifacts';
+                scanBtn.style.pointerEvents = 'none';
+                scanBtn.style.opacity = mode === 'scan' ? '0.7' : '0.5';
+            }
+            if (deepScanBtn) {
+                deepScanBtn.textContent = mode === 'deep' ? 'Deep Scanning...' : 'Deep Scan';
+                deepScanBtn.style.pointerEvents = 'none';
+                deepScanBtn.style.opacity = mode === 'deep' ? '0.7' : '0.5';
+            }
+        } else {
+            if (scanBtn) {
+                scanBtn.textContent = 'Rescan Artifacts';
+                scanBtn.style.pointerEvents = 'auto';
+                scanBtn.style.opacity = '1';
+            }
+            if (deepScanBtn) {
+                deepScanBtn.textContent = 'Deep Scan';
+                deepScanBtn.style.pointerEvents = 'auto';
+                deepScanBtn.style.opacity = '1';
+            }
+        }
+    }
+
+    async function closeAllPanels() {
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
+        const backdrop = document.querySelector('.mat-drawer-backdrop');
+        if (backdrop && isVisible(backdrop)) {
+            backdrop.click();
+        }
+        await sleep(500);
+    }
+
+    function getChatScroller() {
+        let scroller = document.querySelector('infinite-scroller');
+        if (!scroller) {
+            for (const el of document.querySelectorAll('*')) {
+                if (el.scrollHeight > el.clientHeight + 100 && el.clientHeight > 200) {
+                    const ov = getComputedStyle(el).overflowY;
+                    if ((ov === 'auto' || ov === 'scroll') && el.scrollHeight > 2000) {
+                        if (!scroller || el.scrollHeight > scroller.scrollHeight) scroller = el;
+                    }
+                }
+            }
+        }
+        return scroller || document.documentElement;
+    }
+
+    function finishScanning(modeName) {
+        scannedArtifacts = Array.from(artifactMap.entries()).map(([title, data]) => ({
+            title,
+            sources: Array.from(data.sources).sort()
+        }));
+
+        log(`${modeName} complete. Found ${scannedArtifacts.length} unique article artifacts.`);
+
+        if (scannedArtifacts.length === 0) {
+            alert(`No "Article" type artifacts found during ${modeName}.`);
+        }
+
+        renderArtifactList();
+        setScanningUIState(false);
+    }
+
+    // --- Main Scanning Functions ---
+
     async function scanArtifacts() {
         const scanBtn = document.getElementById('gemini-btn-scan');
         if (scanBtn) {
@@ -532,11 +605,8 @@
         const actionMenuBtn = document.querySelector(SELECTORS.ACTIONS_MENU_BUTTON);
         if (!actionMenuBtn) {
             log('Abort: Action menu button not found.');
-            if (scanBtn) {
-                scanBtn.textContent = 'Scan Artifacts';
-                scanBtn.style.pointerEvents = 'auto';
-                scanBtn.style.opacity = '1';
-            }
+            setScanningUIState(false);
+            isScanning = false;
             return;
         }
 
@@ -558,11 +628,8 @@
             log('ERROR: Could not find Files menu in the action list.');
             alert('Could not open files list.');
             document.querySelector('.cdk-overlay-backdrop')?.click(); // close menu
-            if (scanBtn) {
-                scanBtn.textContent = 'Scan Artifacts';
-                scanBtn.style.pointerEvents = 'auto';
-                scanBtn.style.opacity = '1';
-            }
+            setScanningUIState(false);
+            isScanning = false;
             return;
         }
 
@@ -618,22 +685,17 @@
         }
 
         // Close right side menu to prepare for chat scroll
-        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
-        const backdrop = document.querySelector('.mat-drawer-backdrop');
-        if (backdrop && isVisible(backdrop)) {
-            backdrop.click();
-        }
-        await sleep(500);
+        await closeAllPanels();
 
         // --- Step 2: Scan Chat Stream ---
         log('Scanning chat stream by scrolling...');
-        const chatScroller = document.querySelector('infinite-scroller') || window;
+        const chatScroller = getChatScroller();
         
         let lastChatScrollTop = -1;
         const currentScrollTop = () => (chatScroller === window ? window.scrollY : chatScroller.scrollTop);
 
         // Scroll to top of chat first to ensure we scan everything
-        if (chatScroller === window) window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (chatScroller === document.documentElement) window.scrollTo({ top: 0, behavior: 'smooth' });
         else chatScroller.scrollTop = 0;
         await sleep(500);
 
@@ -649,72 +711,28 @@
             if (currentScrollTop() === lastChatScrollTop) break;
             lastChatScrollTop = currentScrollTop();
             
-            if (chatScroller === window) window.scrollBy({ top: 1000, behavior: 'smooth' });
+            if (chatScroller === document.documentElement) window.scrollBy({ top: 1000, behavior: 'smooth' });
             else chatScroller.scrollBy({ top: 1000, behavior: 'smooth' });
             
             await sleep(600);
         }
 
-        scannedArtifacts = Array.from(artifactMap.entries()).map(([title, data]) => ({
-            title,
-            sources: Array.from(data.sources).sort()
-        }));
-
-        log(`Found ${scannedArtifacts.length} unique article artifacts from dual sources.`);
-
-        if (scannedArtifacts.length === 0) {
-            alert('No "Article" type artifacts found in sidebar or chat.');
-        }
-
-        renderArtifactList();
-
-        if (scanBtn) {
-            scanBtn.textContent = 'Rescan Artifacts';
-            scanBtn.style.pointerEvents = 'auto';
-            scanBtn.style.opacity = '1';
-        }
+        finishScanning('Standard Scan');
+        isScanning = false;
     }
 
     async function deepScanArtifacts() {
         if (isScanning || isExporting) return;
         isScanning = true;
 
-        const scanBtn = document.getElementById('gemini-btn-scan');
-        const deepScanBtn = document.getElementById('gemini-btn-deep-scan');
-        if (scanBtn) {
-            scanBtn.textContent = 'Scanning...';
-            scanBtn.style.pointerEvents = 'none';
-            scanBtn.style.opacity = '0.7';
-        }
-        if (deepScanBtn) {
-            deepScanBtn.textContent = 'Deep Scanning...';
-            deepScanBtn.style.pointerEvents = 'none';
-            deepScanBtn.style.opacity = '0.7';
-        }
-
+        setScanningUIState(true, 'deep');
         artifactMap.clear();
 
         // 1. Close the Canvas panel if open to maximize chat view
-        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
-        const backdrop = document.querySelector('.mat-drawer-backdrop');
-        if (backdrop && isVisible(backdrop)) {
-            backdrop.click();
-        }
-        await sleep(1000);
+        await closeAllPanels();
 
         // 2. Find infinite-scroller
-        let scroller = document.querySelector('infinite-scroller');
-        if (!scroller) {
-            for (const el of document.querySelectorAll('*')) {
-                if (el.scrollHeight > el.clientHeight + 100 && el.clientHeight > 200) {
-                    const ov = getComputedStyle(el).overflowY;
-                    if ((ov === 'auto' || ov === 'scroll') && el.scrollHeight > 2000) {
-                        if (!scroller || el.scrollHeight > scroller.scrollHeight) scroller = el;
-                    }
-                }
-            }
-        }
-        if (!scroller) scroller = document.documentElement;
+        let scroller = getChatScroller();
 
         log('Ascending to the true top of the conversation...');
 
@@ -786,30 +804,8 @@
             downAttempts++;
         }
 
-        scannedArtifacts = Array.from(artifactMap.entries()).map(([title, data]) => ({
-            title,
-            sources: Array.from(data.sources).sort()
-        }));
-
-        log(`Deep Scan complete. Found ${scannedArtifacts.length} unique article artifacts.`);
-
-        if (scannedArtifacts.length === 0) {
-            alert('No "Article" type artifacts found during Deep Scan.');
-        }
-
-        renderArtifactList();
-
+        finishScanning('Deep Scan');
         isScanning = false;
-        if (scanBtn) {
-            scanBtn.textContent = 'Rescan Artifacts';
-            scanBtn.style.pointerEvents = 'auto';
-            scanBtn.style.opacity = '1';
-        }
-        if (deepScanBtn) {
-            deepScanBtn.textContent = 'Deep Scan';
-            deepScanBtn.style.pointerEvents = 'auto';
-            deepScanBtn.style.opacity = '1';
-        }
     }
 
     async function runBatchExport() {
