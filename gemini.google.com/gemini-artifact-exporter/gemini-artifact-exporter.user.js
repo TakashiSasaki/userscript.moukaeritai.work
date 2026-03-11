@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.3.02
+// @version      0.3.03
 // @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -741,12 +741,19 @@
         let prevFirstTurnContent = '';
         let topAttempts = 0;
 
-        while (topAttempts < 30) {
-            scroller.scrollTop = 0;
-            // Native window handles might need explicit scroll
-            if (scroller === document.documentElement) window.scrollTo(0, 0);
+        while (topAttempts < 100) {
+            // Emulate PageUp/Home behavior by scrolling up incrementally
+            const scrollStep = Math.max(1000, scroller.clientHeight * 1.5);
+            if (scroller === document.documentElement) {
+                window.scrollBy({ top: -scrollStep, behavior: 'instant' });
+            } else {
+                scroller.scrollBy({ top: -scrollStep, behavior: 'instant' });
+            }
             
-            await sleep(1500); // Wait for progressive load
+            // Dispatch a synthetic wheel event to trigger lazy loaders
+            scroller.dispatchEvent(new WheelEvent('wheel', { deltaY: -100, bubbles: true }));
+            
+            await sleep(1000); // Wait for progressive load
             
             const currentFirstTurn = document.querySelector('message-content, .message-content');
             const currentContent = currentFirstTurn ? currentFirstTurn.textContent.substring(0, 50) : '';
