@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.3.04
+// @version      0.3.05
 // @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -740,42 +740,57 @@
         let highestScrollHeight = scroller.scrollHeight;
         let prevFirstTurnContent = '';
         let topAttempts = 0;
+        let stallCount = 0;
 
-        while (topAttempts < 100) {
-            // Emulate PageUp/Home behavior by scrolling up incrementally
-            const scrollStep = Math.max(1000, scroller.clientHeight * 1.5);
+        while (topAttempts < 250) {
+            // Scroll up smoothly by roughly one viewport height
+            const scrollStep = Math.max(800, scroller.clientHeight * 0.8);
             if (scroller === document.documentElement) {
-                window.scrollBy({ top: -scrollStep, behavior: 'instant' });
+                window.scrollBy({ top: -scrollStep, behavior: 'smooth' });
             } else {
-                scroller.scrollBy({ top: -scrollStep, behavior: 'instant' });
+                scroller.scrollBy({ top: -scrollStep, behavior: 'smooth' });
             }
             
-            // Dispatch a synthetic wheel event to trigger lazy loaders
-            scroller.dispatchEvent(new WheelEvent('wheel', { deltaY: -100, bubbles: true }));
-            
-            await sleep(1000); // Wait for progressive load
-            
-            const currentFirstTurn = document.querySelector('message-content, .message-content');
-            const currentContent = currentFirstTurn ? currentFirstTurn.textContent.substring(0, 50) : '';
+            await sleep(400); // Wait for the smooth animation
             
             const currentScrollTop = scroller === document.documentElement ? window.scrollY : scroller.scrollTop;
             
-            if (currentScrollTop === 0 && currentContent === prevFirstTurnContent && scroller.scrollHeight <= highestScrollHeight + 50) {
-                log('Reached absolute top of conversation.');
-                break;
-            }
-            
-            prevFirstTurnContent = currentContent;
-            if (scroller.scrollHeight > highestScrollHeight) {
-                highestScrollHeight = scroller.scrollHeight;
+            if (currentScrollTop <= 10) {
+                // Reached the top of the currently loaded DOM. Wait to see if more loads.
+                await sleep(1500);
+                
+                const currentFirstTurn = document.querySelector('message-content, .message-content');
+                const currentContent = currentFirstTurn ? currentFirstTurn.textContent.substring(0, 50) : '';
+                
+                if (currentContent === prevFirstTurnContent && scroller.scrollHeight <= highestScrollHeight + 50) {
+                    stallCount++;
+                    log(`Waiting for history to load... (Attempt ${stallCount}/3)`);
+                    if (stallCount >= 3) {
+                        log('Reached absolute top of conversation.');
+                        break;
+                    }
+                } else {
+                    stallCount = 0; // History loaded, reset stall count
+                    log('Loaded older conversation history. Continuing ascent...');
+                }
+                
+                prevFirstTurnContent = currentContent;
+                if (scroller.scrollHeight > highestScrollHeight) {
+                    highestScrollHeight = scroller.scrollHeight;
+                }
+            } else {
+                stallCount = 0; // Freely scrolling
             }
             topAttempts++;
         }
+        
+        // Ensure we are exactly at 0 after breaking
+        scroller.scrollTop = 0;
+        await sleep(1000);
 
         log('Descending and collecting artifacts...');
 
         // 4. Descend and Collect
-        let lastTop = -1;
         let downAttempts = 0;
 
         while (downAttempts < 300) {
@@ -793,21 +808,29 @@
             });
 
             const currentScrollTop = scroller === document.documentElement ? window.scrollY : scroller.scrollTop;
-            if (currentScrollTop === lastTop && downAttempts > 3) {
-                log('Reached absolute bottom of conversation.');
-                break;
+
+            // Check if we've reached the bottom (or close to it)
+            // scroller.scrollHeight - scroller.clientHeight gives the max scrollTop
+            if (currentScrollTop >= (scroller.scrollHeight - scroller.clientHeight - 50)) {
+                stallCount++;
+                log(`Waiting for more content to load at bottom... (Attempt ${stallCount}/3)`);
+                if (stallCount >= 3) {
+                    log('Reached absolute bottom of conversation.');
+                    break;
+                }
+            } else {
+                stallCount = 0; // Still scrolling down, reset stall count
             }
-            lastTop = currentScrollTop;
-            
+
             // Scroll down by 80% viewport to ensure overlap
             const scrollStep = Math.max(800, scroller.clientHeight * 0.8);
             if (scroller === document.documentElement) {
-                window.scrollBy({ top: scrollStep, behavior: 'instant' });
+                window.scrollBy({ top: scrollStep, behavior: 'smooth' });
             } else {
-                scroller.scrollBy({ top: scrollStep, behavior: 'instant' });
+                scroller.scrollBy({ top: scrollStep, behavior: 'smooth' });
             }
-            
-            await sleep(300);
+
+            await sleep(600); // Wait for smooth scroll and render
             downAttempts++;
         }
 
