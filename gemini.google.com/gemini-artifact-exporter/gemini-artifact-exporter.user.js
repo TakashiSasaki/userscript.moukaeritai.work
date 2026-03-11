@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.3.07
+// @version      0.3.08
 // @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -539,7 +539,18 @@
     }
 
     async function closeAllPanels() {
+        // 1. Specifically target the Canvas close button if it exists
+        const canvasCloseBtn = document.querySelector('button[data-test-id="close-button"]');
+        if (canvasCloseBtn) {
+            log('Closing Canvas panel to enable history loading...');
+            canvasCloseBtn.click();
+            await sleep(800); // Wait for layout shift
+        }
+
+        // 2. Generic Escape key
         document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
+        
+        // 3. Side drawer backdrop
         const backdrop = document.querySelector('.mat-drawer-backdrop');
         if (backdrop && isVisible(backdrop)) {
             backdrop.click();
