@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.27
+// @version      0.2.28
 // @lastModified 2026-03-10
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
@@ -98,36 +98,45 @@
                 font-family: 'Google Sans', sans-serif;
                 font-size: 13px;
                 color: #3c4043;
-                display: flex;
+                display: inline-flex;
                 align-items: center;
+                flex-wrap: nowrap;
                 gap: 10px;
                 padding: 6px 14px;
+                width: fit-content;
+                max-width: calc(100vw - 40px);
+                box-sizing: border-box;
+                white-space: nowrap;
                 user-select: none;
                 cursor: move;
                 backdrop-filter: blur(8px);
                 transition: box-shadow 0.2s;
+                visibility: hidden;
             }
+            #gemini-auto-switch-panel.ready { visibility: visible; }
             #gemini-auto-switch-panel:hover {
                 box-shadow: 0 6px 16px rgba(0,0,0,0.2);
             }
-            .version-badge { font-size: 10px; color: #7f8c8d; font-family: monospace; }
-            .auto-switch-label {
+            #gemini-auto-switch-panel .version-badge { font-size: 10px; color: #7f8c8d; font-family: monospace; }
+            #gemini-auto-switch-panel .auto-switch-label {
                 display: flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 500;
             }
-            .auto-switch-checkbox {
+            #gemini-auto-switch-panel .auto-switch-checkbox {
                 cursor: pointer; margin: 0; width: 14px; height: 14px;
             }
-            .manual-next-btn {
+            #gemini-auto-switch-panel .manual-next-btn {
                 background: #1a73e8; color: white; border: none; padding: 4px 10px; border-radius: 12px;
                 cursor: pointer; font-size: 12px; font-weight: 500; transition: background 0.2s, transform 0.1s;
                 display: flex; align-items: center; gap: 4px;
+                white-space: nowrap;
+                flex: 0 0 auto;
             }
-            .manual-next-btn:hover { background: #1557b0; }
-            .manual-next-btn:active { transform: scale(0.96); }
+            #gemini-auto-switch-panel .manual-next-btn:hover { background: #1557b0; }
+            #gemini-auto-switch-panel .manual-next-btn:active { transform: scale(0.96); }
             @media (prefers-color-scheme: dark) {
                 #gemini-auto-switch-panel { background: rgba(32, 33, 36, 0.85); color: #e8eaed; border-color: rgba(255,255,255,0.15); }
-                .manual-next-btn { background: #8ab4f8; color: #202124; }
-                .manual-next-btn:hover { background: #aecbfa; }
+                #gemini-auto-switch-panel .manual-next-btn { background: #8ab4f8; color: #202124; }
+                #gemini-auto-switch-panel .manual-next-btn:hover { background: #aecbfa; }
             }
         `;
         document.head.appendChild(style);
@@ -242,6 +251,10 @@
         panel.style.top = savedPos.top;
         if (savedPos.left) panel.style.left = savedPos.left;
         else panel.style.right = savedPos.right;
+
+        requestAnimationFrame(() => {
+            panel.classList.add('ready');
+        });
 
         let isDragging = false;
         let offset = { x: 0, y: 0 };
