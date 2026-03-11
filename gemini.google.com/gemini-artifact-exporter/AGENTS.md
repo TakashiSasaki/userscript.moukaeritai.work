@@ -83,15 +83,19 @@ Gemini のサイドバーにある「記事 (Article)」タイプのアーティ
 *   **Scan Artifacts の改善**: `scrollContainer.scrollBy` を用いてサイドバーを動的に最下部までスクロールさせながらタイトルを収集するループを実装。
 *   **findChipByTitle の改善**: 個別のエクスポート開始時にも、対象のチップがDOMに見つかればクリック、見つからなければサイドバーをスクロールして出現を待機する非同期処理へと移行。
 
-### 2. UIパネル内のリスト表示の改善 (v0.2.55)
-*   アーティファクト数が多い場合、パネル内のリストが垂直方向に圧縮されて目視不能になる問題が発生。
-*   **対策**: リスト要素 (`label`) に `flex-shrink: 0` を指定し、高さを維持させることで、親コンテナでの `overflow-y: auto` を正しく機能させ、垂直スクロールを可能にした。
+### 2. Dual-Source Artifact Scanning (v0.3.00+)
+*   Scans both the "Files in this chat" sidebar (with virtual scrolling) and the `infinite-scroller` chat history.
+*   This ensures 100% coverage even when the sidebar lazy-loading fails or omits files.
+*   Results are merged by title.
+*   `findChipByTitle` sequentially seeks the sidebar then the chat cards. Clicking either triggers the Canvas UI.
 
-### 3. インストール検知の簡素化 (v0.2.56)
+### 3. UIパネル内のリスト表示の改善 (v0.2.55)
+*   **UI List Vertical Scrolling Fix**: Applied `flex-shrink: 0` to labels in the list container to prevent vertical compression when many artifacts are found.
+
+### 4. インストール検知の簡素化 (v0.2.56)
 *   `installCheckSuffixes` による動的なサフィックス判定（`.app.github.dev` など）を廃止。
 *   現在は `installCheckHosts` (`userscript.moukaeritai.work`, `127.0.0.1`) への完全一致のみで判定を行う。
 
 # その他
 - コードに少しでも変更を加えた時には必ずバージョンのパッチレベルをバンプアップする。
 - ESLint を常に実行し、構文エラーがないことを確認してからコミットする。
-

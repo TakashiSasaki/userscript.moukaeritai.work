@@ -131,21 +131,25 @@
         <h2>注意事項</h2>
         <ul>
             <li><strong>Google ログイン</strong>: 事前に Google ドキュメントが利用可能なアカウントでログインしている必要があります。</li>
+        </ul>
+
+        <h2>注意事項</h2>
+        <ul>
+            <li><strong>Google ログイン</strong>: 事前に Google ドキュメントが利用可能なアカウントでログインしている必要があります。</li>
             <li><strong>UIの自動操作</strong>: このスクリプトは Gemini の標準機能を自動でクリックして操作します。処理中に手動でメニューを操作すると干渉する場合があります。</li>
             <li><strong>処理時間</strong>: 記事の数が多い場合、完了まで数分かかることがあります。</li>
         </ul>
 
         <h2>更新履歴</h2>
         <ul>
-            <li><strong>v0.2.56</strong>: インストール検知ロジックから <code>installCheckSuffixes</code> を削除し、チェックを簡素化。</li>
+                <li class="changelog-item">v0.3.00 (2026-03-11): Implement Dual-Source Scanning (Sidebar + Chat Stream) to ensure 100% artifact coverage. Merged duplicate entries and added source indicators.</li>
+                <li class="changelog-item">v0.2.57 (2026-03-11): Remove dead code (unused selectors and intermediate variables).</li>
+                <li class="changelog-item">v0.2.56 (2026-03-10): Remove installCheckSuffixes and simplify hostname check.</li>
             <li><strong>v0.2.55</strong>: ファイル数が多い場合にUIパネル内のリストが圧縮されて見えなくなる不具合を修正。垂直スクロールが可能に。</li>
             <li><strong>v0.2.54</strong>: Geminiの仮想スクロール（Lazy Loading）に対応。サイドバーを自動スクロールして全てのファイルをスキャン・検出できるように改善。</li>
             <li><strong>v0.2.43</strong>: エクスポート完了検知をやめ、開始シグナル確認後に固定時間待機する方式へ変更。設定項目を <code>Export Wait</code> 中心に整理。</li>
             <li><strong>v0.2.39</strong>: 画面上にアーティファクトが存在しない場合にパネルを自動で非表示にする機能を実装。</li>
             <li><strong>v0.2.38</strong>: 各種待機時間（ウェイト/タイムアウト）を調整可能にし、UIレスポンスを改善。</li>
-            <li><strong>v0.2.36</strong>: エクスポート完了後の会話自動削除機能（カスタムイベント連携）を追加。</li>
-            <li><strong>v0.2.34</strong>: Gemini側のUIスタックバグ（トースト居座り等）に対するアグレッシブなクリーンアップ機能を実装。</li>
-            <li><strong>v0.2.20</strong>: タイムアウト設定機能を追加。</li>
         </ul>
     </div>
 

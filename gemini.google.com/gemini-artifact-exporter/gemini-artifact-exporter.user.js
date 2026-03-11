@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.57
+// @version      0.3.00
 // @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -50,7 +50,9 @@
         SHARE_BUTTON: 'extended-response-panel share-button button, extended-response-panel button:has(mat-icon[fonticon="share"])',
         EXPORT_BUTTON: 'button[data-test-id="export-to-docs-button"], .mat-mdc-menu-item:has(mat-icon[fonticon="docs"])',
         MENU_PANEL: '.mat-mdc-menu-panel',
-        CANVAS_CLOSE_BUTTON: 'button[data-test-id="close-button"]'
+        CANVAS_CLOSE_BUTTON: 'button[data-test-id="close-button"]',
+        CHAT_ARTIFACT_CONTAINER: 'div.container.clickable:has([data-test-id="artifact-text"])',
+        CHAT_ARTIFACT_TITLE: '[data-test-id="artifact-text"]'
     };
 
     function log(msg) {
@@ -228,42 +230,62 @@
 
     // Find a fresh reference to the chip in the DOM based on its title, scrolling if necessary.
     async function findChipByTitle(title) {
-        log(`Querying for chip with title: "${title}" by scrolling...`);
+        log(`Querying for chip with title: "${title}" by scanning sidebar and chat...`);
+        
+        // --- 1. Try Sidebar ---
         const scrollContainer = document.querySelector('div.scrollable-container');
         if (scrollContainer) {
             scrollContainer.scrollTop = 0;
             await sleep(300);
-        }
-        
-        let foundChip = null;
-        let lastScrollTop = -1;
-
-        for (let i = 0; i < 50; i++) { // Max 50 scroll attempts
-            const chips = Array.from(document.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
-            foundChip = chips.find(chip => {
-                const t = chip.querySelector(SELECTORS.CHIP_TITLE);
-                const cleanText = t ? t.textContent.trim() : '';
-                return cleanText === title;
-            });
             
-            if (foundChip) break;
-
-            if (scrollContainer) {
-                if (scrollContainer.scrollTop === lastScrollTop) break; // Reached bottom
+            let lastScrollTop = -1;
+            for (let i = 0; i < 50; i++) {
+                const chips = Array.from(document.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
+                const found = chips.find(chip => {
+                    const t = chip.querySelector(SELECTORS.CHIP_TITLE);
+                    return t && t.textContent.trim() === title;
+                });
+                if (found) {
+                    log(` -> Success: Found chip in sidebar.`);
+                    return found;
+                }
+                if (scrollContainer.scrollTop === lastScrollTop) break;
                 lastScrollTop = scrollContainer.scrollTop;
-                scrollContainer.scrollBy({ top: 500, behavior: 'smooth' }); // Scroll down
-                await sleep(500); // Wait for DOM update
-            } else {
-                break; // No container to scroll
+                scrollContainer.scrollBy({ top: 500 });
+                await sleep(400);
             }
         }
 
-        if (foundChip) {
-            log(` -> Success: Found matching chip.`);
-        } else {
-            log(` -> Failure: No chip with title "${title}" found.`);
+        // --- 2. Try Chat Stream ---
+        log(`Chip not found in sidebar. Searching chat history for: "${title}"...`);
+        const chatScroller = document.querySelector('infinite-scroller') || window;
+        
+        let lastChatScrollTop = -1;
+        const getChatScroll = () => (chatScroller === window ? window.scrollY : chatScroller.scrollTop);
+        
+        if (chatScroller === window) window.scrollTo({ top: 0 });
+        else chatScroller.scrollTop = 0;
+        await sleep(300);
+
+        for (let i = 0; i < 50; i++) {
+            const cards = Array.from(document.querySelectorAll(SELECTORS.CHAT_ARTIFACT_CONTAINER));
+            const found = cards.find(card => {
+                const t = card.querySelector(SELECTORS.CHAT_ARTIFACT_TITLE);
+                return t && t.textContent.trim() === title;
+            });
+            if (found) {
+                log(` -> Success: Found chip in chat stream.`);
+                return found;
+            }
+            if (getChatScroll() === lastChatScrollTop) break;
+            lastChatScrollTop = getChatScroll();
+            if (chatScroller === window) window.scrollBy({ top: 800 });
+            else chatScroller.scrollBy({ top: 800 });
+            await sleep(500);
         }
-        return foundChip;
+
+        log(` -> Failure: No chip with title "${title}" found anywhere.`);
+        return null;
     }
 
     async function processArtifact(targetTitle) {
@@ -460,10 +482,11 @@
         const scrollArea = document.createElement('div');
         scrollArea.style.cssText = `max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-right: 4px;`;
 
-        scannedArtifacts.forEach((title, index) => {
+        scannedArtifacts.forEach((item, index) => {
+            const { title, sources } = item;
             const label = document.createElement('label');
             label.style.cssText = `display:flex; align-items:center; gap:8px; font-size:12px; color:rgba(255,255,255,0.8); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0;`;
-            label.title = title;
+            label.title = `${title} [${sources.join(', ')}]`;
             const cb = document.createElement('input');
             cb.type = 'checkbox';
             cb.className = 'artifact-cb';
@@ -475,7 +498,7 @@
                 selectAllCb.checked = allChecked;
             };
             label.appendChild(cb);
-            label.appendChild(document.createTextNode(`${index + 1}. ${title}`));
+            label.appendChild(document.createTextNode(`${index + 1}. ${title} [${sources.join(', ')}]`));
             scrollArea.appendChild(label);
         });
 
@@ -490,8 +513,6 @@
             scanBtn.style.opacity = '0.7';
         }
 
-
-
         log('Scanning artifacts...');
 
         if (!isConversationPage()) {
@@ -504,6 +525,7 @@
             return;
         }
 
+        // --- Step 1: Scan Sidebar ---
         log('Opening files panel via actions menu...');
         const actionMenuBtn = document.querySelector(SELECTORS.ACTIONS_MENU_BUTTON);
         if (!actionMenuBtn) {
@@ -553,54 +575,93 @@
         }
 
         const scrollContainer = document.querySelector('div.scrollable-container');
-        const artifactSet = new Set();
+        const artifactMap = new Map(); // title -> { sources: Set }
 
-        log('Scanning list by scrolling...');
+        const addArtifact = (title, source) => {
+            if (!artifactMap.has(title)) {
+                artifactMap.set(title, { sources: new Set() });
+            }
+            artifactMap.get(title).sources.add(source);
+        };
+
+        log('Scanning sidebar list by scrolling...');
         if (scrollContainer) {
             scrollContainer.scrollTop = 0;
             await sleep(500);
             let lastScrollTop = -1;
 
-            for (let i = 0; i < 100; i++) { // Auto scroll sweep loop
+            for (let i = 0; i < 100; i++) {
                 const currentChips = Array.from(document.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
                 currentChips.forEach(chip => {
                     const titleEl = chip.querySelector(SELECTORS.CHIP_TITLE);
                     if (titleEl) {
-                        artifactSet.add(titleEl.textContent.trim());
+                        addArtifact(titleEl.textContent.trim(), 'Sidebar');
                     }
                 });
 
-                if (scrollContainer.scrollTop === lastScrollTop) break; // Finished scanning
+                if (scrollContainer.scrollTop === lastScrollTop) break;
                 lastScrollTop = scrollContainer.scrollTop;
                 scrollContainer.scrollBy({ top: 500, behavior: 'smooth' });
-                await sleep(500); // Wait for potential network lazy-load
+                await sleep(500);
             }
-
-            // Restore scroll position to top
             scrollContainer.scrollTop = 0;
         } else {
-            log('Warning: div.scrollable-container not found. Falling back to static scan.');
+            log('Warning: sidebar scrollable-container not found. Falling back to static sidebar scan.');
             initialChips.forEach(chip => {
                 const titleEl = chip.querySelector(SELECTORS.CHIP_TITLE);
                 if (titleEl) {
-                    artifactSet.add(titleEl.textContent.trim());
+                    addArtifact(titleEl.textContent.trim(), 'Sidebar');
                 }
             });
         }
 
-        scannedArtifacts = Array.from(artifactSet);
-
-        log(`Found ${scannedArtifacts.length} article artifacts.`);
-
-        if (scannedArtifacts.length === 0) {
-            alert('No "Article" type artifacts found in the sidebar.');
-        }
-
-        // Close right side menu to clean up UI
+        // Close right side menu to prepare for chat scroll
         document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
         const backdrop = document.querySelector('.mat-drawer-backdrop');
         if (backdrop && isVisible(backdrop)) {
             backdrop.click();
+        }
+        await sleep(500);
+
+        // --- Step 2: Scan Chat Stream ---
+        log('Scanning chat stream by scrolling...');
+        const chatScroller = document.querySelector('infinite-scroller') || window;
+        
+        let lastChatScrollTop = -1;
+        const currentScrollTop = () => (chatScroller === window ? window.scrollY : chatScroller.scrollTop);
+
+        // Scroll to top of chat first to ensure we scan everything
+        if (chatScroller === window) window.scrollTo({ top: 0, behavior: 'smooth' });
+        else chatScroller.scrollTop = 0;
+        await sleep(500);
+
+        for (let i = 0; i < 100; i++) {
+            const chatChips = Array.from(document.querySelectorAll(SELECTORS.CHAT_ARTIFACT_CONTAINER));
+            chatChips.forEach(card => {
+                const titleEl = card.querySelector(SELECTORS.CHAT_ARTIFACT_TITLE);
+                if (titleEl) {
+                    addArtifact(titleEl.textContent.trim(), 'Chat');
+                }
+            });
+
+            if (currentScrollTop() === lastChatScrollTop) break;
+            lastChatScrollTop = currentScrollTop();
+            
+            if (chatScroller === window) window.scrollBy({ top: 1000, behavior: 'smooth' });
+            else chatScroller.scrollBy({ top: 1000, behavior: 'smooth' });
+            
+            await sleep(600);
+        }
+
+        scannedArtifacts = Array.from(artifactMap.entries()).map(([title, data]) => ({
+            title,
+            sources: Array.from(data.sources).sort()
+        }));
+
+        log(`Found ${scannedArtifacts.length} unique article artifacts from dual sources.`);
+
+        if (scannedArtifacts.length === 0) {
+            alert('No "Article" type artifacts found in sidebar or chat.');
         }
 
         renderArtifactList();
@@ -614,7 +675,6 @@
 
     async function runBatchExport() {
         if (isExporting) {
-            cancelExport = true;
             log('Cancellation requested by user.');
             const btn = document.getElementById('gemini-btn-export');
             if (btn) btn.textContent = 'Stopping...';
