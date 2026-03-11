@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.56
+// @version      0.2.57
 // @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -46,7 +46,7 @@
         FILES_MENU_ITEM: 'button[data-test-id="studio-sidebar-button"]',
         SIDEBAR_CHIP: 'button.container:has(mat-icon[fonticon="article"])',
         CHIP_TITLE: 'div:nth-child(2) > div:first-child',
-        CHIP_ICON_CONTAINER: 'mat-icon',
+
         SHARE_BUTTON: 'extended-response-panel share-button button, extended-response-panel button:has(mat-icon[fonticon="share"])',
         EXPORT_BUTTON: 'button[data-test-id="export-to-docs-button"], .mat-mdc-menu-item:has(mat-icon[fonticon="docs"])',
         MENU_PANEL: '.mat-mdc-menu-panel',
@@ -490,12 +490,7 @@
             scanBtn.style.opacity = '0.7';
         }
 
-        const logPanelBody = document.getElementById('gemini-log-panel-body');
-        if (logPanelBody) {
-            while (logPanelBody.firstChild) {
-                logPanelBody.removeChild(logPanelBody.firstChild);
-            }
-        }
+
 
         log('Scanning artifacts...');
 
@@ -683,8 +678,7 @@
                 return;
             }
 
-            const statusText = `Processing ${i + 1}/${selectedTitles.length}: ${selectedTitles[i]}`;
-            log(statusText);
+            log(`Processing ${i + 1}/${selectedTitles.length}: ${selectedTitles[i]}`);
             if (progressEl) progressEl.textContent = `${i + 1} / ${selectedTitles.length}`;
 
             // Hint to the browser to focus this window before processing.
@@ -743,7 +737,6 @@
         log('BATCH EXPORT COMPLETED.');
         finishExport();
 
-        const AUTO_DELETE_KEY = 'gemini-exporter-auto-delete';
         if (GM_getValue(AUTO_DELETE_KEY, false) && !cancelExport) {
             log('Auto-delete enabled. Waiting 1s before requesting conversation deletion...');
             await sleep(1000);
@@ -1042,18 +1035,17 @@
             return;
         }
 
-        const shouldShow = shouldActive;
         const wasHidden = panel.style.display === 'none';
-        panel.style.display = shouldShow ? 'flex' : 'none';
+        panel.style.display = shouldActive ? 'flex' : 'none';
 
-        if (shouldShow && wasHidden) {
+        if (shouldActive && wasHidden) {
             log('Visibility check passed. Showing panel.');
-        } else if (!shouldShow && !wasHidden) {
+        } else if (!shouldActive && !wasHidden) {
             log(`Visibility check failed. Hiding panel (conversation=${isConversationPage()}, actionsMenu=${actionsMenuExists}, hasArtifacts=${hasArtifacts}).`);
         }
 
         // Force style update to ensure visibility (handle lingering elements or style glitches)
-        if (shouldShow) {
+        if (shouldActive) {
             panel.style.backgroundColor = 'rgba(28, 28, 30, 0.7)';
             panel.style.zIndex = '10000';
         }
