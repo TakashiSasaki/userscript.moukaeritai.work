@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.10
+// @version      0.4.12
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-12
 // @author       Takashi Sasaki
@@ -599,6 +599,7 @@
     const debouncedProcessNodes = debounce(processNodes, 500);
 
     let autoExportTriggered = false;
+    let autoExportTimerId = null;
 
     function extractUrls(elOrText) {
         if (!elOrText) return [];
@@ -653,19 +654,64 @@
                             autoExportTriggered = true;
                             console.log(`[Gemini 1-Turn Auto] Match found! Prompt has exactly 1 URL, and it is present in the response: ${userUrls[0]}`);
                             
-                            // Visual cue before starting
-                            const execBtn = document.getElementById('gemini-btn-one-turn-exec');
-                            if(execBtn) {
-                                execBtn.style.backgroundColor = '#fbbc04'; // yellow
-                                execBtn.style.color = '#333';
-                                execBtn.textContent = 'Auto-Triggered...';
-                            }
+                            const delayStr = GM_getValue(AUTO_URL_DELAY_KEY, 5);
+                            let countdown = parseInt(delayStr, 10);
+                            if (isNaN(countdown)) countdown = 5;
 
-                            // Trigger exactly as if the user clicked the button, but using the Auto URL Delay and forcing Delete True
-                            setTimeout(() => {
-                                const delayStr = GM_getValue(AUTO_URL_DELAY_KEY, 5);
-                                runExportProcess(delayStr, true, true);
-                            }, 500);
+                            const execBtn = document.getElementById('gemini-btn-one-turn-exec');
+                            if (execBtn) {
+                                const originalOnClick = execBtn.onclick;
+
+                                const cancelAuto = () => {
+                                    if (autoExportTimerId) clearInterval(autoExportTimerId);
+                                    autoExportTimerId = null;
+                                    execBtn.style.backgroundColor = '';
+                                    execBtn.style.color = '';
+                                    
+                                    const deleteCheckbox = document.getElementById('gemini-delete-checkbox');
+                                    const willDelete = deleteCheckbox ? deleteCheckbox.checked : GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
+                                    
+                                    execBtn.textContent = ''; // Safely clear children (avoids TrustedHTML issue)
+                                    const iconSpan = document.createElement('span');
+                                    iconSpan.style.display = 'flex';
+                                    iconSpan.appendChild(createIconElement(DOCS_ICON_PATH));
+                                    execBtn.appendChild(iconSpan);
+                                    execBtn.appendChild(document.createTextNode(willDelete ? 'Export & Delete' : 'Export'));
+                                    
+                                    execBtn.onclick = originalOnClick;
+                                    console.log('[Gemini 1-Turn Auto] Auto-export cancelled by user.');
+                                };
+
+                                execBtn.onclick = (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    cancelAuto();
+                                };
+
+                                const updateButtonUI = () => {
+                                    execBtn.style.backgroundColor = '#fbbc04'; // yellow
+                                    execBtn.style.color = '#333';
+                                    execBtn.textContent = `Cancel Auto (${countdown}s)`;
+                                };
+                                updateButtonUI();
+
+                                autoExportTimerId = setInterval(() => {
+                                    countdown--;
+                                    if (countdown <= 0) {
+                                        if (autoExportTimerId) clearInterval(autoExportTimerId);
+                                        autoExportTimerId = null;
+                                        execBtn.onclick = originalOnClick;
+                                        runExportProcess(0, true, true);
+                                    } else {
+                                        updateButtonUI();
+                                    }
+                                }, 1000);
+                            } else {
+                                autoExportTimerId = setTimeout(() => {
+                                    autoExportTimerId = null;
+                                    runExportProcess(0, true, true);
+                                }, countdown * 1000);
+                            }
                         }
                     }
                 } catch (e) {
@@ -675,6 +721,10 @@
         } else if (panel) {
             panel.classList.remove('visible');
             autoExportTriggered = false; // Reset trigger state if UI is closed (e.g., user started a new topic or more turns added)
+            if (autoExportTimerId) {
+                clearInterval(autoExportTimerId);
+                autoExportTimerId = null;
+            }
         }
     }
 
@@ -1018,6 +1068,12 @@
         const oneTurnPanel = document.getElementById('gemini-one-turn-panel');
         if (oneTurnPanel) oneTurnPanel.remove();
 
+        autoExportTriggered = false; // Reset trigger so it fires again on new URLs
+        if (autoExportTimerId) {
+            clearInterval(autoExportTimerId);
+            autoExportTimerId = null;
+        }
+
         isInitialized = false;
     }
 
@@ -1049,7 +1105,7 @@
                 const prevUrl = lastUrl;
                 lastUrl = window.location.href;
                 checkUrlAndManageScriptState(prevUrl, lastUrl);
-            }, 500);
+            }, 2000); // Wait 2s for SPA DOM flush
         });
         console.log('[Gemini 1-Click Export to Docs] Using Navigation API for SPA routing.');
     } else {
@@ -1058,7 +1114,7 @@
             if (location.href !== lastUrl) {
                 const prevUrl = lastUrl;
                 lastUrl = location.href;
-                setTimeout(() => checkUrlAndManageScriptState(prevUrl, lastUrl), 500);
+                setTimeout(() => checkUrlAndManageScriptState(prevUrl, lastUrl), 2000); // Wait 2s for SPA DOM flush
             }
         }, 500);
         console.log('[Gemini 1-Click Export to Docs] Using setInterval fallback for SPA routing.');
