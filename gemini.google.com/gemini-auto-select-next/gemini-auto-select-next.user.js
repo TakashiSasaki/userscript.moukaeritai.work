@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.25
+// @version      0.2.26
 // @lastModified 2026-03-10
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
@@ -83,20 +83,7 @@
         return GM_getValue(CONSTANTS.STORAGE_KEY_AUTOSWITCH, true);
     }
 
-    function toggleAutoSwitch() {
-        const newState = !isAutoSwitchEnabled();
-        GM_setValue(CONSTANTS.STORAGE_KEY_AUTOSWITCH, newState);
-        updatePanelUI();
-    }
 
-    function isPanelMinimized() {
-        return GM_getValue(STORAGE_KEYS.PANEL_MINIMIZED, false);
-    }
-
-    const ICONS = {
-        CHECKED: `<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor"><path d="M280-520l-80-80-120 120 200 200 400-400-120-120-280 280z"/></svg>`,
-        UNCHECKED: `<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200zm0-80h560v-560H200v560z"/></svg>`
-    };
 
     function injectStyles() {
         if (document.getElementById('gemini-auto-switch-styles')) return;
@@ -110,42 +97,39 @@
                 z-index: 10000;
                 background-color: rgba(255, 255, 255, 0.9);
                 border: 1px solid #dadce0;
-                border-radius: 8px;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                border-radius: 20px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                 font-family: 'Google Sans', sans-serif;
                 font-size: 13px;
                 color: #3c4043;
-                width: 220px;
-                backdrop-filter: blur(8px);
-                user-select: none;
-            }
-            #gemini-auto-switch-panel .panel-header {
-                padding: 6px 10px;
-                border-bottom: 1px solid #e0e0e0;
-                cursor: move;
                 display: flex;
-                justify-content: space-between;
                 align-items: center;
-                background-color: rgba(241, 243, 244, 0.7);
+                gap: 10px;
+                padding: 6px 14px;
+                user-select: none;
+                cursor: move;
+                backdrop-filter: blur(8px);
+                transition: box-shadow 0.2s;
             }
-            #gemini-auto-switch-panel h1 { font-size: 13px; font-weight: 500; margin: 0; }
+            #gemini-auto-switch-panel:hover {
+                box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+            }
             .version-badge { font-size: 10px; color: #7f8c8d; font-family: monospace; }
-            #gemini-auto-switch-panel .panel-content { padding: 8px 10px; }
-            .control-row { display: flex; align-items: center; justify-content: space-between; }
-            .gtc-toggle-btn {
-                background: none; border: none; cursor: pointer; padding: 4px; border-radius: 50%;
-                display: flex; align-items: center; justify-content: center;
+            .auto-switch-label {
+                display: flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 500;
             }
-            .gtc-toggle-btn:hover { background: rgba(0,0,0,0.05); }
-            .gtc-toggle-btn.enabled { color: #1a73e8; }
-            .gtc-toggle-btn.disabled { color: #5f6368; }
+            .auto-switch-checkbox {
+                cursor: pointer; margin: 0; width: 14px; height: 14px;
+            }
             .manual-next-btn {
-                background: #1a73e8; color: white; border: none; padding: 4px 10px; border-radius: 4px;
-                cursor: pointer; font-size: 11px; margin-top: 8px; width: 100%; transition: background 0.2s;
+                background: #1a73e8; color: white; border: none; padding: 4px 10px; border-radius: 12px;
+                cursor: pointer; font-size: 12px; font-weight: 500; transition: background 0.2s, transform 0.1s;
+                display: flex; align-items: center; gap: 4px;
             }
             .manual-next-btn:hover { background: #1557b0; }
+            .manual-next-btn:active { transform: scale(0.96); }
             @media (prefers-color-scheme: dark) {
-                #gemini-auto-switch-panel { background: rgba(32, 33, 36, 0.85); color: #e8eaed; border-color: #5f6368; }
+                #gemini-auto-switch-panel { background: rgba(32, 33, 36, 0.85); color: #e8eaed; border-color: rgba(255,255,255,0.15); }
                 .manual-next-btn { background: #8ab4f8; color: #202124; }
                 .manual-next-btn:hover { background: #aecbfa; }
             }
@@ -219,10 +203,11 @@
     function updatePanelUI() {
         const panel = document.getElementById('gemini-auto-switch-panel');
         if (!panel) return;
-        const btn = panel.querySelector('.switch-toggle');
-        const enabled = isAutoSwitchEnabled();
-        btn.className = 'gtc-toggle-btn switch-toggle ' + (enabled ? 'enabled' : 'disabled');
-        setInnerHTML(btn, enabled ? ICONS.CHECKED : ICONS.UNCHECKED);
+        
+        const checkbox = panel.querySelector('.auto-switch-checkbox');
+        if (checkbox) {
+            checkbox.checked = isAutoSwitchEnabled();
+        }
 
         const items = getConversationItems();
         const selectedIndex = items.findIndex(item => item.classList.contains('selected') || item.getAttribute('aria-current') === 'page');
@@ -234,23 +219,27 @@
         injectStyles();
         const panel = document.createElement('div');
         panel.id = 'gemini-auto-switch-panel';
+        panel.title = 'Drag to move';
         setInnerHTML(panel, `
-            <div class="panel-header">
-                <h1>Auto-Select Next</h1>
-                <span class="version-badge">v${GM_info.script.version}</span>
-            </div>
-            <div class="panel-content">
-                <div class="control-row">
-                    <span>Enabled</span>
-                    <button class="gtc-toggle-btn switch-toggle"></button>
-                </div>
-                <button class="manual-next-btn">⏭️ Skip to Next</button>
-            </div>
+            <label class="auto-switch-label" title="Automatically select next conversation on delete">
+                <input type="checkbox" class="auto-switch-checkbox">
+                Auto
+            </label>
+            <button class="manual-next-btn" title="Explicitly skip to the next conversation">⏭️ Next</button>
+            <span class="version-badge">v${GM_info.script.version}</span>
         `);
         document.body.appendChild(panel);
 
-        panel.querySelector('.switch-toggle').addEventListener('click', toggleAutoSwitch);
-        panel.querySelector('.manual-next-btn').addEventListener('click', () => selectNextConversation(0));
+        const checkbox = panel.querySelector('.auto-switch-checkbox');
+        checkbox.addEventListener('change', (e) => {
+            GM_setValue(CONSTANTS.STORAGE_KEY_AUTOSWITCH, e.target.checked);
+            updatePanelUI();
+        });
+        
+        panel.querySelector('.manual-next-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectNextConversation(0);
+        });
 
         // Position persistence
         const savedPos = GM_getValue(CONSTANTS.PANEL_POSITION_KEY, { top: '80px', right: '20px' });
@@ -260,9 +249,9 @@
 
         let isDragging = false;
         let offset = { x: 0, y: 0 };
-        const header = panel.querySelector('.panel-header');
 
-        header.addEventListener('mousedown', (e) => {
+        panel.addEventListener('mousedown', (e) => {
+            if (e.target.closest('button') || e.target.closest('input') || e.target.closest('label')) return;
             isDragging = true;
             offset.x = e.clientX - panel.offsetLeft;
             offset.y = e.clientY - panel.offsetTop;
@@ -271,6 +260,7 @@
 
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
+            e.preventDefault();
             panel.style.right = 'auto';
             panel.style.left = (e.clientX - offset.x) + 'px';
             panel.style.top = (e.clientY - offset.y) + 'px';
