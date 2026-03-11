@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.3.08
+// @version      0.3.09
 // @lastModified 2026-03-10
-// @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
+// @description  Export Gemini "Article" artifacts to Google Docs. Supports batch export, deep scanning of chat history, and separate sidebar scanning.
 // @author       Takashi Sasaki
-// @homepageURL  https://x.com/TakashiSasaki
+// @homepageURL  https://x.xom/TakashiSasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @grant        GM_setValue
@@ -515,23 +515,23 @@
         
         if (isStarting) {
             if (scanBtn) {
-                scanBtn.textContent = mode === 'scan' ? 'Scanning...' : 'Scan Artifacts';
+                scanBtn.textContent = mode === 'scan' ? 'Scanning Sidebar...' : 'Scan Sidebar Menu';
                 scanBtn.style.pointerEvents = 'none';
                 scanBtn.style.opacity = mode === 'scan' ? '0.7' : '0.5';
             }
             if (deepScanBtn) {
-                deepScanBtn.textContent = mode === 'deep' ? 'Deep Scanning...' : 'Deep Scan';
+                deepScanBtn.textContent = mode === 'deep' ? 'Scanning Chat...' : 'Scan Chat History';
                 deepScanBtn.style.pointerEvents = 'none';
                 deepScanBtn.style.opacity = mode === 'deep' ? '0.7' : '0.5';
             }
         } else {
             if (scanBtn) {
-                scanBtn.textContent = 'Rescan Artifacts';
+                scanBtn.textContent = 'Rescan Sidebar Menu';
                 scanBtn.style.pointerEvents = 'auto';
                 scanBtn.style.opacity = '1';
             }
             if (deepScanBtn) {
-                deepScanBtn.textContent = 'Deep Scan';
+                deepScanBtn.textContent = 'Rescan Chat History';
                 deepScanBtn.style.pointerEvents = 'auto';
                 deepScanBtn.style.opacity = '1';
             }
@@ -604,17 +604,17 @@
     async function scanArtifacts() {
         const scanBtn = document.getElementById('gemini-btn-scan');
         if (scanBtn) {
-            scanBtn.textContent = 'Scanning...';
+            scanBtn.textContent = 'Scanning Sidebar...';
             scanBtn.style.pointerEvents = 'none';
             scanBtn.style.opacity = '0.7';
         }
 
-        log('Scanning artifacts...');
+        log('Scanning sidebar artifacts...');
 
         if (!isConversationPage()) {
             log('Abort: Not on a conversation page.');
             if (scanBtn) {
-                scanBtn.textContent = 'Scan Artifacts';
+                scanBtn.textContent = 'Scan Sidebar Menu';
                 scanBtn.style.pointerEvents = 'auto';
                 scanBtn.style.opacity = '1';
             }
@@ -705,40 +705,10 @@
             });
         }
 
-        // Close right side menu to prepare for chat scroll
+        // Close right side menu before finishing
         await closeAllPanels();
 
-        // --- Step 2: Scan Chat Stream ---
-        log('Scanning chat stream by scrolling...');
-        const chatScroller = getChatScroller();
-        
-        let lastChatScrollTop = -1;
-        const currentScrollTop = () => (chatScroller === window ? window.scrollY : chatScroller.scrollTop);
-
-        // Scroll to top of chat first to ensure we scan everything
-        if (chatScroller === document.documentElement) window.scrollTo({ top: 0, behavior: 'smooth' });
-        else chatScroller.scrollTop = 0;
-        await sleep(500);
-
-        for (let i = 0; i < 100; i++) {
-            const chatChips = Array.from(document.querySelectorAll(SELECTORS.CHAT_ARTIFACT_CONTAINER));
-            chatChips.forEach(card => {
-                const titleEl = card.querySelector(SELECTORS.CHAT_ARTIFACT_TITLE);
-                if (titleEl) {
-                    addArtifact(titleEl.textContent.trim(), 'Chat');
-                }
-            });
-
-            if (currentScrollTop() === lastChatScrollTop) break;
-            lastChatScrollTop = currentScrollTop();
-            
-            if (chatScroller === document.documentElement) window.scrollBy({ top: 1000, behavior: 'smooth' });
-            else chatScroller.scrollBy({ top: 1000, behavior: 'smooth' });
-            
-            await sleep(600);
-        }
-
-        finishScanning('Standard Scan');
+        finishScanning('Sidebar Scan');
         isScanning = false;
     }
 
@@ -1099,8 +1069,8 @@
 
         const scanBtn = document.createElement('button');
         scanBtn.id = 'gemini-btn-scan';
-        scanBtn.textContent = 'Scan Artifacts';
-        scanBtn.title = 'アーティファクトの一覧を取得します。';
+        scanBtn.textContent = 'Scan Sidebar Menu';
+        scanBtn.title = '右サイドバーにある「このチャット内のファイル一覧」を展開してスキャンします。';
         scanBtn.style.cssText = `
             padding: 10px 16px;
             background-color: #3c4043;
@@ -1118,8 +1088,8 @@
 
         const deepScanBtn = document.createElement('button');
         deepScanBtn.id = 'gemini-btn-deep-scan';
-        deepScanBtn.textContent = 'Deep Scan';
-        deepScanBtn.title = '会話全体を強力にスキャンして、隠れたアーティファクトをすべて検出します。数秒かかります。';
+        deepScanBtn.textContent = 'Scan Chat History';
+        deepScanBtn.title = 'メイン会話履歴を上部までスクロールしながら、履歴に埋まっているアーティファクトをすべて検出します。数秒かかります。';
         deepScanBtn.style.cssText = `
             padding: 10px 16px;
             background-color: #5bb974;
