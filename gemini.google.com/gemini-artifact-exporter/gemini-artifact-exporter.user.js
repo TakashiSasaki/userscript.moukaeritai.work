@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.3.03
+// @version      0.3.04
 // @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -1088,8 +1088,25 @@
         deepScanBtn.onmouseout = () => { deepScanBtn.style.backgroundColor = '#5bb974'; };
         deepScanBtn.onclick = () => deepScanArtifacts();
 
-        buttonContainer.appendChild(scanBtn);
-        buttonContainer.appendChild(deepScanBtn);
+        const scanButtonsContainer = document.createElement('div');
+        scanButtonsContainer.style.cssText = `
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            width: 100%;
+        `;
+
+        scanBtn.style.flex = '1';
+        deepScanBtn.style.flex = '1';
+        scanBtn.style.padding = '8px 10px';
+        deepScanBtn.style.padding = '8px 10px';
+        scanBtn.style.fontSize = '13px';
+        deepScanBtn.style.fontSize = '13px';
+
+        scanButtonsContainer.appendChild(scanBtn);
+        scanButtonsContainer.appendChild(deepScanBtn);
+
+        buttonContainer.appendChild(scanButtonsContainer);
 
         const listContainer = document.createElement('div');
         listContainer.id = 'gemini-artifact-list-container';
