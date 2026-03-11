@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.4
-// @lastModified 2026-03-10
+// @version      0.4.5
+// @lastModified 2026-03-11
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -196,54 +196,53 @@
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
             }
-            /* 1-Turn Panel */
+            /* 1-Turn Horizontal Action Bar */
             #gemini-one-turn-panel {
                 position: fixed;
                 background-color: rgba(28, 28, 30, 0.85);
                 backdrop-filter: blur(12px) saturate(180%);
                 -webkit-backdrop-filter: blur(12px) saturate(180%);
                 border: 1px solid rgba(255, 255, 255, 0.15);
-                border-radius: 12px;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-                padding: 12px;
+                border-radius: 24px;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+                padding: 6px 12px;
                 display: none;
-                flex-direction: column;
-                gap: 10px;
+                flex-direction: row;
+                align-items: center;
+                gap: 12px;
                 z-index: 9999;
                 font-family: 'Google Sans', sans-serif;
-                min-width: 200px;
                 color: white;
                 user-select: none;
             }
             #gemini-one-turn-panel.visible {
                 display: flex;
             }
-            .one-turn-header {
-                font-size: 13px;
-                font-weight: 600;
-                color: rgba(255, 255, 255, 0.9);
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                padding-bottom: 6px;
-                margin-bottom: 2px;
+            .one-turn-drag-handle {
+                cursor: move;
+                opacity: 0.6;
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
-                cursor: move;
+                padding: 4px;
             }
-            .one-turn-version {
-                font-size: 10px;
-                color: rgba(255, 255, 255, 0.5);
-                font-weight: 400;
+            .one-turn-drag-handle:hover {
+                opacity: 1;
             }
             .one-turn-controls {
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
-                font-size: 12px;
-                color: rgba(255, 255, 255, 0.7);
+                gap: 12px;
+                font-size: 13px;
+                color: rgba(255, 255, 255, 0.9);
             }
-            .one-turn-controls input {
-                width: 45px;
+            .one-turn-controls label {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                cursor: pointer;
+            }
+            .one-turn-controls input[type="number"] {
+                width: 40px;
                 background: rgba(0,0,0,0.3);
                 border: 1px solid rgba(255,255,255,0.2);
                 border-radius: 4px;
@@ -251,12 +250,16 @@
                 padding: 2px 4px;
                 text-align: center;
             }
+            .one-turn-controls input[type="checkbox"] {
+                cursor: pointer;
+                accent-color: #1a73e8;
+            }
             #gemini-btn-one-turn-exec {
                 background-color: #1a73e8;
                 color: white;
                 border: none;
-                border-radius: 20px;
-                padding: 8px 16px;
+                border-radius: 16px;
+                padding: 6px 14px;
                 font-size: 13px;
                 font-weight: 500;
                 cursor: pointer;
@@ -597,23 +600,17 @@
         if (savedPos.left) panel.style.left = savedPos.left;
         else panel.style.right = savedPos.right;
 
-        const header = document.createElement('div');
-        header.className = 'one-turn-header';
-
-        const titleSpan = document.createElement('span');
-        titleSpan.textContent = '⠿ 1-Turn Auto Export';
-        header.appendChild(titleSpan);
-
-        const versionSpan = document.createElement('span');
-        versionSpan.className = 'one-turn-version';
-        versionSpan.textContent = `v${GM_info.script.version}`;
-        header.appendChild(versionSpan);
+        // Drag Handle
+        const dragHandle = document.createElement('div');
+        dragHandle.className = 'one-turn-drag-handle';
+        dragHandle.title = `Gemini 1-Turn Auto Export v${GM_info.script.version}`;
+        dragHandle.innerHTML = '⠿'; // Simple drag icon
 
         // Dragging Logic
         let isDragging = false;
         let offset = { x: 0, y: 0 };
 
-        header.addEventListener('mousedown', (e) => {
+        dragHandle.addEventListener('mousedown', (e) => {
             isDragging = true;
             offset.x = e.clientX - panel.offsetLeft;
             offset.y = e.clientY - panel.offsetTop;
@@ -638,22 +635,46 @@
 
         const controls = document.createElement('div');
         controls.className = 'one-turn-controls';
-        controls.textContent = 'Wait (sec): ';
 
+        // Wait Time Setting
+        const waitLabel = document.createElement('label');
+        waitLabel.textContent = 'Wait(s):';
         const delayInput = document.createElement('input');
         delayInput.type = 'number';
         delayInput.min = '0';
         delayInput.value = GM_getValue(AUTO_DELETE_DELAY_KEY, 3);
         delayInput.onchange = () => GM_setValue(AUTO_DELETE_DELAY_KEY, parseInt(delayInput.value, 10) || 0);
-        controls.appendChild(delayInput);
+        waitLabel.appendChild(delayInput);
 
+        // Auto Delete Checkbox
+        const deleteLabel = document.createElement('label');
+        const deleteCheckbox = document.createElement('input');
+        deleteCheckbox.type = 'checkbox';
+        deleteCheckbox.checked = GM_getValue('gemini-export-auto-delete-toggle', true);
+        deleteLabel.appendChild(deleteCheckbox);
+        deleteLabel.appendChild(document.createTextNode('Auto-Delete'));
+
+        controls.appendChild(waitLabel);
+        controls.appendChild(deleteLabel);
+
+        // Execute Button
         const execBtn = document.createElement('button');
         execBtn.id = 'gemini-btn-one-turn-exec';
-        const iconSpan = document.createElement('span');
-        iconSpan.style.display = 'flex';
-        iconSpan.appendChild(createIconElement(DOCS_ICON_PATH));
-        execBtn.appendChild(iconSpan);
-        execBtn.appendChild(document.createTextNode('Export & Delete'));
+        
+        const updateBtnText = () => {
+            execBtn.innerHTML = '';
+            const iconSpan = document.createElement('span');
+            iconSpan.style.display = 'flex';
+            iconSpan.appendChild(createIconElement(DOCS_ICON_PATH));
+            execBtn.appendChild(iconSpan);
+            execBtn.appendChild(document.createTextNode(deleteCheckbox.checked ? 'Export & Delete' : 'Export'));
+        };
+        updateBtnText();
+
+        deleteCheckbox.onchange = () => {
+            GM_setValue('gemini-export-auto-delete-toggle', deleteCheckbox.checked);
+            updateBtnText();
+        };
 
         execBtn.onclick = async () => {
             const moreBtn = document.querySelector(SELECTORS.moreMenuButton);
@@ -662,37 +683,45 @@
                 return;
             }
 
+            const willDelete = deleteCheckbox.checked;
+
             execBtn.disabled = true;
             showOverlay();
             try {
                 // 1. Export
                 await handleTurnExport(moreBtn);
 
-                // 2. Countdown & Wait
-                let delay = parseInt(delayInput.value, 10);
-                if (isNaN(delay)) delay = 3;
+                if (willDelete) {
+                    // 2. Countdown & Wait
+                    let delay = parseInt(delayInput.value, 10);
+                    if (isNaN(delay)) delay = 3;
 
-                for (let i = delay; i > 0; i--) {
-                    execBtn.textContent = `Deleting in ${i}s...`;
-                    await sleep(1000);
+                    for (let i = delay; i > 0; i--) {
+                        execBtn.textContent = `Deleting in ${i}s...`;
+                        await sleep(1000);
+                    }
+                    execBtn.textContent = 'Deleting...';
+
+                    // 3. Dispatch Delete Event
+                    console.log('[Gemini 1-Turn Export] Requesting conversation deletion.');
+                    window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete'));
+                } else {
+                    console.log('[Gemini 1-Turn Export] Auto-delete skipped based on user setting.');
+                    execBtn.textContent = 'Done!';
+                    await sleep(2000);
                 }
-                execBtn.textContent = 'Deleting...';
-
-                // 3. Dispatch Delete Event
-                console.log('[Gemini 1-Turn Export] Requesting conversation deletion.');
-                window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete'));
 
             } catch (err) {
                 console.error('1-Turn auto process failed:', err);
                 alert('Process failed. See console.');
-                execBtn.disabled = false;
-                execBtn.textContent = 'Export & Delete';
             } finally {
                 hideOverlay();
+                execBtn.disabled = false;
+                updateBtnText();
             }
         };
 
-        panel.appendChild(header);
+        panel.appendChild(dragHandle);
         panel.appendChild(controls);
         panel.appendChild(execBtn);
         document.body.appendChild(panel);
