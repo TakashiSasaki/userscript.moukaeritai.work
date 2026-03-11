@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.3.06
+// @version      0.3.07
 // @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -548,10 +548,20 @@
     }
 
     function getChatScroller() {
-        let scroller = document.querySelector('infinite-scroller');
+        // Specifically look for the chat history scroller, avoiding the narrow side-nav scroller
+        let scroller = document.querySelector('infinite-scroller.chat-history') || 
+                       document.querySelector('chat-window-content infinite-scroller');
+        
+        if (!scroller) {
+            const scrollers = Array.from(document.querySelectorAll('infinite-scroller'));
+            // Heuristic: The chat scroller is wide (> 300px), sidebar is narrow (~70px)
+            scroller = scrollers.find(el => el.clientWidth > 300);
+        }
+
         if (!scroller) {
             for (const el of document.querySelectorAll('*')) {
-                if (el.scrollHeight > el.clientHeight + 100 && el.clientHeight > 200) {
+                // Heuristic for other scrollable containers
+                if (el.scrollHeight > el.clientHeight + 100 && el.clientHeight > 200 && el.clientWidth > 300) {
                     const ov = getComputedStyle(el).overflowY;
                     if ((ov === 'auto' || ov === 'scroll') && el.scrollHeight > 2000) {
                         if (!scroller || el.scrollHeight > scroller.scrollHeight) scroller = el;
