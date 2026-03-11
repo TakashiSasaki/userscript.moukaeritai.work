@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.9
+// @version      0.4.10
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-12
 // @author       Takashi Sasaki
@@ -600,10 +600,22 @@
 
     let autoExportTriggered = false;
 
-    function extractUrls(text) {
+    function extractUrls(elOrText) {
+        if (!elOrText) return [];
+        const text = typeof elOrText === 'string' ? elOrText : (elOrText.textContent || '');
         const urlRegex = /(https?:\/\/[^\s"'<>()]+)/g;
-        const matches = text.match(urlRegex);
-        return matches ? matches : [];
+        const matches = text.match(urlRegex) || [];
+        
+        if (typeof elOrText === 'object' && elOrText.querySelectorAll) {
+            const anchors = elOrText.querySelectorAll('a[href]');
+            anchors.forEach(a => {
+                if (a.href && a.href.startsWith('http')) {
+                    matches.push(a.href);
+                }
+            });
+        }
+        // Return unique URLs
+        return [...new Set(matches)];
     }
 
     function updateOneTurnVisibility() {
@@ -631,11 +643,8 @@
                     const messageContentEl = document.querySelector('message-content');
                     
                     if (userQueryEl && messageContentEl) {
-                        const userText = userQueryEl.textContent || '';
-                        const botText = messageContentEl.textContent || '';
-
-                        const userUrls = extractUrls(userText);
-                        const botUrls = extractUrls(botText);
+                        const userUrls = extractUrls(userQueryEl);
+                        const botUrls = extractUrls(messageContentEl);
                         
                         console.log(`[Gemini 1-Turn] Extracted Prompt URLs:`, userUrls);
                         console.log(`[Gemini 1-Turn] Extracted Response URLs:`, botUrls);
