@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.11
+// @version      0.2.12
 // @lastModified 2026-03-10
 // @description  Adds a 1-click floating button with shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
@@ -220,7 +220,7 @@
                 align-items: center;
                 gap: 8px;
                 background: rgba(255, 255, 255, 0.9);
-                padding: 6px 12px 6px 8px;
+                padding: 6px 12px;
                 border-radius: 24px;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                 border: 1px solid #dadce0;
@@ -228,13 +228,6 @@
                 transition: background-color 0.2s;
                 font-family: 'Google Sans', sans-serif;
                 user-select: none;
-            }
-            .drag-handle {
-                cursor: move;
-                color: #9aa0a6;
-                display: flex;
-                align-items: center;
-                padding: 0 4px;
             }
             .gdp-main-delete-btn {
                 display: flex;
@@ -265,7 +258,8 @@
                 font-size: 11px;
                 color: #7f8c8d;
                 font-family: monospace;
-                padding-right: 4px;
+                padding: 0 4px;
+                cursor: move;
             }
             @media (prefers-color-scheme: dark) {
                 #gemini-delete-panel { background: rgba(32, 33, 36, 0.85); border-color: #5f6368; }
@@ -428,7 +422,6 @@
         const version = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.2.11';
 
         setInnerHTML(panel, `
-            <div class="drag-handle" title="Drag to move">⠿</div>
             <button class="gdp-main-delete-btn" id="gdp-global-delete-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" height="16" viewBox="0 -960 960 960" width="16" fill="currentColor">
                     <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/>
@@ -469,7 +462,7 @@
         });
 
         // Drag Logic
-        const handle = panel.querySelector('.drag-handle');
+        const handle = panel.querySelector('.version-badge');
         let isDragging = false;
         let dragOffset = { x: 0, y: 0 };
 
