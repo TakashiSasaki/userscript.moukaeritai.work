@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.8
+// @version      0.4.9
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-12
 // @author       Takashi Sasaki
@@ -220,10 +220,26 @@
             }
             .one-turn-drag-handle {
                 cursor: move;
-                opacity: 0.6;
+                cursor: grab;
+                color: rgba(255, 255, 255, 0.5);
                 display: flex;
+                flex-direction: column;
                 align-items: center;
-                padding: 4px;
+                justify-content: center;
+                padding-right: 12px;
+                border-right: 1px solid rgba(255, 255, 255, 0.2);
+                margin-right: 12px;
+                user-select: none;
+            }
+            .one-turn-drag-icon {
+                font-size: 16px;
+                line-height: 1;
+            }
+            .one-turn-version {
+                font-size: 9px;
+                opacity: 0.7;
+                margin-top: 2px;
+                line-height: 1;
             }
             .one-turn-drag-handle:hover {
                 opacity: 1;
@@ -620,6 +636,9 @@
 
                         const userUrls = extractUrls(userText);
                         const botUrls = extractUrls(botText);
+                        
+                        console.log(`[Gemini 1-Turn] Extracted Prompt URLs:`, userUrls);
+                        console.log(`[Gemini 1-Turn] Extracted Response URLs:`, botUrls);
 
                         if (userUrls.length === 1 && botUrls.includes(userUrls[0])) {
                             autoExportTriggered = true;
@@ -729,11 +748,20 @@
         if (savedPos.left) panel.style.left = savedPos.left;
         else panel.style.right = savedPos.right;
 
-        // Drag Handle
         const dragHandle = document.createElement('div');
         dragHandle.className = 'one-turn-drag-handle';
         dragHandle.title = `Gemini 1-Turn Auto Export v${GM_info.script.version}`;
-        dragHandle.textContent = '⠿'; // Simple drag icon
+        
+        const dragIcon = document.createElement('span');
+        dragIcon.className = 'one-turn-drag-icon';
+        dragIcon.textContent = '⠿';
+        
+        const versionText = document.createElement('span');
+        versionText.className = 'one-turn-version';
+        versionText.textContent = `v${GM_info.script.version}`;
+
+        dragHandle.appendChild(dragIcon);
+        dragHandle.appendChild(versionText);
 
         // Dragging Logic
         let isDragging = false;
