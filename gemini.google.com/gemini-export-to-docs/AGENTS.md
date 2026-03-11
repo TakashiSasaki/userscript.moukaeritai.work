@@ -15,7 +15,11 @@ This project follows the agent development guidelines outlined in the root [AGEN
 ### Horizontal 1-Turn Action Bar
 - **Draggable Handle**: The bar's far left element (marked with `⠿`) acts as a drag handle. Uses `mousedown`, `mousemove`, and `mouseup` on `document` to handle dragging.
 - **Persistence**: Saves the current `top` and `left` coordinates to `gemini-export-panel-pos` using `GM_setValue` upon `mouseup`.
-- **Auto-Delete Toggle**: Saves the state of the auto-delete checkbox to `gemini-export-auto-delete-toggle` via `GM_setValue` to persist user preference.
+- **Manual Toggle**: Saves the state of the auto-delete checkbox to `gemini-export-auto-delete-toggle` via `GM_setValue` to persist user preference.
+- **Auto(URL) Detection**: 
+  - Extracts URLs from `<user-query>` and `<message-content>` tags via regex `/(https?:\/\/[^\s"'<>()]+)/g`.
+  - If enabled via `gemini-export-auto-url-toggle` and exactly one identical URL is found in both, it triggers `runExportProcess` with forced deletion after a configurable delay (`gemini-export-auto-url-delay`).
+  - An `autoExportTriggered` lock prevents infinite trigger loops while tracking the same conversation state.
 - **Initial Positioning**: On load, it checks for `gemini-export-panel-pos` and applies it to the panel's style. Defaults to `bottom: 20px; right: 20px;`.
 
 Please refer to the root `AGENTS.md` for all operational procedures, including Git practices, documentation structure, and HTML sample preprocessing.
