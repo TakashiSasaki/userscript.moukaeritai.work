@@ -142,6 +142,7 @@
 
         <h2>更新履歴</h2>
         <ul>
+                <li class="changelog-item">v0.3.06 (2026-03-11): Fixed Deep Scan auto-scroll failure caused by overlapping `behavior: smooth` animations. Reverted to instantaneous scroll jumps while maintaining stall detection and active container focus.</li>
                 <li class="changelog-item">v0.3.05 (2026-03-11): Improved Deep Scan scroll stability. Implemented human-like smooth scrolling combined with a 3-strike stall detector to ensure the script doesn't prematurely abort when Gemini's lazy loading is slow due to network latency.</li>
                 <li class="changelog-item">v0.3.04 (2026-03-11): Compacted UI by placing Scan and Deep Scan buttons side-by-side.</li>
                 <li class="changelog-item">v0.3.03 (2026-03-11): Fixed Deep Scan auto-scroll logic. Replaced instantaneous `scrollTop = 0` with incremental `scrollBy` and synthetic wheel events to reliably trigger Gemini's historical message lazy-loading.</li>

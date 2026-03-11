@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.3.05
+// @version      0.3.06
 // @lastModified 2026-03-10
 // @description  Export all "Article" type artifacts from the Gemini sidebar to Google Docs.
 // @author       Takashi Sasaki
@@ -736,6 +736,10 @@
 
         log('Ascending to the true top of the conversation...');
 
+        // Exert focus and pointer events to wake up Angular's lazy loaders
+        if (!scroller.hasAttribute('tabindex')) scroller.setAttribute('tabindex', '-1');
+        scroller.focus({ preventScroll: true });
+        
         // 3. Ascend to true top
         let highestScrollHeight = scroller.scrollHeight;
         let prevFirstTurnContent = '';
@@ -743,12 +747,12 @@
         let stallCount = 0;
 
         while (topAttempts < 250) {
-            // Scroll up smoothly by roughly one viewport height
+            // Scroll up instantly by roughly one viewport height to avoid smooth animation overlap lock
             const scrollStep = Math.max(800, scroller.clientHeight * 0.8);
             if (scroller === document.documentElement) {
-                window.scrollBy({ top: -scrollStep, behavior: 'smooth' });
+                window.scrollBy({ top: -scrollStep, behavior: 'instant' });
             } else {
-                scroller.scrollBy({ top: -scrollStep, behavior: 'smooth' });
+                scroller.scrollTop -= scrollStep; // Use direct property assignment for maximum reliability
             }
             
             await sleep(400); // Wait for the smooth animation
@@ -822,12 +826,12 @@
                 stallCount = 0; // Still scrolling down, reset stall count
             }
 
-            // Scroll down by 80% viewport to ensure overlap
+            // Scroll down by 80% viewport to ensure overlap, using instantaneous jump
             const scrollStep = Math.max(800, scroller.clientHeight * 0.8);
             if (scroller === document.documentElement) {
-                window.scrollBy({ top: scrollStep, behavior: 'smooth' });
+                window.scrollBy({ top: scrollStep, behavior: 'instant' });
             } else {
-                scroller.scrollBy({ top: scrollStep, behavior: 'smooth' });
+                scroller.scrollTop += scrollStep;
             }
 
             await sleep(600); // Wait for smooth scroll and render
