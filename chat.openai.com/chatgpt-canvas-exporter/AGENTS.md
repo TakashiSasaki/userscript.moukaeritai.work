@@ -24,7 +24,9 @@ The following selectors are critical for interacting with the Canvas:
 -   **Canvas Message/Editor Group**: `div[id^="textdoc-message-"]`
     - This is the main container for the Canvas UI elements (header, title, actions, and editor).
 -   **Content Editor (ProseMirror)**: `.ProseMirror`
-    - The actual editor element where the content resides. Extraction is currently done via `.innerText`.
+    - The actual editor element where the content resides. Detection of this element triggers the appearance of the floating UI. Extraction is done via `.innerText`.
+-   **Conversation Images**: `article img`
+    - Used to collect images within the chat thread for inclusion in the ZIP export.
 -   **Header Actions**: `div[id^="textdoc-message-"] .flex.items-center.justify-end`
     - The area containing native buttons (Copy, Edit, etc.). This is where we inject the "Export MD" button.
 -   **Title**: `div[id^="textdoc-message-"] .text-token-text-primary.font-semibold`
@@ -37,7 +39,11 @@ The following selectors are critical for interacting with the Canvas:
     - **In-Header**: Injected directly into the native actions bar for a seamless look.
     - **Floating**: A fixed (but movable) button that appears only when `.ProseMirror` is detected.
     - **Movable Logic**: Implemented with mouse event listeners (`mousedown`, `mousemove`, `mouseup`). It calculates position relative to the `right` and `bottom` edges of the viewport to handle resizing gracefully.
-- **MutationObserver**: Used to detect when the Canvas enters the DOM or the path changes, ensuring buttons are re-injected if lost.
+- **Panel UI Control Bar**:
+    - **Scan (Light)**: Quickly refreshes the list based on currently visible canvas messages.
+    - **Deep Scan**: Placeholder for extended search logic.
+    - **Automatic Trigger**: When `.ProseMirror` is detected, a "Light Scan" is automatically performed to keep the panel contents up-to-date.
+- **MutationObserver**: Used to detect when the Canvas enters the DOM or the path changes, ensuring buttons are re-injected and the panel is updated.
 
 ### Performance and Reliability
 - **Avoid Over-Injection**: The injector checks for the existence of `.canvas-exporter-btn` before prepending.

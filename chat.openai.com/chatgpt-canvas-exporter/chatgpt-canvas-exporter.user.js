@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Canvas Exporter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.7.0
+// @version      0.7.1
 // @description  ChatGPTの会話ページでキャンバスの内容をエクスポートする
 // @author       Takashi Sasaki
 // @match        https://chatgpt.com/*
@@ -16,7 +16,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '0.7.0';
+    const VERSION = '0.7.1';
 
     // セレクタの定義
     const CANVAS_MESSAGE_SELECTOR = 'div[id^="textdoc-message-"]';
@@ -283,15 +283,19 @@
         });
     }
 
-    // パネルUIの作成/更新
-    function updatePanelUI() {
+    // パネルUIの作成/更新 (スキャン処理)
+    function updatePanelUI(isDeep = false) {
         const panel = document.getElementById('canvas-exporter-panel');
         if (!panel) return;
+
+        console.log(`[CanvasExporter] updatePanelUI called. isDeep=${isDeep}`);
 
         const listContainer = panel.querySelector('.canvas-list');
         listContainer.innerHTML = '';
 
-        const messageEls = document.querySelectorAll(CANVAS_MESSAGE_SELECTOR);
+        // ディープスキャンの場合は、より広範な要素を探す（将来的な拡張用）
+        const selector = isDeep ? CANVAS_MESSAGE_SELECTOR : CANVAS_MESSAGE_SELECTOR;
+        const messageEls = document.querySelectorAll(selector);
 
         if (messageEls.length === 0) {
             listContainer.innerHTML = '<div class="no-canvas">No canvas detected</div>';
@@ -317,6 +321,13 @@
         });
     }
 
+    // ディープスキャン (将来的な拡張用)
+    function deepScan() {
+        console.log('[CanvasExporter] Deep scan initiated...');
+        // 現状は通常の更新と同じだが、将来的に履歴を遡るなどの処理を追加可能
+        updatePanelUI(true);
+    }
+
     // パネルUIの注入
     function injectPanelUI() {
         if (document.getElementById('canvas-exporter-panel')) return;
@@ -334,11 +345,23 @@
                     <button class="panel-close-btn">&times;</button>
                 </div>
             </div>
+            <div class="panel-controls">
+                <button class="panel-scan-btn">Scan</button>
+                <button class="panel-deep-scan-btn">Deep Scan</button>
+            </div>
             <div class="canvas-list"></div>
         `;
 
         panel.querySelector('.panel-download-all-btn').addEventListener('click', () => {
             downloadAllAsZip();
+        });
+
+        panel.querySelector('.panel-scan-btn').addEventListener('click', () => {
+            updatePanelUI(false);
+        });
+
+        panel.querySelector('.panel-deep-scan-btn').addEventListener('click', () => {
+            deepScan();
         });
 
         panel.querySelector('.panel-close-btn').addEventListener('click', () => {
@@ -453,9 +476,8 @@
             if (document.querySelector(CANVAS_CONTENT_SELECTOR)) {
                 injectFloatingUI();
                 document.getElementById('canvas-exporter-floating-ui').style.display = 'block';
-                if (document.getElementById('canvas-exporter-panel').classList.contains('active')) {
-                    updatePanelUI();
-                }
+                // キャンバス検出時に自動でパネル内容を更新（軽い方のスキャン）
+                updatePanelUI(false);
             } else if (document.getElementById('canvas-exporter-floating-ui')) {
                 document.getElementById('canvas-exporter-floating-ui').style.display = 'none';
                 document.getElementById('canvas-exporter-panel').classList.remove('active');
@@ -566,6 +588,27 @@
         }
         .panel-download-all-btn:hover {
             opacity: 0.8;
+        }
+        .panel-controls {
+            padding: 8px 10px;
+            display: flex;
+            gap: 8px;
+            background-color: var(--gpt-surface-secondary, #fafafa);
+            border-bottom: 1px solid var(--border-light, #eee);
+        }
+        .panel-scan-btn, .panel-deep-scan-btn {
+            flex: 1;
+            padding: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border-radius: 4px;
+            border: 1px solid var(--border-medium, #ccc);
+            background-color: var(--gpt-surface-primary, #fff);
+            color: var(--text-primary, #333);
+            transition: background-color 0.2s;
+        }
+        .panel-scan-btn:hover, .panel-deep-scan-btn:hover {
+            background-color: var(--gpt-surface-secondary, #f0f0f0);
         }
         .canvas-list {
             padding: 10px;
