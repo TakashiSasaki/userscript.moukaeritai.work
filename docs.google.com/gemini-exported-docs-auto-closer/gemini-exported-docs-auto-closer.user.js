@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini Exported Docs Auto-Closer
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.1
-// @lastModified 2026-03-10
-// @description  Automatically closes Google Docs tabs that were opened by the Gemini Artifact Exporter after a configurable delay.
+// @version      0.2.2
+// @lastModified 2026-03-12
+// @description  Automatically closes Google Docs tabs that were opened by the Gemini Artifact Exporter after a configurable delay. (Horizontal UI)
 // @author       Takashi Sasaki
 // @match        https://docs.google.com/document/d/*
 // @match        https://userscript.moukaeritai.work/*
@@ -20,7 +20,7 @@
     // Report version to landing page
     const SCRIPT_NAME = 'Gemini Exported Docs Auto-Closer';
     const reportVersion = () => {
-        const version = typeof GM_info !== 'undefined' ? GM_info.script.version : '0.2.1';
+        const version = typeof GM_info !== 'undefined' ? GM_info.script.version : '0.2.2';
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: { name: SCRIPT_NAME, version: version }
         }));
@@ -67,7 +67,7 @@
         }
     };
 
-    // Create UI container (Draggable Panel)
+    // Create UI container (Horizontal Button-Like Panel)
     const panel = document.createElement('div');
     panel.id = 'gemini-closer-panel';
     panel.style.cssText = `
@@ -76,73 +76,63 @@
         ${savedPos.left ? `left: ${savedPos.left};` : `right: ${savedPos.right};`}
         background-color: #323232;
         color: white;
-        padding: 0;
-        border-radius: 8px;
+        padding: 4px 12px;
+        border-radius: 20px;
         font-family: Roboto, Arial, sans-serif;
-        font-size: 14px;
+        font-size: 13px;
         z-index: 999999;
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         transition: opacity 0.3s;
-        min-width: 280px;
         user-select: none;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     `;
 
-    // Header (Drag handle)
-    const header = document.createElement('div');
-    header.style.cssText = `
-        padding: 8px 12px;
-        background-color: #444;
-        border-radius: 8px 8px 0 0;
-        cursor: move;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 12px;
+    // Version Handle (Drag handle)
+    const versionSpan = document.createElement('span');
+    versionSpan.style.cssText = `
         color: #aaa;
+        font-size: 11px;
+        cursor: move;
+        font-weight: bold;
+        padding: 2px 4px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 4px;
     `;
-    setInnerHTML(header, '<span>⠿ Gemini Auto-Closer</span>');
-    panel.appendChild(header);
+    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.2.2'}`;
+    panel.appendChild(versionSpan);
 
-    // Body
-    const body = document.createElement('div');
-    body.style.cssText = `
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    `;
-    panel.appendChild(body);
-
-    const message = document.createElement('div');
-    message.style.fontSize = '15px';
+    const message = document.createElement('span');
+    message.style.whiteSpace = 'nowrap';
     message.textContent = `Closing in ${countdown}s...`;
-    body.appendChild(message);
+    panel.appendChild(message);
 
-    // Settings row
-    const settingsRow = document.createElement('div');
-    settingsRow.style.cssText = `
+    // Settings
+    const settingsSpan = document.createElement('span');
+    settingsSpan.style.cssText = `
         display: flex;
         align-items: center;
-        gap: 8px;
-        font-size: 12px;
+        gap: 4px;
         color: #ccc;
     `;
-    setInnerHTML(settingsRow, '<span>Wait:</span>');
+    setInnerHTML(settingsSpan, '<span>Wait:</span>');
 
     const timeInput = document.createElement('input');
     timeInput.type = 'number';
     timeInput.min = '3';
     timeInput.value = waitTime;
     timeInput.style.cssText = `
-        width: 45px;
+        width: 40px;
         background: #222;
         color: white;
         border: 1px solid #555;
         border-radius: 4px;
-        padding: 2px 4px;
+        padding: 1px 2px;
         font-family: inherit;
+        font-size: 12px;
     `;
     timeInput.addEventListener('change', () => {
         let val = parseInt(timeInput.value);
@@ -152,44 +142,36 @@
         GM_setValue('waitTime', val);
         console.log(`[Gemini Docs Closer] Wait time updated to ${val}s`);
     });
-    settingsRow.appendChild(timeInput);
-    settingsRow.appendChild(document.createTextNode('sec'));
-
-    body.appendChild(settingsRow);
-
-    // Buttons row
-    const buttonsRow = document.createElement('div');
-    buttonsRow.style.cssText = `
-        display: flex;
-        justify-content: flex-end;
-        gap: 12px;
-        margin-top: 4px;
-    `;
+    settingsSpan.appendChild(timeInput);
+    settingsSpan.appendChild(document.createTextNode('s'));
+    panel.appendChild(settingsSpan);
 
     const cancelBtn = document.createElement('button');
-    cancelBtn.textContent = 'Stay here';
+    cancelBtn.textContent = 'Stay';
     cancelBtn.style.cssText = `
         background: #444;
         color: white;
         border: none;
-        border-radius: 4px;
+        border-radius: 12px;
         cursor: pointer;
-        padding: 6px 12px;
-        font-size: 13px;
+        padding: 2px 10px;
+        font-size: 11px;
+        font-weight: bold;
+        transition: background 0.2s;
     `;
+    cancelBtn.onmouseover = () => cancelBtn.style.background = '#555';
+    cancelBtn.onmouseout = () => cancelBtn.style.background = '#444';
 
     cancelBtn.addEventListener('click', () => {
         clearInterval(timerId);
-        message.textContent = 'Auto-close cancelled.';
+        message.textContent = 'Cancelled.';
         message.style.color = '#8ab4f8';
         setTimeout(() => {
             panel.style.opacity = '0';
             setTimeout(() => panel.remove(), 300);
         }, 2000);
     });
-
-    buttonsRow.appendChild(cancelBtn);
-    body.appendChild(buttonsRow);
+    panel.appendChild(cancelBtn);
 
     document.body.appendChild(panel);
 
@@ -197,7 +179,7 @@
     let isDragging = false;
     let offset = { x: 0, y: 0 };
 
-    header.addEventListener('mousedown', (e) => {
+    versionSpan.addEventListener('mousedown', (e) => {
         isDragging = true;
         offset.x = e.clientX - panel.offsetLeft;
         offset.y = e.clientY - panel.offsetTop;
