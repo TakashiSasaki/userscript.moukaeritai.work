@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.16
+// @version      0.4.17
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-12
 // @author       Takashi Sasaki
@@ -19,8 +19,7 @@
     'use strict';
 
     const installCheckHosts = [
-        'userscript.moukaeritai.work',
-        '127.0.0.1'
+        'userscript.moukaeritai.work'
     ];
 
     const isInstallCheckHost = installCheckHosts.includes(location.hostname);
@@ -602,7 +601,7 @@
         const text = typeof elOrText === 'string' ? elOrText : (elOrText.textContent || '');
         const urlRegex = /(https?:\/\/[^\s"'<>()]+)/gi;
         const matches = text.match(urlRegex) || [];
-        
+
         if (typeof elOrText === 'object' && elOrText.querySelectorAll) {
             const anchors = elOrText.querySelectorAll('a[href]');
             anchors.forEach(a => {
@@ -644,11 +643,11 @@
                 try {
                     const userQueryEl = document.querySelector('user-query');
                     const messageContentEl = document.querySelector('message-content');
-                    
+
                     if (userQueryEl && messageContentEl) {
                         const userUrls = extractUrls(userQueryEl);
                         const botUrls = extractUrls(messageContentEl);
-                        
+
                         console.log(`[Gemini 1-Turn] Extracted Prompt URLs:`, userUrls);
                         console.log(`[Gemini 1-Turn] Extracted Response URLs:`, botUrls);
 
@@ -674,66 +673,66 @@
                             if (matchFound) {
                                 autoExportTriggered = true;
                                 console.log(`[Gemini 1-Turn Auto] Match concluded. Prompt had 1 URL matched in response.`);
-                                
+
                                 const delayStr = GM_getValue(AUTO_URL_DELAY_KEY, 5);
-                            let countdown = parseInt(delayStr, 10);
-                            if (isNaN(countdown)) countdown = 5;
+                                let countdown = parseInt(delayStr, 10);
+                                if (isNaN(countdown)) countdown = 5;
 
-                            const execBtn = document.getElementById('gemini-btn-one-turn-exec');
-                            if (execBtn) {
-                                const originalOnClick = execBtn.onclick;
+                                const execBtn = document.getElementById('gemini-btn-one-turn-exec');
+                                if (execBtn) {
+                                    const originalOnClick = execBtn.onclick;
 
-                                const cancelAuto = () => {
-                                    if (autoExportTimerId) clearInterval(autoExportTimerId);
-                                    autoExportTimerId = null;
-                                    execBtn.style.backgroundColor = '';
-                                    execBtn.style.color = '';
-                                    
-                                    const deleteCheckbox = document.getElementById('gemini-delete-checkbox');
-                                    const willDelete = deleteCheckbox ? deleteCheckbox.checked : GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
-                                    
-                                    execBtn.textContent = ''; // Safely clear children (avoids TrustedHTML issue)
-                                    const iconSpan = document.createElement('span');
-                                    iconSpan.style.display = 'flex';
-                                    iconSpan.appendChild(createIconElement(DOCS_ICON_PATH));
-                                    execBtn.appendChild(iconSpan);
-                                    execBtn.appendChild(document.createTextNode(willDelete ? 'Export & Delete' : 'Export'));
-                                    
-                                    execBtn.onclick = originalOnClick;
-                                    console.log('[Gemini 1-Turn Auto] Auto-export cancelled by user.');
-                                };
-
-                                execBtn.onclick = (e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    cancelAuto();
-                                };
-
-                                const updateButtonUI = () => {
-                                    execBtn.style.backgroundColor = '#fbbc04'; // yellow
-                                    execBtn.style.color = '#333';
-                                    execBtn.textContent = `Cancel Auto (${countdown}s)`;
-                                };
-                                updateButtonUI();
-
-                                autoExportTimerId = setInterval(() => {
-                                    countdown--;
-                                    if (countdown <= 0) {
+                                    const cancelAuto = () => {
                                         if (autoExportTimerId) clearInterval(autoExportTimerId);
                                         autoExportTimerId = null;
+                                        execBtn.style.backgroundColor = '';
+                                        execBtn.style.color = '';
+
+                                        const deleteCheckbox = document.getElementById('gemini-delete-checkbox');
+                                        const willDelete = deleteCheckbox ? deleteCheckbox.checked : GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
+
+                                        execBtn.textContent = ''; // Safely clear children (avoids TrustedHTML issue)
+                                        const iconSpan = document.createElement('span');
+                                        iconSpan.style.display = 'flex';
+                                        iconSpan.appendChild(createIconElement(DOCS_ICON_PATH));
+                                        execBtn.appendChild(iconSpan);
+                                        execBtn.appendChild(document.createTextNode(willDelete ? 'Export & Delete' : 'Export'));
+
                                         execBtn.onclick = originalOnClick;
+                                        console.log('[Gemini 1-Turn Auto] Auto-export cancelled by user.');
+                                    };
+
+                                    execBtn.onclick = (e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        cancelAuto();
+                                    };
+
+                                    const updateButtonUI = () => {
+                                        execBtn.style.backgroundColor = '#fbbc04'; // yellow
+                                        execBtn.style.color = '#333';
+                                        execBtn.textContent = `Cancel Auto (${countdown}s)`;
+                                    };
+                                    updateButtonUI();
+
+                                    autoExportTimerId = setInterval(() => {
+                                        countdown--;
+                                        if (countdown <= 0) {
+                                            if (autoExportTimerId) clearInterval(autoExportTimerId);
+                                            autoExportTimerId = null;
+                                            execBtn.onclick = originalOnClick;
+                                            runExportProcess(0, true, true);
+                                        } else {
+                                            updateButtonUI();
+                                        }
+                                    }, 1000);
+                                } else {
+                                    autoExportTimerId = setTimeout(() => {
+                                        autoExportTimerId = null;
                                         runExportProcess(0, true, true);
-                                    } else {
-                                        updateButtonUI();
-                                    }
-                                }, 1000);
-                            } else {
-                                autoExportTimerId = setTimeout(() => {
-                                    autoExportTimerId = null;
-                                    runExportProcess(0, true, true);
-                                }, countdown * 1000);
+                                    }, countdown * 1000);
+                                }
                             }
-                        }
                         }
                     }
                 } catch (e) {
@@ -763,7 +762,7 @@
         const execBtn = document.getElementById('gemini-btn-one-turn-exec');
         if (execBtn) execBtn.disabled = true;
         showOverlay();
-        
+
         try {
             // 1. Export
             await handleTurnExport(moreBtn);
@@ -801,7 +800,7 @@
                 execBtn.disabled = false;
                 execBtn.style.backgroundColor = ''; // Reset custom colors
                 execBtn.style.color = '';
-                
+
                 // Need to re-read the exact active state instead of hardcoded
                 const deleteCheckbox = document.getElementById('gemini-auto-delete-cb');
                 if (deleteCheckbox) {
@@ -832,11 +831,11 @@
         const dragHandle = document.createElement('div');
         dragHandle.className = 'one-turn-drag-handle';
         dragHandle.title = `Gemini 1-Turn Auto Export v${GM_info.script.version}`;
-        
+
         const dragIcon = document.createElement('span');
         dragIcon.className = 'one-turn-drag-icon';
         dragIcon.textContent = '⠿';
-        
+
         const versionText = document.createElement('span');
         versionText.className = 'one-turn-version';
         versionText.textContent = `v${GM_info.script.version}`;
@@ -877,7 +876,7 @@
         // --- ROW 1: Manual Sub-Controls ---
         const manualRow = document.createElement('div');
         manualRow.className = 'one-turn-row';
-        
+
         const manualWaitLabel = document.createElement('label');
         const rLabelManual = document.createElement('span');
         rLabelManual.className = 'r-label';
@@ -904,7 +903,7 @@
         // --- ROW 2: Auto(URL) Sub-Controls ---
         const autoRow = document.createElement('div');
         autoRow.className = 'one-turn-row';
-        
+
         const autoWaitLabel = document.createElement('label');
         const rLabelAuto = document.createElement('span');
         rLabelAuto.className = 'r-label';
@@ -935,7 +934,7 @@
         // Execute Button
         const execBtn = document.createElement('button');
         execBtn.id = 'gemini-btn-one-turn-exec';
-        
+
         const updateBtnText = () => {
             execBtn.textContent = '';
             const iconSpan = document.createElement('span');
