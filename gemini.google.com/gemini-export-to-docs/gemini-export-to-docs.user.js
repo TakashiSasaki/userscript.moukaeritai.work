@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.17
+// @version      0.4.18
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-12
 // @author       Takashi Sasaki
@@ -656,7 +656,8 @@
                             let matchFound = false;
 
                             for (const botUrl of botUrls) {
-                                if (userUrls[0] === botUrl) {
+                                // Comparison (Case-insensitive to handle Https:// vs https://)
+                                if (userUrls[0].toLowerCase() === botUrl.toLowerCase()) {
                                     matchFound = true;
                                     break;
                                 }
