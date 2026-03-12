@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.3.09
+// @version      0.3.10
 // @lastModified 2026-03-10
 // @description  Export Gemini "Article" artifacts to Google Docs. Supports batch export, deep scanning of chat history, and separate sidebar scanning.
 // @author       Takashi Sasaki
@@ -448,6 +448,7 @@
     let isExporting = false;
     let cancelExport = false;
     let scannedArtifacts = [];
+    let hasAutoScanned = false;
     const artifactMap = new Map(); // title -> { sources: Set }
 
     function renderArtifactList() {
@@ -1251,8 +1252,7 @@
             height: 1.2em; /* Reserve height to prevent layout shift */
         `;
 
-        buttonContainer.appendChild(scanBtn);
-        buttonContainer.appendChild(deepScanBtn);
+        buttonContainer.appendChild(scanButtonsContainer);
         buttonContainer.appendChild(listContainer);
         buttonContainer.appendChild(exportBtn);
         buttonContainer.appendChild(progressDisplay);
@@ -1309,6 +1309,13 @@
         if (shouldActive) {
             panel.style.backgroundColor = 'rgba(28, 28, 30, 0.7)';
             panel.style.zIndex = '10000';
+
+            // Automatic Sidebar Scan Trigger
+            if (!hasAutoScanned && !isExporting && !isScanning) {
+                hasAutoScanned = true;
+                log('Triggering automatic sidebar scan...');
+                scanArtifacts();
+            }
         }
     }
 
@@ -1333,6 +1340,7 @@
         if (lastUrl !== window.location.href) {
             log(`URL changed from ${lastUrl} to ${window.location.href}`);
             lastUrl = window.location.href;
+            hasAutoScanned = false; // Reset scan state for new conversation
             if (scannedArtifacts.length > 0) {
                 scannedArtifacts = [];
                 renderArtifactList();
