@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.27
+// @version      0.2.28
 // @lastModified 2026-03-13
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
@@ -409,7 +409,7 @@
         if (scrollBtn && isAutoScrollEnabled() && !isSidebarVisible()) {
             scrollBtn.style.backgroundColor = '#fef7e0'; // Light yellow warning
             scrollBtn.style.color = '#b05e00';
-            scrollBtn.innerHTML = '⚠️ Sidebar is closed (Expand to scroll)';
+            scrollBtn.textContent = '⚠️ Sidebar is closed (Expand to scroll)';
         } else if (scrollBtn) {
             scrollBtn.style.backgroundColor = '';
             scrollBtn.style.color = '';
