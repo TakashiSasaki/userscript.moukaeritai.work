@@ -41,7 +41,11 @@ function updateButtonState(item) {
 
     if (!installedVersion) {
         // Not installed
-        btn.innerHTML = btn.dataset.originalContent || `${DOWNLOAD_ICON} Install`;
+        let label = (btn.dataset.originalContent || '').replace(/Install/i, 'Install');
+        if (serverVersion) {
+            label = label.replace(/Install/i, `Install (v${serverVersion})`);
+        }
+        btn.innerHTML = label;
         btn.classList.remove('installed');
         btn.style.pointerEvents = '';
         btn.style.background = '';
@@ -51,7 +55,9 @@ function updateButtonState(item) {
 
     if (serverVersion && compareVersions(serverVersion, installedVersion) > 0) {
         // Update available
-        btn.innerHTML = `${DOWNLOAD_ICON} Update`;
+        let label = (btn.dataset.originalContent || '').replace(/Install/i, 'Update');
+        label = label.replace(/Update/i, `Update (v${serverVersion})`);
+        btn.innerHTML = label;
         btn.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.6)';
         btn.style.background = '#f39c12';
         btn.classList.remove('installed');
@@ -128,8 +134,12 @@ async function initVersionCheck() {
         const installBtn = item.querySelector('.install-button');
         if (!installBtn) return;
 
+        // Strip hardcoded version from original content if present
+        let cleanHTML = installBtn.innerHTML.replace(/\s*\(v[\d.]+\)/g, '');
+        installBtn.innerHTML = cleanHTML;
+
         // Save original button content
-        installBtn.dataset.originalContent = installBtn.innerHTML;
+        installBtn.dataset.originalContent = cleanHTML;
 
         // Create footer container
         const footer = document.createElement('div');

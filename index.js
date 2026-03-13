@@ -71,7 +71,11 @@ function updateButtonState(item) {
 
     if (!installedVersion) {
         // Case: Not installed
-        installBtn.innerHTML = installBtn.dataset.originalContent || installBtn.innerHTML; // Restore icon+text
+        let label = (installBtn.dataset.originalContent || '').replace(/Install/i, 'Install');
+        if (serverVersion) {
+            label = label.replace(/Install/i, `Install (v${serverVersion})`);
+        }
+        installBtn.innerHTML = label;
         installBtn.style.backgroundColor = ''; // Default green
         installBtn.classList.remove('installed');
         return;
@@ -92,10 +96,9 @@ function updateButtonState(item) {
 
     if (serverVersion && compareVersions(serverVersion, installedVersion) > 0) {
         // Case: Update available
-        installBtn.innerHTML = `
-            <svg height="16" viewBox="0 0 24 24" width="16"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-            Update
-        `;
+        let label = (installBtn.dataset.originalContent || '').replace(/Install/i, 'Update');
+        label = label.replace(/Update/i, `Update (v${serverVersion})`);
+        installBtn.innerHTML = label;
         installBtn.style.backgroundColor = '#f39c12'; // Orange
     } else {
         // Case: Up to date (or server version unknown)
@@ -139,8 +142,12 @@ async function initialize() {
         const installBtn = item.querySelector('.install-button');
         if (!installBtn) return;
 
+        // Strip hardcoded version from original content if present
+        let cleanHTML = installBtn.innerHTML.replace(/\s*\(v[\d.]+\)/g, '');
+        installBtn.innerHTML = cleanHTML;
+
         // Save original button content once
-        installBtn.dataset.originalContent = installBtn.innerHTML;
+        installBtn.dataset.originalContent = cleanHTML;
 
         // Create Footer Container
         const footer = document.createElement('div');
