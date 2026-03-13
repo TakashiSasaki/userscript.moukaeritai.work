@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.23
-// @lastModified 2026-03-10
+// @version      0.2.24
+// @lastModified 2026-03-13
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -131,10 +131,7 @@
 
     // --- UI Injection ---
 
-    const ICONS = {
-        CHECKED: `<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="currentColor"><path d="M280-520l-80-80-120 120 200 200 400-400-120-120-280 280z"/></svg>`,
-        UNCHECKED: `<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200zm0-80h560v-560H200v560z"/></svg>`
-    };
+    // ICONS removed, using emojis.
 
     function injectStyles() {
         if (document.getElementById('gemini-auto-scroll-styles')) return;
@@ -230,44 +227,42 @@
                 flex-direction: column;
                 gap: 6px;
             }
-            #gemini-auto-scroll-panel .control-row {
+            #gemini-auto-scroll-panel .auto-scroll-btn {
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
-            }
-            #gemini-auto-scroll-panel .control-row label {
-                font-weight: 500;
-            }
-            #gemini-auto-scroll-panel .toggle-switch {
-                display: flex;
-                align-items: center;
+                justify-content: center;
                 gap: 8px;
-            }
-            #gemini-auto-scroll-panel .gtc-toggle-btn {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
+                width: 100%;
+                padding: 10px;
                 border: none;
-                background-color: transparent;
+                border-radius: 6px;
+                font-size: 14px;
+                font-weight: bold;
                 cursor: pointer;
-                transition: background-color 0.2s;
-                padding: 4px;
+                transition: all 0.2s ease;
+                font-family: inherit;
+                margin-bottom: 8px;
             }
-            #gemini-auto-scroll-panel .gtc-toggle-btn:hover {
-                background-color: rgba(60, 64, 67, 0.08);
+            #gemini-auto-scroll-panel .auto-scroll-btn.stopped {
+                background-color: #f1f3f4;
+                color: #3c4043;
+                border: 1px solid #dadce0;
             }
-            #gemini-auto-scroll-panel .gtc-icon {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 20px;
-                height: 20px;
+            #gemini-auto-scroll-panel .auto-scroll-btn.stopped:hover {
+                background-color: #e8eaed;
             }
-            #gemini-auto-scroll-panel .gtc-toggle-btn.enabled .gtc-icon { color: #1a73e8; }
-            #gemini-auto-scroll-panel .gtc-toggle-btn.disabled .gtc-icon { color: #5f6368; }
-            #gemini-auto-scroll-panel .gtc-toggle-btn.processing .gtc-icon { animation: gtc-pulse 1.5s infinite ease-in-out; }
-            @keyframes gtc-pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+            #gemini-auto-scroll-panel .auto-scroll-btn.running {
+                background-color: #ceead6;
+                color: #0d652d;
+                border: 1px solid #81c995;
+            }
+            #gemini-auto-scroll-panel .auto-scroll-btn.running:hover {
+                background-color: #a8dab5;
+            }
+            #gemini-auto-scroll-panel .auto-scroll-btn.processing {
+                animation: gtc-pulse 1.5s infinite ease-in-out;
+            }
+            @keyframes gtc-pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
             #gemini-auto-scroll-panel .info-row {
                 display: flex;
@@ -375,20 +370,22 @@
         if (!panel) return;
 
         // Update Auto-Scroll UI
-        const scrollBtn = panel.querySelector('.scroll-toggle');
-        const scrollStatusText = panel.querySelector('.scroll-status');
-        if (scrollBtn && scrollStatusText) {
+        const scrollBtn = panel.querySelector('.auto-scroll-btn');
+        if (scrollBtn) {
             const isScrollEnabled = isAutoScrollEnabled();
-            scrollBtn.className = 'gtc-toggle-btn scroll-toggle ' + (isScrollEnabled ? 'enabled' : 'disabled');
-            if (isProcessing) {
-                scrollBtn.classList.add('processing');
-                scrollStatusText.textContent = 'Scrolling...';
+            scrollBtn.className = 'auto-scroll-btn';
+            
+            if (isScrollEnabled) {
+                scrollBtn.classList.add('running');
+                if (isProcessing) {
+                    scrollBtn.classList.add('processing');
+                    scrollBtn.textContent = '🏃‍♂️ Scrolling (Click to Stop)';
+                } else {
+                    scrollBtn.textContent = '⏹️ Stop Auto-Scroll';
+                }
             } else {
-                scrollStatusText.textContent = isScrollEnabled ? 'ON' : 'OFF';
-            }
-            const scrollIcon = scrollBtn.querySelector('.gtc-icon');
-            if (scrollIcon) {
-                setInnerHTML(scrollIcon, isScrollEnabled ? ICONS.CHECKED : ICONS.UNCHECKED);
+                scrollBtn.classList.add('stopped');
+                scrollBtn.textContent = '▶️ Start Auto-Scroll';
             }
         }
 
@@ -438,13 +435,7 @@
                 <span class="gtc-minimize-btn" title="Minimize">−</span>
             </div>
             <div class="panel-content">
-                <div class="control-row">
-                    <label>Auto-Scroll</label>
-                    <div class="toggle-switch">
-                        <span class="status-text scroll-status">OFF</span>
-                        <button class="gtc-toggle-btn scroll-toggle"><span class="gtc-icon"></span></button>
-                    </div>
-                </div>
+                <button class="auto-scroll-btn">▶️ Start Auto-Scroll</button>
                 <div class="info-row">
                     <span>Loaded: <span class="gtc-badge">0 items</span></span>
                     <span>ID: <span class="conversation-id">N/A</span></span>
@@ -454,7 +445,7 @@
 
         document.body.appendChild(panel);
 
-        panel.querySelector('.scroll-toggle').addEventListener('click', (e) => {
+        panel.querySelector('.auto-scroll-btn').addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             toggleAutoScroll();
