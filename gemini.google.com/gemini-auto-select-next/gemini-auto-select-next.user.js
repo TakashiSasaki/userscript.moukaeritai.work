@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.28
-// @lastModified 2026-03-10
+// @version      0.2.29
+// @lastModified 2026-03-13
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -151,8 +151,8 @@
         if (!item) return null;
         const href = item.getAttribute('href');
         if (href) {
-            const match = href.match(/\/app\/([a-f0-9]{16})/);
-            if (match) return match[1];
+            const match = href.match(/\/(app|gem)\/(?:[a-f0-9]+\/)?([a-f0-9]{16})/);
+            if (match) return match[2];
         }
         const jslog = item.getAttribute('jslog');
         if (jslog) {
@@ -163,8 +163,8 @@
     }
 
     function getConversationIdFromUrl() {
-        const match = window.location.pathname.match(/\/(app|gem)\/([a-f0-9]{16})/);
-        return match ? match[1] : null;
+        const match = window.location.pathname.match(/\/(app|gem)\/(?:[a-f0-9]+\/)?([a-f0-9]{16})/);
+        return match ? match[2] : null;
     }
 
     function findNextConversationId() {
