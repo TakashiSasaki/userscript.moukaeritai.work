@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.25
+// @version      0.2.26
 // @lastModified 2026-03-13
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
@@ -395,6 +395,15 @@
             badge.textContent = `${count} items`;
         }
 
+        if (scrollBtn && isAutoScrollEnabled() && !isSidebarVisible()) {
+            scrollBtn.style.backgroundColor = '#fef7e0'; // Light yellow warning
+            scrollBtn.style.color = '#b05e00';
+            scrollBtn.innerHTML = '⚠️ Sidebar is closed (Expand to scroll)';
+        } else if (scrollBtn) {
+            scrollBtn.style.backgroundColor = '';
+            scrollBtn.style.color = '';
+        }
+
         // Update Summary Text
         const summarySpan = panel.querySelector('.minimized-summary');
         if (summarySpan) {
@@ -572,18 +581,38 @@
         return null;
     }
 
-    function getScrollContainer() {
-        const container = document.querySelector(SELECTORS.SCROLL_CONTAINER);
-        if (container && isElementScrollable(container)) {
-            return container;
+    function isSidebarVisible() {
+        const scrollers = document.querySelectorAll(SELECTORS.SCROLL_CONTAINER);
+        for (const el of scrollers) {
+            const style = window.getComputedStyle(el);
+            if (style.visibility !== 'hidden' && el.offsetWidth > 100) return true;
         }
-        // Fallback
+        return false;
+    }
+
+    function getScrollContainer() {
+        const allScrollers = document.querySelectorAll(SELECTORS.SCROLL_CONTAINER);
+        let bestCandidate = null;
+
+        for (const el of allScrollers) {
+            const style = window.getComputedStyle(el);
+            // Must be visible and have width (sidebar icon bar is ~72px, expanded is > 200px)
+            if (style.visibility !== 'hidden' && el.offsetWidth > 100) {
+                if (isElementScrollable(el)) return el;
+                // If not scrollable yet, keep as candidate if it's the right type
+                bestCandidate = el;
+            }
+        }
+
+        if (bestCandidate) return bestCandidate;
+
+        // Fallback: findScrollableParent from any conversation item
         const anyItem = document.querySelector(SELECTORS.CONVERSATION_ITEM);
         if (anyItem) {
             const scrollParent = findScrollableParent(anyItem);
             if (scrollParent) return scrollParent;
         }
-        return container;
+        return document.querySelector(SELECTORS.SCROLL_CONTAINER);
     }
 
     function isElementScrollable(element) {
@@ -637,6 +666,11 @@
                     toggleAutoScroll();
                     clearInterval(scrollInterval);
                     alert('Gemini Auto-Scroll halted: "Couldn’t load recent chats" error detected. Please reload the page.');
+                    return;
+                }
+
+                if (!isSidebarVisible()) {
+                    // console.debug('[GeminiAutoScroll] Sidebar hidden, skipping scroll tick.');
                     return;
                 }
 
