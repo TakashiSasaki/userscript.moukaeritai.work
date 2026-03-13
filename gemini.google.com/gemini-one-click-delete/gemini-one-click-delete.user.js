@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.2.12
-// @lastModified 2026-03-10
+// @version      0.1.33
+// @lastModified 2026-03-13
 // @description  Adds a 1-click floating button with shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -389,7 +389,7 @@
         }
 
         // Fallback: If header is not available (e.g., search view or no active chat), check sidebar
-        const match = location.pathname.match(/^\/(app|gem)\/([a-f0-9]{16})/);
+        const match = location.pathname.match(/\/(app|gem)\/([a-f0-9]{16})/);
         const conversationId = match ? match[2] : null;
 
         if (conversationId) {
@@ -614,7 +614,7 @@
      * Checks the URL and runs init or cleanup accordingly.
      */
     function checkUrlAndManageScriptState() {
-        const isChatPage = /^\/(app|gem)\/[a-f0-9]{16}/.test(location.pathname);
+        const isChatPage = /^\/(app|gem)\//.test(location.pathname);
 
         if (isChatPage) {
             initMainFunctionality();

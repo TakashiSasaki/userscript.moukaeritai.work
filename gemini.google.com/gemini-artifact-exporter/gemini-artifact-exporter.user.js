@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.3.10
-// @lastModified 2026-03-10
+// @version      0.3.11
+// @lastModified 2026-03-13
 // @description  Export Gemini "Article" artifacts to Google Docs. Supports batch export, deep scanning of chat history, and separate sidebar scanning.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.xom/TakashiSasaki
@@ -64,7 +64,7 @@
     log(`Script loaded on ${window.location.href} (readyState=${document.readyState})`);
 
     function isConversationPage() {
-        return /\/app\/[a-z0-9]+/.test(window.location.pathname);
+        return /^\/(app|gem)\//.test(window.location.pathname);
     }
 
     function waitForElement(selector, context = document, timeout = 5000) {

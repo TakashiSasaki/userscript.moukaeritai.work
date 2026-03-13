@@ -163,7 +163,7 @@
     }
 
     function getConversationIdFromUrl() {
-        const match = window.location.pathname.match(/\/app\/([a-f0-9]{16})/);
+        const match = window.location.pathname.match(/\/(app|gem)\/([a-f0-9]{16})/);
         return match ? match[1] : null;
     }
 
@@ -338,7 +338,7 @@
     }
 
     function checkUrl() {
-        if (/^\/app/.test(location.pathname)) init();
+        if (/^\/(app|gem)\//.test(location.pathname)) init();
         else {
             isInitialized = false;
             uiObserver.disconnect();

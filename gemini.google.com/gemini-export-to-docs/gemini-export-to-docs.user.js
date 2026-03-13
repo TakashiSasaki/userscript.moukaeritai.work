@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.18
+// @version      0.4.19
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
-// @lastModified 2026-03-12
+// @lastModified 2026-03-13
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
@@ -1103,7 +1103,7 @@
      * Checks the URL and runs init or cleanup accordingly.
      */
     function checkUrlAndManageScriptState(prevUrl, currentUrl) {
-        const isChatPage = /^\/(app|gem)\/[a-f0-9]{16}/.test(location.pathname);
+        const isChatPage = /^\/(app|gem)\//.test(location.pathname);
 
         // Force a UI reset if transitioning between different pages (to clear "Deleting..." states etc.)
         if (prevUrl && currentUrl && prevUrl !== currentUrl && isInitialized) {

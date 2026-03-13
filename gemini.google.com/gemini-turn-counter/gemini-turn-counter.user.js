@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.29
-// @lastModified 2026-03-02
+// @version      0.4.21
+// @lastModified 2026-03-13
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -588,7 +588,7 @@
      * Checks the URL and runs init or cleanup accordingly.
      */
     function checkUrlAndManageScriptState() {
-        const isChatPage = /^\/(app|gem)\/[a-f0-9]{16}/.test(location.pathname);
+        const isChatPage = /^\/(app|gem)\//.test(location.pathname);
 
         if (isChatPage) {
             initMainFunctionality();
