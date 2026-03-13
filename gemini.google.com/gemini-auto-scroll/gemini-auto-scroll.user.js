@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.28
+// @version      0.2.29
 // @lastModified 2026-03-13
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
@@ -352,8 +352,8 @@
         // Strategy 1: href (Most reliable)
         const href = item.getAttribute('href');
         if (href) {
-            const match = href.match(/\/app\/([a-f0-9]{16})/);
-            if (match) return match[1];
+            const match = href.match(/\/(app|gem)\/(?:[a-f0-9]+\/)?([a-f0-9]{16})/);
+            if (match) return match[2];
         }
 
         // Strategy 2: jslog fallback
@@ -576,8 +576,8 @@
     // --- Utility Functions ---
 
     function getConversationIdFromUrl() {
-        const match = window.location.pathname.match(/\/(app|gem)\/([a-f0-9]{16})/);
-        return match ? (match[2] || match[1]) : null;
+        const match = window.location.pathname.match(/\/(app|gem)\/(?:[a-f0-9]+\/)?([a-f0-9]{16})/);
+        return match ? match[2] : null;
     }
 
     function findScrollableParent(element) {
