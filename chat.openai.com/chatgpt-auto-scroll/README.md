@@ -45,10 +45,9 @@ ChatGPTのサイドバーにある会話履歴リストを自動的にスクロ�
     *   `userscript-check-installed`: ページロード時に発火し、スクリプトの存在を通知します。
     *   `userscript-ping`: ポータルサイトからの問い合わせに応答します。
 
-## 動作環境
-
-*   Tampermonkey などのユーザースクリプトマネージャーが必要です。
-*   対象ドメイン: `chatgpt.com` およびポータルサイト関連ドメイン。
+*   Target Domain: `chatgpt.com` and portal domains.
+*   Required: Tampermonkey or similar.
+*   Features: Position persistence, adjustable interval.
 
 ## 著者
 
