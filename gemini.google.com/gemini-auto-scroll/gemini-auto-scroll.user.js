@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.26
+// @version      0.2.27
 // @lastModified 2026-03-13
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
@@ -143,160 +143,171 @@
                 top: 20px;
                 right: 20px;
                 z-index: 10000;
-                background-color: rgba(255, 255, 255, 0.9);
-                border: 1px solid #dadce0;
-                border-radius: 8px;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-                font-family: 'Google Sans', sans-serif;
-                font-size: 14px;
-                color: #3c4043;
-                width: 260px;
-                backdrop-filter: blur(8px);
+                background: rgba(255, 255, 255, 0.7);
+                backdrop-filter: blur(12px) saturate(180%);
+                -webkit-backdrop-filter: blur(12px) saturate(180%);
+                border: 1px solid rgba(209, 213, 219, 0.3);
+                border-radius: 24px;
+                box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+                font-family: 'Outfit', 'Google Sans', sans-serif;
+                padding: 12px;
                 display: none; /* Initially hidden */
+                flex-direction: column;
+                gap: 8px;
+                user-select: none;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                min-width: 200px;
+            }
+            #gemini-auto-scroll-panel:hover {
+                background: rgba(255, 255, 255, 0.85);
+                border-color: rgba(209, 213, 219, 0.5);
+                box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.25);
             }
             #gemini-auto-scroll-panel.ready {
-                display: block;
+                display: flex;
             }
             #gemini-auto-scroll-panel.minimized {
-                width: auto;
-                background-color: #c2e7ff; /* Light blue */
-                color: #001d35; /* Dark text */
-                border: 1px solid #c2e7ff;
-                padding: 0 12px;
-                height: 32px;
-                display: flex;
-                align-items: center;
+                min-width: unset;
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                padding: 0;
                 justify-content: center;
+                align-items: center;
+                overflow: hidden;
                 cursor: pointer;
-                font-weight: 500;
-                font-size: 13px;
-                white-space: nowrap;
-                backdrop-filter: none;
             }
-            #gemini-auto-scroll-panel.minimized .panel-header, 
-            #gemini-auto-scroll-panel.minimized .panel-content {
+            #gemini-auto-scroll-panel.minimized .panel-content,
+            #gemini-auto-scroll-panel.minimized .widget-header {
                 display: none;
             }
             #gemini-auto-scroll-panel .minimized-summary {
                 display: none;
-                user-select: none;
+                font-size: 20px;
+                line-height: 1;
             }
             #gemini-auto-scroll-panel.minimized .minimized-summary {
                 display: block;
             }
-            #gemini-auto-scroll-panel .panel-header {
-                padding: 6px 10px;
-                border-bottom: 1px solid #e0e0e0;
-                cursor: move;
-                user-select: none;
+
+            .widget-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                background-color: rgba(241, 243, 244, 0.7);
+                padding: 0 4px;
+                cursor: move;
             }
-            #gemini-auto-scroll-panel .panel-header h1 {
-                font-size: 14px;
-                font-weight: 500;
+            .widget-header h1 {
+                font-size: 13px;
+                font-weight: 600;
                 margin: 0;
-                line-height: 1;
+                color: #1a73e8;
+                letter-spacing: 0.3px;
             }
-            #gemini-auto-scroll-panel .panel-header .version-badge {
-                font-size: 11px;
-                background-color: #e8f0fe;
-                color: #1967d2;
-                padding: 2px 6px;
-                border-radius: 4px;
-            }
-            .gtc-minimize-btn {
-                cursor: pointer;
-                padding: 0 6px;
-                border-radius: 4px;
-                user-select: none;
-                transition: background 0.2s;
-                font-size: 16px;
-                line-height: 1;
+            .version-badge {
+                font-size: 10px;
                 color: #5f6368;
-                font-weight: bold;
+                opacity: 0.7;
             }
-            .gtc-minimize-btn:hover {
-                background: rgba(0,0,0,0.1);
-            }
-            #gemini-auto-scroll-panel .panel-content {
-                padding: 8px 10px;
+
+            .panel-content {
                 display: flex;
                 flex-direction: column;
-                gap: 6px;
+                gap: 8px;
             }
-            #gemini-auto-scroll-panel .auto-scroll-btn {
+
+            .auto-scroll-btn {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 8px;
-                width: 100%;
-                padding: 10px;
+                gap: 10px;
+                padding: 10px 16px;
                 border: none;
-                border-radius: 6px;
+                border-radius: 16px;
                 font-size: 14px;
-                font-weight: bold;
+                font-weight: 600;
                 cursor: pointer;
                 transition: all 0.2s ease;
                 font-family: inherit;
-                margin-bottom: 8px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.05);
             }
-            #gemini-auto-scroll-panel .auto-scroll-btn.stopped {
-                background-color: #f1f3f4;
+            .auto-scroll-btn.stopped {
+                background: #ffffff;
                 color: #3c4043;
                 border: 1px solid #dadce0;
             }
-            #gemini-auto-scroll-panel .auto-scroll-btn.stopped:hover {
-                background-color: #e8eaed;
+            .auto-scroll-btn.stopped:hover {
+                background: #f8f9fa;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             }
-            #gemini-auto-scroll-panel .auto-scroll-btn.running {
-                background-color: #ceead6;
-                color: #0d652d;
-                border: 1px solid #81c995;
+            .auto-scroll-btn.running {
+                background: #e6f4ea;
+                color: #137333;
+                border: 1px solid #ceead6;
             }
-            #gemini-auto-scroll-panel .auto-scroll-btn.running:hover {
-                background-color: #a8dab5;
+            .auto-scroll-btn.running:hover {
+                background: #d2e3d8;
+                transform: translateY(-1px);
             }
-            #gemini-auto-scroll-panel .auto-scroll-btn.processing {
+            .auto-scroll-btn.processing {
                 animation: gtc-pulse 1.5s infinite ease-in-out;
             }
-            @keyframes gtc-pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
-            #gemini-auto-scroll-panel .info-row {
+            .stats-row {
                 display: flex;
                 justify-content: space-between;
-                font-size: 12px;
+                align-items: center;
+                font-size: 11px;
                 color: #5f6368;
-                border-top: 1px solid #e0e0e0;
-                padding-top: 6px;
-                margin-top: 2px;
+                padding: 0 6px;
+                font-weight: 500;
             }
-             #gemini-auto-scroll-panel .info-row .gtc-badge {
-                font-weight: bold;
-                color: #1e8e3e;
+            .stat-value {
+                color: #1a73e8;
+                font-weight: 600;
             }
+
+            .gtc-minimize-btn {
+                cursor: pointer;
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                transition: background 0.2s;
+                color: #5f6368;
+                font-size: 18px;
+            }
+            .gtc-minimize-btn:hover {
+                background: rgba(0,0,0,0.05);
+            }
+
+            @keyframes gtc-pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(0.98); } 100% { opacity: 1; transform: scale(1); } }
+            
             .gtc-conversation-index {
                 position: absolute;
                 top: 6px;
                 left: 6px;
-                background-color: rgba(0, 0, 0, 0.7);
+                background-color: rgba(26, 115, 232, 0.85);
                 color: #fff;
                 font-size: 10px;
-                padding: 0 4px;
-                border-radius: 4px;
+                padding: 1px 5px;
+                border-radius: 6px;
                 z-index: 10;
                 pointer-events: none;
-                font-family: monospace;
+                font-family: 'Outfit', monospace;
+                font-weight: 600;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             }
 
             /* --- Custom Scrollbar Styles --- */
-            ::-webkit-scrollbar { width: 16px !important; height: 16px !important; background-color: #f0f0f0; display: block !important; }
-            ::-webkit-scrollbar-track { background: #e0e0e0; border-left: 1px solid #ccc; }
-            ::-webkit-scrollbar-thumb { background-color: #ff6f00; border-radius: 4px; border: 2px solid #e0e0e0; }
-            ::-webkit-scrollbar-thumb:hover { background-color: #e65100; }
-            conversations-list, .conversations-list, infinite-scroller { scrollbar-color: #ff6f00 #e0e0e0 !important; scrollbar-width: auto !important; }
+            ::-webkit-scrollbar { width: 14px !important; height: 14px !important; background-color: transparent; display: block !important; }
+            ::-webkit-scrollbar-track { background: rgba(0,0,0,0.03); border-radius: 10px; }
+            ::-webkit-scrollbar-thumb { background-color: #4e95ff; border-radius: 10px; border: 3px solid rgba(255,255,255,0.8); }
+            ::-webkit-scrollbar-thumb:hover { background-color: #3b82f6; }
+            conversations-list, .conversations-list, infinite-scroller { scrollbar-color: #4e95ff transparent !important; scrollbar-width: thin !important; }
         `;
         document.head.appendChild(style);
     }
@@ -435,19 +446,20 @@
         panel.id = 'gemini-auto-scroll-panel';
 
         setInnerHTML(panel, `
-            <div class="minimized-summary">Loading...</div>
-            <div class="panel-header">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <h1>${GM_info.script.name}</h1>
+            <div class="minimized-summary" title="Double click to expand">📜</div>
+            <div class="widget-header">
+                <div style="display:flex; align-items:baseline; gap:6px;">
+                    <h1>Auto-Scroll</h1>
                     <span class="version-badge">v${GM_info.script.version}</span>
                 </div>
                 <span class="gtc-minimize-btn" title="Minimize">−</span>
             </div>
             <div class="panel-content">
                 <button class="auto-scroll-btn">▶️ Start Auto-Scroll</button>
-                <div class="info-row">
-                    <span>Loaded: <span class="gtc-badge">0 items</span></span>
-                    <span>ID: <span class="conversation-id">N/A</span></span>
+                <div class="stats-row">
+                    <span>Loaded: <span class="stat-value gtc-badge">0 items</span></span>
+                    <span style="opacity: 0.5">|</span>
+                    <span>ID: <span class="stat-value conversation-id">N/A</span></span>
                 </div>
             </div>
         `);
@@ -476,7 +488,7 @@
             });
         }
 
-        const header = panel.querySelector('.panel-header');
+        const header = panel.querySelector('.widget-header');
         const summary = panel.querySelector('.minimized-summary');
         let isDragging = false;
         let hasDragged = false;
