@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.29
+// @version      0.2.30
 // @lastModified 2026-03-13
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
@@ -112,6 +112,13 @@
         updatePanelUI();
         if (newState) {
             attemptScrollToConversation();
+        } else {
+            if (scrollInterval) {
+                clearInterval(scrollInterval);
+                scrollInterval = null;
+            }
+            isProcessing = false;
+            updatePanelUI();
         }
     }
 
@@ -670,6 +677,9 @@
             scrollInterval = setInterval(() => {
                 if (!isAutoScrollEnabled()) {
                     clearInterval(scrollInterval);
+                    scrollInterval = null;
+                    isProcessing = false;
+                    updatePanelUI();
                     return;
                 }
 
