@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.19
+// @version      0.4.20
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
-// @lastModified 2026-03-13
+// @lastModified 2026-03-14
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
@@ -599,19 +599,37 @@
     function extractUrls(elOrText) {
         if (!elOrText) return [];
         const text = typeof elOrText === 'string' ? elOrText : (elOrText.textContent || '');
+        // Initial broad regex for URL-like strings
         const urlRegex = /(https?:\/\/[^\s"'<>()]+)/gi;
-        const matches = text.match(urlRegex) || [];
+        const rawMatches = text.match(urlRegex) || [];
+
+        const cleanUrl = (url) => {
+            if (!url) return '';
+            // 1. Multibyte stop: Truncate at the first multibyte character
+            // Gemini typically outputs ASCII-only URLs.
+            const multibyteIndex = url.search(/[^\x00-\x7F]/);
+            if (multibyteIndex !== -1) {
+                url = url.substring(0, multibyteIndex);
+            }
+
+            // 2. Trailing punctuation trim: Truncate common symbols that might be appended by mistake or as sentence delimiters
+            // We repeatedly trim from the end characters that are highly unlikely to be the TRUE end of a URL
+            // in the context of it being inside a Gemini response text block.
+            return url.replace(/[\]\),.;!?]+$/, '');
+        };
+
+        const matches = rawMatches.map(cleanUrl).filter(url => url.length > 10);
 
         if (typeof elOrText === 'object' && elOrText.querySelectorAll) {
             const anchors = elOrText.querySelectorAll('a[href]');
             anchors.forEach(a => {
                 if (a.href && a.href.startsWith('http')) {
-                    matches.push(a.href);
+                    matches.push(cleanUrl(a.href));
                 }
             });
         }
-        // Return unique URLs
-        return [...new Set(matches)];
+        // Return unique, non-empty URLs
+        return [...new Set(matches.filter(Boolean))];
     }
 
     function extractYoutubeVideoId(url) {
@@ -659,6 +677,13 @@
                                 // Comparison (Case-insensitive to handle Https:// vs https://)
                                 if (userUrls[0].toLowerCase() === botUrl.toLowerCase()) {
                                     matchFound = true;
+                                    break;
+                                }
+                                // Flexible comparison: If the response URL starts with or contains the prompt URL
+                                // This handles cases where our truncation might have been slightly different
+                                if (botUrl.toLowerCase().includes(userUrls[0].toLowerCase())) {
+                                    matchFound = true;
+                                    console.log(`[Gemini 1-Turn Auto] Match found via inclusion: ${userUrls[0]}`);
                                     break;
                                 }
                                 if (userYtId) {
