@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.20
+// @version      0.4.21
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-14
 // @author       Takashi Sasaki
@@ -40,14 +40,11 @@
     // Removed initial URL check as it will be handled dynamically
 
     // svg icons
-    // svg icons
-    // svg icons
     const DOCS_ICON_PATH = "M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z";
     const CHECK_ICON_PATH = "M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z";
 
     // --- Selectors (based on provided samples) ---
     const SELECTORS = {
-        // Turn selectors
         // Turn selectors
         turnContainer: 'model-response, response-container, .response-container', // Broad container to watch
         aiTurnContainer: 'model-response', // Specifically AI response tags
@@ -71,19 +68,6 @@
      */
     function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    /**
-     * Waits for an element to appear in the DOM
-     */
-    async function waitForElement(selector, timeout = 5000, context = document) {
-        const startTime = Date.now();
-        while (Date.now() - startTime < timeout) {
-            const el = context.querySelector(selector);
-            if (el) return el;
-            await sleep(100);
-        }
-        return null;
     }
 
     /**
@@ -322,6 +306,19 @@
 
         svg.appendChild(path);
         return svg;
+    }
+
+    /**
+     * Helper: Sets the content of the execute button (icon + text)
+     */
+    function setExecBtnContent(btn, text) {
+        if (!btn) return;
+        btn.textContent = ''; // Clear existing
+        const iconSpan = document.createElement('span');
+        iconSpan.style.display = 'flex';
+        iconSpan.appendChild(createIconElement(DOCS_ICON_PATH));
+        btn.appendChild(iconSpan);
+        btn.appendChild(document.createTextNode(text));
     }
 
     /**
@@ -642,12 +639,10 @@
         const turns = document.querySelectorAll(SELECTORS.aiTurnContainer);
         // Note: Gemini UI can be slow to update styles/classes. 
         // We'll count anything that looks like a model response.
-        const activeTurns = turns;
-
-        console.log(`[Gemini 1-Turn] Found ${activeTurns.length} active AI turns using ${SELECTORS.aiTurnContainer}`);
+        console.log(`[Gemini 1-Turn] Found ${turns.length} active AI turns using ${SELECTORS.aiTurnContainer}`);
 
         // A 1-turn conversation usually has exactly 1 model-response
-        const isOneTurn = activeTurns.length === 1;
+        const isOneTurn = turns.length === 1;
 
         let panel = document.getElementById('gemini-one-turn-panel');
         if (isOneTurn) {
@@ -717,12 +712,7 @@
                                         const deleteCheckbox = document.getElementById('gemini-delete-checkbox');
                                         const willDelete = deleteCheckbox ? deleteCheckbox.checked : GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
 
-                                        execBtn.textContent = ''; // Safely clear children (avoids TrustedHTML issue)
-                                        const iconSpan = document.createElement('span');
-                                        iconSpan.style.display = 'flex';
-                                        iconSpan.appendChild(createIconElement(DOCS_ICON_PATH));
-                                        execBtn.appendChild(iconSpan);
-                                        execBtn.appendChild(document.createTextNode(willDelete ? 'Export & Delete' : 'Export'));
+                                        setExecBtnContent(execBtn, willDelete ? 'Export & Delete' : 'Export');
 
                                         execBtn.onclick = originalOnClick;
                                         console.log('[Gemini 1-Turn Auto] Auto-export cancelled by user.');
@@ -737,11 +727,12 @@
                                     const updateButtonUI = () => {
                                         execBtn.style.backgroundColor = '#fbbc04'; // yellow
                                         execBtn.style.color = '#333';
-                                        execBtn.textContent = `Cancel Auto (${countdown}s)`;
+                                        execBtn.textContent = countdownPaused ? `Auto Paused (${countdown}s)` : `Cancel Auto (${countdown}s)`;
                                     };
-                                    updateButtonUI();
 
                                     autoExportTimerId = setInterval(() => {
+                                        if (countdownPaused) return; // Requirement: Hover pause
+
                                         countdown--;
                                         if (countdown <= 0) {
                                             if (autoExportTimerId) clearInterval(autoExportTimerId);
@@ -752,6 +743,7 @@
                                             updateButtonUI();
                                         }
                                     }, 1000);
+                                    updateButtonUI(); // Initial call
                                 } else {
                                     autoExportTimerId = setTimeout(() => {
                                         autoExportTimerId = null;
@@ -830,12 +822,7 @@
                 // Need to re-read the exact active state instead of hardcoded
                 const deleteCheckbox = document.getElementById('gemini-auto-delete-cb');
                 if (deleteCheckbox) {
-                    execBtn.textContent = '';
-                    const iconSpan = document.createElement('span');
-                    iconSpan.style.display = 'flex';
-                    iconSpan.appendChild(createIconElement(DOCS_ICON_PATH));
-                    execBtn.appendChild(iconSpan);
-                    execBtn.appendChild(document.createTextNode(deleteCheckbox.checked ? 'Export & Delete' : 'Export'));
+                    setExecBtnContent(execBtn, deleteCheckbox.checked ? 'Export & Delete' : 'Export');
                 } else {
                     execBtn.textContent = 'Export';
                 }
@@ -895,6 +882,10 @@
                 GM_setValue('gemini-export-panel-pos', { top: panel.style.top, left: panel.style.left });
             }
         });
+
+        // Hover pause logic
+        panel.addEventListener('mouseenter', () => { countdownPaused = true; });
+        panel.addEventListener('mouseleave', () => { countdownPaused = false; });
 
         const controlsCol = document.createElement('div');
         controlsCol.className = 'one-turn-controls-col';
@@ -961,14 +952,7 @@
         const execBtn = document.createElement('button');
         execBtn.id = 'gemini-btn-one-turn-exec';
 
-        const updateBtnText = () => {
-            execBtn.textContent = '';
-            const iconSpan = document.createElement('span');
-            iconSpan.style.display = 'flex';
-            iconSpan.appendChild(createIconElement(DOCS_ICON_PATH));
-            execBtn.appendChild(iconSpan);
-            execBtn.appendChild(document.createTextNode(deleteCheckbox.checked ? 'Export & Delete' : 'Export'));
-        };
+        const updateBtnText = () => setExecBtnContent(execBtn, deleteCheckbox.checked ? 'Export & Delete' : 'Export');
         updateBtnText();
 
         deleteCheckbox.onchange = () => {
@@ -1036,25 +1020,7 @@
     let keydownListener = null;
     let styleElement = null;
     let isInitialized = false;
-
-    let policy;
-    if (window.trustedTypes && window.trustedTypes.createPolicy) {
-        try {
-            policy = window.trustedTypes.createPolicy('geminiExportDocs_' + Math.random().toString(36).substr(2, 9), {
-                createHTML: (string) => string
-            });
-        } catch (e) {
-            console.error('Failed to create TrustedTypes policy', e);
-        }
-    }
-
-    function setInnerHTML(element, html) {
-        if (policy) {
-            element.innerHTML = policy.createHTML(html);
-        } else {
-            element.innerHTML = html;
-        }
-    }
+    let countdownPaused = false;
 
     /**
      * Main initialization for the script's features.
