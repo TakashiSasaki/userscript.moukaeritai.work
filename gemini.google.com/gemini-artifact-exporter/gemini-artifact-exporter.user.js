@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.3.11
-// @lastModified 2026-03-13
+// @version      0.3.12
+// @lastModified 2026-03-14
 // @description  Export Gemini "Article" artifacts to Google Docs. Supports batch export, deep scanning of chat history, and separate sidebar scanning.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.xom/TakashiSasaki
@@ -47,12 +47,12 @@
         SIDEBAR_CHIP: 'button.container:has(mat-icon[fonticon="article"])',
         CHIP_TITLE: 'div:nth-child(2) > div:first-child',
 
-        SHARE_BUTTON: 'extended-response-panel share-button button, extended-response-panel button:has(mat-icon[fonticon="share"])',
-        EXPORT_BUTTON: 'button[data-test-id="export-to-docs-button"], .mat-mdc-menu-item:has(mat-icon[fonticon="docs"])',
-        MENU_PANEL: '.mat-mdc-menu-panel',
-        CANVAS_CLOSE_BUTTON: 'button[data-test-id="close-button"]',
-        CHAT_ARTIFACT_CONTAINER: 'div.container.clickable:has([data-test-id="artifact-text"])',
-        CHAT_ARTIFACT_TITLE: '[data-test-id="artifact-text"]'
+        SHARE_BUTTON: 'extended-response-panel share-button button, extended-response-panel button:has(mat-icon[fonticon="share"]), button.export-menu-button',
+        EXPORT_BUTTON: 'button[data-test-id="export-to-docs-button"], .mat-mdc-menu-item:has(mat-icon[fonticon="docs"]), button[aria-label*="Google ドキュメントにエクスポート"], button[aria-label*="Export to Google Docs"]',
+        MENU_PANEL: '.mat-mdc-menu-panel, mat-menu-panel',
+        CANVAS_CLOSE_BUTTON: 'button[data-test-id="close-button"], button.close-button',
+        CHAT_ARTIFACT_CONTAINER: 'div.container.clickable:has([data-test-id="artifact-text"]), deep-research-entry-chip-content',
+        CHAT_ARTIFACT_TITLE: '[data-test-id="artifact-text"], span'
     };
 
     function log(msg) {
