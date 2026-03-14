@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.29
-// @lastModified 2026-03-13
+// @version      0.2.30
+// @lastModified 2026-03-14
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -189,8 +189,8 @@
         return null;
     }
 
-    function selectNextConversation(retryCount = 0) {
-        if (!isAutoSwitchEnabled()) return;
+    function selectNextConversation(retryCount = 0, force = false) {
+        if (!force && !isAutoSwitchEnabled()) return;
         const nextId = findNextConversationId();
         if (nextId) {
             const items = getConversationItems();
@@ -198,7 +198,7 @@
             if (target) {
                 target.click();
             } else if (retryCount < 5) {
-                setTimeout(() => selectNextConversation(retryCount + 1), 200);
+                setTimeout(() => selectNextConversation(retryCount + 1, force), 200);
             } else {
                 window.location.href = `https://gemini.google.com/app/${nextId}`;
             }
@@ -243,7 +243,7 @@
         
         panel.querySelector('.manual-next-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            selectNextConversation(0);
+            selectNextConversation(0, true);
         });
 
         // Position persistence
@@ -335,6 +335,12 @@
             }
             updatePanelUI();
         }, 2000);
+
+        // Custom event interface: allow other userscripts to request "select next"
+        window.addEventListener('gemini-auto-select-next:request-next', () => {
+            console.log('[GeminiAutoSelectNext] Received request-next event from another script.');
+            selectNextConversation(0, true);
+        });
     }
 
     function checkUrl() {
