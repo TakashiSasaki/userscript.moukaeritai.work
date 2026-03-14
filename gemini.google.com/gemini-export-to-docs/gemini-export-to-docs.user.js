@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.21
+// @version      0.4.22
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-14
 // @author       Takashi Sasaki
@@ -577,6 +577,7 @@
     const AUTO_URL_DELAY_KEY = 'gemini-export-auto-url-delay';
     const AUTO_URL_TOGGLE_KEY = 'gemini-export-auto-url-toggle';
     const AUTO_DELETE_TOGGLE_KEY = 'gemini-export-auto-delete-toggle';
+    const AUTO_SKIP_REMAINING_KEY = 'gemini-export-auto-skip-remaining';
 
     // Simple debounce function to reduce polling frequency on DOM mutations
     function debounce(func, wait) {
@@ -749,6 +750,24 @@
                                         autoExportTimerId = null;
                                         runExportProcess(0, true, true);
                                     }, countdown * 1000);
+                                }
+                            } else {
+                                // No match logic: optional auto-skip
+                                let remaining = parseInt(GM_getValue(AUTO_SKIP_REMAINING_KEY, 0), 10);
+                                if (isNaN(remaining)) remaining = 0;
+
+                                if (remaining > 0) {
+                                    autoExportTriggered = true; // Prevent re-trigger on this page
+                                    remaining--;
+                                    GM_setValue(AUTO_SKIP_REMAINING_KEY, remaining);
+                                    console.log(`[Gemini 1-Turn Auto] No match found. Auto-skipping to next. Remaining skips: ${remaining}`);
+                                    
+                                    // Update UI if panel exists
+                                    const skipInput = document.getElementById('gemini-auto-skip-input');
+                                    if (skipInput) skipInput.value = remaining;
+
+                                    // Dispatch custom event to Auto-Select Next script
+                                    window.dispatchEvent(new CustomEvent('gemini-auto-select-next:request-next'));
                                 }
                             }
                         }
@@ -934,6 +953,23 @@
         autoDelayInput.onchange = () => GM_setValue(AUTO_URL_DELAY_KEY, parseInt(autoDelayInput.value, 10) || 0);
         autoWaitLabel.appendChild(autoDelayInput);
 
+        const skipLabel = document.createElement('label');
+        skipLabel.style.marginLeft = '4px';
+        const skipTitle = document.createElement('span');
+        skipTitle.textContent = 'Skip(N):';
+        skipTitle.style.fontSize = '12px';
+        skipTitle.style.opacity = '0.7';
+        skipTitle.style.marginRight = '4px';
+        skipLabel.appendChild(skipTitle);
+        const skipInput = document.createElement('input');
+        skipInput.id = 'gemini-auto-skip-input';
+        skipInput.type = 'number';
+        skipInput.min = '0';
+        skipInput.style.width = '32px';
+        skipInput.value = GM_getValue(AUTO_SKIP_REMAINING_KEY, 0);
+        skipInput.onchange = () => GM_setValue(AUTO_SKIP_REMAINING_KEY, parseInt(skipInput.value, 10) || 0);
+        skipLabel.appendChild(skipInput);
+
         const autoEnableLabel = document.createElement('label');
         const autoEnableCheckbox = document.createElement('input');
         autoEnableCheckbox.type = 'checkbox';
@@ -943,6 +979,7 @@
         autoEnableLabel.appendChild(document.createTextNode('Enable'));
 
         autoRow.appendChild(autoWaitLabel);
+        autoRow.appendChild(skipLabel);
         autoRow.appendChild(autoEnableLabel);
 
         controlsCol.appendChild(manualRow);
