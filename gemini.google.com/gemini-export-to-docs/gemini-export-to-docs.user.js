@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.22
+// @version      0.4.23
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-14
 // @author       Takashi Sasaki
@@ -756,18 +756,26 @@
                                 let remaining = parseInt(GM_getValue(AUTO_SKIP_REMAINING_KEY, 0), 10);
                                 if (isNaN(remaining)) remaining = 0;
 
+                                console.log(`[Gemini 1-Turn Auto] No match found. Checking auto-skip... (Remaining skips: ${remaining}, autoExportTriggered: ${autoExportTriggered})`);
+
                                 if (remaining > 0) {
                                     autoExportTriggered = true; // Prevent re-trigger on this page
                                     remaining--;
                                     GM_setValue(AUTO_SKIP_REMAINING_KEY, remaining);
-                                    console.log(`[Gemini 1-Turn Auto] No match found. Auto-skipping to next. Remaining skips: ${remaining}`);
+                                    console.log(`[Gemini 1-Turn Auto] Auto-skipping to next. Decrementing remaining to: ${remaining}`);
                                     
                                     // Update UI if panel exists
                                     const skipInput = document.getElementById('gemini-auto-skip-input');
-                                    if (skipInput) skipInput.value = remaining;
+                                    if (skipInput) {
+                                        console.log(`[Gemini 1-Turn Auto] Updating UI skip input value to: ${remaining}`);
+                                        skipInput.value = remaining;
+                                    }
 
                                     // Dispatch custom event to Auto-Select Next script
+                                    console.log(`[Gemini 1-Turn Auto] Dispatching custom event: gemini-auto-select-next:request-next`);
                                     window.dispatchEvent(new CustomEvent('gemini-auto-select-next:request-next'));
+                                } else {
+                                    console.log(`[Gemini 1-Turn Auto] No skips remaining or skip count is 0. Staying on current conversation.`);
                                 }
                             }
                         }

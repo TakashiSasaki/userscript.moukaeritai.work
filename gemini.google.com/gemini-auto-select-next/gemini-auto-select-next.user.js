@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.30
+// @version      0.2.31
 // @lastModified 2026-03-14
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
@@ -190,18 +190,27 @@
     }
 
     function selectNextConversation(retryCount = 0, force = false) {
-        if (!force && !isAutoSwitchEnabled()) return;
+        if (!force && !isAutoSwitchEnabled()) {
+            console.log('[GeminiAutoSelectNext] selectNextConversation called but ignored (force=false, auto=off)');
+            return;
+        }
         const nextId = findNextConversationId();
+        console.log(`[GeminiAutoSelectNext] selectNextConversation logic start. force: ${force}, retry: ${retryCount}, foundNextId: ${nextId}`);
         if (nextId) {
             const items = getConversationItems();
             const target = items.find(item => getIdFromItem(item) === nextId);
             if (target) {
+                console.log(`[GeminiAutoSelectNext] Targeted conversation found in DOM. Clicking...`);
                 target.click();
             } else if (retryCount < 5) {
+                console.log(`[GeminiAutoSelectNext] Target nextId not in DOM (virtual scroll?). Retrying ${retryCount + 1}/5...`);
                 setTimeout(() => selectNextConversation(retryCount + 1, force), 200);
             } else {
+                console.log(`[GeminiAutoSelectNext] Target nextId still not in DOM after retries. Redirecting window to: /app/${nextId}`);
                 window.location.href = `https://gemini.google.com/app/${nextId}`;
             }
+        } else {
+            console.log('[GeminiAutoSelectNext] No next conversation found to skip to.');
         }
     }
 
@@ -338,7 +347,7 @@
 
         // Custom event interface: allow other userscripts to request "select next"
         window.addEventListener('gemini-auto-select-next:request-next', () => {
-            console.log('[GeminiAutoSelectNext] Received request-next event from another script.');
+            console.log('[GeminiAutoSelectNext] EVENT RECEIVED: gemini-auto-select-next:request-next');
             selectNextConversation(0, true);
         });
     }
