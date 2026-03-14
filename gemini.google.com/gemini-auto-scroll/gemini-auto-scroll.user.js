@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.30
-// @lastModified 2026-03-13
+// @version      0.2.31
+// @lastModified 2026-03-14
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -62,7 +62,9 @@
         CONVERSATION_ITEM: 'a.conversation, a[data-test-id="conversation"]',
         SPINNER: 'mat-progress-spinner[data-test-id="loading-history-spinner"]',
         SCROLL_CONTAINER: 'nav infinite-scroller, infinite-scroller',
-        ERROR_SNACKBAR: 'mat-snack-bar-container'
+        ERROR_SNACKBAR: 'mat-snack-bar-container',
+        SIDEBAR_TOGGLE: 'button[data-test-id="side-nav-menu-button"]',
+        CHAT_APP: 'chat-app'
     };
 
     const CONSTANTS = {
@@ -110,8 +112,22 @@
         const newState = !isAutoScrollEnabled();
         localStorage.setItem(CONSTANTS.STORAGE_KEY, newState);
         updatePanelUI();
+
         if (newState) {
-            attemptScrollToConversation();
+            // Requirement: If starting, ensure the sidebar is expanded.
+            if (!isSidebarVisible()) {
+                console.debug('[GeminiAutoScroll] Sidebar is closed. Expanding sidebar...');
+                const toggle = document.querySelector(SELECTORS.SIDEBAR_TOGGLE);
+                if (toggle) {
+                    toggle.click();
+                    // Wait slightly for DOM transition
+                    setTimeout(attemptScrollToConversation, 500);
+                } else {
+                    attemptScrollToConversation();
+                }
+            } else {
+                attemptScrollToConversation();
+            }
         } else {
             if (scrollInterval) {
                 clearInterval(scrollInterval);
@@ -601,6 +617,11 @@
     }
 
     function isSidebarVisible() {
+        const chatApp = document.querySelector(SELECTORS.CHAT_APP);
+        if (chatApp) {
+            return chatApp.classList.contains('side-nav-open');
+        }
+        // Fallback to legacy visibility check
         const scrollers = document.querySelectorAll(SELECTORS.SCROLL_CONTAINER);
         for (const el of scrollers) {
             const style = window.getComputedStyle(el);
@@ -692,7 +713,10 @@
                 }
 
                 if (!isSidebarVisible()) {
-                    // console.debug('[GeminiAutoScroll] Sidebar hidden, skipping scroll tick.');
+                    console.debug('[GeminiAutoScroll] Sidebar hidden. Stopping auto-scroll.');
+                    if (isAutoScrollEnabled()) {
+                        toggleAutoScroll(); // This will clear the interval and update UI
+                    }
                     return;
                 }
 
