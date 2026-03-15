@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.22
+// @version      0.4.23
 // @lastModified 2026-03-16
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
@@ -59,8 +59,12 @@
         tableBlock: 'table-block', // or 'table' inside model response
         // Artifact selector
         artifact: 'immersive-entry-chip, entry-chip',
-        // Link Card selector
-        linkCard: '.list-item-container.link, yt-core-attributed-string, [data-test-id="link-preview"]'
+        // Product integrations and Maps (Link Cards)
+        linkCard: '.list-item-container.link, yt-core-attributed-string, [data-test-id="link-preview"], a.link[href*="google.com/maps"]',
+        // Model generated images
+        modelImage: 'button.image-button img',
+        // Thinking process blocks
+        thinkingBlock: 'thinking-block, thought-chip'
     };
 
     // --- State Management ---
@@ -302,7 +306,7 @@
                 // Image count
                 const imgs = turn.querySelectorAll(SELECTORS.userImage);
                 imgs.forEach(img => {
-                    collectedImages.push(img.src);
+                    collectedImages.push({ src: img.src, type: 'user' });
                 });
             });
 
@@ -311,6 +315,7 @@
             let totalTables = 0;
             let totalArtifacts = 0;
             let totalLinkCards = 0;
+            let totalThinkingBlocks = 0;
 
             modelTurns.forEach(turn => {
                 // Model text selector is tricky, it usually contains many nested elements.
@@ -333,6 +338,16 @@
                 // Count Link Cards
                 const linkCards = turn.querySelectorAll(SELECTORS.linkCard);
                 totalLinkCards += linkCards.length;
+
+                // Count Thinking Blocks
+                const thinkingBlocks = turn.querySelectorAll(SELECTORS.thinkingBlock);
+                totalThinkingBlocks += thinkingBlocks.length;
+
+                // Model Images
+                const modelImgs = turn.querySelectorAll(SELECTORS.modelImage);
+                modelImgs.forEach(img => {
+                    collectedImages.push({ src: img.src, type: 'model' });
+                });
             });
 
             const imageCount = collectedImages.length;
@@ -342,9 +357,13 @@
                 iconDiv.textContent = `Gemini Turns v${scriptVersion} | U:${userTurns.length} M:${modelTurns.length} A:${totalArtifacts} L:${totalLinkCards}`;
             }
 
+            const getThumbnailStyling = (type) => {
+                return type === 'model' ? 'border: 2px solid #a8c7fa;' : '';
+            };
+
             const thumbnailsHtml = imageCount > 0
                 ? `<div class="gtc-thumbnails">
-                    ${collectedImages.map(url => `<img src="${url}" class="gtc-thumbnail" />`).join('')}
+                    ${collectedImages.map(imgData => `<img src="${imgData.src}" class="gtc-thumbnail" style="${getThumbnailStyling(imgData.type)}" title="${imgData.type} image" />`).join('')}
                    </div>`
                 : '';
             setInnerHTML(contentDiv, `
@@ -370,10 +389,14 @@
                 <div class="gtc-row">
                      <span>Tables:</span> <span class="gtc-val">${totalTables}</span>
                 </div>
+                ${totalThinkingBlocks > 0 ? `
                 <div class="gtc-row">
-                    <span>Images:</span> 
+                     <span>Thinking Process:</span> <span class="gtc-val">${totalThinkingBlocks}</span>
+                </div>` : ''}
+                <div class="gtc-row">
+                    <span>Images (U:M):</span> 
                     <span>
-                        <span class="gtc-val">${imageCount}</span>
+                        <span class="gtc-val">${collectedImages.filter(i => i.type === 'user').length}:${collectedImages.filter(i => i.type === 'model').length}</span>
                         ${imageCount > 0 ?
                     `<button id="gtc-copy-all" style="margin-left: 8px; padding: 2px 6px; font-size: 11px; cursor: pointer;">Copy</button>
                                  <span id="gtc-copy-status"></span>`
@@ -409,15 +432,15 @@
                         try {
                             let processedCount = 0;
 
-                            const promises = collectedImages.map(async (url) => {
-                                const dataUri = await fetchImageData(url);
+                            const promises = collectedImages.map(async (imgData) => {
+                                const dataUri = await fetchImageData(imgData.src);
                                 processedCount++;
                                 if (statusSpan) statusSpan.textContent = `${processedCount}/${collectedImages.length}`;
 
                                 let imgTag = '';
                                 if (dataUri) {
                                     const styleAttr = useHeightLimit ? ` style="max-height: ${heightLimit}px;"` : '';
-                                    imgTag = `<img src="${dataUri}"${styleAttr} />`;
+                                    imgTag = `<img src="${dataUri}"${styleAttr} data-source-type="${imgData.type}" />`;
                                 }
                                 return imgTag;
                             });

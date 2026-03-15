@@ -24,10 +24,12 @@ Since Google Gemini is a complex SPA with frequently changing CSS classes, AI ag
 
 ### Example Selectors (as of 2026-03-16)
 *   **Artifacts (Canvas)**: `immersive-entry-chip, entry-chip`
-*   **Link Cards**: `.list-item-container.link, yt-core-attributed-string, [data-test-id="link-preview"]`
+*   **Link Cards (inc. Maps)**: `.list-item-container.link, yt-core-attributed-string, [data-test-id="link-preview"], a.link[href*="google.com/maps"]`
 *   **Code Blocks**: `code-block`
 *   **Tables**: `table-block`
-*   **Images**: `img[data-test-id="uploaded-img"]`
+*   **Images (User)**: `img[data-test-id="uploaded-img"]` (inside `button.preview-image-button`)
+*   **Images (Model)**: `button.image-button img`
+*   **Thinking Process**: `thinking-block, thought-chip`
 
 ## Implementation Details
 
