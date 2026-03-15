@@ -22,9 +22,12 @@ Since Google Gemini is a complex SPA with frequently changing CSS classes, AI ag
     *   **Reliability**: Does the selector persist across different conversation types?
     *   **Completeness**: Does the source cover all intended data points (e.g., both Canvas files and Link Cards)?
 
-### Example Selectors (as of 2026-03-01)
+### Example Selectors (as of 2026-03-16)
 *   **Artifacts (Canvas)**: `immersive-entry-chip, entry-chip`
 *   **Link Cards**: `.list-item-container.link, yt-core-attributed-string, [data-test-id="link-preview"]`
+*   **Code Blocks**: `code-block`
+*   **Tables**: `table-block`
+*   **Images**: `img[data-test-id="uploaded-img"]`
 
 ## Implementation Details
 
@@ -32,7 +35,8 @@ Since Google Gemini is a complex SPA with frequently changing CSS classes, AI ag
 Gemini is a complex SPA. Routing is managed using the modern `window.navigation` API with a lightweight `setInterval` fallback for older browsers. This ensures the script only initializes on `/app/` or `/gem/` chat pages and cleans up correctly when navigating away.
 
 ### Reactivity & Performance
-- **MutationObserver**: Used to detect real-time message generation and DOM updates.
+- **MutationObserver**: Used to detect real-time message generation and DOM updates. **Must** include a debounce mechanism (e.g., 300ms) to prevent performance issues during large DOM insertions.
+- **Trusted Types**: Gemini uses Trusted Types. All HTML injection via `innerHTML` is governed by a `trustedTypes.createPolicy` to comply with CSP restrictions.
 - **Cleanup**: The script proactively removes style elements, UI containers, and disconnects observers when leaving chat pages to minimize memory leaks and CPU overhead.
 
 ### Lessons Learned & Common Gotchas

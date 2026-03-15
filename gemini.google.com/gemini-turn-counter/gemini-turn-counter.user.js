@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.21
-// @lastModified 2026-03-13
+// @version      0.4.22
+// @lastModified 2026-03-16
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -68,6 +68,7 @@
     let styleElement = null;
     let isInitialized = false;
     let uiContainer = null; // Store reference to the main UI container
+    let updateStatsTimeout = null;
 
     // Trusted Types Policy Creation
     let policy;
@@ -553,8 +554,10 @@
         setTimeout(updateStats, 500); // Wait a bit for initial load
 
         mainObserver = new MutationObserver((_mutations) => {
-            // Simple debounce could be added here
-            updateStats();
+            if (updateStatsTimeout) {
+                clearTimeout(updateStatsTimeout);
+            }
+            updateStatsTimeout = setTimeout(updateStats, 300); // 300ms debounce
         });
         mainObserver.observe(document.body, { childList: true, subtree: true });
 
@@ -571,6 +574,10 @@
         if (mainObserver) {
             mainObserver.disconnect();
             mainObserver = null;
+        }
+        if (updateStatsTimeout) {
+            clearTimeout(updateStatsTimeout);
+            updateStatsTimeout = null;
         }
         if (styleElement) {
             styleElement.remove();
