@@ -29,25 +29,63 @@
             </p>
         </header>
 
-        <ul class="project-list" id="project-list">
-            <li class="project-item">
-                <div class="project-title">
-                    <img alt="M365 Copilot" src="https://www.google.com/s2/favicons?domain=m365.cloud.microsoft&sz=64" />
-                    <a href="m365-copilot-notebook-styler/index.html">M365 Copilot Notebook Styler 🎨</a>
+        <div class="project-grid" id="project-list">
+            <!-- M365 Copilot Notebook Styler -->
+            <article class="project-card fade-in delay-1">
+                <div class="card-content">
+                    <header class="card-header">
+                        <img src="https://www.google.com/s2/favicons?domain=m365.cloud.microsoft&sz=128" alt="M365 Icon" class="project-favicon">
+                        <h2 class="project-title">
+                            <a href="m365-copilot-notebook-styler/index.html">Copilot Notebook Styler</a>
+                        </h2>
+                    </header>
+                    <p class="project-description">
+                        M365 Copilot ノートブックのペイン境界を明確にするためのスタイリングスクリプト。<br>
+                        左/中央/右ペインの背景色を微調整します。
+                    </p>
                 </div>
-                <p class="project-desc">
-                    M365 Copilot ノートブックのペイン（左ナビ、中央ワークスペース、右チャット）の背景色を調整し、境界を明確にして視認性を向上させます。
-                </p>
-                <a class="install-button" data-script-name="M365 Copilot Notebook Styler"
-                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/m365.cloud.microsoft/m365-copilot-notebook-styler/m365-copilot-notebook-styler.user.js"
-                    target="_blank">
-                    <svg height="18" viewbox="0 0 24 24" width="18">
-                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                    </svg>
-                    Install (v0.1.0)
-                </a>
-            </li>
-        </ul>
+                <div class="card-actions">
+                    <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/m365.cloud.microsoft/m365-copilot-notebook-styler/m365-copilot-notebook-styler.user.js" class="install-button" data-version="0.1.1">
+                        <span class="button-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </span>
+                        <span>Install</span>
+                    </a>
+                </div>
+            </article>
+
+            <!-- M365 Copilot One-Click Delete -->
+            <article class="project-card fade-in delay-2">
+                <div class="card-content">
+                    <header class="card-header">
+                        <img src="https://www.google.com/s2/favicons?domain=m365.cloud.microsoft&sz=128" alt="M365 Icon" class="project-favicon">
+                        <h2 class="project-title">
+                            <a href="m365-copilot-chat-deleter/index.html">Copilot One-Click Deleter</a>
+                        </h2>
+                    </header>
+                    <p class="project-description">
+                        アクティブなチャットをワンクリックで削除するスクリプト。<br>
+                        フローティングボタンまたはキーボードショートカット (Ctrl+Shift+BackSpace) を提供します。
+                    </p>
+                </div>
+                <div class="card-actions">
+                    <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/m365.cloud.microsoft/m365-copilot-chat-deleter/m365-copilot-chat-deleter.user.js" class="install-button" data-version="0.1.0">
+                        <span class="button-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </span>
+                        <span>Install</span>
+                    </a>
+                </div>
+            </article>
+        </div>
 
         <footer>
             <div class="social-links">
