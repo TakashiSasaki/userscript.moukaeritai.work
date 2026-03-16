@@ -46,3 +46,30 @@ Gemini is a complex SPA. Routing is managed using the modern `window.navigation`
 1.  **Dynamic Tag Names**: Gemini frequently updates custom tag names (e.g., from `entry-chip` to `immersive-entry-chip`). Always use composite selectors to maintain backward compatibility.
 2.  **Parent-Child Double Counting**: When using composite selectors or classes (e.g., `.parent, .child`), ensure that selectors do not match both a parent and its child simultaneously. This can lead to inflated counts (e.g., 2x the actual count) if `querySelectorAll().length` is used without filtering.
 3.  **State-Dependent UI Changes**: Opening a side panel (like Canvas) may cause elements (like "Open" buttons) to be removed from the chat flow's DOM. Always target the most stable container element (the "chip") rather than transient interactive elements (the "button") for accurate tracking.
+
+### External API (Custom Events)
+
+Gemini Turn Counter は外部スクリプトから画像コピー機能を利用するためのカスタムイベント API を提供します。
+
+**発火方法 (リクエスト):**
+```javascript
+document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images', {
+    detail: {
+        target: 'all',  // 'user', 'model', または 'all'
+        maxHeight: 200  // 省略可能（数値で高さを制限。false で制限なし）
+    }
+}));
+```
+
+**結果の受け取り (レスポンス):**
+処理完了後、ステータスを含む `gemini-turn-counter-copy-images-result` イベントが同期/非同期でディスパッチされます。
+```javascript
+document.addEventListener('gemini-turn-counter-copy-images-result', (e) => {
+    if (e.detail.success) {
+        console.log(`Copied ${e.detail.count} images.`);
+    } else {
+        console.error(`Failed: ${e.detail.error || e.detail.message}`);
+    }
+});
+```
+※ **注意**: `ClipboardItem` 書き込みに対するブラウザの User Gesture 制約を満たすため、外部スクリプト側で `gemini-turn-counter-copy-images` をディスパッチする処理は、必ずユーザーのクリック等の同期イベントハンドラー内で行う必要があります。

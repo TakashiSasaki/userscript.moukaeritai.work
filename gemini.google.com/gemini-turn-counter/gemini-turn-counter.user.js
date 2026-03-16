@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.25
+// @version      0.4.26
 // @lastModified 2026-03-16
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
@@ -272,6 +272,76 @@
     // Keep track of processed images to avoid refetching heavily
     // In a real script we might need better caching or just fetch on demand.
 
+    // Global reference for external access
+    let latestCollectedImages = [];
+
+    /**
+     * Reusable image-to-clipboard function
+     * @param {Array} targetImages - Array of {src, type} objects
+     * @param {number|boolean} heightLimit - Max height limit, or false/0 for no limit
+     * @param {HTMLElement} [statusSpan] - Optional element to output progress
+     * @returns {Promise<Blob>}
+     */
+    const copyImagesToHtmlClipboard = async (targetImages, heightLimit = false, statusSpan = null) => {
+        if (!targetImages || targetImages.length === 0) throw new Error("No images to copy");
+
+        let processedCount = 0;
+        const promises = targetImages.map(async (imgData) => {
+            const dataUri = await fetchImageData(imgData.src);
+            processedCount++;
+            if (statusSpan) statusSpan.textContent = `${processedCount}/${targetImages.length}`;
+
+            let imgTag = '';
+            if (dataUri) {
+                const styleAttr = heightLimit ? ` style="max-height: ${heightLimit}px;"` : '';
+                imgTag = `<img src="${dataUri}"${styleAttr} data-source-type="${imgData.type}" />`;
+            }
+            return imgTag;
+        });
+
+        const results = await Promise.all(promises);
+        const htmlToCopy = results.join('');
+        
+        if (statusSpan) statusSpan.textContent = `${htmlToCopy.length} chars`;
+        
+        return new Blob([htmlToCopy], { type: "text/html" });
+    };
+
+    // --- Custom Event Listener for Data Request ---
+    document.addEventListener('gemini-turn-counter-copy-images', (e) => {
+        const { target = 'all', maxHeight = 200 } = e.detail || {};
+        
+        let targetImages = latestCollectedImages;
+        if (target === 'user') {
+            targetImages = latestCollectedImages.filter(i => i.type === 'user');
+        } else if (target === 'model') {
+            targetImages = latestCollectedImages.filter(i => i.type === 'model');
+        }
+
+        if (targetImages.length === 0) {
+            document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images-result', {
+                detail: { success: false, message: 'No images found for target: ' + target }
+            }));
+            return;
+        }
+
+        // To comply with User Gesture constraints for clipboard API, the CustomEvent 
+        // MUST be dispatched synchronously during a user gesture (e.g. click).
+        const clipboardPromise = copyImagesToHtmlClipboard(targetImages, maxHeight);
+        const item = new ClipboardItem({ "text/html": clipboardPromise });
+        
+        navigator.clipboard.write([item]).then(() => {
+            document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images-result', {
+                detail: { success: true, count: targetImages.length }
+            }));
+        }).catch(err => {
+            console.error('Gemini Turn Counter: External Clipboard write failed:', err);
+            document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images-result', {
+                detail: { success: false, error: err.toString() }
+            }));
+        });
+    });
+
     const updateStats = () => {
         // Disconnect to avoid loops
         if (mainObserver) mainObserver.disconnect();
@@ -337,12 +407,15 @@
                 const thinkingBlocks = turn.querySelectorAll(SELECTORS.thinkingBlock);
                 totalThinkingBlocks += thinkingBlocks.length;
 
-                // Model Images
+            // Model Images
                 const modelImgs = turn.querySelectorAll(SELECTORS.modelImage);
                 modelImgs.forEach(img => {
                     collectedImages.push({ src: img.src, type: 'model' });
                 });
             });
+
+            // Update global reference
+            latestCollectedImages = collectedImages;
 
             const imageCount = collectedImages.length;
             const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.1.28';
@@ -425,38 +498,15 @@
                     if (statusSpan) statusSpan.textContent = '0/' + targetImages.length;
 
                     const useHeightLimit = heightEnable ? heightEnable.checked : false;
-                    const heightLimit = heightInput ? heightInput.value : 200;
+                    const heightLimit = useHeightLimit && heightInput ? heightInput.value : false;
 
                     // Use Promise-based ClipboardItem construction to prevent "Document is not focused" error
-                    const clipboardPromise = (async () => {
-                        try {
-                            let processedCount = 0;
-
-                            const promises = targetImages.map(async (imgData) => {
-                                const dataUri = await fetchImageData(imgData.src);
-                                processedCount++;
-                                if (statusSpan) statusSpan.textContent = `${processedCount}/${targetImages.length}`;
-
-                                let imgTag = '';
-                                if (dataUri) {
-                                    const styleAttr = useHeightLimit ? ` style="max-height: ${heightLimit}px;"` : '';
-                                    imgTag = `<img src="${dataUri}"${styleAttr} data-source-type="${imgData.type}" />`;
-                                }
-                                return imgTag;
-                            });
-
-                            const results = await Promise.all(promises);
-                            const htmlToCopy = results.join('');
-
-                            if (statusSpan) statusSpan.textContent = `${htmlToCopy.length} chars`;
-
-                            return new Blob([htmlToCopy], { type: "text/html" });
-                        } catch (err) {
+                    const clipboardPromise = copyImagesToHtmlClipboard(targetImages, heightLimit, statusSpan)
+                        .catch(err => {
                             console.error('Image processing failed', err);
                             if (statusSpan) statusSpan.textContent = 'Err';
                             throw err;
-                        }
-                    })();
+                        });
 
                     const item = new ClipboardItem({ "text/html": clipboardPromise });
                     navigator.clipboard.write([item]).then(() => {
