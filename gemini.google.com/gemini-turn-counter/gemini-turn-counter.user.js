@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.23
+// @version      0.4.24
 // @lastModified 2026-03-16
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
@@ -398,8 +398,10 @@
                     <span>
                         <span class="gtc-val">${collectedImages.filter(i => i.type === 'user').length}:${collectedImages.filter(i => i.type === 'model').length}</span>
                         ${imageCount > 0 ?
-                    `<button id="gtc-copy-all" style="margin-left: 8px; padding: 2px 6px; font-size: 11px; cursor: pointer;">Copy</button>
-                                 <span id="gtc-copy-status"></span>`
+                    `<button id="gtc-copy-user" style="margin-left: 8px; padding: 2px 6px; font-size: 11px; cursor: pointer;" ${collectedImages.filter(i => i.type === 'user').length === 0 ? 'disabled' : ''}>📋U</button>
+                     <button id="gtc-copy-model" style="margin-left: 4px; padding: 2px 6px; font-size: 11px; cursor: pointer;" ${collectedImages.filter(i => i.type === 'model').length === 0 ? 'disabled' : ''}>📋M</button>
+                     <button id="gtc-copy-all" style="margin-left: 4px; padding: 2px 6px; font-size: 11px; cursor: pointer;">📋All</button>
+                     <span id="gtc-copy-status" style="margin-left: 4px; font-size: 11px;"></span>`
                     : ''}
                     </span>
                 </div>
@@ -412,17 +414,21 @@
                 ${thumbnailsHtml}
             `);
 
-            // Attach Copy All event
-            const copyBtn = contentDiv.querySelector('#gtc-copy-all');
+            // Attach Copy events
+            const copyBtnU = contentDiv.querySelector('#gtc-copy-user');
+            const copyBtnM = contentDiv.querySelector('#gtc-copy-model');
+            const copyBtnAll = contentDiv.querySelector('#gtc-copy-all');
             const statusSpan = contentDiv.querySelector('#gtc-copy-status');
             const heightEnable = contentDiv.querySelector('#gtc-height-enable');
             const heightInput = contentDiv.querySelector('#gtc-height-input');
 
-            if (copyBtn) {
-                copyBtn.addEventListener('click', (e) => {
+            const doCopy = (btn, originalLabel, targetImages) => {
+                if (!btn || targetImages.length === 0) return;
+                
+                btn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    copyBtn.textContent = '...';
-                    if (statusSpan) statusSpan.textContent = '0/' + collectedImages.length;
+                    btn.textContent = '...';
+                    if (statusSpan) statusSpan.textContent = '0/' + targetImages.length;
 
                     const useHeightLimit = heightEnable ? heightEnable.checked : false;
                     const heightLimit = heightInput ? heightInput.value : 200;
@@ -432,10 +438,10 @@
                         try {
                             let processedCount = 0;
 
-                            const promises = collectedImages.map(async (imgData) => {
+                            const promises = targetImages.map(async (imgData) => {
                                 const dataUri = await fetchImageData(imgData.src);
                                 processedCount++;
-                                if (statusSpan) statusSpan.textContent = `${processedCount}/${collectedImages.length}`;
+                                if (statusSpan) statusSpan.textContent = `${processedCount}/${targetImages.length}`;
 
                                 let imgTag = '';
                                 if (dataUri) {
@@ -460,17 +466,21 @@
 
                     const item = new ClipboardItem({ "text/html": clipboardPromise });
                     navigator.clipboard.write([item]).then(() => {
-                        copyBtn.textContent = 'Copied!';
+                        btn.textContent = 'Copied!';
                         setTimeout(() => {
-                            copyBtn.textContent = 'Copy';
+                            btn.textContent = originalLabel;
                             if (statusSpan && !statusSpan.textContent.includes('chars')) statusSpan.textContent = '';
                         }, 3000);
                     }).catch(err => {
                         console.error('Clipboard write failed:', err);
-                        copyBtn.textContent = 'Err';
+                        btn.textContent = 'Err';
                     });
                 });
-            }
+            };
+
+            doCopy(copyBtnU, '📋U', collectedImages.filter(i => i.type === 'user'));
+            doCopy(copyBtnM, '📋M', collectedImages.filter(i => i.type === 'model'));
+            doCopy(copyBtnAll, '📋All', collectedImages);
 
         } finally {
             if (mainObserver) mainObserver.observe(document.body, { childList: true, subtree: true });
