@@ -143,6 +143,7 @@
 
         <h2>更新履歴</h2>
         <ul>
+                <li class="changelog-item">v0.3.13 (2026-03-16): 「Export Selected」ボタンのクリック時に、<code>gemini-turn-counter</code> と連携して会話内の全画像をクリップボードに自動コピーする機能を追加。コピー結果は専用インジケーターに表示されます（画像数、なし、タイムアウト）。</li>
                 <li class="changelog-item">v0.3.08 (2026-03-11): Improved session cleanup before scanning. The script now explicitly closes any open Canvas (artifact) panel to ensure Gemini's history lazy-loader can operate at full-width.</li>
                 <li class="changelog-item">v0.3.07 (2026-03-11): Fixed the "Double Scroller" bug. The script now correctly distinguishes between the sidebar history scroller and the main chat window scroller by prioritizing the `infinite-scroller.chat-history` selector and adding width-based heuristics.</li>
                 <li class="changelog-item">v0.3.06 (2026-03-11): Fixed Deep Scan auto-scroll failure caused by overlapping `behavior: smooth` animations. Reverted to instantaneous scroll jumps while maintaining stall detection and active container focus.</li>

@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.3.12
-// @lastModified 2026-03-14
+// @version      0.3.13
+// @lastModified 2026-03-16
 // @description  Export Gemini "Article" artifacts to Google Docs. Supports batch export, deep scanning of chat history, and separate sidebar scanning.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.xom/TakashiSasaki
@@ -855,6 +855,55 @@
         isExporting = true;
         cancelExport = false;
 
+        // --- Dispatch image copy request (must be in sync path from user click for User Gesture) ---
+        const imageCopyIndicator = document.getElementById('gemini-image-copy-indicator');
+        if (imageCopyIndicator) {
+            imageCopyIndicator.textContent = '⏳ Copying images...';
+            imageCopyIndicator.style.color = 'rgba(255, 255, 255, 0.7)';
+            imageCopyIndicator.style.display = 'block';
+        }
+
+        // Set up one-time result listener before dispatching
+        const imageCopyResultPromise = new Promise((resolve) => {
+            const timeoutId = setTimeout(() => {
+                resolve({ success: false, count: 0, reason: 'timeout' });
+            }, 10000); // 10s timeout
+
+            const handler = (e) => {
+                clearTimeout(timeoutId);
+                document.removeEventListener('gemini-turn-counter-copy-images-result', handler);
+                resolve(e.detail || { success: false, count: 0 });
+            };
+            document.addEventListener('gemini-turn-counter-copy-images-result', handler);
+        });
+
+        log('Dispatching gemini-turn-counter-copy-images event (target: all)...');
+        document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images', {
+            detail: { target: 'all' }
+        }));
+
+        // Wait for and display the result (non-blocking for the export flow)
+        imageCopyResultPromise.then((result) => {
+            log(`Image copy result: success=${result.success}, count=${result.count || 0}`);
+            if (imageCopyIndicator) {
+                if (result.success) {
+                    const count = result.count || 0;
+                    imageCopyIndicator.textContent = `✅ ${count} image(s) copied`;
+                    imageCopyIndicator.style.color = '#2ea44f';
+                } else if (result.reason === 'timeout') {
+                    imageCopyIndicator.textContent = '⚠️ Image copy timed out (Turn Counter not running?)';
+                    imageCopyIndicator.style.color = '#f0ad4e';
+                } else {
+                    imageCopyIndicator.textContent = '📭 No images found';
+                    imageCopyIndicator.style.color = 'rgba(255, 255, 255, 0.5)';
+                }
+                // Auto-hide after 10 seconds
+                setTimeout(() => {
+                    if (imageCopyIndicator) imageCopyIndicator.style.display = 'none';
+                }, 10000);
+            }
+        });
+
         const btn = document.getElementById('gemini-btn-export');
         if (btn) {
             btn.textContent = 'Cancel Export';
@@ -1252,10 +1301,23 @@
             height: 1.2em; /* Reserve height to prevent layout shift */
         `;
 
+        // --- Image Copy Indicator ---
+        const imageCopyIndicator = document.createElement('div');
+        imageCopyIndicator.id = 'gemini-image-copy-indicator';
+        imageCopyIndicator.style.cssText = `
+            text-align: center;
+            font-family: 'Google Sans', sans-serif;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 2px;
+            display: none;
+        `;
+
         buttonContainer.appendChild(scanButtonsContainer);
         buttonContainer.appendChild(listContainer);
         buttonContainer.appendChild(exportBtn);
         buttonContainer.appendChild(progressDisplay);
+        buttonContainer.appendChild(imageCopyIndicator);
         buttonContainer.appendChild(togglesContainer);
 
         panel.appendChild(header);
