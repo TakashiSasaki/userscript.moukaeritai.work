@@ -68,6 +68,11 @@
         .install-button:hover {
             background-color: #2c974b;
         }
+
+        h2, h3 {
+            border-bottom: 1px solid #eaecef;
+            padding-bottom: 0.3em;
+        }
     </style>
 </head>
 
@@ -79,74 +84,81 @@
         </svg>
         userscript.moukaeritai.work
     </a>
-    <div id="content">Loading documentation...</div>
+    <div id="content">
+        <h1>Gemini Turn Counter</h1>
+        <p>Google Gemini 上での会話において、メッセージ数（ターン数）や文字数をリアルタイムにカウントし、画面上に表示するためのユーザースクリプトです。</p>
 
-    <!-- Marked library for parsing markdown -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
+            <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
+            <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
+        </div>
+
+        <a href="gemini-turn-counter.user.js" class="install-button">スクリプトをインストール</a>
+
+        <h2>1. 概要と目的</h2>
+        <p>すでに作成済みの <code>chatgpt-turn-counter</code> と同様に、Google Gemini 上での会話において、メッセージ数や文字数をリアルタイムにカウントし、画面上に表示することを目的としています。</p>
+
+        <h2>2. 機能一覧</h2>
+
+        <h3>2.1 カウンター機能 (Turn Counter)</h3>
+        <p>以下の要素をカウントし、表示します。</p>
+        <ul>
+            <li><strong>ユーザー送信数 (User)</strong>: ユーザーがメッセージを送信した回数
+                <ul>
+                    <li><strong>文字数表示</strong>: テキストノードの合計文字数を併記</li>
+                </ul>
+            </li>
+            <li><strong>モデル応答数 (Model)</strong>: Geminiがレスポンスを返した回数
+                <ul>
+                    <li><strong>文字数表示</strong>: 応答メッセージの合計文字数を併記</li>
+                </ul>
+            </li>
+            <li><strong>画像送信/生成数 (Images)</strong>: ユーザー送信画像とモデル生成画像の数を別々にカウント (U:M表示)
+                <ul>
+                    <li><strong>サムネイル表示</strong>: 画像を縮小表示し、一覧で確認可能 (モデル生成画像には青枠を表示)</li>
+                    <li><strong>画像一括コピー (📋U / 📋M / 📋All)</strong>: "Images" 行の各ボタンをクリックすると、ユーザー画像のみ、モデル画像のみ、あるいは全画像をHTMLタグ（Data URI埋め込み）としてクリップボードに一括コピーします。画像コピー時に適用する Max Height 制限を指定可能。</li>
+                    <li><strong>外部スクリプト連携</strong>: カスタムイベント (<code>gemini-turn-counter-copy-images</code>) を通じて、外部のユーザースクリプトからも画像コピー機能を利用可能です。</li>
+                </ul>
+            </li>
+            <li><strong>思考プロセス (Thinking Process)</strong>: 応答に含まれる「思考プロセス」ブロックの数をカウント</li>
+            <li><strong>アーティファクト / リンクカード (Maps等)</strong>: 応答に含まれるキャンバス（Artifacts）や、Googleマップ等のリンクカードの数を独立してカウント</li>
+            <li><strong>コードブロック / テーブル数</strong>: 応答に含まれるコードブロックやテーブルの数を独立してカウント</li>
+        </ul>
+
+        <h3>2.2 ユーザーインターフェイス (UI)</h3>
+        <p><code>chatgpt-turn-counter</code> のデザインをベースに、Gemini向けに最適化されています。</p>
+        <ul>
+            <li><strong>初期状態</strong>: 画面右上に浮動パネルとして表示</li>
+            <li><strong>ドラッグ＆ドロップ</strong>: パネルを自由に移動でき、その位置は保存されます (<code>localStorage</code> に記憶)</li>
+            <li><strong>展開 / 最小化</strong>: クリックで詳細表示とアイコン表示（最小化）を切り替えられます。最小化状態でも主要なカウント概要を確認可能です。</li>
+        </ul>
+
+        <h2>3. 技術仕様</h2>
+        <ul>
+            <li><strong>対象URLパターン</strong>: <code>https://gemini.google.com/*</code></li>
+            <li><strong>名前空間</strong>: <code>userscript.moukaeritai.work</code></li>
+            <li><strong>自動アップデート (Automatic Updates)</strong>: GitHub 上の raw ファイルを参照して自動更新されます。</li>
+        </ul>
+
+        <h2>更新履歴</h2>
+        <ul>
+            <li><strong>v0.4.26</strong>: 外部スクリプトから画像コピー機能を利用できるカスタムイベント (<code>gemini-turn-counter-copy-images</code>) を追加し、内部処理をリファクタリング。</li>
+            <li><strong>v0.4.25</strong>: ローカル環境用のインストール検知ガードコード (<code>127.0.0.1</code>, <code>.app.github.dev</code>) を削除。</li>
+            <li><strong>v0.4.24</strong>: 画像コピーボタンを3つ（📋U:ユーザーのみ, 📋M:モデルのみ, 📋All:全て）に分割し、対象を絞ってコピーできるように改善。</li>
+            <li><strong>v0.4.23</strong>: モデル生成画像、Googleマップ連携カード、思考プロセス (Thinking Process) ブロックのカウント機能を追加。画像コピー時に生成元種別 (user/model) を属性として付与。</li>
+            <li><strong>v0.4.22</strong>: MutationObserverにデバウンス処理(300ms)を追加しパフォーマンスを改善。</li>
+            <li><em>v0.1.30 ~ v0.4.21 の更新: 画像コピーの高さ制限設定追加、テーブル・コードブロックのカウント強化、各種UI微調整など</em></li>
+            <li><strong>v0.1.29</strong>: インストール用の動的ドキュメントページへのアップデート。</li>
+            <li><strong>v0.1.25</strong>: アーティファクトの二重カウント問題を修正。</li>
+            <li><strong>v0.1.22</strong>: UIのドラッグ＆ドロップ移動および位置の保存に対応。</li>
+            <li><strong>v0.1.21</strong>: UIの最小化ボタン追加と状態保存に対応。</li>
+            <li><strong>v0.1.20</strong>: アーティファクト（Canvas）およびリンクカードのカウントに対応。</li>
+            <li><strong>v0.1.19</strong>: SPAナビゲーション検知を <code>window.navigation</code> API に移行しパフォーマンス向上。</li>
+        </ul>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const markdown = `
-# Gemini Turn Counter
-
-Google Gemini 上での会話において、メッセージ数（ターン数）や文字数をリアルタイムにカウントし、画面上に表示するためのユーザースクリプトです。
-
-<div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
-    <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
-    <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
-</div>
-
-<a href="gemini-turn-counter.user.js" class="install-button">スクリプトをインストール</a>
-
-## 1. 概要と目的
-
-すでに作成済みの \`chatgpt-turn-counter\` と同様に、Google Gemini 上での会話において、メッセージ数や文字数をリアルタイムにカウントし、画面上に表示することを目的としています。
-
-## 2. 機能一覧
-
-### 2.1 カウンター機能 (Turn Counter)
-以下の要素をカウントし、表示します。
-
-*   **ユーザー送信数 (User)**: ユーザーがメッセージを送信した回数
-    *   **文字数表示**: テキストノードの合計文字数を併記
-*   **モデル応答数 (Model)**: Geminiがレスポンスを返した回数
-    *   **文字数表示**: 応答メッセージの合計文字数を併記
-*   **画像送信/生成数 (Images)**: ユーザー送信画像とモデル生成画像の数を別々にカウント (U:M表示)
-    *   **サムネイル表示**: 画像を縮小表示し、一覧で確認可能 (モデル生成画像には青枠を表示)
-    *   **画像一括コピー (📋U / 📋M / 📋All)**: "Images" 行の各ボタンをクリックすると、ユーザー画像のみ、モデル画像のみ、あるいは全画像をHTMLタグ（Data URI埋め込み）としてクリップボードに一括コピーします。画像コピー時に適用する Max Height 制限を指定可能。
-    *   **外部スクリプト連携**: カスタムイベント (`gemini-turn-counter-copy-images`) を通じて、外部のユーザースクリプトからも画像コピー機能を利用可能です。
-*   **思考プロセス (Thinking Process)**: 応答に含まれる「思考プロセス」ブロックの数をカウント
-*   **アーティファクト / リンクカード (Maps等)**: 応答に含まれるキャンバス（Artifacts）や、Googleマップ等のリンクカードの数を独立してカウント
-*   **コードブロック / テーブル数**: 応答に含まれるコードブロックやテーブルの数を独立してカウント
-
-### 2.2 ユーザーインターフェイス (UI)
-\`chatgpt-turn-counter\` のデザインをベースに、Gemini向けに最適化されています。
-
-*   **初期状態**: 画面右上に浮動パネルとして表示
-*   **ドラッグ＆ドロップ**: パネルを自由に移動でき、その位置は保存されます (\`localStorage\` に記憶)
-*   **展開 / 最小化**: クリックで詳細表示とアイコン表示（最小化）を切り替えられます。最小化状態でも主要なカウント概要を確認可能です。
-
-## 3. 技術仕様
-
-*   **対象URLパターン**: \`https://gemini.google.com/*\`
-*   **名前空間**: \`userscript.moukaeritai.work\`
-*   **自動アップデート (Automatic Updates)**: GitHub 上の raw ファイルを参照して自動更新されます。
-
-## 更新履歴
-*   **v0.4.26**: 外部スクリプトから画像コピー機能を利用できるカスタムイベント (`gemini-turn-counter-copy-images`) を追加し、内部処理をリファクタリング。
-*   **v0.4.25**: ローカル環境用のインストール検知ガードコード (`127.0.0.1`, `.app.github.dev`) を削除。
-*   **v0.4.24**: 画像コピーボタンを3つ（📋U:ユーザーのみ, 📋M:モデルのみ, 📋All:全て）に分割し、対象を絞ってコピーできるように改善。
-*   **v0.4.23**: モデル生成画像、Googleマップ連携カード、思考プロセス (Thinking Process) ブロックのカウント機能を追加。画像コピー時に生成元種別 (user/model) を属性として付与。
-*   **v0.4.22**: MutationObserverにデバウンス処理(300ms)を追加しパフォーマンスを改善。
-*   *v0.1.30 ~ v0.4.21 の更新: 画像コピーの高さ制限設定追加、テーブル・コードブロックのカウント強化、各種UI微調整など*
-*   **v0.1.29**: インストール用の動的ドキュメントページへのアップデート。
-*   **v0.1.25**: アーティファクトの二重カウント問題を修正。
-*   **v0.1.22**: UIのドラッグ＆ドロップ移動および位置の保存に対応。
-*   **v0.1.21**: UIの最小化ボタン追加と状態保存に対応。
-*   **v0.1.20**: アーティファクト（Canvas）およびリンクカードのカウントに対応。
-*   **v0.1.19**: SPAナビゲーション検知を \`window.navigation\` API に移行しパフォーマンス向上。
-`;
-            document.getElementById('content').innerHTML = marked.parse(markdown);
-
             // Fetch version from script metadata
             try {
                 const response = await fetch('gemini-turn-counter.user.js');
