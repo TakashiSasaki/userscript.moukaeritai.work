@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.23
+// @version      0.4.24
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
-// @lastModified 2026-03-14
+// @lastModified 2026-03-16
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
@@ -990,8 +990,53 @@
         autoRow.appendChild(skipLabel);
         autoRow.appendChild(autoEnableLabel);
 
+        // --- ROW 3: Image Copy Button ---
+        const imageRow = document.createElement('div');
+        imageRow.className = 'one-turn-row';
+        imageRow.style.justifyContent = 'flex-end'; // Align to the right
+        
+        const copyImageBtn = document.createElement('button');
+        copyImageBtn.id = 'gemini-btn-copy-images';
+        copyImageBtn.style.cssText = 'background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: white; padding: 2px 8px; font-size: 11px; cursor: pointer; transition: background 0.2s;';
+        copyImageBtn.textContent = '📋 Copy Images';
+        
+        let copyIndicatorTimer = null;
+        
+        copyImageBtn.onmouseenter = () => copyImageBtn.style.background = 'rgba(255,255,255,0.2)';
+        copyImageBtn.onmouseleave = () => copyImageBtn.style.background = 'rgba(255,255,255,0.1)';
+        
+        copyImageBtn.onclick = () => {
+            copyImageBtn.textContent = '⏳ Copying...';
+            // Dispatch request to gemini-turn-counter
+            document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images', {
+                detail: { target: 'all' }
+            }));
+        };
+
+        // Listen for the result from gemini-turn-counter
+        document.addEventListener('gemini-turn-counter-copy-images-result', (e) => {
+            if (copyIndicatorTimer) clearTimeout(copyIndicatorTimer);
+            
+            if (e.detail && e.detail.success) {
+                const count = e.detail.count || 0;
+                copyImageBtn.textContent = `✅ Copied (${count})`;
+                copyImageBtn.style.border = '1px solid #2ea44f';
+            } else {
+                copyImageBtn.textContent = `❌ Failed/No imgs`;
+                copyImageBtn.style.border = '1px solid #e53935';
+            }
+            
+            copyIndicatorTimer = setTimeout(() => {
+                copyImageBtn.textContent = '📋 Copy Images';
+                copyImageBtn.style.border = '1px solid rgba(255,255,255,0.2)';
+            }, 3000);
+        });
+
+        imageRow.appendChild(copyImageBtn);
+
         controlsCol.appendChild(manualRow);
         controlsCol.appendChild(autoRow);
+        controlsCol.appendChild(imageRow);
 
         // Execute Button
         const execBtn = document.createElement('button');

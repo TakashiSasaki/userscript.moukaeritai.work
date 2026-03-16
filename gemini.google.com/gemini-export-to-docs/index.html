@@ -169,6 +169,7 @@
             <li><strong>自動削除連動</strong>: 「Export & Delete」ボタンをクリックすると、Google
                 Docsへのエクスポートが実行され、その後指定した秒数が経過すると、<code>gemini-one-click-delete</code> と連携して会話を自動的に削除します。</li>
             <li><strong>待機時間の調整</strong>: 削除までの待機時間（秒）はパネル上で自由に変更可能（デフォルト3秒、ブラウザに保存）です。</li>
+            <li><strong>画像一括コピー機能</strong>: パネルに「📋 Copy Images」ボタンを追加。クリックすると <code>gemini-turn-counter</code> スクリプトと連携し、会話内の全画像をクリップボードにコピーします。（※要 <code>gemini-turn-counter</code> v0.4.26 以降）</li>
             <li><strong>フローティング・ドラッグ移動</strong>: パネル上部のヘッダー（⠿）をドラッグすることで、画面内の好きな位置に移動できます。位置は自動的に保存され、次回ロード時にも維持されます。
             </li>
             <li><strong>自動消滅</strong>: 会話が2ターン以上に増えた場合や、他のページに移動した場合は、自動的にこのパネルは消去されます。</li>
@@ -206,6 +207,7 @@
 
         <h2>更新履歴</h2>
         <ul>
+            <li><strong>v0.4.24</strong>: 1ターンの専用UIパネルに、<code>gemini-turn-counter</code> と連携して一発で全画像をコピーできる「📋 Copy Images」ボタンを追加しました。</li>
             <li><strong>v0.4.18</strong>: URLの比較を行う際に大文字・小文字を区別しないように修正し、<code>Https://</code>のように入力された場合でも正しく自動実行がトリガーされるように改善しました。</li>
             <li><strong>v0.4.17</strong>: インストール検知のホスト制限をより厳格化し、コード内のインデントや不要な空白を整理して保守性を向上させました。</li>
             <li><strong>v0.4.16</strong>: YouTubeのライブ配信URL（<code>youtube.com/live/</code>）からの動画ID抽出に対応しました。</li>
