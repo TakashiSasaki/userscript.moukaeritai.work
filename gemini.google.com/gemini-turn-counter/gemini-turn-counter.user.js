@@ -1,13 +1,12 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.24
+// @version      0.4.25
 // @lastModified 2026-03-16
 // @description  Count user/model turns, images, and characters in Google Gemini
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
-// @match        http://127.0.0.1:5500/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js
 // @grant        GM_xmlhttpRequest
@@ -19,15 +18,10 @@
     'use strict';
 
     const installCheckHosts = [
-        'userscript.moukaeritai.work',
-        '127.0.0.1'
-    ];
-    const installCheckSuffixes = [
-        '.app.github.dev'
+        'userscript.moukaeritai.work'
     ];
 
-    const isInstallCheckHost = installCheckHosts.includes(location.hostname) ||
-        installCheckSuffixes.some(suffix => location.hostname.endsWith(suffix));
+    const isInstallCheckHost = installCheckHosts.includes(location.hostname);
 
     if (isInstallCheckHost) {
         const report = () => {
@@ -424,7 +418,7 @@
 
             const doCopy = (btn, originalLabel, targetImages) => {
                 if (!btn || targetImages.length === 0) return;
-                
+
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     btn.textContent = '...';

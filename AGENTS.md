@@ -114,8 +114,6 @@ JavaScript（`.user.js`）のコードを変更した後は、必ずESLintを実
 #### 1. 必須 @match
 ```javascript
 // @match        https://userscript.moukaeritai.work/*
-// @match        http://127.0.0.1:5500/*
-// @match        https://*.app.github.dev/*
 ```
 
 #### 2. 標準実装コード
@@ -123,15 +121,10 @@ JavaScript（`.user.js`）のコードを変更した後は、必ずESLintを実
 
 ```javascript
     const installCheckHosts = [
-        'userscript.moukaeritai.work',
-        '127.0.0.1'
-    ];
-    const installCheckSuffixes = [
-        '.app.github.dev'
+        'userscript.moukaeritai.work'
     ];
 
-    const isInstallCheckHost = installCheckHosts.includes(location.hostname) ||
-        installCheckSuffixes.some(suffix => location.hostname.endsWith(suffix));
+    const isInstallCheckHost = installCheckHosts.includes(location.hostname);
 
     if (isInstallCheckHost) {
         const report = () => {
