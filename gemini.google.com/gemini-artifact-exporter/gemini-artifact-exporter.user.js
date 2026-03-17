@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.3.13
-// @lastModified 2026-03-16
+// @version      0.3.14
+// @lastModified 2026-03-17
 // @description  Export Gemini "Article" artifacts to Google Docs. Supports batch export, deep scanning of chat history, and separate sidebar scanning.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.xom/TakashiSasaki
@@ -20,8 +20,7 @@
     'use strict';
 
     const installCheckHosts = [
-        'userscript.moukaeritai.work',
-        '127.0.0.1'
+        'userscript.moukaeritai.work'
     ];
 
     const isInstallCheckHost = installCheckHosts.includes(location.hostname);
@@ -231,13 +230,13 @@
     // Find a fresh reference to the chip in the DOM based on its title, scrolling if necessary.
     async function findChipByTitle(title) {
         log(`Querying for chip with title: "${title}" by scanning sidebar and chat...`);
-        
+
         // --- 1. Try Sidebar ---
         const scrollContainer = document.querySelector('div.scrollable-container');
         if (scrollContainer) {
             scrollContainer.scrollTop = 0;
             await sleep(300);
-            
+
             let lastScrollTop = -1;
             for (let i = 0; i < 50; i++) {
                 const chips = Array.from(document.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
@@ -259,10 +258,10 @@
         // --- 2. Try Chat Stream ---
         log(`Chip not found in sidebar. Searching chat history for: "${title}"...`);
         const chatScroller = document.querySelector('infinite-scroller') || window;
-        
+
         let lastChatScrollTop = -1;
         const getChatScroll = () => (chatScroller === window ? window.scrollY : chatScroller.scrollTop);
-        
+
         if (chatScroller === window) window.scrollTo({ top: 0 });
         else chatScroller.scrollTop = 0;
         await sleep(300);
@@ -513,7 +512,7 @@
     function setScanningUIState(isStarting, mode = 'scan') {
         const scanBtn = document.getElementById('gemini-btn-scan');
         const deepScanBtn = document.getElementById('gemini-btn-deep-scan');
-        
+
         if (isStarting) {
             if (scanBtn) {
                 scanBtn.textContent = mode === 'scan' ? 'Scanning Sidebar...' : 'Scan Sidebar Menu';
@@ -550,7 +549,7 @@
 
         // 2. Generic Escape key
         document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
-        
+
         // 3. Side drawer backdrop
         const backdrop = document.querySelector('.mat-drawer-backdrop');
         if (backdrop && isVisible(backdrop)) {
@@ -561,9 +560,9 @@
 
     function getChatScroller() {
         // Specifically look for the chat history scroller, avoiding the narrow side-nav scroller
-        let scroller = document.querySelector('infinite-scroller.chat-history') || 
-                       document.querySelector('chat-window-content infinite-scroller');
-        
+        let scroller = document.querySelector('infinite-scroller.chat-history') ||
+            document.querySelector('chat-window-content infinite-scroller');
+
         if (!scroller) {
             const scrollers = Array.from(document.querySelectorAll('infinite-scroller'));
             // Heuristic: The chat scroller is wide (> 300px), sidebar is narrow (~70px)
@@ -731,7 +730,7 @@
         // Exert focus and pointer events to wake up Angular's lazy loaders
         if (!scroller.hasAttribute('tabindex')) scroller.setAttribute('tabindex', '-1');
         scroller.focus({ preventScroll: true });
-        
+
         // 3. Ascend to true top
         let highestScrollHeight = scroller.scrollHeight;
         let prevFirstTurnContent = '';
@@ -746,18 +745,18 @@
             } else {
                 scroller.scrollTop -= scrollStep; // Use direct property assignment for maximum reliability
             }
-            
+
             await sleep(400); // Wait for the smooth animation
-            
+
             const currentScrollTop = scroller === document.documentElement ? window.scrollY : scroller.scrollTop;
-            
+
             if (currentScrollTop <= 10) {
                 // Reached the top of the currently loaded DOM. Wait to see if more loads.
                 await sleep(1500);
-                
+
                 const currentFirstTurn = document.querySelector('message-content, .message-content');
                 const currentContent = currentFirstTurn ? currentFirstTurn.textContent.substring(0, 50) : '';
-                
+
                 if (currentContent === prevFirstTurnContent && scroller.scrollHeight <= highestScrollHeight + 50) {
                     stallCount++;
                     log(`Waiting for history to load... (Attempt ${stallCount}/3)`);
@@ -769,7 +768,7 @@
                     stallCount = 0; // History loaded, reset stall count
                     log('Loaded older conversation history. Continuing ascent...');
                 }
-                
+
                 prevFirstTurnContent = currentContent;
                 if (scroller.scrollHeight > highestScrollHeight) {
                     highestScrollHeight = scroller.scrollHeight;
@@ -779,7 +778,7 @@
             }
             topAttempts++;
         }
-        
+
         // Ensure we are exactly at 0 after breaking
         scroller.scrollTop = 0;
         await sleep(1000);
