@@ -511,6 +511,33 @@
 
         log(`Received export request for "${req.targetTitle}" (ID: ${req.requestId})`);
 
+        // Trigger image copy only on the first item of a batch
+        if (req.currentIndex === 1) {
+            showIndicator('⏳ 画像をコピー中...');
+            const imageCopyResultPromise = new Promise((resolve) => {
+                const timeoutId = setTimeout(() => resolve({ success: false, count: 0, reason: 'timeout' }), 10000);
+                const handler = (event) => {
+                    clearTimeout(timeoutId);
+                    document.removeEventListener('gemini-turn-counter-copy-images-result', handler);
+                    resolve(event.detail || { success: false, count: 0 });
+                };
+                document.addEventListener('gemini-turn-counter-copy-images-result', handler);
+            });
+
+            log('Dispatching gemini-turn-counter-copy-images event...');
+            document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images', { detail: { target: 'all' } }));
+
+            const copyResult = await imageCopyResultPromise;
+            if (copyResult.success) {
+                showIndicator(`✅ ${copyResult.count || 0} 枚の画像をコピーしました`, true, false);
+            } else if (copyResult.reason === 'timeout') {
+                showIndicator('⚠️ 画像コピーがタイムアウトしました', false, true);
+            } else {
+                showIndicator('📭 コピーする画像がありませんでした', false, false);
+            }
+            await sleep(2000); // Wait a bit so the user can read the result before exporting starts
+        }
+
         const progressText = (req.currentIndex !== undefined && req.totalItems !== undefined)
             ? `(${req.currentIndex}/${req.totalItems})`
             : '';

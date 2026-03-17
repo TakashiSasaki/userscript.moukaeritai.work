@@ -575,43 +575,6 @@
         isExporting = true;
         cancelExport = false;
 
-        // --- Dispatch image copy request ---
-        const imageCopyIndicator = document.getElementById('gemini-image-copy-indicator');
-        if (imageCopyIndicator) {
-            imageCopyIndicator.textContent = '⏳ Copying images...';
-            imageCopyIndicator.style.color = 'rgba(255, 255, 255, 0.7)';
-            imageCopyIndicator.style.display = 'block';
-        }
-
-        const imageCopyResultPromise = new Promise((resolve) => {
-            const timeoutId = setTimeout(() => resolve({ success: false, count: 0, reason: 'timeout' }), 10000);
-            const handler = (e) => {
-                clearTimeout(timeoutId);
-                document.removeEventListener('gemini-turn-counter-copy-images-result', handler);
-                resolve(e.detail || { success: false, count: 0 });
-            };
-            document.addEventListener('gemini-turn-counter-copy-images-result', handler);
-        });
-
-        log('Dispatching gemini-turn-counter-copy-images event...');
-        document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images', { detail: { target: 'all' } }));
-
-        imageCopyResultPromise.then((result) => {
-            if (imageCopyIndicator) {
-                if (result.success) {
-                    imageCopyIndicator.textContent = `✅ ${result.count || 0} image(s) copied`;
-                    imageCopyIndicator.style.color = '#2ea44f';
-                } else if (result.reason === 'timeout') {
-                    imageCopyIndicator.textContent = '⚠️ Image copy timed out';
-                    imageCopyIndicator.style.color = '#f0ad4e';
-                } else {
-                    imageCopyIndicator.textContent = '📭 No images found';
-                    imageCopyIndicator.style.color = 'rgba(255, 255, 255, 0.5)';
-                }
-                setTimeout(() => { if (imageCopyIndicator) imageCopyIndicator.style.display = 'none'; }, 10000);
-            }
-        });
-
         const btn = document.getElementById('gemini-btn-export');
         if (btn) {
             btn.textContent = 'Cancel Export';
@@ -1008,23 +971,10 @@
             height: 1.2em; /* Reserve height to prevent layout shift */
         `;
 
-        // --- Image Copy Indicator ---
-        const imageCopyIndicator = document.createElement('div');
-        imageCopyIndicator.id = 'gemini-image-copy-indicator';
-        imageCopyIndicator.style.cssText = `
-            text-align: center;
-            font-family: 'Google Sans', sans-serif;
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.7);
-            margin-top: 2px;
-            display: none;
-        `;
-
         buttonContainer.appendChild(scanButtonsContainer);
         buttonContainer.appendChild(listContainer);
         buttonContainer.appendChild(exportBtn);
         buttonContainer.appendChild(progressDisplay);
-        buttonContainer.appendChild(imageCopyIndicator);
         buttonContainer.appendChild(togglesContainer);
 
         panel.appendChild(header);
