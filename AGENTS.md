@@ -148,51 +148,13 @@ repo_root/
 ## インデックスの維持
 
 新しいプロジェクトを追加する際は、ルートおよび各ディレクトリの `index.html` を更新してください。
--   **一貫性**: `onamae.com/index.html` 等、サブディレクトリにもインデックスを配置し、回遊性を高める。
+-   **一貫性**: `onamae.com/index.html` 等、サブディレクトリにもインデックスを配置し、回工夫性を高める。
 -   **カードデザイン**:
     -   **タイトル**: サイトのFavicon (Google S2 API) + プロジェクト名（ドキュメントへのリンク）。
     -   **配置**: **インストールボタンはカードの右下(bottom-right)に配置**してください。
 -   **バージョン更新**: ユーザースクリプトのバージョンを上げた際は、必ず `index.html` 内のそのスクリプトの `Install` ボタンのテキスト（例: `Install (vX.Y.Z)`）も最新のバージョン番号に更新してください。
 
-
-## Technical Knowledge Base
-
-### YouTube (SPA & Performance)
-
-YouTube user script development learnings:
-
-1.  **SPA Navigation & Cleanup**:
-    -   **Early Cleanup**: On SPA sites like YouTube, rely on early navigation events like `yt-navigate-start` to stop observers and timers *before* page teardown begins. Waiting for `finish` events often causes browser hangs as observers process thousands of deletion mutations.
-    -   **Idempotency**: Ensure cleanup functions are idempotent so they can be safely called multiple times (e.g., on start, on finish, on unload).
-
-2.  **Observer Performance**:
-    -   **Avoid Broad Monitoring**: Do NOT monitor `document.body` with `subtree: true` if massive DOM changes are expected.
-    -   **Polling Alternatives**: For waiting on elements during transitions, lightweight polling (`setInterval`) is often safer and more performant than `MutationObserver`.
-
-3.  **Strict Context Checking**:
-    -   **URL Verification**: Always verify `window.location.pathname` or parameters at the start of your main logic to ensure UI elements don't bleed into unintended pages (e.g., playlist tools appearing on video watch pages).
-
-4.  **Trusted Types Compliance (Security)**:
-    -   **Avoid `innerHTML`**: Modern sites like YouTube enforce Trusted Types security policies that block assignment to `innerHTML`.
-    -   **Use DOM Methods**: Always use `document.createElement()`, `textContent`, `setAttribute()`, and `appendChild()` to securely construct UI elements.
-
-### Gemini (DOM Structure & Selectors)
-
-Learnings from implementing features like Auto-Scroll and Conversation Management (as of Feb 2026):
-
-1.  **Conversation List Hierarchy**:
-    -   The list is roughly at `conversations-list > .conversations-container`.
-    -   **BEWARE**: Broader containers like `side-navigation-content` or `bard-sidenav` also contain "Gems" (Bot) items. Targeting these broad containers allows selectors to pick up Bot items, causing bugs (e.g., incorrect ID logic, sequential numbering artifacts).
-
-2.  **Item Selectors**:
-    -   **Correct Selector**: `[data-test-id="conversation"]`. Note: This attribute is on an `<a>` tag, NOT a `div`. Do NOT restrict your selector to `div` (e.g., `div[data-test-id="conversation"]` will fail).
-    -   **Recommended Strategy**: Prioritize `[data-test-id="conversation"]`. If falling back to `jslog` or other attributes, strictly exclude `[data-test-id="item"]` (which usually denotes Bots/Gems).
-
-3.  **Virtual Scrolling**:
-    -   Gemini uses virtual scrolling. Only currently visible conversation items exist in the DOM. `document.querySelectorAll` will only return a subset (e.g., ~15 items) of the full history.
-    -   Logic that depends on "finding the current item and then finding the next one" must handle cases where the current item has been scrolled out of view and unloaded from the DOM.
-
-### Shared UI Patterns
+## 共有UIパターン (Shared UI Patterns)
 
 1.  **Activity-Linked Panel State**:
     -   **Sync Active/Inactive**: If a script has a UI panel, its open/closed state should be linked to the script's active context, not just a manual toggle.
