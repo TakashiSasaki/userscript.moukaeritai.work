@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Exported Docs Auto-Closer
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.2
+// @version      0.2.3
 // @lastModified 2026-03-12
 // @description  Automatically closes Google Docs tabs that were opened by the Gemini Artifact Exporter after a configurable delay. (Horizontal UI)
 // @author       Takashi Sasaki
@@ -43,6 +43,9 @@
 
     let countdown = waitTime;
     let timerId = null;
+
+    let isPaused = false;
+    let isCancelled = false;
 
     // Load position
     const savedPos = GM_getValue('panelPosition', { bottom: '24px', right: '24px' });
@@ -102,7 +105,7 @@
         background: rgba(255,255,255,0.05);
         border-radius: 4px;
     `;
-    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.2.2'}`;
+    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.2.3'}`;
     panel.appendChild(versionSpan);
 
     const message = document.createElement('span');
@@ -163,6 +166,7 @@
     cancelBtn.onmouseout = () => cancelBtn.style.background = '#444';
 
     cancelBtn.addEventListener('click', () => {
+        isCancelled = true;
         clearInterval(timerId);
         message.textContent = 'Cancelled.';
         message.style.color = '#8ab4f8';
@@ -174,6 +178,36 @@
     panel.appendChild(cancelBtn);
 
     document.body.appendChild(panel);
+
+    // Pause/Resume on Hover
+    panel.addEventListener('mouseenter', () => {
+        if (!isCancelled) {
+            isPaused = true;
+            message.textContent = `Paused (${countdown}s)`;
+        }
+    });
+
+    panel.addEventListener('mouseleave', () => {
+        if (!isCancelled) {
+            isPaused = false;
+            message.textContent = `Closing in ${countdown}s...`;
+        }
+    });
+
+    // Custom Events for Pause/Resume
+    document.addEventListener('gemini-docs-closer-pause', () => {
+        if (!isCancelled && document.body.contains(panel)) {
+            isPaused = true;
+            message.textContent = `Paused (${countdown}s)`;
+        }
+    });
+
+    document.addEventListener('gemini-docs-closer-resume', () => {
+        if (!isCancelled && document.body.contains(panel)) {
+            isPaused = false;
+            message.textContent = `Closing in ${countdown}s...`;
+        }
+    });
 
     // Dragging Logic
     let isDragging = false;
@@ -205,6 +239,17 @@
     // Start countdown
     console.log('[Gemini Docs Closer] Gemini referrer detected. Starting auto-close countdown.');
     timerId = setInterval(() => {
+        if (isCancelled || !document.body.contains(panel)) {
+            clearInterval(timerId);
+            return;
+        }
+
+        if (isPaused) {
+            // Keep message updated with Paused state, do not decrement countdown
+            message.textContent = `Paused (${countdown}s)`;
+            return;
+        }
+
         countdown--;
         if (countdown > 0) {
             message.textContent = `Closing in ${countdown}s...`;
