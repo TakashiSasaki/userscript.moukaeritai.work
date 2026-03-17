@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Paste in New Tab - userscript.moukaeritai.work</title>
+    <link rel="stylesheet" href="../../index.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-content">
+            <a href="../../index.html" class="home-link">
+                <span class="home-icon">🏠</span>
+                <span class="home-text">Home</span>
+            </a>
+            <div class="breadcrumb">
+                <span class="separator">/</span>
+                <a href="../index.html">docs.google.com</a>
+                <span class="separator">/</span>
+                <span class="current">Auto Paste in New Tab</span>
+            </div>
+            <h1>Auto Paste in New Tab</h1>
+        </div>
+    </header>
+
+    <main class="content-wrapper">
+        <section class="script-details">
+            <div class="install-card">
+                <h2>Install Script</h2>
+                <p>Google Docs上で新しいタブを開き、自動でペーストするスクリプト</p>
+                <div class="install-actions">
+                    <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/docs.google.com/auto-paste-in-new-tab/auto-paste-in-new-tab.user.js" class="btn btn-primary install-btn">
+                        <span class="btn-icon">⬇️</span>
+                        Install Script (v0.1.0)
+                    </a>
+                </div>
+                <div class="install-status" id="install-status">
+                    <span class="status-indicator"></span>
+                    <span class="status-text">Checking installation status...</span>
+                </div>
+            </div>
+
+            <article class="markdown-body">
+                <h2>目的</h2>
+                <p>Google Docs上で新しいタブを開き、クリップボードの内容を自動でペーストするスクリプトです。</p>
+
+                <h2>機能概要</h2>
+                <ul>
+                    <li>Google Docs (ドキュメント) の画面上にフローティングボタンを配置します。</li>
+                    <li>ボタンのラベルは「Paste in new tab」です。</li>
+                    <li>ユーザーはボタンを自由にドラッグして移動でき、その位置は記憶されます。</li>
+                    <li>ボタンを押下すると、内部的にカスタムイベント（例: <code>EmulateDocsPaste</code>）を発火します。</li>
+                    <li>カスタムイベントに反応して、<code>Shift+F11</code> をエミュレートし、500msの待機後に <code>Ctrl+V</code> をエミュレートします。</li>
+                </ul>
+
+                <h2>対象サイト</h2>
+                <ul>
+                    <li><code>https://docs.google.com/document/*</code></li>
+                </ul>
+            </article>
+        </section>
+    </main>
+
+    <script src="../../index.js"></script>
+</body>
+</html>
