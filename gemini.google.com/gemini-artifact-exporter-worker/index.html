@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Artifact Exporter Worker</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: 0 auto; }
+        h1, h2, h3 { color: #333; }
+        code { background-color: #f4f4f4; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background-color: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>Gemini Artifact Exporter Worker</h1>
+    <p>このユーザースクリプトは、Gemini の「アーティファクト（Article）」を Google ドキュメントにエクスポートするメインUI <code>gemini-artifact-exporter</code> のワーカー（バックグラウンド処理用）スクリプトです。単体では機能しません。</p>
+
+    <h2>概要</h2>
+    <p>
+        <code>gemini-artifact-exporter</code> と連携し、カスタムイベントを受信して実際のエクスポート操作（DOMのクリック、メニューの展開、待機処理など）をバックグラウンドで実行します。
+        実行中は画面上に控えめなインジケーターが表示され、進行状況（どのタイトルのキャンバスをエクスポートしているか）が視覚的に分かります。
+    </p>
+
+    <h2>インストール</h2>
+    <p>
+        <a href="./gemini-artifact-exporter-worker.user.js">こちらをクリックしてインストール</a>
+    </p>
+
+    <h2>主な機能</h2>
+    <ul>
+        <li><code>gemini-artifact-exporter-worker:request</code> イベントの受信と処理</li>
+        <li>エクスポート対象のアーティファクトを直接クリック（存在しない場合はタイトルで再検索）</li>
+        <li>エクスポート実行状態を示す UI インジケーターの表示</li>
+        <li><code>gemini-artifact-exporter-worker:result</code> イベントによる結果の返信</li>
+    </ul>
+
+    <h2>技術的な詳細</h2>
+    <p>
+        メインUIを持つ <code>gemini-artifact-exporter</code> との責務の分離を図るため、DOM操作や待機ロジックをこのスクリプトに切り出しています。
+        通信は <code>document.dispatchEvent(new CustomEvent(...))</code> を介して行われ、メイン側は Promise で結果を待機する設計になっています。
+    </p>
+
+</body>
+</html>
