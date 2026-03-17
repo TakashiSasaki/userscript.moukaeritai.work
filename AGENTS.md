@@ -48,58 +48,9 @@
 2.  **`README.md` または `{project-name}.md` (人間用)**: ユーザー向けの概要、目的、機能説明。実装の詳細は含めない。
 3.  **`AGENTS.md` (AI用)**: エージェント向けの実装ノート。セレクタリスト、設計戦略、運用ルール等を記述。
 
-### サンプルHTMLの前処理
-
-このセクションでは、HTMLサンプルファイルを軽量かつ明確で一貫性のある状態に保つための標準的な手順とルールを概説します。すべてのエージェントは、HTMLサンプルファイルを扱う際にこのガイドに従う必要があります。
-
-#### 開発ワークフロー
-
-HTMLサンプルファイル（`.html`）を編集したり、それに基づいて開発を行ったりする場合は、常に以下の手順に従ってください。
-
-1.  **ファイルの初期化**: 開始前に、前処理スクリプトを再実行または検証する必要がある場合は、まず対象ファイルを元のコミットされた状態に復元する必要があります。
-    ```bash
-    # ファイルをHEADの状態に復元する
-    git restore path/to/your/file.html
-    ```
-
-2.  **前処理スクリプトの実行 (必須)**:
-    全ドメインの全ユーザースクリプトで共通の前処理基準を適用するため、必ずリポジトリルートにある `./scripts/preprocess_html_samples.py` を使用してください。個別のスクリプトや手動での前処理は禁止されています。
-
-    ```bash
-    # 特定の samples/ ディレクトリ内のすべてのHTMLファイルを処理する
-    ./scripts/preprocess_html_samples.py 'path/to/samples/*.html'
-    ```
-
-3.  **変更のコミット**: 前処理スクリプトがHTMLファイルを変更した場合、それらの変更をリポジトリにコミットします。これにより、すべての開発者とエージェントが更新されたサンプルを使用することが保証されます。
-    ```bash
-    git add path/to/your/file.html
-    git commit -m "docs: Preprocess HTML samples with the latest script"
-    ```
-
-#### 前処理ルール
-
-`preprocess_html_samples.py` スクリプトは以下のルールを適用します。
-
-1.  **属性の削除**:
-    *   空の文字列値を持つ属性（例: `style=""`, `class=""`）のみが削除されます。
-
-2.  **要素の削除/クリア**:
-    *   **`<head>`**: `<head>` 内の不要な要素（例: `<link>`, `<meta>`, `<title>`）は削除されます。
-    *   **`<script>` & `<style>`**: すべての `<script>` および `<style>` タグはドキュメントから削除されます。
-    *   **`<svg>`**: `<svg>` タグ自体は保持されますが、そのすべての子要素（`<path>`, `<g>`など）は削除されます。
-    *   **コメント**: すべてのHTMLコメント（`<!-- ... -->`）は削除されます。
-
-3.  **コンテンツの切り詰め**:
-    *   100文字を超えるテキストノードは、省略記号（`...`）で切り詰められます。
-
-4.  **フォーマット**:
-    *   最終的なHTMLは、要素に基づいた改行で整形されますが、どの行にも先頭のインデントはありません。
-
-#### スクリプトの仕様
-
--   **実装**: Python、`BeautifulSoup4` (`bs4`)、`lxml`を使用。
--   **べき等性**: このスクリプトはべき等です。同じファイルに対して複数回実行しても、さらなる変更は生じません。
--   **環境**: `python3`, `beautifulsoup4`, `lxml` が必要です。
+### DOMの解析と開発スタイル
+以前はHTMLのDOMスナップショットをファイル（`samples/` ディレクトリ等）として保存していましたが、現在は非推奨です。
+開発時は **Chrome Dev Tools MCP** などを経由して、対象サイトのDOM構造をリアルタイムに取得・解析するスタイルを採用してください。不要なスナップショットファイルはリポジトリにコミットしないでください。
 
 ### JSの品質とリンティング
 JavaScript（`.user.js`）のコードを変更した後は、必ずESLintを実行して文法エラーや潜在的なバグがないか確認してください。
@@ -168,78 +119,42 @@ Webページのパフォーマンスへの影響を最小限に抑えるため�
 
 階層構造: `DOMAIN_NAME/SCRIPT_NAME/`
 
+リポジトリ直下には、ユーザースクリプトの対象となる「ドメイン風のディレクトリ（例: `gemini.google.com/`, `youtube.com/` など）」が配置されます。
+**注意**: `scripts/` ディレクトリや `.git/` などのシステム/ユーティリティディレクトリは、ユーザースクリプトのドメインディレクトリではないため、処理の対象外としてください。
+
 ```
 repo_root/
   ├── index.html                  # メインプロジェクトリスト (ランディングページ)
   ├── AGENTS.md                   # グローバルエージェントガイドライン (このファイル)
+  ├── scripts/                    # (除外対象) ユーティリティスクリプト等
   ├── DOMAIN_NAME/                # 例: gemini.google.com
   │   ├── AGENTS.md               # ディレクトリレベルのエージェント指示
   │   └── SCRIPT_NAME/            # 例: gemini-profile-badge
   │       ├── SCRIPT_NAME.user.js # ユーザースクリプトソース
   │       ├── README.md (または SCRIPT_NAME.md) # 仕様書 (人間向け)
   │       ├── AGENTS.md           # 実装詳細 (エージェント向け)
-  │       ├── index.html          # ドキュメントビューア
-  │       └── samples/            # DOMスナップショット
+  │       └── index.html          # ドキュメントビューア
 ```
 
 ### 開発フロー
-1.  **サンプルの取得**: DOMスナップショットを取得し `samples/` へ保存。
-2.  **前処理**: `preprocess_html_samples.py` でHTMLを軽量化。
-3.  **仕様記述**: `SCRIPT_NAME.md` にユーザー向け仕様を記述。
-4.  **技術メモ**: `AGENTS.md` にエージェント向け技術詳細（セレクタ等）を記述。
-5.  **実装**: `.user.js` を実装。
-6.  **リンティング**: `npx eslint` でチェック。
-7.  **ドキュメント作成**: プレミアムデザインの `index.html` を作成。
-8.  **登録**: ルートの `index.html` にプロジェクトを追加。
+1.  **DOM解析**: Chrome Dev Tools MCP経由でリアルタイムにDOM構造を取得・解析。
+2.  **仕様記述**: `SCRIPT_NAME.md` にユーザー向け仕様を記述。
+3.  **技術メモ**: `AGENTS.md` にエージェント向け技術詳細（セレクタ等）を記述。
+4.  **実装**: `.user.js` を実装。
+5.  **リンティング**: `npx eslint` でチェック。
+6.  **ドキュメント作成**: プレミアムデザインの `index.html` を作成。
+7.  **登録**: ルートの `index.html` にプロジェクトを追加。
 
 ## インデックスの維持
 
 新しいプロジェクトを追加する際は、ルートおよび各ディレクトリの `index.html` を更新してください。
--   **一貫性**: `onamae.com/index.html` 等、サブディレクトリにもインデックスを配置し、回遊性を高める。
+-   **一貫性**: `onamae.com/index.html` 等、サブディレクトリにもインデックスを配置し、回工夫性を高める。
 -   **カードデザイン**:
     -   **タイトル**: サイトのFavicon (Google S2 API) + プロジェクト名（ドキュメントへのリンク）。
     -   **配置**: **インストールボタンはカードの右下(bottom-right)に配置**してください。
 -   **バージョン更新**: ユーザースクリプトのバージョンを上げた際は、必ず `index.html` 内のそのスクリプトの `Install` ボタンのテキスト（例: `Install (vX.Y.Z)`）も最新のバージョン番号に更新してください。
 
-
-## Technical Knowledge Base
-
-### YouTube (SPA & Performance)
-
-YouTube user script development learnings:
-
-1.  **SPA Navigation & Cleanup**:
-    -   **Early Cleanup**: On SPA sites like YouTube, rely on early navigation events like `yt-navigate-start` to stop observers and timers *before* page teardown begins. Waiting for `finish` events often causes browser hangs as observers process thousands of deletion mutations.
-    -   **Idempotency**: Ensure cleanup functions are idempotent so they can be safely called multiple times (e.g., on start, on finish, on unload).
-
-2.  **Observer Performance**:
-    -   **Avoid Broad Monitoring**: Do NOT monitor `document.body` with `subtree: true` if massive DOM changes are expected.
-    -   **Polling Alternatives**: For waiting on elements during transitions, lightweight polling (`setInterval`) is often safer and more performant than `MutationObserver`.
-
-3.  **Strict Context Checking**:
-    -   **URL Verification**: Always verify `window.location.pathname` or parameters at the start of your main logic to ensure UI elements don't bleed into unintended pages (e.g., playlist tools appearing on video watch pages).
-
-4.  **Trusted Types Compliance (Security)**:
-    -   **Avoid `innerHTML`**: Modern sites like YouTube enforce Trusted Types security policies that block assignment to `innerHTML`.
-    -   **Use DOM Methods**: Always use `document.createElement()`, `textContent`, `setAttribute()`, and `appendChild()` to securely construct UI elements.
-
-### Gemini (DOM Structure & Selectors)
-
-Learnings from implementing features like Auto-Scroll and Conversation Management (as of Feb 2026):
-
-1.  **Conversation List Hierarchy**:
-    -   The list is roughly at `conversations-list > .conversations-container`.
-    -   **BEWARE**: Broader containers like `side-navigation-content` or `bard-sidenav` also contain "Gems" (Bot) items. Targeting these broad containers allows selectors to pick up Bot items, causing bugs (e.g., incorrect ID logic, sequential numbering artifacts).
-
-2.  **Item Selectors**:
-    -   **Correct Selector**: `[data-test-id="conversation"]`. Note: This attribute is on an `<a>` tag, NOT a `div`. Do NOT restrict your selector to `div` (e.g., `div[data-test-id="conversation"]` will fail).
-    -   **Recommended Strategy**: Prioritize `[data-test-id="conversation"]`. If falling back to `jslog` or other attributes, strictly exclude `[data-test-id="item"]` (which usually denotes Bots/Gems).
-
-3.  **Virtual Scrolling**:
-    -   Gemini uses virtual scrolling. Only currently visible conversation items exist in the DOM. `document.querySelectorAll` will only return a subset (e.g., ~15 items) of the full history.
-    -   Logic that depends on "finding the current item and then finding the next one" must handle cases where the current item has been scrolled out of view and unloaded from the DOM.
-
-### Shared UI Patterns
+## 共有UIパターン (Shared UI Patterns)
 
 1.  **Activity-Linked Panel State**:
     -   **Sync Active/Inactive**: If a script has a UI panel, its open/closed state should be linked to the script's active context, not just a manual toggle.
