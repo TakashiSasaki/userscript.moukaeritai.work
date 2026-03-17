@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Auto Paste in New Tab
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.2
+// @version      0.1.3
 // @description  Emulates Shift+F11 and Ctrl+V in Google Docs.
 // @author       Takashi Sasaki
 // @match        https://docs.google.com/document/*
@@ -25,7 +25,7 @@
             document.dispatchEvent(new CustomEvent('userscript-check-installed', {
                 detail: {
                     name: typeof GM_info !== 'undefined' ? GM_info.script.name : 'Auto Paste in New Tab',
-                    version: typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.2'
+                    version: typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.3'
                 }
             }));
         };
@@ -34,8 +34,9 @@
         return;
     }
 
-    // Load position
+    // Load position and settings
     const savedPos = GM_getValue('panelPosition', { bottom: '24px', right: '24px' });
+    let pasteMethod = GM_getValue('pasteMethod', 'menu');
 
     // Create UI container
     const panel = document.createElement('div');
@@ -73,8 +74,35 @@
         background: rgba(255,255,255,0.05);
         border-radius: 4px;
     `;
-    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.2'}`;
+    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.3'}`;
     panel.appendChild(versionSpan);
+
+    const methodSelect = document.createElement('select');
+    methodSelect.style.cssText = `
+        background: #444;
+        color: white;
+        border: 1px solid #555;
+        border-radius: 4px;
+        padding: 2px 4px;
+        font-size: 11px;
+        cursor: pointer;
+        outline: none;
+    `;
+    const optionMenu = document.createElement('option');
+    optionMenu.value = 'menu';
+    optionMenu.textContent = 'Menu (Edit>Paste)';
+    const optionEvent = document.createElement('option');
+    optionEvent.value = 'event';
+    optionEvent.textContent = 'Event (Ctrl+V)';
+    methodSelect.appendChild(optionMenu);
+    methodSelect.appendChild(optionEvent);
+    methodSelect.value = pasteMethod;
+
+    methodSelect.addEventListener('change', (e) => {
+        pasteMethod = e.target.value;
+        GM_setValue('pasteMethod', pasteMethod);
+    });
+    panel.appendChild(methodSelect);
 
     const pasteBtn = document.createElement('button');
     pasteBtn.textContent = 'Paste in new tab';
@@ -154,27 +182,55 @@
 
         // Wait 500ms
         setTimeout(() => {
-            // Emulate Ctrl+V
-            const ctrlVDown = new KeyboardEvent('keydown', {
-                key: 'v',
-                code: 'KeyV',
-                keyCode: 86,
-                ctrlKey: true,
-                bubbles: true,
-                cancelable: true
-            });
-            const ctrlVUp = new KeyboardEvent('keyup', {
-                key: 'v',
-                code: 'KeyV',
-                keyCode: 86,
-                ctrlKey: true,
-                bubbles: true,
-                cancelable: true
-            });
+            if (pasteMethod === 'event') {
+                // Emulate Ctrl+V
+                const ctrlVDown = new KeyboardEvent('keydown', {
+                    key: 'v',
+                    code: 'KeyV',
+                    keyCode: 86,
+                    ctrlKey: true,
+                    bubbles: true,
+                    cancelable: true
+                });
+                const ctrlVUp = new KeyboardEvent('keyup', {
+                    key: 'v',
+                    code: 'KeyV',
+                    keyCode: 86,
+                    ctrlKey: true,
+                    bubbles: true,
+                    cancelable: true
+                });
 
-            console.log('[Auto Paste in New Tab] Emulating Ctrl+V');
-            target.dispatchEvent(ctrlVDown);
-            target.dispatchEvent(ctrlVUp);
+                console.log('[Auto Paste in New Tab] Emulating Ctrl+V');
+                target.dispatchEvent(ctrlVDown);
+                target.dispatchEvent(ctrlVUp);
+            } else if (pasteMethod === 'menu') {
+                const editMenu = document.querySelector('#docs-edit-menu');
+                if (editMenu) {
+                    console.log('[Auto Paste in New Tab] Clicking Edit menu');
+                    ['mousedown', 'mouseup', 'click'].forEach(type => {
+                        editMenu.dispatchEvent(new MouseEvent(type, { bubbles: true }));
+                    });
+
+                    setTimeout(() => {
+                        const pasteItem = Array.from(document.querySelectorAll('.goog-menuitem'))
+                            .find(item => {
+                                const label = item.querySelector('.goog-menuitem-label') || item.querySelector('span');
+                                return label && label.textContent.trim() === '貼り付け';
+                            });
+                        if (pasteItem) {
+                            console.log('[Auto Paste in New Tab] Clicking Paste menu item');
+                            ['mousedown', 'mouseup', 'click'].forEach(type => {
+                                pasteItem.dispatchEvent(new MouseEvent(type, { bubbles: true }));
+                            });
+                        } else {
+                            console.error('[Auto Paste in New Tab] Paste menu item not found');
+                        }
+                    }, 100);
+                } else {
+                    console.error('[Auto Paste in New Tab] Edit menu not found');
+                }
+            }
         }, 500);
     });
 
