@@ -6,7 +6,6 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>NotebookLM Artifact Delete Button - Moukaeritai</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --primary: #10a37f;
@@ -132,7 +131,19 @@
             </a>
         </nav>
 
-        <div id="content">Loading...</div>
+        <div id="content">
+            <h1>NotebookLM Artifact Delete Button</h1>
+<h2>概要</h2>
+<p>NotebookLM の各アーティファクト（メモ、ソースなど）に削除ボタンを追加し、1クリックで削除プロセスを開始できるようにするユーザースクリプトです。</p>
+<h2>機能</h2>
+<ul>
+<li>各アーティファクトのアイテムに「×」ボタンを追加します。</li>
+<li>ボタンをクリックすると、ネイティブの削除メニューを自動的に呼び出し、削除確認ダイアログまで自動化または補助します。</li>
+</ul>
+<h2>インストール</h2>
+<p><a href="notebooklm-artifact-delete-button.user.js">こちら</a> からインストールしてください。</p>
+
+        </div>
 
         <div class="install-section">
             <a class="install-button" id="install-btn" href="notebooklm-artifact-delete-button.user.js">
@@ -143,19 +154,6 @@
             </a>
         </div>
     </div>
-
-    <script>
-        async function loadMarkdown() {
-            try {
-                const response = await fetch('README.md');
-                const text = await response.text();
-                document.getElementById('content').innerHTML = marked.parse(text);
-            } catch (e) {
-                document.getElementById('content').innerText = 'Failed to load content.';
-            }
-        }
-        loadMarkdown();
-    </script>
 </body>
 
 </html>

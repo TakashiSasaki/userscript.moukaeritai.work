@@ -2,74 +2,211 @@
 <html lang="ja">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatGPT No Margin Userscript - Documentation</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>ChatGPT No Margin - Moukaeritai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            color: #333;
+        :root {
+            --primary: #10a37f;
+            --primary-dark: #0e8a6c;
+            --bg-gradient: linear-gradient(135.2deg, rgba(7, 12, 10, 1) 1.2%, rgba(13, 44, 40, 1) 98.1%);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-dim: #b0b8c4;
         }
 
-        pre {
-            background-color: #f4f4f4;
-            padding: 10px;
-            border-radius: 5px;
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 2em;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 3rem;
+            backdrop-filter: blur(15px);
+        }
+
+        .top-nav {
+            margin-bottom: 2em;
+        }
+
+        .top-nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-dim);
+            padding: 8px 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .top-nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
+        }
+
+        #content h1 {
+            background: linear-gradient(90deg, #10a37f, #20e3b2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 0;
+        }
+
+        #content h2 {
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        #content code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        #content pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
             overflow-x: auto;
         }
 
-        code {
-            font-family: Consolas, Monaco, 'Andale Mono', monospace;
-            background-color: #f4f4f4;
-            padding: 2px 4px;
-            border-radius: 3px;
+        .install-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
         }
 
-        h1,
-        h2,
-        h3 {
-            color: #2c3e50;
-        }
-
-        a {
-            color: #0366d6;
+        .install-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            background: var(--primary);
+            color: white;
             text-decoration: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 163, 127, 0.3);
         }
 
-        a:hover {
-            text-decoration: underline;
-        }
-
-        #content {
-            margin-top: 20px;
+        .install-button:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 6px 20px rgba(16, 163, 127, 0.5);
+            transform: scale(1.05);
         }
     </style>
 </head>
 
 <body>
-    <div id="content">Loading documentation...</div>
+    <div class="container">
+        <nav class="top-nav">
+            <a class="top-nav-link" href="../index.html">
+                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
+                    <path
+                        d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
+                </svg>
+                Back to Home
+            </a>
+        </nav>
 
-    <script>
-        fetch('README.md')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(markdown => {
-                document.getElementById('content').innerHTML = marked.parse(markdown);
-            })
-            .catch(error => {
-                console.error('Error loading markdown:', error);
-                document.getElementById('content').innerHTML = '<p>Error loading documentation. Please check if chatgpt-no-margin.md exists.</p>';
-            });
-    </script>
+        <div id="content">
+            <h1>ChatGPT No Margin Userscript Design Document</h1>
+<h2>概要</h2>
+<p>このユーザースクリプト (<code>chatgpt-no-margin.user.js</code>) は、ChatGPTの会話画面におけるメッセージの左右の余白を削除し、画面幅を最大限に活用するためのツールです。これにより、コードブロックや長い文章の視認性を向上させることを目的としています。</p>
+<h2>主な機能</h2>
+<ol>
+<li><strong>メッセージコンテナの最大化</strong>: 会話メッセージが表示されるコンテナの <code>max-width</code> 制限を解除し、<code>100%</code> に設定します。</li>
+<li><strong>余白の削除</strong>: <code>margin-left</code> および <code>margin-right</code> を <code>0</code> に設定し、中央揃えによる余白を排除します。</li>
+<li><strong>動的なDOM監視</strong>: <code>MutationObserver</code> を使用して、チャットの進行に伴い新たに追加されるメッセージに対しても即座にスタイルを適用します。</li>
+<li><strong>ポータルサイト連携</strong>: ユーザースクリプトのインストール状況を管理サイト (<code>userscript.moukaeritai.work</code> 等) に通知する機能を備えています。</li>
+</ol>
+<h2>技術的詳細</h2>
+<h3>ターゲットDOM構造</h3>
+<p>ChatGPTのDOM構造は頻繁に変更されるため、以下の主要なクラスパターンをターゲットとしています。</p>
+<ol>
+<li><p><strong>内部メッセージコンテナ (<code>div.flex.mx-auto</code>)</strong>:</p>
+<ul>
+<li>従来のレイアウトおよび一部の新しいレイアウトで使用される、メッセージコンテンツを直接包むフレックスコンテナ。</li>
+<li><code>mx-auto</code> クラスにより中央揃えされている要素をターゲットにします。</li>
+</ul>
+</li>
+<li><p><strong>外部メッセージラッパー (<code>div.text-base.mx-auto</code>)</strong>:</p>
+<ul>
+<li>最近のChatGPTのDOM構造で見られる、メッセージ全体を囲むラッパー。</li>
+<li><code>text-base</code>, <code>my-auto</code>, <code>mx-auto</code> 等のクラスを持つ要素をターゲットにします。</li>
+</ul>
+</li>
+<li><p><strong>CSS変数 (<code>--thread-content-max-width</code>)</strong>:</p>
+<ul>
+<li>Tailwind CSSのArbitrary Values機能などで使用されるカスタムプロパティを検出した場合、これを <code>100%</code> に上書きします。</li>
+</ul>
+</li>
+</ol>
+<h3>スタイル変更ロジック</h3>
+<p>対象となる要素 (<code>widen</code> 関数で処理) に対して、以下のインラインスタイルを強制的に適用します。</p>
+<pre><code class="language-javascript">element.style.marginLeft = &quot;0px&quot;;
+element.style.marginRight = &quot;0px&quot;;
+element.style.maxWidth = &quot;100%&quot;;
+</code></pre>
+<h3>監視戦略 (MutationObserver)</h3>
+<ul>
+<li><strong>監視対象</strong>: <code>main div[role=&#39;presentation&#39;]</code> (チャットエリアのメインコンテナ) またはフォールバックとして <code>document.body</code>。</li>
+<li><strong>監視オプション</strong>: <code>{ childList: true, subtree: true, attributes: true, attributeFilter: [&#39;class&#39;, &#39;style&#39;] }</code><ul>
+<li><code>childList</code>: 新しいメッセージの追加を検知。</li>
+<li><code>attributes</code>: クラスやスタイルの変更によるレイアウトのリセットを検知（特にレスポンシブな変更時）。</li>
+</ul>
+</li>
+<li><strong>遅延初期化</strong>: ページロード完了後のDOM構築を待つため、<code>setTimeout</code> により1.5秒の遅延を入れてから監視を開始します。</li>
+</ul>
+<h3>Portal API Guard</h3>
+<p>特定の管理ドメイン (<code>userscript.moukaeritai.work</code> など) で実行された場合、スクリプトのメインロジックを実行せず、インストール済みであることを通知するイベント (<code>userscript-check-installed</code>, <code>userscript-pong</code>) のみを処理します。</p>
+<h2>バージョン履歴</h2>
+<ul>
+<li><strong>1.1.0</strong>:<ul>
+<li>複数のDOMパターン (<code>div.text-base.mx-auto</code>) への対応を追加。</li>
+<li>CSS変数 (<code>--thread-content-max-width</code>) のオーバーライド処理を追加。</li>
+<li>コードベースの統合とリファクタリング。</li>
+</ul>
+</li>
+<li><strong>1.0.0</strong>:<ul>
+<li>初期リリース。基本的な <code>div.flex.mx-auto</code> への対応。</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+
+        <div class="install-section">
+            <a class="install-button" id="install-btn" href="chatgpt-no-margin.user.js">
+                <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                </svg>
+                Install Userscript
+            </a>
+        </div>
+    </div>
 </body>
 
 </html>

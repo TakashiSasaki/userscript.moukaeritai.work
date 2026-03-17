@@ -2,111 +2,201 @@
 <html lang="ja">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Playlist Scroller UserScript</title>
-    <!-- Github Markdown CSS for styling -->
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>YouTube Playlist Scroller - Moukaeritai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #10a37f;
+            --primary-dark: #0e8a6c;
+            --bg-gradient: linear-gradient(135.2deg, rgba(7, 12, 10, 1) 1.2%, rgba(13, 44, 40, 1) 98.1%);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-dim: #b0b8c4;
+        }
+
         body {
-            box-sizing: border-box;
-            min-width: 200px;
-            max-width: 980px;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 2em;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
             margin: 0 auto;
-            padding: 45px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 3rem;
+            backdrop-filter: blur(15px);
         }
 
-        @media (max-width: 767px) {
-            body {
-                padding: 15px;
-            }
+        .top-nav {
+            margin-bottom: 2em;
         }
 
-        .home-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #24292e;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            transition: background-color 0.2s;
-            display: flex;
+        .top-nav-link {
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-dim);
+            padding: 8px 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            transition: all 0.3s ease;
         }
 
-        .home-button svg {
-            fill: currentColor;
+        .top-nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
         }
 
-        .home-button:hover {
-            background-color: #0366d6;
+        #content h1 {
+            background: linear-gradient(90deg, #10a37f, #20e3b2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 0;
+        }
+
+        #content h2 {
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        #content code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        #content pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .install-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .install-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            background: var(--primary);
             color: white;
             text-decoration: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 163, 127, 0.3);
+        }
+
+        .install-button:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 6px 20px rgba(16, 163, 127, 0.5);
+            transform: scale(1.05);
         }
     </style>
 </head>
 
-<body class="markdown-body">
-    <a href="https://userscript.moukaeritai.work/" class="home-button">
-        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
-            <path
-                d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-        </svg>
-        userscript.moukaeritai.work
-    </a>
-    <div id="content">Loading documentation...</div>
+<body>
+    <div class="container">
+        <nav class="top-nav">
+            <a class="top-nav-link" href="../index.html">
+                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
+                    <path
+                        d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
+                </svg>
+                Back to Home
+            </a>
+        </nav>
 
-    <!-- Marked library for parsing markdown -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Fetch the markdown file located in the same directory
-            fetch('README.md')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(text => {
-                    // Parse markdown to HTML using 'marked' library
-                    document.getElementById('content').innerHTML = marked.parse(text);
-                })
-                .catch(err => {
-                    // Display friendly error message (likely CORS if opened directly)
-                    document.getElementById('content').innerHTML = `
-                        <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 1em; border-radius: 4px;">
-                            <h3 style="margin-top: 0;">Error loading document</h3>
-                            <p>${err.message}</p>
-                            <hr>
-                            <p><strong>注意:</strong> このファイルをローカルファイルシステム (file://) から直接開いている場合、ブラウザのセキュリティポリシー(CORS)により外部ファイルの読み込みがブロックされることがあります。</p>
-                            <p>以下のいずれかの方法で閲覧してください：</p>
-                            <ul>
-                                <li>ローカルサーバーを起動してアクセスする (例: <code>python -m http.server</code> や <code>npx http-server</code>)</li>
-                                <li>VSCodeの "Live Server" 拡張機能を使用する</li>
-                            </ul>
-                        </div>
-                    `;
-                    console.error('Error fetching markdown:', err);
-                });
-        });
-    </script>
-    <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
-    <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
-        <p>
-            Hosted on GitHub Pages |
-            <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
-            Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
-        </p>
-    </footer>
+        <div id="content">
+            <h1>YouTube Playlist Scroller</h1>
+<p>プレイリストページで、リストの一番下まで自動的にスクロールし続けるユーザースクリプトです。<br>大量の動画が含まれるプレイリスト（例えば「後で見る」など）の全件読み込みを支援します。</p>
+<h2>機能</h2>
+<ul>
+<li><strong>自動スクロール</strong>: 一定間隔でページ最下部へスクロール、または指定ピクセル数だけスクロールします。</li>
+<li><strong>読み込み状態表示</strong>: 現在プレイリストを読み込み中かどうかをパネルに表示します（&quot;Loading...&quot; / &quot;Idle&quot;）。</li>
+<li><strong>バックグラウンド動作</strong>: ブラウザで他のタブを見ていても、裏でスクロールを継続します（ブラウザの仕様により頻度が下がる場合があります）。</li>
+<li><strong>設定保存</strong>: スクロール間隔やステップ数、モード（最下部へジャンプするかどうか）の設定を記憶します。</li>
+</ul>
+<h2>インストール</h2>
+<ol>
+<li>Tampermonkey などの拡張機能がインストールされていることを確認します。</li>
+<li>以下のリンクをクリックしてインストールします。</li>
+</ol>
+<p>👉 <strong><a href="youtube-playlist-scroller.user.js">Install YouTube Playlist Scroller</a></strong></p>
+<p>このスクリプトは YouTube 全体にインストールされますが、<strong>主要機能が有効になるのはプレイリストページのみ</strong>です。</p>
+<h2>使い方</h2>
+<ol>
+<li>YouTubeのプレイリストページ（<code>https://www.youtube.com/playlist?list=...</code>）を開きます。</li>
+<li>画面右下に「Auto Scroller」パネルが表示され、<code>Active</code> が表示されます（初回注入時は 1-3 秒のランダムディレイ後に表示）。</li>
+<li><strong>ON/OFF</strong> ボタンをクリックすると、自動スクロールの開始/停止を切り替えられます。<ul>
+<li>プレイリスト以外のページでは <code>Inactive</code> 表示となり、パネル内容は閉じた状態になります。</li>
+</ul>
+</li>
+</ol>
+<h2>設定</h2>
+<ul>
+<li><strong>Scroll to Bottom</strong>: チェックを入れると、毎回ページの最下端へジャンプします（大量読み込みに推奨）。チェックを外すと、現在の位置から「Step」で指定した量だけスクロールします。</li>
+<li><strong>Step (px)</strong>: 「Scroll to Bottom」がオフの場合の、1回あたりのスクロール量です。</li>
+<li><strong>Interval (sec)</strong>: スクロールを実行する間隔（秒）です。</li>
+</ul>
+<h2>併用推奨スクリプト</h2>
+<p>このスクリプトは以下のツールと組み合わせて使用することで、プレイリストの管理がより便利になります。</p>
+<ul>
+<li><strong><a href="../youtube-playlist-saver/index.html">YouTube Playlist Saver</a></strong>: 読み込んだ動画のIDを自動的に保存し、既知か新規かを判別します。</li>
+<li><strong><a href="../youtube-playlist-filter/index.html">YouTube Playlist Filter</a></strong>: 大量の動画から特定のキーワードで絞り込みを行います。</li>
+<li><strong><a href="../youtube-playlist-remover/index.html">YouTube Playlist Remover</a></strong>: 不要な動画を一括で削除します。</li>
+</ul>
+<h2>技術的詳細</h2>
+<ul>
+<li>このスクリプトは <a href="../youtube-playlist-saver/index.html">YouTube Playlist Saver</a> から機能を分離し、単独での使いやすさを重視して設計されました。</li>
+<li>ページ遷移 (<code>yt-navigate-start/finish</code>) を検知し、プレイリストページの間だけ機能を有効化します。</li>
+</ul>
+<h2>更新履歴</h2>
+<ul>
+<li><strong>v0.1.8</strong>: 初期化ディレイを 1-3 秒のランダムに変更し、同時起動の負荷を分散。</li>
+<li><strong>v0.1.5</strong>: YouTube全体にインストールしつつ、プレイリストページのみでアクティブ化するように変更。アクティブ状態に応じてパネルの開閉と表示を自動連動。</li>
+<li><strong>v0.1.3</strong>: 読み込み判定ロジックを修正（無限スクロール時のスピナーも検知するように変更）。</li>
+<li><strong>v0.1.2</strong>: 読み込み中の状態 (&quot;Loading...&quot;) を表示する機能を追加。</li>
+<li><strong>v0.1.1</strong>: 初回公開。</li>
+</ul>
+<h2>開発者向け情報</h2>
+<p>このスクリプトの内部構造やメンテナンス方針については、<a href="AGENTS.md">AGENTS.md</a> を参照してください。</p>
+
+        </div>
+
+        <div class="install-section">
+            <a class="install-button" id="install-btn" href="youtube-playlist-scroller.user.js">
+                <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                </svg>
+                Install Userscript
+            </a>
+        </div>
+    </div>
 </body>
 
 </html>

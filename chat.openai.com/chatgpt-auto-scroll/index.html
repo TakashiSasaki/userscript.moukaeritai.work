@@ -6,7 +6,6 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>ChatGPT Auto Scroll - Moukaeritai</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --primary: #10a37f;
@@ -132,7 +131,87 @@
             </a>
         </nav>
 
-        <div id="content">Loading...</div>
+        <div id="content">
+            <h1>ChatGPT Auto Scroll</h1>
+<p>ChatGPTのサイドバーにある会話履歴リストを自動的にスクロールし、過去のすべての会話を読み込むためのユーザースクリプトです。</p>
+<h2>主な機能</h2>
+<ol>
+<li><p><strong>会話リストの自動スクロール</strong></p>
+<ul>
+<li>ChatGPTのサイドバーは「無限スクロール」形式になっており、古い会話はスクロールしないと読み込まれません。</li>
+<li>このスクリプトは、リストの最下部へのスクロールを自動的に繰り返し、すべての会話履歴をDOM上にロードさせます。</li>
+<li>他のツール（会話エクスポートツールなど）で全履歴を処理したい場合の前準備として有用です。</li>
+</ul>
+</li>
+<li><p><strong>高機能フローティング操作パネル</strong></p>
+<ul>
+<li>画面上にドラッグ可能な操作パネルを表示し、スクリプトの制御と状態確認を行えます。</li>
+<li><strong>リアルタイムステータス表示</strong>:<ul>
+<li><strong>State</strong>: 現在の動作状態（Idle / Running / Cooldown）。</li>
+<li><strong>Scrolls</strong>: スクロールを実行した回数。</li>
+<li><strong>Top</strong>: 現在のスクロール位置（ピクセル）。</li>
+</ul>
+</li>
+<li><strong>ドラッグ移動</strong>: ボタン以外のパネル上のどこを掴んでも自由に位置を移動できます。</li>
+<li><strong>位置の記憶</strong>: パネルの位置は保存され、次回アクセス時やリロード後も同じ場所に復元されます。</li>
+</ul>
+</li>
+<li><p><strong>ポータルサイト連携 (Install Detection)</strong></p>
+<ul>
+<li>配布用ポータルサイト（<code>userscript.moukaeritai.work</code>）にアクセスした際、スクリプトがインストール済みであることをサイト側に通知します。</li>
+<li>これにより、ポータルサイト上で「インストール済み」のステータス表示が可能になります。</li>
+</ul>
+</li>
+</ol>
+<h2>使い方</h2>
+<ol>
+<li>スクリプトをインストールした状態で ChatGPT (<code>chatgpt.com</code>) を開きます。</li>
+<li>画面右上（初期位置）に「Auto Scroll vX.X.X」というパネルが表示されます。<ul>
+<li>パネルはボタン以外の場所をドラッグして好きな位置に移動できます。</li>
+</ul>
+</li>
+<li><strong>Start Scroll</strong> ボタンをクリックすると、サイドバーの自動スクロールが始まります。<ul>
+<li>ボタンの色が緑から赤（Stop Scroll）に変わり、Stateが <code>Running</code> になります。</li>
+</ul>
+</li>
+<li>リストの読み込みが完了するまで（または <strong>Stop Scroll</strong> を押すまで）動作します。<ul>
+<li>スクロール中は <code>Scrolls</code> カウンタが増加し、<code>Top</code> の値が更新されます。</li>
+</ul>
+</li>
+</ol>
+<h2>技術的詳細</h2>
+<ul>
+<li><p><strong>DOM監視</strong>: <code>MutationObserver</code> を使用してリスト要素の変化を監視しています。スクロールによって新しい要素が読み込まれると、再度最下部へスクロールを行います。</p>
+</li>
+<li><p><strong>セレクタ管理</strong>: ChatGPTの頻繁なUI変更に対応するため、会話リストを特定するためのCSSセレクタを複数保持し、優先順位順に適用します。</p>
+</li>
+<li><p><strong>UI/UX設計</strong>:</p>
+<ul>
+<li><strong>ドラッグ操作</strong>: パネル全体（ボタンを除く）をドラッグ領域とすることで、操作性を向上させています。</li>
+<li><strong>誤操作防止</strong>: ステータステキスト等は <code>user-select: none</code> により選択不可となっており、ドラッグ時の誤選択を防ぎます。</li>
+<li><strong>SPA対応</strong>: <code>setInterval</code> を使用して定期的にUIパネルの存在を確認し、画面遷移などで削除された場合に再生成します。</li>
+<li><strong>位置保存</strong>: <code>GM_setValue</code> / <code>GM_getValue</code> を使用して、ユーザーが移動させたパネルの位置を記憶・復元します。</li>
+</ul>
+</li>
+<li><p><strong>イベント通信</strong>:</p>
+<ul>
+<li><code>userscript-check-installed</code>: ページロード時に発火し、スクリプトの存在を通知します。</li>
+<li><code>userscript-ping</code>: ポータルサイトからの問い合わせに応答します。</li>
+</ul>
+</li>
+<li><p>Target Domain: <code>chatgpt.com</code> and portal domains.</p>
+</li>
+<li><p>Required: Tampermonkey or similar.</p>
+</li>
+<li><p>Features: Position persistence, adjustable interval.</p>
+</li>
+</ul>
+<h2>著者</h2>
+<p>Takashi SASAKI (@TakashiSasaki)</p>
+<h2>ライセンス</h2>
+<p>MIT</p>
+
+        </div>
 
         <div class="install-section">
             <a class="install-button" id="install-btn" href="chatgpt-auto-scroll.user.js">
@@ -143,19 +222,6 @@
             </a>
         </div>
     </div>
-
-    <script>
-        async function loadMarkdown() {
-            try {
-                const response = await fetch('README.md');
-                const text = await response.text();
-                document.getElementById('content').innerHTML = marked.parse(text);
-            } catch (e) {
-                document.getElementById('content').innerText = 'Failed to load content.';
-            }
-        }
-        loadMarkdown();
-    </script>
 </body>
 
 </html>

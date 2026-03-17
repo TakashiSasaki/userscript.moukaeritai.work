@@ -2,160 +2,169 @@
 <html lang="ja">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Gemini Profile Badge - Moukaeritai</title>
-    <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-profile-badge/index.html"
-        rel="canonical" />
-    <!-- Github Markdown CSS for styling -->
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #10a37f;
+            --primary-dark: #0e8a6c;
+            --bg-gradient: linear-gradient(135.2deg, rgba(7, 12, 10, 1) 1.2%, rgba(13, 44, 40, 1) 98.1%);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-dim: #b0b8c4;
+        }
+
         body {
-            box-sizing: border-box;
-            min-width: 200px;
-            max-width: 980px;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 2em;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
             margin: 0 auto;
-            padding: 45px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 3rem;
+            backdrop-filter: blur(15px);
         }
 
-        @media (max-width: 767px) {
-            body {
-                padding: 15px;
-            }
+        .top-nav {
+            margin-bottom: 2em;
         }
 
-        .home-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #24292e;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            transition: background-color 0.2s;
-            display: flex;
+        .top-nav-link {
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
-        }
-
-        .home-button svg {
-            fill: currentColor;
-        }
-
-        .home-button:hover {
-            background-color: #0366d6;
-            color: white;
+            gap: 10px;
             text-decoration: none;
+            color: var(--text-dim);
+            padding: 8px 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .top-nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
+        }
+
+        #content h1 {
+            background: linear-gradient(90deg, #10a37f, #20e3b2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 0;
+        }
+
+        #content h2 {
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        #content code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        #content pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .install-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
         }
 
         .install-button {
-            display: inline-block;
-            padding: 12px 24px;
-            background-color: #2ea44f;
-            color: white !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
             font-weight: 600;
-            border-radius: 6px;
-            text-decoration: none !important;
-            margin: 20px 0;
-            transition: background-color 0.2s;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 163, 127, 0.3);
         }
 
         .install-button:hover {
-            background-color: #2c974b;
+            background: var(--primary-dark);
+            box-shadow: 0 6px 20px rgba(16, 163, 127, 0.5);
+            transform: scale(1.05);
         }
     </style>
 </head>
 
-<body class="markdown-body">
-    <a href="https://userscript.moukaeritai.work/" class="home-button">
-        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
-            <path
-                d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-        </svg>
-        userscript.moukaeritai.work
-    </a>
-    <div id="content">Loading documentation...</div>
+<body>
+    <div class="container">
+        <nav class="top-nav">
+            <a class="top-nav-link" href="../index.html">
+                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
+                    <path
+                        d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
+                </svg>
+                Back to Home
+            </a>
+        </nav>
 
-    <!-- Marked library for parsing markdown -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            const markdown = `
-# Gemini Profile Badge
+        <div id="content">
+            <h1>Gemini Profile Badge</h1>
+<p>Google Gemini のウェブページにおいて、ユーザープロフィール画像が表示される箇所に任意の文字列（数文字程度のテキストや絵文字）を「バッジ」として追加表示するユーザースクリプトです。</p>
+<p>対象URL: `<a href="https://gemini.google.com/app%5C%60">https://gemini.google.com/app\`</a></p>
+<h2>設定 (Configuration)</h2>
+<p>ユーザースクリプトのメニューコマンドを通じてバッジのテキストを簡単設定できます。</p>
+<ol>
+<li>ブラウザのツールバーにあるTampermonkeyのアイコンをクリックします。</li>
+<li>表示されるメニューから「<strong>Set Badge Text</strong>」を選択します。</li>
+<li>プロンプトが表示されたら、バッジとして表示したいテキストを入力し、「OK」をクリックします。<ul>
+<li>テキストを空にすると、バッジは非表示になります。</li>
+<li>設定は即座に反映されます。</li>
+</ul>
+</li>
+</ol>
+<p>この設定はTampermonkeyが提供するローカルストレージに保存されます。</p>
+<h2>機能仕様</h2>
+<ul>
+<li><strong>パフォーマンス設計</strong>: ページの初期表示に必須ではないため、読み込みパフォーマンスに影響を与えないよう `MutationObserver` を用いて非同期で描画処理を行います。</li>
+<li><strong>重複描画の防止</strong>: `MutationObserver` が複数回発火した場合でもバッジが重複して描画されないよう制御しています。</li>
+<li><strong>動的な更新</strong>: メニューからバッジテキストが更新された際、既存のバッジの内容を即座に更新します。</li>
+</ul>
 
-Google Gemini のウェブページにおいて、ユーザープロフィール画像が表示される箇所に任意の文字列（数文字程度のテキストや絵文字）を「バッジ」として追加表示するユーザースクリプトです。
+        </div>
 
-対象URL: \`https://gemini.google.com/app\`
-
-<div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
-    <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
-    <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
-</div>
-
-<a href="gemini-profile-badge.user.js" class="install-button">スクリプトをインストール</a>
-
-## 設定 (Configuration)
-
-ユーザースクリプトのメニューコマンドを通じてバッジのテキストを簡単設定できます。
-
-1.  ブラウザのツールバーにあるTampermonkeyのアイコンをクリックします。
-2.  表示されるメニューから「**Set Badge Text**」を選択します。
-3.  プロンプトが表示されたら、バッジとして表示したいテキストを入力し、「OK」をクリックします。
-    -   テキストを空にすると、バッジは非表示になります。
-    -   設定は即座に反映されます。
-
-この設定はTampermonkeyが提供するローカルストレージに保存されます。
-
-## 機能仕様
-
-*   **パフォーマンス設計**: ページの初期表示に必須ではないため、読み込みパフォーマンスに影響を与えないよう \`MutationObserver\` を用いて非同期で描画処理を行います。
-*   **重複描画の防止**: \`MutationObserver\` が複数回発火した場合でもバッジが重複して描画されないよう制御しています。
-*   **動的な更新**: メニューからバッジテキストが更新された際、既存のバッジの内容を即座に更新します。
-`;
-            document.getElementById('content').innerHTML = marked.parse(markdown);
-
-            // Fetch version from script metadata
-            try {
-                const response = await fetch('gemini-profile-badge.user.js');
-                if (response.ok) {
-                    const text = await response.text();
-                    const versionMatch = text.match(/\/\/ @version\s+([\d.]+)/);
-                    const dateMatch = text.match(/\/\/ @lastModified\s+([\d-]+)/);
-                    if (versionMatch) {
-                        const version = versionMatch[1];
-                        const date = dateMatch ? dateMatch[1] : '不明';
-
-                        // Update info labels
-                        const verEl = document.getElementById('ver-info');
-                        const dateEl = document.getElementById('date-info');
-                        if (verEl) verEl.textContent = `v${version}`;
-                        if (dateEl) dateEl.textContent = date;
-
-                        const installBtn = document.querySelector('.install-button');
-                        if (installBtn) {
-                            installBtn.textContent = `スクリプトをインストール (v${version})`;
-                        }
-                    }
-                }
-            } catch (e) {
-                console.warn('Could not fetch script version:', e);
-            }
-        });
-    </script>
-    <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
-    <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
-        <p>
-            Hosted on GitHub Pages |
-            <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
-            Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
-        </p>
-    </footer>
+        <div class="install-section">
+            <a class="install-button" id="install-btn" href="gemini-profile-badge.user.js">
+                <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                </svg>
+                Install Userscript
+            </a>
+        </div>
+    </div>
 </body>
 
 </html>
