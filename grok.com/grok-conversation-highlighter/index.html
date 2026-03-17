@@ -2,106 +2,184 @@
 <html lang="ja">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grok Conversation Highlighter</title>
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Grok Conversation Highlighter with Dynamic Selection - Moukaeritai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #10a37f;
+            --primary-dark: #0e8a6c;
+            --bg-gradient: linear-gradient(135.2deg, rgba(7, 12, 10, 1) 1.2%, rgba(13, 44, 40, 1) 98.1%);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-dim: #b0b8c4;
+        }
+
         body {
-            box-sizing: border-box;
-            min-width: 200px;
-            max-width: 980px;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 2em;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
             margin: 0 auto;
-            padding: 45px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 3rem;
+            backdrop-filter: blur(15px);
         }
 
-        @media (max-width: 767px) {
-            body {
-                padding: 15px;
-            }
+        .top-nav {
+            margin-bottom: 2em;
         }
 
-        .home-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #24292e;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            transition: background-color 0.2s;
-            display: flex;
+        .top-nav-link {
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-dim);
+            padding: 8px 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            transition: all 0.3s ease;
         }
 
-        .home-button svg {
-            fill: currentColor;
+        .top-nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
         }
 
-        .home-button:hover {
-            background-color: #0366d6;
+        #content h1 {
+            background: linear-gradient(90deg, #10a37f, #20e3b2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 0;
+        }
+
+        #content h2 {
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        #content code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        #content pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .install-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .install-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            background: var(--primary);
             color: white;
             text-decoration: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 163, 127, 0.3);
+        }
+
+        .install-button:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 6px 20px rgba(16, 163, 127, 0.5);
+            transform: scale(1.05);
         }
     </style>
 </head>
 
-<body class="markdown-body">
-    <a href="https://userscript.moukaeritai.work/" class="home-button">
-        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
-            <path
-                d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-        </svg>
-        userscript.moukaeritai.work
-    </a>
-    <div id="content">Loading documentation...</div>
+<body>
+    <div class="container">
+        <nav class="top-nav">
+            <a class="top-nav-link" href="../index.html">
+                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
+                    <path
+                        d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
+                </svg>
+                Back to Home
+            </a>
+        </nav>
 
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            fetch('Grok Conversation Highlighter with Dynamic Selection-1.20.md')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(text => {
-                    document.getElementById('content').innerHTML = marked.parse(text);
-                })
-                .catch(err => {
-                    document.getElementById('content').innerHTML = `
-                        <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 1em; border-radius: 4px;">
-                            <h3 style="margin-top: 0;">Error loading document</h3>
-                            <p>${err.message}</p>
-                            <hr>
-                            <p><strong>注意:</strong> このファイルをローカルファイルシステム (file://) から直接開いている場合、ブラウザのセキュリティポリシー(CORS)により外部ファイルの読み込みがブロックされることがあります。</p>
-                            <p>以下のいずれかの方法で閲覧してください：</p>
-                            <ul>
-                                <li>ローカルサーバーを起動してアクセスする (例: <code>python -m http.server</code> や <code>npx http-server</code>)</li>
-                                <li>VSCodeの "Live Server" 拡張機能を使用する</li>
-                            </ul>
-                        </div>
-                    `;
-                    console.error('Error fetching markdown:', err);
-                });
-        });
-    </script>
-    <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
-    <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
-        <p>
-            Hosted on GitHub Pages |
-            <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
-            Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
-        </p>
-    </footer>
+        <div id="content">
+            <h1>Grok Conversation Highlighter with Dynamic Selection ユーザースクリプト</h1>
+<h2>概要</h2>
+<p>この「Grok Conversation Highlighter with Dynamic Selection」ユーザースクリプトは、x.com 上の Grok 会話ページに特化して設計されています。このスクリプトは、特定の会話に存在する灰色で囲まれたハイライトされた項目を動的に見つけ出し、そこにある「もっと見る」ボタンをクリックし、そのボタンをシアン色でハイライトすることで、ユーザーの操作を支援します。また、会話を削除するためのカスタムボタンも追加します。</p>
+<h2>機能</h2>
+<p>このスクリプトは、以下の主要な機能を提供します。</p>
+<ul>
+<li><strong>会話削除ボタンの追加</strong>: Grok のページ上の特定の領域に、ゴミ箱アイコン付きのカスタム削除ボタンを挿入します。<ul>
+<li>この削除ボタンがクリックされると、「チャット履歴」ボタンをクリックしようとし、その後 <code>processHistoryPane</code> 関数を呼び出します。</li>
+</ul>
+</li>
+<li><strong><code>processHistoryPane</code> 関数</strong>: この関数がスクリプトの中核ロジックを担います。<ul>
+<li>外部の履歴コンテナが表示されるのを待機します。</li>
+<li>特定の灰色のラッパー (<code>div.r-bqz1g2</code>) を見つけるために、内部の履歴ペインを自動スクロールします。初期状態で見つからない場合は、複数回スクロールを試行します。</li>
+<li>灰色のラッパーが見つかると、その親となる <code>&lt;a&gt;</code> 要素を特定します。</li>
+<li><strong>リンクのハイライト表示</strong>: 特定された親 <code>&lt;a&gt;</code> 要素は、背景がオレンジ色、文字色が白色、パディング、角丸が適用され、表示領域にスムーズにスクロールされます。</li>
+<li>このハイライトされたリンク内にある「もっと見る」ボタンを待機します。</li>
+<li>「もっと見る」ボタンをクリックし、その後、そのボタンをシアン色の背景、白色の文字色、パディング、角丸でスタイル設定します。</li>
+</ul>
+</li>
+<li><strong>イベントリスナー</strong>: ネイティブの「チャット履歴」ボタンがクリックされた場合にも <code>processHistoryPane</code> が再実行されるように、イベントリスナーが設定されています。</li>
+</ul>
+<h2>動作環境</h2>
+<ul>
+<li><strong>ターゲットウェブサイト</strong>: このユーザースクリプトは、x.com 上の Grok 会話ページに特化して動作するように設計されています。<ul>
+<li><strong>URL パターン</strong>: <code>https://x.com/i/grok?conversation=*</code></li>
+</ul>
+</li>
+<li><strong>ブラウザ拡張機能</strong>: Tampermonkey などのユーザースクリプトマネージャーで使用することを意図しています。</li>
+</ul>
+<h2>技術詳細 (バージョン 1.20)</h2>
+<ul>
+<li><strong>動的な要素検出</strong>: <code>waitFor</code> 関数を使用して、DOM 内に特定の要素が出現するまで待機し、要素の動的なロードに対応します。</li>
+<li><strong>DOM操作の深度</strong>: <code>querySelector</code> や <code>closest</code> などの標準 DOM メソッドを駆使して、必要な要素を正確に特定し、スタイルを適用します。</li>
+<li><strong>CSSスタイルの直接適用</strong>: JavaScript を介して直接 CSS スタイルを適用し、ユーザーインターフェースを視覚的に強化します。</li>
+<li><strong>スクロール操作</strong>: <code>scrollBy</code> や <code>scrollIntoView</code> を使用して、目的の要素がユーザーの視界に入るようにページを操作します。</li>
+</ul>
+
+        </div>
+
+        <div class="install-section">
+            <a class="install-button" id="install-btn" href="Grok Conversation Highlighter with Dynamic Selection-1.20.user.js">
+                <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                </svg>
+                Install Userscript
+            </a>
+        </div>
+    </div>
 </body>
 
 </html>

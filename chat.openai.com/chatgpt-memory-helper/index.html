@@ -6,7 +6,6 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>ChatGPT Memory Helper - Moukaeritai</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --primary: #10a37f;
@@ -132,7 +131,10 @@
             </a>
         </nav>
 
-        <div id="content">Loading...</div>
+        <div id="content">
+            <p>このユーザースクリプト <code>chatgpt-memory-helper.user.js</code> は、ChatGPTのメモリ管理ダイアログで、各メモリ項目に連番を表示する機能を追加します。連番は「#1 of 123」のような形式で表示されます。</p>
+
+        </div>
 
         <div class="install-section">
             <a class="install-button" id="install-btn" href="chatgpt-memory-helper.user.js">
@@ -143,19 +145,6 @@
             </a>
         </div>
     </div>
-
-    <script>
-        async function loadMarkdown() {
-            try {
-                const response = await fetch('README.md');
-                const text = await response.text();
-                document.getElementById('content').innerHTML = marked.parse(text);
-            } catch (e) {
-                document.getElementById('content').innerText = 'Failed to load content.';
-            }
-        }
-        loadMarkdown();
-    </script>
 </body>
 
 </html>

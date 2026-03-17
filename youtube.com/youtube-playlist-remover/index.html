@@ -2,111 +2,206 @@
 <html lang="ja">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Playlist Remover UserScript</title>
-    <!-- Github Markdown CSS for styling -->
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>YouTube Playlist Remover - Moukaeritai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #10a37f;
+            --primary-dark: #0e8a6c;
+            --bg-gradient: linear-gradient(135.2deg, rgba(7, 12, 10, 1) 1.2%, rgba(13, 44, 40, 1) 98.1%);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-dim: #b0b8c4;
+        }
+
         body {
-            box-sizing: border-box;
-            min-width: 200px;
-            max-width: 980px;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 2em;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
             margin: 0 auto;
-            padding: 45px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 3rem;
+            backdrop-filter: blur(15px);
         }
 
-        @media (max-width: 767px) {
-            body {
-                padding: 15px;
-            }
+        .top-nav {
+            margin-bottom: 2em;
         }
 
-        .home-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #24292e;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            transition: background-color 0.2s;
-            display: flex;
+        .top-nav-link {
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-dim);
+            padding: 8px 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            transition: all 0.3s ease;
         }
 
-        .home-button svg {
-            fill: currentColor;
+        .top-nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
         }
 
-        .home-button:hover {
-            background-color: #0366d6;
+        #content h1 {
+            background: linear-gradient(90deg, #10a37f, #20e3b2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 0;
+        }
+
+        #content h2 {
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        #content code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        #content pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .install-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .install-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            background: var(--primary);
             color: white;
             text-decoration: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 163, 127, 0.3);
+        }
+
+        .install-button:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 6px 20px rgba(16, 163, 127, 0.5);
+            transform: scale(1.05);
         }
     </style>
 </head>
 
-<body class="markdown-body">
-    <a href="https://userscript.moukaeritai.work/" class="home-button">
-        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
-            <path
-                d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-        </svg>
-        userscript.moukaeritai.work
-    </a>
-    <div id="content">Loading documentation...</div>
+<body>
+    <div class="container">
+        <nav class="top-nav">
+            <a class="top-nav-link" href="../index.html">
+                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
+                    <path
+                        d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
+                </svg>
+                Back to Home
+            </a>
+        </nav>
 
-    <!-- Marked library for parsing markdown -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Fetch the markdown file located in the same directory
-            fetch('README.md')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(text => {
-                    // Parse markdown to HTML using 'marked' library
-                    document.getElementById('content').innerHTML = marked.parse(text);
-                })
-                .catch(err => {
-                    // Display friendly error message (likely CORS if opened directly)
-                    document.getElementById('content').innerHTML = `
-                        <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 1em; border-radius: 4px;">
-                            <h3 style="margin-top: 0;">Error loading document</h3>
-                            <p>${err.message}</p>
-                            <hr>
-                            <p><strong>注意:</strong> このファイルをローカルファイルシステム (file://) から直接開いている場合、ブラウザのセキュリティポリシー(CORS)により外部ファイルの読み込みがブロックされることがあります。</p>
-                            <p>以下のいずれかの方法で閲覧してください：</p>
-                            <ul>
-                                <li>ローカルサーバーを起動してアクセスする (例: <code>python -m http.server</code> や <code>npx http-server</code>)</li>
-                                <li>VSCodeの "Live Server" 拡張機能を使用する</li>
-                            </ul>
-                        </div>
-                    `;
-                    console.error('Error fetching markdown:', err);
-                });
-        });
-    </script>
-    <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
-    <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
-        <p>
-            Hosted on GitHub Pages |
-            <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
-            Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
-        </p>
-    </footer>
+        <div id="content">
+            <h1>YouTube Playlist Remover</h1>
+<p>YouTube プレイリスト用のツールスクリプトです。<strong>YouTube Playlist Saver</strong> および <strong>YouTube Playlist Filter</strong> との併用を想定しています。
+スクロールによってスキャンされた範囲（<strong>Range</strong>）のうち、フィルタリングによって現在「表示されている」動画を、プレイリストから一括削除する機能を提供します。</p>
+<h2>機能</h2>
+<h3>一括削除 (Remove Range)</h3>
+<ul>
+<li><strong>Remove Range</strong> ボタンをクリックすると、**「スキャン済み範囲（画面より上）」および「現在表示されている画面内」<strong>の動画のうち、</strong>「表示されている（フィルタで隠されていない）」**動画を一括で削除します。</li>
+<li><strong>安全・確実な設計</strong>:<ul>
+<li><strong>UI操作のエミュレーション</strong>: このスクリプトはDOM要素を直接削除したり隠したりするのではなく、**YouTube標準の削除メニューを自動的にクリック操作（エミュレーション）**します。これにより、YouTube側の内部データとの不整合を防ぎ、安全に削除を実行します。</li>
+<li><strong>フィルタとの連携</strong>: <strong>YouTube Playlist Filter</strong> によって非表示 (<code>display: none</code>) になっている動画は、たとえ範囲内にあっても削除操作の対象に<strong>しません</strong>。</li>
+<li><strong>視覚的なフィードバック</strong>: 実行を開始すると、削除の対象となっている動画の連番（#Index）が一時的に<strong>赤太字に変更</strong>され、現在どの動画を処理中か（x/y）がパネルに表示されます。</li>
+<li><strong>⚠️ 注意</strong>: ボタンを押すと確認ダイアログなしで<strong>即座に削除</strong>されます。操作にはご注意ください。</li>
+</ul>
+</li>
+<li><strong>確実な削除同期</strong>:<ul>
+<li>削除ボタンのエミュレーション後、アイテムがリストから実際に削除される（YouTube側によって消される）のを待機してから次の動画へ進みます。</li>
+<li>これにより、リストの読み込み状態や順序が崩れるのを防ぎ、確実な一括処理を可能にします。</li>
+</ul>
+</li>
+</ul>
+<h2>インストール</h2>
+<ol>
+<li>Tampermonkey などの拡張機能がインストールされていることを確認します。</li>
+<li>以下のリンクをクリックしてインストールします。</li>
+</ol>
+<p>👉 <strong><a href="youtube-playlist-remover.user.js">Install YouTube Playlist Remover</a></strong></p>
+<p>このスクリプトは YouTube 全体にインストールされますが、<strong>主要機能が有効になるのはプレイリストページのみ</strong>です。</p>
+<h2>使い方</h2>
+<ol>
+<li>プレイリストを開き、不要な動画が画面の上部に隠れるまでスクロールします（あるいはフィルタ機能で絞り込みます）。</li>
+<li>右下の <strong>Playlist Remover</strong> パネルを確認します。<ul>
+<li>プレイリスト以外のページでは <code>Inactive</code> 表示となり、パネル内容は閉じた状態になります。</li>
+<li>初回注入時は 1〜3 秒のランダムディレイ後にパネルが表示されます。</li>
+</ul>
+</li>
+<li><code>Removable: Top X (N items)</code> と表示され、削除対象の数が確認できます。</li>
+<li><strong>Remove Range</strong> ボタンを押して実行します。実行中にもう一度押すと中断を要求し、現在の処理が終わった時点で停止します。</li>
+</ol>
+<h2>更新履歴</h2>
+<ul>
+<li><strong>v0.1.34</strong>: メニューのタイムアウトを10秒に延長。「Wait for removal」オプションを追加（OFF時は1秒ウェイト）。</li>
+<li><strong>v0.1.30</strong>: 初期化ディレイを 1〜3 秒のランダムに変更し、同時起動の負荷を分散。</li>
+<li><strong>v0.1.25</strong>: 一括削除の多重実行を防止し、実行中の再クリックで中断できるように変更。</li>
+<li><strong>v0.1.17</strong>: YouTube全体にインストールしつつ、プレイリストページのみでアクティブ化するように変更。アクティブ状態に応じてパネルの開閉と表示を自動連動。</li>
+<li><strong>v0.1.15</strong>: 一括削除の実行中、削除対象となる動画の連番（#Index）を赤太字でハイライト表示するように改善。</li>
+<li><strong>v0.1.14</strong>: 削除進捗の表示（x/y）を、削除成功数ではなく処理済み件数ベースに変更し、進行状況がよりリアルタイムに反映されるように改善。</li>
+<li><strong>v0.1.13</strong>: 削除操作の開始時に、対象の動画コンテナ (<code>ytd-playlist-video-renderer</code>) にもフォーカスを当てるように変更。</li>
+<li><strong>v0.1.12</strong>: クリック操作のエミュレーション前にフォーカス移動 (<code>.focus()</code>) を追加。より人間らしい操作に近づけ、一部のフォーカス依存UIへの対応を強化。</li>
+<li><strong>v0.1.11</strong>: 削除実行中（Removing...）のステータス表示に、現在処理中の動画番号（#Index）を表示するように改善。</li>
+<li><strong>v0.1.10</strong>: 一括削除時、DOMからアイテムが実際に消えるのを待機するように変更（Optimistic UIの廃止）。これにより削除の確実性を向上。</li>
+<li><strong>v0.1.9</strong>: レイアウトの崩れを防ぎ安定性を高めるため、一括削除の順序を「下から上（逆順）」に変更。</li>
+<li><strong>v0.1.8</strong>: メニューのロード待機、可視性チェック、既存ステートのリセット処理を強化。</li>
+<li><strong>v0.1.7</strong>: メニュー開閉とアイテムクリックのエミュレーションを強化。</li>
+<li><strong>v0.1.6</strong>: 公開プレイリストなどで表示されるYouTubeネイティブの確認ダイアログ (&quot;Delete this video from playlist?&quot;) を自動で処理する機能を追加。</li>
+<li><strong>v0.1.5</strong>: 削除対象がない場合に表示されていたアラート (<code>alert</code>) も削除。</li>
+<li><strong>v0.1.4</strong>: 確認ダイアログ (<code>confirm</code>) を削除し、ボタン押下後すぐに削除を実行するように変更。⚠️ 注意: 誤操作でもすぐに削除が開始されます。</li>
+<li><strong>v0.1.3</strong>: 初回公開。</li>
+</ul>
+
+        </div>
+
+        <div class="install-section">
+            <a class="install-button" id="install-btn" href="youtube-playlist-remover.user.js">
+                <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                </svg>
+                Install Userscript
+            </a>
+        </div>
+    </div>
 </body>
 
 </html>

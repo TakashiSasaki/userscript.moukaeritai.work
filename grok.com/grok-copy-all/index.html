@@ -2,112 +2,193 @@
 <html lang="ja">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grok Copy All UserScript</title>
-    <!-- Github Markdown CSS for styling -->
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Grok Conversation Copy - Moukaeritai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #10a37f;
+            --primary-dark: #0e8a6c;
+            --bg-gradient: linear-gradient(135.2deg, rgba(7, 12, 10, 1) 1.2%, rgba(13, 44, 40, 1) 98.1%);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-dim: #b0b8c4;
+        }
+
         body {
-            box-sizing: border-box;
-            min-width: 200px;
-            max-width: 980px;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 2em;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
             margin: 0 auto;
-            padding: 45px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 3rem;
+            backdrop-filter: blur(15px);
         }
 
-        @media (max-width: 767px) {
-            body {
-                padding: 15px;
-            }
+        .top-nav {
+            margin-bottom: 2em;
         }
 
-        .home-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #24292e;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            transition: background-color 0.2s;
-            display: flex;
+        .top-nav-link {
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-dim);
+            padding: 8px 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            transition: all 0.3s ease;
         }
 
-        .home-button svg {
-            fill: currentColor;
+        .top-nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
         }
 
-        .home-button:hover {
-            background-color: #0366d6;
+        #content h1 {
+            background: linear-gradient(90deg, #10a37f, #20e3b2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 0;
+        }
+
+        #content h2 {
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        #content code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        #content pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .install-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .install-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            background: var(--primary);
             color: white;
             text-decoration: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 163, 127, 0.3);
+        }
+
+        .install-button:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 6px 20px rgba(16, 163, 127, 0.5);
+            transform: scale(1.05);
         }
     </style>
 </head>
 
-<body class="markdown-body">
-    <a href="https://userscript.moukaeritai.work/" class="home-button">
-        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
-            <path
-                d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-        </svg>
-        userscript.moukaeritai.work
-    </a>
-    <div id="content">Loading documentation...</div>
+<body>
+    <div class="container">
+        <nav class="top-nav">
+            <a class="top-nav-link" href="../index.html">
+                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
+                    <path
+                        d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
+                </svg>
+                Back to Home
+            </a>
+        </nav>
 
-    <!-- Marked library for parsing markdown -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Fetch the markdown file located in the same directory
-            fetch('grok-copy-all.md')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(text => {
-                    // Parse markdown to HTML using 'marked' library
-                    document.getElementById('content').innerHTML = marked.parse(text);
-                })
-                .catch(err => {
-                    // Display friendly error message (likely CORS if opened directly)
-                    document.getElementById('content').innerHTML = `
-                        <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 1em; border-radius: 4px;">
-                            <h3 style="margin-top: 0;">Error loading document</h3>
-                            <p>${err.message}</p>
-                            <hr>
-                            <p><strong>注意:</strong> このファイルをローカルファイルシステム (file://) から直接開いている場合、ブラウザのセキュリティポリシー(CORS)により外部ファイルの読み込みがブロックされることがあります。</p>
-                            <p>以下のいずれかの方法で閲覧してください：</p>
-                            <ul>
-                                <li>ローカルサーバーを起動してアクセスする (例: <code>python -m http.server</code> や <code>npx http-server</code>)</li>
-                                <li>VSCodeの "Live Server" 拡張機能を使用する</li>
-                            </ul>
-                        </div>
-                    `;
-                    console.error('Error fetching markdown:', err);
-                });
-        });
-    </script>
-    <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
-    <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
-        <p>
-            Hosted on GitHub Pages |
-            <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
-            Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a> |
-            <a href="https://github.com/codespaces/fuzzy-halibut-qgr4qgggrh494p" target="codespaces">Open in Codespaces</a>
-        </p>
-    </footer>
+        <div id="content">
+            <h1>Grok Conversation Copy Tool</h1>
+<p>このプロジェクトは、Grok (grok.com) の会話ページにおいて、全ての会話ターン（ユーザーの質問とAIの回答）を一括でクリップボードにコピーするためのユーザースクリプト <code>grok-copy-all.user.js</code> を提供します。</p>
+<h2>概要</h2>
+<p>Grokの会話ページでは、各ターンごとに「コピー」ボタンが用意されていますが、会話全体を一度にコピーする方法は提供されていません。
+本スクリプトは、画面上の全てのコピーボタンを自動的に検出し、順次クリックをエミュレートすることで、全てのテキストを結合してクリップボードに保存します。</p>
+<h2>機能</h2>
+<ul>
+<li><strong>ボタン追加</strong>: 画面右上にオレンジ色の <strong>「Copy All」</strong> ボタンを追加します。</li>
+<li><strong>自動収集</strong>: 会話の上から下まで、全ての「コピー」ボタン（<code>aria-label=&quot;コピー&quot;</code> または <code>aria-label=&quot;Copy&quot;</code>）を自動的に処理します。</li>
+<li><strong>スマート結合</strong>: 各ターンのテキストを区切り線（<code>--------------------</code>）で結合し、読みやすい形式でクリップボードに格納します。</li>
+<li><strong>通知</strong>: コピーが完了するとボタンの表示が「Done!」に変わります。</li>
+</ul>
+<h2>対象ページ</h2>
+<p>以下のような Grok の共有会話ページ（<code>/c/</code>を含むURL）で動作します。</p>
+<ul>
+<li><code>https://grok.com/c/abaf5ee3-7047-48fe-b7e6-62b3e9006810</code></li>
+<li><code>https://grok.com/c/50d6285c-e555-4e44-81b4-d5f40762f976</code></li>
+<li><code>https://grok.com/c/9425d7a7-...?rid=...</code> (リビジョンID付きも可)</li>
+</ul>
+<h2>インストール方法</h2>
+<ol>
+<li><strong>Tampermonkeyの導入</strong>: Chrome等のブラウザ拡張機能「Tampermonkey」をインストールしてください。</li>
+<li><strong>スクリプトの追加</strong>: <code>grok-copy-all.user.js</code> の内容を新しいスクリプトとして追加、保存します。</li>
+<li><strong>有効化</strong>: スクリプトが有効になっていることを確認してください。</li>
+</ol>
+<h2>使い方</h2>
+<ol>
+<li>Grokの会話ページを開きます。</li>
+<li>ログインしていない場合やCloudflareの認証が表示された場合は、手動で認証を済ませてページを表示してください。</li>
+<li>ページ右上に表示される <strong>「Copy All」</strong> ボタンをクリックします。</li>
+<li>ボタンの色が変わり、処理が開始されます。完了後「Done!」と表示されたら、クリップボードに全会話がコピーされています。</li>
+</ol>
+<h2>開発情報</h2>
+<h3>検証環境</h3>
+<ul>
+<li><strong>対象ボタン仕様</strong>: <code>sample1.html</code>, <code>sample2.html</code> に基づく構成。</li>
+<li><strong>検証ツール</strong>: スタティックHTMLでの自動テストおよび実サイトでの動作確認（ユーザーによる）。</li>
+</ul>
+<h3>技術的な仕組み</h3>
+<p><code>navigator.clipboard.writeText</code> を一時的にフック（ジャック）し、各ボタンがこの関数を呼び出した際に渡されるテキストを配列に保存します。これにより、DOM構造が変化しても「ボタンがコピーしようとした内容」を正確に取得できます。</p>
+<h1>リポジトリ</h1>
+<ul>
+<li><strong>GitHub</strong>: <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/grok.com/grok-copy-all">https://github.com/TakashiSasaki/userscript.moukaeritai.work/tree/userscript/grok.com/grok-copy-all</a></li>
+<li><strong>Raw Script</strong>: <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-copy-all/grok-copy-all.user.js">https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-copy-all/grok-copy-all.user.js</a></li>
+</ul>
+
+        </div>
+
+        <div class="install-section">
+            <a class="install-button" id="install-btn" href="grok-copy-all.user.js">
+                <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                </svg>
+                Install Userscript
+            </a>
+        </div>
+    </div>
 </body>
 
 </html>

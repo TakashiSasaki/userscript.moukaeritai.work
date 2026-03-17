@@ -4,9 +4,8 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>ChatGPT Auto Sender - Moukaeritai</title>
+    <title>ChatGPT Auto Prompt Sender - Moukaeritai</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --primary: #10a37f;
@@ -132,7 +131,34 @@
             </a>
         </nav>
 
-        <div id="content">Loading...</div>
+        <div id="content">
+            <h1>ChatGPT Auto Prompt Sender</h1>
+<h2>スクリプト概要</h2>
+<p>このTampermonkeyユーザースクリプトは、ChatGPTで現在の応答が完了した後、次の事前入力されたプロンプトの送信を自動化します。これにより、連続したプロンプト入力や自動化された会話を効率的に行うことができます。</p>
+<h2>主な機能と動作</h2>
+<ul>
+<li><strong>プロンプトの自動送信</strong>: ChatGPTが応答の生成を完了したことを検知し、有効化されている場合、入力テキストエリア内の次の事前入力されたプロンプトを1秒の遅延後に自動的に送信します。</li>
+<li><strong>トグル機能</strong>: 自動送信機能の視覚的なトグルを提供します。新しい応答要素が表示されると、特定の<code>div</code>の背景が黄色に変わります。この黄色の要素をクリックすることで、入力<code>textarea</code>の背景が赤（自動送信有効）とデフォルトの状態（自動送信無効）の間で切り替わります。</li>
+<li><strong>動作対象ページ</strong>: ChatGPT (<code>https://chatgpt.com</code> / <code>https://chat.openai.com</code>)</li>
+</ul>
+<h2>使い方</h2>
+<ol>
+<li>Tampermonkeyなどのユーザースクリプトマネージャーをインストールします。</li>
+<li>このスクリプトをインストールします。</li>
+<li>ChatGPTを開きます。</li>
+<li>応答生成後、特定のUI要素（黄色い背景）をクリックして自動送信を有効化（赤背景）します。</li>
+<li>次の応答完了時に自動的に送信されます。</li>
+</ol>
+<h2>技術詳細</h2>
+<ul>
+<li><strong>MutationObserver</strong>: DOM変更を監視し、応答完了やボタン出現を検知。</li>
+<li><strong>DOM操作</strong>: 背景色の変更やクリックイベントのトリガー。</li>
+</ul>
+<hr>
+<p><strong>Author:</strong> Takashi SASAKI (@TakashiSasaki)
+<strong>License:</strong> MIT</p>
+
+        </div>
 
         <div class="install-section">
             <a class="install-button" id="install-btn" href="chatgpt-auto-sender.user.js">
@@ -143,19 +169,6 @@
             </a>
         </div>
     </div>
-
-    <script>
-        async function loadMarkdown() {
-            try {
-                const response = await fetch('README.md');
-                const text = await response.text();
-                document.getElementById('content').innerHTML = marked.parse(text);
-            } catch (e) {
-                document.getElementById('content').innerText = 'Failed to load content.';
-            }
-        }
-        loadMarkdown();
-    </script>
 </body>
 
 </html>

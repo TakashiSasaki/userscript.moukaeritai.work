@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>NotebookLM Source Delete Button - Moukaeritai</title>
+    <title>M365 Copilot Notebook Styler - Moukaeritai</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -132,61 +132,28 @@
         </nav>
 
         <div id="content">
-            <h1>NotebookLM Source Delete Button</h1>
-<p>NotebookLM のソースパネルに、ソースの管理を効率化するための機能を追加するユーザースクリプトです。</p>
-<h2>主な機能</h2>
+            <h1>M365 Copilot Notebook Styler</h1>
+<h2>概要 (Overview)</h2>
+<p>Microsoft 365 Copilot ノートブック (<code>m365.cloud.microsoft/chat/</code> および <code>m365.cloud.microsoft/notebooks/</code>) のUIにおいて、左ナビゲーションペイン、中央ワークスペース、右チャットペインの3つの主要領域の背景色をわずかに変更し、境界を明確にするためのユーザースクリプトです。</p>
+<p>デフォルトのモダンUIでは、境界線が曖昧でペイン間の区別がつきにくい場合があるため、このスクリプトは視認性の向上を目的としています。ダークモードとライトモードの両方に馴染むように半透明の色を設定しています。</p>
+<h2>機能 (Features)</h2>
+<ul>
+<li><strong>ペインの境界色付け</strong>: ノートブックUIの主要な3ペイン構造を検知し、それぞれに異なる背景色を適用します。</li>
+<li><strong>オン/オフ トグルUI</strong>: 画面右上に表示されるフローティングUIから、色付け機能の有効・無効をリアルタイムに切り替えることができます。</li>
+<li><strong>設定の保存</strong>: トグルの状態はローカルストレージに保存され、次回のアクセス時にも維持されます。</li>
+</ul>
+<h2>使い方 (Usage)</h2>
 <ol>
-<li><strong>ソースの連番表示</strong>:<ul>
-<li>各ソースアイテムの左上に連番を表示し、ソースの総数や順序を把握しやすくします。</li>
-</ul>
-</li>
-<li><strong>クイックリネームボタン (✎)</strong>:<ul>
-<li>ソースアイテムにリネームボタンを追加します。クリックすると、ネイティブの「Rename source」メニューを自動的に呼び出します。</li>
-</ul>
-</li>
-<li><strong>クイック削除ボタン (×)</strong>:<ul>
-<li>ソースアイテムに削除ボタンを追加します。クリックすると、ネイティブの「Remove source」メニューの選択から、確認ダイアログの確定（Delete）までを自動的に実行します。</li>
-</ul>
-</li>
+<li>スクリプトをインストールし、M365 Copilot のノートブックページを開きます。</li>
+<li>画面右上に「M365 Pane Styler」という小さなフローティングパネルが表示されます。</li>
+<li>トグルスイッチをクリックして色付け機能のオン/オフを切り替えます。</li>
+<li>パネルの上部（タイトル部分）をドラッグすることで、パネルの位置を自由に移動できます。</li>
 </ol>
-<h2>実装の仕組み</h2>
-<ul>
-<li><strong>自動化シーケンス</strong>:<ul>
-<li>NotebookLM のネイティブ UI は、ホバー時のみ「More」ボタンが表示される仕様であるため、スクリプト側で <code>mouseenter</code>/<code>mouseover</code> イベントをエミュレートしてボタンを出現させます。</li>
-<li>メニューの出現やダイアログの表示を <code>async/await</code> とポーリング（定期的な要素確認）によって待機し、確実に操作を完了させます。</li>
-</ul>
-</li>
-<li><strong>パフォーマンスへの配慮</strong>:<ul>
-<li>SPA（Single Page Application）の遷移に対応するため、<code>setInterval</code> による監視を行っていますが、<code>/notebook/</code> 以下のURLでのみ主要なロジックが動作するように制限されています。</li>
-</ul>
-</li>
-<li><strong>互換性と保守性</strong>:<ul>
-<li>バージョンチェック API を実装しており、外部からのバージョン確認が可能です。</li>
-<li>特定のクラス名が変更された場合に備え、テキスト内容によるフォールバック検索ロジックを備えています。</li>
-</ul>
-</li>
-</ul>
-<h2>開発ルール</h2>
-<ul>
-<li><strong>バージョン管理</strong>:<ul>
-<li>初期バージョンは 0.1.0 とし、変更ごとにパッチレベルをバンプアップします。</li>
-</ul>
-</li>
-<li><strong>URL マッチング</strong>:<ul>
-<li><code>https://notebooklm.google.com/notebook/*</code> で有効になります。</li>
-</ul>
-</li>
-<li><strong>API 実装</strong>:<ul>
-<li>バージョンチェックのための <code>userscript-check-version</code> イベントに応答する API を実装しています。</li>
-<li>開発用ポータルサイトでのインストール検知用ガードを実装しています。</li>
-</ul>
-</li>
-</ul>
 
         </div>
 
         <div class="install-section">
-            <a class="install-button" id="install-btn" href="notebooklm-source-delete-button.user.js">
+            <a class="install-button" id="install-btn" href="m365-copilot-notebook-styler.user.js">
                 <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                 </svg>

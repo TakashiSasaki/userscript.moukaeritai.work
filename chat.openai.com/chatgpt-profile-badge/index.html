@@ -2,99 +2,224 @@
 <html lang="ja">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatGPT Profile Badge - Documentation</title>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>ChatGPT Profile Badge - Moukaeritai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #10a37f;
+            --primary-dark: #0e8a6c;
+            --bg-gradient: linear-gradient(135.2deg, rgba(7, 12, 10, 1) 1.2%, rgba(13, 44, 40, 1) 98.1%);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-dim: #b0b8c4;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 2em;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 40px 20px;
-            line-height: 1.6;
-            color: #333;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 3rem;
+            backdrop-filter: blur(15px);
         }
 
-        h1,
-        h2,
-        h3,
-        h4 {
-            border-bottom: 1px solid #eaecef;
-            padding-bottom: 0.3em;
-            margin-top: 24px;
-            margin-bottom: 16px;
+        .top-nav {
+            margin-bottom: 2em;
         }
 
-        code {
-            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-            background-color: rgba(27, 31, 35, 0.05);
-            padding: 0.2em 0.4em;
-            margin: 0;
-            font-size: 85%;
-            border-radius: 3px;
-        }
-
-        pre {
-            background-color: #f6f8fa;
-            border-radius: 6px;
-            font-size: 85%;
-            line-height: 1.45;
-            overflow: auto;
-            padding: 16px;
-        }
-
-        pre code {
-            background-color: transparent;
-            padding: 0;
-            margin: 0;
-            font-size: 100%;
-            border: 0;
-        }
-
-        a {
-            color: #0366d6;
+        .top-nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
             text-decoration: none;
+            color: var(--text-dim);
+            padding: 8px 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            transition: all 0.3s ease;
         }
 
-        a:hover {
-            text-decoration: underline;
+        .top-nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
         }
 
-        ul,
-        ol {
-            padding-left: 2em;
+        #content h1 {
+            background: linear-gradient(90deg, #10a37f, #20e3b2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 0;
         }
 
-        hr {
-            border: 0;
-            border-top: 1px solid #eaecef;
-            margin: 24px 0;
+        #content h2 {
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        #content code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        #content pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .install-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .install-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 163, 127, 0.3);
+        }
+
+        .install-button:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 6px 20px rgba(16, 163, 127, 0.5);
+            transform: scale(1.05);
         }
     </style>
 </head>
 
 <body>
-    <div id="content">Loading documentation...</div>
+    <div class="container">
+        <nav class="top-nav">
+            <a class="top-nav-link" href="../index.html">
+                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
+                    <path
+                        d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
+                </svg>
+                Back to Home
+            </a>
+        </nav>
 
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            fetch('README.md')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.text();
-                })
-                .then(markdown => {
-                    document.getElementById('content').innerHTML = marked.parse(markdown);
-                })
-                .catch(error => {
-                    console.error('Error fetching or rendering markdown:', error);
-                    document.getElementById('content').innerText = 'Error: Could not load chatgpt-profile-badge.md.';
-                });
-        });
-    </script>
+        <div id="content">
+            <h1>ユーザースクリプト「ChatGPT Profile Badge」</h1>
+<h2>概要 (Overview)</h2>
+<p>ChatGPTのウェブページにおいて、ユーザー情報が表示される箇所に任意の文字列（数文字程度のテキストや絵文字）を「バッジ」として追加表示するユーザースクリプトです。</p>
+<h2>導入 (Installation)</h2>
+<ol>
+<li><a href="https://www.tampermonkey.net/">Tampermonkey</a> などのユーザースクリプトマネージャーをブラウザにインストールします。</li>
+<li>このリポジリのGitHub RAW URLにアクセスすると、スクリプトのインストールが開始されます。</li>
+</ol>
+<h2>設定 (Configuration)</h2>
+<p>v0.2.0から、ユーザースクリプトのメニューコマンドを通じてバッジのテキストを簡単設定できるようになりました。</p>
+<ol>
+<li>ブラウザのツールバーにあるTampermonkeyのアイコンをクリックします。</li>
+<li>表示されるメニューから「<strong>Set Badge Text</strong>」を選択します。</li>
+<li>プロンプトが表示されたら、バッジとして表示したいテキストを入力し、「OK」をクリックします。<ul>
+<li>テキストを空にすると、バッジは非表示になります。</li>
+<li>設定は即座に反映されます。</li>
+</ul>
+</li>
+</ol>
+<p>この設定はTampermonkeyが提供するストレージに保存されます。</p>
+<hr>
+<h2>技術仕様 (Technical Specifications)</h2>
+<p>本スクリプトの実装に関する技術的な意思決定です。</p>
+<h3>パフォーマンス設計 (Performance Design)</h3>
+<p>バッジはページの初期表示に必須ではないため、ページの読み込みパフォーマンスに影響を与えないよう、<code>MutationObserver</code> を用いて非同期で描画処理を行います。これにより、目的のUI要素がDOMに出現した後に、遅延してバッジの描画が開始されます。</p>
+<h3>DOMセレクタ戦略 (DOM Selector Strategy)</h3>
+<p>ChatGPTのUIはクラス名が動的に変更される可能性があるため、セレクタは安定性を重視して選択されています。</p>
+<p>ユーザー情報を示すプロファイルボタンは複数存在する可能性があるため、以下の手順で正確な要素を特定します。</p>
+<ol>
+<li><code>document.querySelectorAll(&#39;[data-testid=&quot;accounts-profile-button&quot;]&#39;)</code> を使用して、全てのプロファイルボタン要素を取得します。</li>
+<li>取得したボタン要素を走査し、ユーザー名やプラン情報を含む <code>.min-w-0</code> クラスの子要素を持つボタンを特定します。これが、バッジを注入する対象となる正しいプロファイルボタンです。</li>
+<li>特定されたプロファイルボタンの内部で、ユーザー名が直接含まれる <code>div.min-w-0 &gt; div.flex</code> という構造的セレクタを用いて注入箇所（<code>nameContainer</code>）を特定します。</li>
+</ol>
+<p>このアプローチは、誤ったプロファイルボタンへの注入を防ぎ、より堅牢なバッジ表示を目指すものです。</p>
+<h3>描画ロジック (Rendering Logic)</h3>
+<ul>
+<li><strong>重複描画の防止</strong>: <code>MutationObserver</code> が複数回発火した場合でもバッジが重複して描画されるのを防ぐため、注入先のコンテナ要素に <code>data-badge-injected=&quot;true&quot;</code> というカスタムデータ属性を付与します。描画処理の前にこの属性の有無を確認します。</li>
+<li><strong>動的な更新</strong>: メニューからバッジテキストが更新された際、<code>removeBadge()</code> 関数が既存のバッジと <code>data-badge-injected</code> 属性をDOMから削除します。その後、<code>findTargetAndInject()</code> が再実行され、新しいテキストでバッジが再描画（またはテキストが空の場合は非表示）されます。</li>
+<li><strong>スタイリング</strong>: バッジは <code>&lt;span&gt;</code> 要素として生成されます。既存のUIとの親和性を保つため、<code>profile.html</code> サンプルから特定した <code>text-token-text-secondary</code> などのクラスを適用しつつ、バッジとして見せるための追加スタイル（<code>padding</code>, <code>backgroundColor</code> など）をインラインで設定しています。</li>
+</ul>
+<hr>
+<h2>開発 (Development)</h2>
+<h3>プロジェクト構造 (Project Structure)</h3>
+<pre><code>.
+├── chatgpt-profile-badge.md      # この仕様書 (This document)
+├── chatgpt-profile-badge.user.js # ユーザースクリプト本体 (The userscript source)
+└── samples/                      # テスト用のサンプルファイル (Sample files for testing)
+    ├── ...
+    └── preprocess.py
+</code></pre>
+<h3>テスト (Testing)</h3>
+<p>UIの変更やデバッグは、<code>samples/</code> ディレクトリ内のHTMLファイルを用いて行います。これらのファイルは、開発効率向上のために前処理（不要な要素の削除など）が可能です。</p>
+<p>前処理を行うには、<code>samples/</code> ディレクトリで以下のコマンドを実行します。</p>
+<pre><code class="language-shell">pip install beautifulsoup4
+python preprocess.py &lt;target_html_file&gt;
+</code></pre>
+<p>詳細は <code>samples/samples.md</code> を参照してください。</p>
+<h3>貢献ガイドライン (Contribution Guidelines)</h3>
+<h4>メタデータ規約 (Metadata Conventions)</h4>
+<ul>
+<li><strong>@namespace</strong>: <code>userscript.moukaeritai.work</code></li>
+<li><strong>@author</strong>: <code>Takashi Sasaki</code></li>
+<li><strong>@homepage</strong>: <code>https://x.com/TakashiSasaki</code></li>
+<li><strong>@grant</strong>: <code>GM_setValue</code>, <code>GM_getValue</code>, <code>GM_registerMenuCommand</code> など、スクリプトが必要とする権限。</li>
+<li><strong>@updateURL</strong> / <strong>@downloadURL</strong>: GitHubのRAW URL。</li>
+</ul>
+<h4>バージョン管理 (Versioning)</h4>
+<ul>
+<li>バージョンは <code>major.minor.patch</code> 形式（セマンティックバージョニング）で管理します。</li>
+<li>スクリプトに少しでも変更を加えた場合は、<code>patch</code> 番号を必ずインクリメントしてください。</li>
+</ul>
+<h4>配布 (Distribution)</h4>
+<ul>
+<li>スクリプトの最新版はGitHubで公開します。</li>
+<li>メタデータには、Tampermonkeyが更新を検知できるよう、GitHub上の <code>user.js</code> ファイルへのRAW URLを記載します。</li>
+</ul>
+
+        </div>
+
+        <div class="install-section">
+            <a class="install-button" id="install-btn" href="chatgpt-profile-badge.user.js">
+                <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                </svg>
+                Install Userscript
+            </a>
+        </div>
+    </div>
 </body>
 
 </html>

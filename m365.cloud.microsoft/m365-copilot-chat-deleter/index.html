@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>NotebookLM Source Delete Button - Moukaeritai</title>
+    <title>M365 Copilot One-Click Delete - Moukaeritai</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -132,61 +132,25 @@
         </nav>
 
         <div id="content">
-            <h1>NotebookLM Source Delete Button</h1>
-<p>NotebookLM のソースパネルに、ソースの管理を効率化するための機能を追加するユーザースクリプトです。</p>
-<h2>主な機能</h2>
-<ol>
-<li><strong>ソースの連番表示</strong>:<ul>
-<li>各ソースアイテムの左上に連番を表示し、ソースの総数や順序を把握しやすくします。</li>
-</ul>
-</li>
-<li><strong>クイックリネームボタン (✎)</strong>:<ul>
-<li>ソースアイテムにリネームボタンを追加します。クリックすると、ネイティブの「Rename source」メニューを自動的に呼び出します。</li>
-</ul>
-</li>
-<li><strong>クイック削除ボタン (×)</strong>:<ul>
-<li>ソースアイテムに削除ボタンを追加します。クリックすると、ネイティブの「Remove source」メニューの選択から、確認ダイアログの確定（Delete）までを自動的に実行します。</li>
-</ul>
-</li>
-</ol>
-<h2>実装の仕組み</h2>
+            <h1>M365 Copilot One-Click Delete</h1>
+<h2>概要 (Overview)</h2>
+<p>Microsoft 365 Copilot (<code>m365.cloud.microsoft/chat/</code>) のUIにおいて、現在アクティブな会話をワンクリック、またはショートカットキー (<code>Ctrl + Shift + Backspace</code>) で削除できるユーザースクリプトです。</p>
+<p>デフォルトのUIでは、「その他」メニューを開いてから「削除」を選択し、さらに確認ダイアログで「削除する」をクリックする必要がありますが、このスクリプトはこれらの一連の操作を自動化します。</p>
+<h2>機能 (Features)</h2>
 <ul>
-<li><strong>自動化シーケンス</strong>:<ul>
-<li>NotebookLM のネイティブ UI は、ホバー時のみ「More」ボタンが表示される仕様であるため、スクリプト側で <code>mouseenter</code>/<code>mouseover</code> イベントをエミュレートしてボタンを出現させます。</li>
-<li>メニューの出現やダイアログの表示を <code>async/await</code> とポーリング（定期的な要素確認）によって待機し、確実に操作を完了させます。</li>
+<li><strong>フローティングUI</strong>: 画面右下に表示されるコンパクトなパネルから、ワンクリックでアクティブなチャットを削除できます。</li>
+<li><strong>ショートカットキー</strong>: <code>Ctrl + Shift + Backspace</code> に対応しており、キーボードから手を離さずに削除を実行できます。</li>
+<li><strong>ステータス表示</strong>: 削除処理中はボタンが非活性になり、重複実行を防ぎます。</li>
 </ul>
-</li>
-<li><strong>パフォーマンスへの配慮</strong>:<ul>
-<li>SPA（Single Page Application）の遷移に対応するため、<code>setInterval</code> による監視を行っていますが、<code>/notebook/</code> 以下のURLでのみ主要なロジックが動作するように制限されています。</li>
-</ul>
-</li>
-<li><strong>互換性と保守性</strong>:<ul>
-<li>バージョンチェック API を実装しており、外部からのバージョン確認が可能です。</li>
-<li>特定のクラス名が変更された場合に備え、テキスト内容によるフォールバック検索ロジックを備えています。</li>
-</ul>
-</li>
-</ul>
-<h2>開発ルール</h2>
-<ul>
-<li><strong>バージョン管理</strong>:<ul>
-<li>初期バージョンは 0.1.0 とし、変更ごとにパッチレベルをバンプアップします。</li>
-</ul>
-</li>
-<li><strong>URL マッチング</strong>:<ul>
-<li><code>https://notebooklm.google.com/notebook/*</code> で有効になります。</li>
-</ul>
-</li>
-<li><strong>API 実装</strong>:<ul>
-<li>バージョンチェックのための <code>userscript-check-version</code> イベントに応答する API を実装しています。</li>
-<li>開発用ポータルサイトでのインストール検知用ガードを実装しています。</li>
-</ul>
-</li>
-</ul>
+<h2>インストール</h2>
+<p>ルートディレクトリの <code>index.html</code> からインストールできます。マネージャーは Tampermonkey を推奨します。</p>
+<h2>互換性について</h2>
+<p>対象サイトのDOM変更により、セレクタが合わなくなった場合は動作しなくなる可能性があります。その際は <code>AGENTS.md</code> のセレクタ情報を更新する必要があります。</p>
 
         </div>
 
         <div class="install-section">
-            <a class="install-button" id="install-btn" href="notebooklm-source-delete-button.user.js">
+            <a class="install-button" id="install-btn" href="m365-copilot-chat-deleter.user.js">
                 <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                 </svg>

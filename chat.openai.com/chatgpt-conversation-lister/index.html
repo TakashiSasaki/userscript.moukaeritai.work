@@ -6,7 +6,6 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>ChatGPT Conversation Lister - Moukaeritai</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --primary: #10a37f;
@@ -132,7 +131,65 @@
             </a>
         </nav>
 
-        <div id="content">Loading...</div>
+        <div id="content">
+            <h1>ChatGPT Conversation Lister (Unified)</h1>
+<p>ChatGPTのウェブインターフェース上で、過去の会話履歴を効率的に検索・管理・エクスポートするためのユーザースクリプトです。</p>
+<h2>主な機能</h2>
+<ol>
+<li><p><strong>会話タイトルの検索</strong></p>
+<ul>
+<li>サイドバーの「New Chat」ボタンの横に追加される検索アイコン、またはドラッグ可能なUIパネルの「Search」ボタンから検索ダイアログを起動できます。</li>
+<li>保存された過去の会話タイトルからキーワード検索を行い、目的のチャットへ即座にジャンプできます。</li>
+</ul>
+</li>
+<li><p><strong>会話リストのTSVエクスポート</strong></p>
+<ul>
+<li>取得済みの会話データを「ID」「タイトル」「内部順序（ProjectionID）」の形式でTSV出力します。</li>
+<li>ExcelやGoogleスプレッドシート、Notion等への貼り付けに最適です。</li>
+</ul>
+</li>
+<li><p><strong>会話データのスキャンと件数表示</strong></p>
+<ul>
+<li>UIパネルに検出できた会話数を表示します。</li>
+<li>「Scan List」を押すと、現在表示されている会話一覧を再スキャンして保存します。</li>
+<li>UIパネルの位置はドラッグで変更でき、位置は保存されます。</li>
+</ul>
+</li>
+</ol>
+<h2>技術的な特徴</h2>
+<ul>
+<li><strong>リンクベースの取得</strong>: サイドバー内の <code>/c/</code> リンクから会話IDとタイトルを取得します（必要に応じてReact内部データにもフォールバックします）。</li>
+<li><strong>UIの分離 (Shadow DOM)</strong>: スクリプトが生成するパネルやダイアログはShadow DOM内に構築されているため、ChatGPT本体のCSSスタイルと干渉しません。</li>
+<li><strong>動的な要素注入</strong>: <code>MutationObserver</code>を使用しており、ChatGPTのページ遷移や要素の再描画が発生しても、検索ボタンなどのUI要素を安定して表示し続けます。</li>
+<li><strong>マルチセレクタ対応</strong>: ChatGPTの頻繁なアップデートに対応するため、複数のDOMセレクタをフォールバックとして保持しています。</li>
+</ul>
+<h2>使い方</h2>
+<h3>会話の検索</h3>
+<ol>
+<li>サイドバー上部の検索アイコンをクリックするか、UIパネルの「Search」を押します。</li>
+<li>入力欄にキーワードを入力すると、リアルタイムでタイトルが絞り込まれます。</li>
+<li>タイトルをクリックすると、その会話に移動します。</li>
+</ol>
+<h3>データのバックアップ/エクスポート</h3>
+<ol>
+<li>UIパネルの「List TSV」を押します。</li>
+<li>表示されたテキストエリアの内容をコピーして利用してください。</li>
+</ol>
+<h3>会話の再スキャン</h3>
+<ol>
+<li>UIパネルの「Scan List」を押して、現在表示されている会話一覧を更新します。</li>
+<li>会話数が更新され、検索/TSVに反映されます。</li>
+</ol>
+<h2>注意事項</h2>
+<ul>
+<li>このスクリプトはブラウザのローカルストレージ（ユーザースクリプトマネージャーの機能）に会話のタイトルとIDを保存します。</li>
+<li>ChatGPTの仕様変更により、サイドバーの構造が大きく変わった場合は、スクリプト内の <code>CONVERSATION_LIST_SELECTORS</code> の更新が必要になる場合があります。</li>
+<li>取得できるのは、サイドバーに表示されている会話のみです。古い会話が表示されていない場合は、手動でスクロールしてから「Scan List」を実行してください。</li>
+</ul>
+<hr>
+<p><strong>Author:</strong> Takashi Sasaki (@TakashiSasaki)<br><strong>License:</strong> MIT</p>
+
+        </div>
 
         <div class="install-section">
             <a class="install-button" id="install-btn" href="chatgpt-conversation-lister.user.js">
@@ -143,19 +200,6 @@
             </a>
         </div>
     </div>
-
-    <script>
-        async function loadMarkdown() {
-            try {
-                const response = await fetch('README.md');
-                const text = await response.text();
-                document.getElementById('content').innerHTML = marked.parse(text);
-            } catch (e) {
-                document.getElementById('content').innerText = 'Failed to load content.';
-            }
-        }
-        loadMarkdown();
-    </script>
 </body>
 
 </html>

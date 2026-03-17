@@ -2,111 +2,304 @@
 <html lang="ja">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Playlist Saver UserScript</title>
-    <!-- Github Markdown CSS for styling -->
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>YouTube Playlist Saver - Moukaeritai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #10a37f;
+            --primary-dark: #0e8a6c;
+            --bg-gradient: linear-gradient(135.2deg, rgba(7, 12, 10, 1) 1.2%, rgba(13, 44, 40, 1) 98.1%);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-dim: #b0b8c4;
+        }
+
         body {
-            box-sizing: border-box;
-            min-width: 200px;
-            max-width: 980px;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 2em;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
             margin: 0 auto;
-            padding: 45px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 3rem;
+            backdrop-filter: blur(15px);
         }
 
-        @media (max-width: 767px) {
-            body {
-                padding: 15px;
-            }
+        .top-nav {
+            margin-bottom: 2em;
         }
 
-        .home-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #24292e;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            transition: background-color 0.2s;
-            display: flex;
+        .top-nav-link {
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-dim);
+            padding: 8px 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            transition: all 0.3s ease;
         }
 
-        .home-button svg {
-            fill: currentColor;
+        .top-nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
         }
 
-        .home-button:hover {
-            background-color: #0366d6;
+        #content h1 {
+            background: linear-gradient(90deg, #10a37f, #20e3b2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 0;
+        }
+
+        #content h2 {
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        #content code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        #content pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .install-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .install-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            background: var(--primary);
             color: white;
             text-decoration: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 163, 127, 0.3);
+        }
+
+        .install-button:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 6px 20px rgba(16, 163, 127, 0.5);
+            transform: scale(1.05);
         }
     </style>
 </head>
 
-<body class="markdown-body">
-    <a href="https://userscript.moukaeritai.work/" class="home-button">
-        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
-            <path
-                d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-        </svg>
-        userscript.moukaeritai.work
-    </a>
-    <div id="content">Loading documentation...</div>
+<body>
+    <div class="container">
+        <nav class="top-nav">
+            <a class="top-nav-link" href="../index.html">
+                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
+                    <path
+                        d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
+                </svg>
+                Back to Home
+            </a>
+        </nav>
 
-    <!-- Marked library for parsing markdown -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Fetch the markdown file located in the same directory
-            fetch('README.md')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(text => {
-                    // Parse markdown to HTML using 'marked' library
-                    document.getElementById('content').innerHTML = marked.parse(text);
-                })
-                .catch(err => {
-                    // Display friendly error message (likely CORS if opened directly)
-                    document.getElementById('content').innerHTML = `
-                        <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 1em; border-radius: 4px;">
-                            <h3 style="margin-top: 0;">Error loading document</h3>
-                            <p>${err.message}</p>
-                            <hr>
-                            <p><strong>注意:</strong> このファイルをローカルファイルシステム (file://) から直接開いている場合、ブラウザのセキュリティポリシー(CORS)により外部ファイルの読み込みがブロックされることがあります。</p>
-                            <p>以下のいずれかの方法で閲覧してください：</p>
-                            <ul>
-                                <li>ローカルサーバーを起動してアクセスする (例: <code>python -m http.server</code> や <code>npx http-server</code>)</li>
-                                <li>VSCodeの "Live Server" 拡張機能を使用する</li>
-                            </ul>
-                        </div>
-                    `;
-                    console.error('Error fetching markdown:', err);
-                });
-        });
-    </script>
-    <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
-    <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
-        <p>
-            Hosted on GitHub Pages |
-            <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
-            Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
-        </p>
-    </footer>
+        <div id="content">
+            <h1>YouTube Playlist Saver 設計書</h1>
+<p>このドキュメントは、YouTube のプレイリストに含まれる動画 ID を記録・管理するユーザースクリプトの設計を定義します。</p>
+<h2>1. プロジェクトの目的</h2>
+<p><code>youtube-playlist-saver.user.js</code> を作成し、YouTube プレイリスト内の動画情報を効率的に収集・可視化することを目的とします。</p>
+<h3>開発リソース</h3>
+<ul>
+<li><strong>サンプル DOM</strong>: <code>samples/</code> ディレクトリに、プレイリスト全体の DOM や動画アイテムの断片を保存し、分析に使用します。</li>
+<li><strong>実行環境</strong>: ブラウザの Tampermonkey 拡張機能での動作を想定しています。</li>
+</ul>
+<h2>2. 動作対象ページ</h2>
+<p>URL の <code>list</code> パラメータにプレイリスト ID が含まれるページを対象とします。</p>
+<ul>
+<li><strong>後で見る (Watch Later)</strong>: <code>https://www.youtube.com/playlist?list=WL</code></li>
+<li><strong>高く評価した動画 (Liked Videos)</strong>: <code>https://www.youtube.com/playlist?list=LL</code></li>
+<li><strong>一般のプレイリスト</strong>: <code>https://www.youtube.com/playlist?list=[PLAYLIST_ID]</code></li>
+<li><strong>インストール範囲</strong>: YouTube 全体にインストールされますが、主要機能がアクティブになるのはプレイリストページのみです。</li>
+</ul>
+<h2>3. ユーザースクリプトの機能</h2>
+<h3>3.1 動画 ID の収集</h3>
+<ul>
+<li><strong>自動記録</strong>: ユーザーがプレイリストをスクロールして表示された動画アイテムの ID を抽出します。</li>
+<li><strong>プレイリスト管理</strong>: 動画 ID は、対応するプレイリスト ID（<code>WL</code> や <code>LL</code> を含む）と紐付けて記録します。</li>
+<li><strong>重複除外</strong>: すでに保存済みの動画については、新規に記録しません。</li>
+</ul>
+<h3>3.2 永続データストレージ</h3>
+<ul>
+<li>収集したデータの保存および読み込みには、ユーザースクリプトの API である <code>GM_setValue</code> および <code>GM_getValue</code> を使用します。</li>
+<li><strong>パフォーマンス最適化</strong>:<ul>
+<li><strong>データのキャッシュ</strong>: ストレージへのアクセス回数を減らすため、メモリ上にデータのキャッシュを保持します。</li>
+<li><strong>一括保存 (Batch Save)</strong>: データの書き込みは、バッチ処理により効率化。変更検知から2秒間の待機（デバウンス）を経て、まとめて保存されます。</li>
+</ul>
+</li>
+<li>メタデータ項目の <code>@grant</code> には、これらの API を使用するために必要な権限を設定します。</li>
+</ul>
+<h3>3.3 既知動画のインジケーター表示</h3>
+<ul>
+<li><strong>表示場所</strong>: 各動画アイテム内の <code>id=&quot;engagement-bar&quot;</code> 要素（メタデータ領域）。</li>
+<li><strong>表示内容</strong>:<ul>
+<li><strong>新規</strong>: <code>[NEW]</code> (青色) - 今回のセッションで初めて検出・記録された動画。</li>
+<li><strong>既知</strong>: <code>[SAVED]</code> (緑色) - 以前のセッションですでに記録済みの動画。</li>
+</ul>
+</li>
+<li><strong>個別削除</strong>: インジケーターの横に「ゴミ箱」アイコンを表示します。<ul>
+<li>クリックすると確認ダイアログが表示され、OKを押すと YouTube のメニューを自動操作して削除します。</li>
+<li>削除後は動画行が半透明化されます。</li>
+</ul>
+</li>
+</ul>
+<h3>3.4 ステータスパネル</h3>
+<ul>
+<li>右下のパネルで保存数や保存状態を表示します。</li>
+<li><strong>アクティブ状態に連動</strong>: プレイリストページでは <code>Active</code> と表示し内容を展開、非プレイリストでは <code>Inactive</code> 表示で内容を閉じます。</li>
+<li><strong>初期化ディレイ</strong>: 初回注入時は 1-3 秒のランダムディレイ後に初期化します。</li>
+</ul>
+<h3>3.5 API機能 (開発者向け)</h3>
+<ul>
+<li><strong><code>window.YouTubePlaylistSaver</code></strong>: 他のスクリプトからデータを利用するためのAPIを公開しています。<ul>
+<li><code>isSaved(playlistId, videoId)</code>: 動画が保存済みかチェック。</li>
+<li><code>save(playlistId, ...)</code>: 動画を強制的に保存し、新規かどうかの結果を返す。</li>
+<li><code>getAllKnownIds(playlistId)</code>: 保存済みの全IDを取得。</li>
+</ul>
+</li>
+</ul>
+<h3>3.6 補助機能の分離</h3>
+<ul>
+<li><strong>フィルタリング</strong>: 以前のバージョンに含まれていたフィルタリング機能は、<strong><a href="../youtube-playlist-filter/index.html">YouTube Playlist Filter</a></strong> に分離されました。</li>
+<li><strong>一括削除</strong>: フィルタ条件やスクロール状態に基づいた一括削除機能は、<strong><a href="../youtube-playlist-remover/index.html">YouTube Playlist Remover</a></strong> に分離されました。</li>
+<li><strong>自動スクロール</strong>: <strong><a href="../youtube-playlist-scroller/index.html">YouTube Playlist Scroller</a></strong> に分離されました。</li>
+</ul>
+<h2>4. データ構造とバージョニング</h2>
+<p>将来的な機能拡張（最終発見日時の記録など）に備え、保存データの形式をバージョニング管理しています。</p>
+<h3>4.1 旧データ形式 (バージョン表記なし)</h3>
+<p>初期実装で採用されていた形式です。プレイリスト ID をキーとし、動画 ID の配列を値に持つ単純なマッピング構造です。</p>
+<pre><code class="language-json">{
+  &quot;PL_ExampleId1&quot;: [&quot;videoId1&quot;, &quot;videoId2&quot;],
+  &quot;PL_ExampleId2&quot;: [&quot;videoId3&quot;]
+}
+</code></pre>
+<h3>4.2 バージョン 1</h3>
+<p>データ全体をラッパーオブジェクトで包み、<code>version</code> プロパティと <code>playlists</code> プロパティを導入しました。</p>
+<pre><code class="language-json">{
+  &quot;version&quot;: 1,
+  &quot;playlists&quot;: {
+    &quot;PL_ExampleId1&quot;: [&quot;videoId1&quot;, &quot;videoId2&quot;],
+    &quot;PL_ExampleId2&quot;: [&quot;videoId3&quot;]
+  }
+}
+</code></pre>
+<h3>4.3 バージョン 2 (現在)</h3>
+<p>各動画IDに対してメタデータ（タイトル、チャンネル名、追加日時）を保持するオブジェクト構造へ変更されました。</p>
+<pre><code class="language-json">{
+  &quot;version&quot;: 2,
+  &quot;playlists&quot;: {
+    &quot;PL_ExampleId1&quot;: {
+        &quot;videoId1&quot;: { &quot;title&quot;: &quot;video title&quot;, &quot;channel&quot;: &quot;channel name&quot;, &quot;addedAt&quot;: 1234567890 }
+    }
+}
+</code></pre>
+<h3>4.4 JSONスキーマ</h3>
+<p>エクスポートされるデータの正確な形式定義は、<a href="data-format/data-format-v2.schema.json">data-format/data-format-v2.schema.json</a> に記載されています。
+このスキーマはバリデーションや他のツールとのデータ交換に使用できます。</p>
+<h2>5. プロジェクト管理</h2>
+<h3>5.1 バージョン管理</h3>
+<ul>
+<li>形式: <code>major.minor.patch</code> (Semantic Versioning)</li>
+<li>更新ルール: スクリプトファイルが少しでも変更された場合は、<code>patch</code> レベルを更新します。</li>
+</ul>
+<h3>5.2 現在バージョン</h3>
+<p><code>0.2.51</code></p>
+<h3>5.3 メタデータ定義</h3>
+<ul>
+<li><strong>作者</strong>: Takashi Sasaki (x.com/TakashiSasaki)</li>
+<li><strong>Namespace</strong>: <code>userscript.moukaeritai.work</code></li>
+<li><strong>許可ドメイン (@connect)</strong>: <code>gist.githubusercontent.com</code>（インポート機能に使用）</li>
+<li><strong>公開・更新</strong>: GitHub (<code>TakashiSasaki/userscript.moukaeritai.work</code>) 上で公開し、Tampermonkey の自動更新機能に対応させます。</li>
+</ul>
+<h2>6. データインポート機能</h2>
+<p>外部サーバー（主にGist）にバックアップされたJSONデータ、またはローカルファイルからデータを取り込み、統合します。</p>
+<ul>
+<li><strong>使用方法</strong>:<ul>
+<li><strong>URLから</strong>: メニュー「Import Data from URL」を選択し、JSONデータのURLを入力します。GistのRaw URL（ハッシュ付き）は自動的に最新版に変換されます。</li>
+<li><strong>ファイルから</strong>: メニュー「Import Data from File」を選択し、ローカルのJSONファイル（<code>.json</code>）を選択して読み込みます。</li>
+</ul>
+</li>
+<li><strong>仕様</strong>:<ul>
+<li><strong>対象フォーマット</strong>: バージョン2形式のJSONデータに対応しています。旧バージョン形式も可能な限り自動変換して読み込みます。</li>
+<li><strong>マージの挙動</strong>:<ul>
+<li><strong>プレイリスト非依存</strong>: 現在ブラウザで開いているページに関わらず、JSONデータ内の各プレイリストID（キー）に基づいて、正しいプレイリストにデータが振り分けられます。</li>
+<li><strong>新規追加</strong>: ローカルに存在しない動画IDは新規に追加されます。</li>
+<li><strong>メタデータ補完</strong>: ローカルにIDのみが存在し、タイトルやチャンネル名が欠落している場合、インポートデータに情報があればそれを反映して更新します。</li>
+</ul>
+</li>
+<li><strong>即時反映</strong>: インポート完了後、現在表示中のリストに含まれる動画のステータス（<code>[NEW]</code> / <code>[SAVED]</code>）は即座に更新されます。</li>
+<li><strong>許可ドメイン</strong>: デフォルトでは <code>@connect</code> に指定された <code>gist.githubusercontent.com</code> からの取得を許可しています。</li>
+<li><strong>CORS</strong>: <code>GM_xmlhttpRequest</code> を使用し、クロスドメイン制約を回避してデータを取得します。</li>
+</ul>
+</li>
+</ul>
+<h2>7. データエクスポート機能</h2>
+<p>保存されている<strong>すべてのプレイリスト</strong>のデータを、クリップボードへのコピーまたはファイルとしてエクスポートします。</p>
+<ul>
+<li><strong>使用方法</strong>:<ul>
+<li><strong>クリップボードへ</strong>: メニュー「Copy Data to Clipboard」を選択します。全データがJSONテキストとしてコピーされます。</li>
+<li><strong>ファイルへ</strong>: メニュー「Export Data to File」を選択します。全データが <code>youtube_playlist_saver_data.json</code> としてダウンロードされます。</li>
+</ul>
+</li>
+<li><strong>出力データの内容</strong>:<ul>
+<li>現在開いているプレイリストだけでなく、過去に記録された<strong>全てのプレイリスト</strong>（後で見る、高く評価した動画、その他のプレイリスト）の情報が含まれます。</li>
+</ul>
+</li>
+<li><strong>用途</strong>:<ul>
+<li><strong>バックアップ</strong>: Gistなどの外部ストレージやローカルディスクへの保存。</li>
+<li><strong>データ移行</strong>: 別のPCでインポート機能を使用してデータを同期する際に使用します。</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+
+        <div class="install-section">
+            <a class="install-button" id="install-btn" href="youtube-playlist-saver.user.js">
+                <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                </svg>
+                Install Userscript
+            </a>
+        </div>
+    </div>
 </body>
 
 </html>
