@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Auto Paste in New Tab
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.3
+// @version      0.1.4
 // @description  Emulates Shift+F11 and Ctrl+V in Google Docs.
 // @author       Takashi Sasaki
 // @match        https://docs.google.com/document/*
@@ -25,7 +25,7 @@
             document.dispatchEvent(new CustomEvent('userscript-check-installed', {
                 detail: {
                     name: typeof GM_info !== 'undefined' ? GM_info.script.name : 'Auto Paste in New Tab',
-                    version: typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.3'
+                    version: typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.4'
                 }
             }));
         };
@@ -74,7 +74,7 @@
         background: rgba(255,255,255,0.05);
         border-radius: 4px;
     `;
-    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.3'}`;
+    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.4'}`;
     panel.appendChild(versionSpan);
 
     const methodSelect = document.createElement('select');
@@ -205,28 +205,39 @@
                 target.dispatchEvent(ctrlVDown);
                 target.dispatchEvent(ctrlVUp);
             } else if (pasteMethod === 'menu') {
-                const editMenu = document.querySelector('#docs-edit-menu');
+                const editMenu = document.getElementById('docs-edit-menu');
                 if (editMenu) {
                     console.log('[Auto Paste in New Tab] Clicking Edit menu');
-                    ['mousedown', 'mouseup', 'click'].forEach(type => {
-                        editMenu.dispatchEvent(new MouseEvent(type, { bubbles: true }));
+                    ['mousedown', 'mouseup'].forEach(type => {
+                        editMenu.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window, buttons: 1 }));
                     });
 
-                    setTimeout(() => {
-                        const pasteItem = Array.from(document.querySelectorAll('.goog-menuitem'))
-                            .find(item => {
-                                const label = item.querySelector('.goog-menuitem-label') || item.querySelector('span');
-                                return label && label.textContent.trim() === '貼り付け';
-                            });
-                        if (pasteItem) {
+                    // Wait for the menu to render
+                    let pasteItem = null;
+                    let checkCount = 0;
+                    
+                    const findAndClickPaste = () => {
+                        pasteItem = Array.from(document.querySelectorAll('.goog-menuitem')).find(item => {
+                            const text = item.textContent || '';
+                            // Find 'Paste' or '貼り付け', exclude 'Paste without formatting' / '書式なし' etc.
+                            return (text.includes('Ctrl+V') || text.includes('Paste') || text.includes('貼り付け')) 
+                                && !text.includes('without') && !text.includes('書式なし') && !text.includes('マークダウン');
+                        });
+
+                        if (pasteItem && pasteItem.getBoundingClientRect().width > 0) {
                             console.log('[Auto Paste in New Tab] Clicking Paste menu item');
                             ['mousedown', 'mouseup', 'click'].forEach(type => {
-                                pasteItem.dispatchEvent(new MouseEvent(type, { bubbles: true }));
+                                pasteItem.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window, buttons: 1, which: 1 }));
                             });
+                        } else if (checkCount < 10) {
+                            checkCount++;
+                            setTimeout(findAndClickPaste, 50);
                         } else {
-                            console.error('[Auto Paste in New Tab] Paste menu item not found');
+                            console.error('[Auto Paste in New Tab] Paste menu item not found or not visible');
                         }
-                    }, 100);
+                    };
+                    
+                    setTimeout(findAndClickPaste, 50);
                 } else {
                     console.error('[Auto Paste in New Tab] Edit menu not found');
                 }
