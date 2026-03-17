@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.26
-// @lastModified 2026-03-16
-// @description  Count user/model turns, images, and characters in Google Gemini
+// @version      0.4.27
+// @lastModified 2026-03-17
+// @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
@@ -67,6 +67,7 @@
     let isInitialized = false;
     let uiContainer = null; // Store reference to the main UI container
     let updateStatsTimeout = null;
+    let isDeepScanning = false; // Flag to pause auto-updating during manual deep scan
 
     // Trusted Types Policy Creation
     let policy;
@@ -232,6 +233,8 @@
 
     // --- Core Logic ---
 
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
     const getTextContentLength = (element) => {
         if (!element) return 0;
         let length = 0;
@@ -342,13 +345,56 @@
         });
     });
 
-    const updateStats = () => {
+    const updateStats = (forceUpdate = false, overrideData = null) => {
+        if (isDeepScanning && !forceUpdate) return; // Ignore mutations during deep scan
+
         // Disconnect to avoid loops
         if (mainObserver) mainObserver.disconnect();
 
         try {
-            const userTurns = document.querySelectorAll(SELECTORS.userTurn);
-            const modelTurns = document.querySelectorAll(SELECTORS.modelTurn);
+            let userTurnsCount = 0, modelTurnsCount = 0;
+            let userCharCount = 0, modelCharCount = 0;
+            let totalArtifacts = 0, totalLinkCards = 0, totalCodeBlocks = 0, totalTables = 0, totalThinkingBlocks = 0;
+            let collectedImages = [];
+
+            if (overrideData) {
+                // Use data collected from deep scan
+                userTurnsCount = overrideData.userTurnsCount;
+                modelTurnsCount = overrideData.modelTurnsCount;
+                userCharCount = overrideData.userCharCount;
+                modelCharCount = overrideData.modelCharCount;
+                totalArtifacts = overrideData.totalArtifacts;
+                totalLinkCards = overrideData.totalLinkCards;
+                totalCodeBlocks = overrideData.totalCodeBlocks;
+                totalTables = overrideData.totalTables;
+                totalThinkingBlocks = overrideData.totalThinkingBlocks;
+                collectedImages = overrideData.collectedImages;
+            } else {
+                // Standard observable window scrape
+                const userTurns = document.querySelectorAll(SELECTORS.userTurn);
+                const modelTurns = document.querySelectorAll(SELECTORS.modelTurn);
+                userTurnsCount = userTurns.length;
+                modelTurnsCount = modelTurns.length;
+
+                userTurns.forEach(turn => {
+                    const textNodes = turn.querySelectorAll(SELECTORS.userText);
+                    textNodes.forEach(node => { userCharCount += getTextContentLength(node); });
+                    const imgs = turn.querySelectorAll(SELECTORS.userImage);
+                    imgs.forEach(img => { collectedImages.push({ src: img.src, type: 'user' }); });
+                });
+
+                modelTurns.forEach(turn => {
+                    modelCharCount += getTextContentLength(turn);
+                    totalCodeBlocks += turn.querySelectorAll(SELECTORS.codeBlock).length;
+                    totalTables += turn.querySelectorAll(SELECTORS.tableBlock).length;
+                    totalArtifacts += turn.querySelectorAll(SELECTORS.artifact).length;
+                    totalLinkCards += turn.querySelectorAll(SELECTORS.linkCard).length;
+                    totalThinkingBlocks += turn.querySelectorAll(SELECTORS.thinkingBlock).length;
+
+                    const modelImgs = turn.querySelectorAll(SELECTORS.modelImage);
+                    modelImgs.forEach(img => { collectedImages.push({ src: img.src, type: 'model' }); });
+                });
+            }
 
             // Get UI container elements
             const container = document.getElementById('gemini-turn-counter-ui');
@@ -357,62 +403,56 @@
             const iconDiv = container.querySelector('.gtc-icon');
             const contentDiv = container.querySelector('.gtc-content');
 
-            let userCharCount = 0;
-            let collectedImages = [];
+            if (!overrideData) {
+                const userTurns = document.querySelectorAll(SELECTORS.userTurn);
+                userTurns.forEach(turn => {
+                    // Text count
+                    const textNodes = turn.querySelectorAll(SELECTORS.userText);
+                    textNodes.forEach(node => {
+                        userCharCount += getTextContentLength(node);
+                    });
 
-            userTurns.forEach(turn => {
-                // Text count
-                const textNodes = turn.querySelectorAll(SELECTORS.userText);
-                textNodes.forEach(node => {
-                    userCharCount += getTextContentLength(node);
+                    // Image count
+                    const imgs = turn.querySelectorAll(SELECTORS.userImage);
+                    imgs.forEach(img => {
+                        collectedImages.push({ src: img.src, type: 'user' });
+                    });
                 });
 
-                // Image count
-                const imgs = turn.querySelectorAll(SELECTORS.userImage);
-                imgs.forEach(img => {
-                    collectedImages.push({ src: img.src, type: 'user' });
+                const modelTurns = document.querySelectorAll(SELECTORS.modelTurn);
+                modelTurns.forEach(turn => {
+                    // Model text selector is tricky, it usually contains many nested elements.
+                    // We'll try to grab the main container text for now.
+                    // Refinement: exclude 'sources' or other meta info if possible.
+                    modelCharCount += getTextContentLength(turn);
+
+                    // Count Code Blocks
+                    const logs = turn.querySelectorAll(SELECTORS.codeBlock);
+                    totalCodeBlocks += logs.length;
+
+                    // Count Tables
+                    const tables = turn.querySelectorAll(SELECTORS.tableBlock);
+                    totalTables += tables.length;
+
+                    // Count Artifacts
+                    const artifacts = turn.querySelectorAll(SELECTORS.artifact);
+                    totalArtifacts += artifacts.length;
+
+                    // Count Link Cards
+                    const linkCards = turn.querySelectorAll(SELECTORS.linkCard);
+                    totalLinkCards += linkCards.length;
+
+                    // Count Thinking Blocks
+                    const thinkingBlocks = turn.querySelectorAll(SELECTORS.thinkingBlock);
+                    totalThinkingBlocks += thinkingBlocks.length;
+
+                // Model Images
+                    const modelImgs = turn.querySelectorAll(SELECTORS.modelImage);
+                    modelImgs.forEach(img => {
+                        collectedImages.push({ src: img.src, type: 'model' });
+                    });
                 });
-            });
-
-            let modelCharCount = 0;
-            let totalCodeBlocks = 0;
-            let totalTables = 0;
-            let totalArtifacts = 0;
-            let totalLinkCards = 0;
-            let totalThinkingBlocks = 0;
-
-            modelTurns.forEach(turn => {
-                // Model text selector is tricky, it usually contains many nested elements.
-                // We'll try to grab the main container text for now.
-                // Refinement: exclude 'sources' or other meta info if possible.
-                modelCharCount += getTextContentLength(turn);
-
-                // Count Code Blocks
-                const logs = turn.querySelectorAll(SELECTORS.codeBlock);
-                totalCodeBlocks += logs.length;
-
-                // Count Tables
-                const tables = turn.querySelectorAll(SELECTORS.tableBlock);
-                totalTables += tables.length;
-
-                // Count Artifacts
-                const artifacts = turn.querySelectorAll(SELECTORS.artifact);
-                totalArtifacts += artifacts.length;
-
-                // Count Link Cards
-                const linkCards = turn.querySelectorAll(SELECTORS.linkCard);
-                totalLinkCards += linkCards.length;
-
-                // Count Thinking Blocks
-                const thinkingBlocks = turn.querySelectorAll(SELECTORS.thinkingBlock);
-                totalThinkingBlocks += thinkingBlocks.length;
-
-            // Model Images
-                const modelImgs = turn.querySelectorAll(SELECTORS.modelImage);
-                modelImgs.forEach(img => {
-                    collectedImages.push({ src: img.src, type: 'model' });
-                });
-            });
+            }
 
             // Update global reference
             latestCollectedImages = collectedImages;
@@ -421,7 +461,7 @@
             const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.1.28';
 
             if (iconDiv) {
-                iconDiv.textContent = `Gemini Turns v${scriptVersion} | U:${userTurns.length} M:${modelTurns.length} A:${totalArtifacts} L:${totalLinkCards}`;
+                iconDiv.textContent = `Gemini Turns v${scriptVersion} | U:${userTurnsCount} M:${modelTurnsCount} A:${totalArtifacts} L:${totalLinkCards}`;
             }
 
             const getThumbnailStyling = (type) => {
@@ -441,8 +481,8 @@
                         <span id="gtc-minimize-btn" class="gtc-minimize-btn" title="Minimize">−</span>
                     </div>
                 </div>
-                <div class="gtc-row"><span>User:</span> <span class="gtc-val">${userTurns.length} (${userCharCount.toLocaleString()})</span></div>
-                <div class="gtc-row"><span>Model:</span> <span class="gtc-val">${modelTurns.length} (${modelCharCount.toLocaleString()})</span></div>
+                <div class="gtc-row"><span>User:</span> <span class="gtc-val">${userTurnsCount} (${userCharCount.toLocaleString()})</span></div>
+                <div class="gtc-row"><span>Model:</span> <span class="gtc-val">${modelTurnsCount} (${modelCharCount.toLocaleString()})</span></div>
                 <div class="gtc-row" style="border-top:1px solid #444; margin-top:4px; padding-top:4px;"></div>
                 <div class="gtc-row">
                      <span>Artifacts (Canvas):</span> <span class="gtc-val">${totalArtifacts}</span>
@@ -526,10 +566,193 @@
             doCopy(copyBtnM, '📋M', collectedImages.filter(i => i.type === 'model'));
             doCopy(copyBtnAll, '📋All', collectedImages);
 
+            const deepScanBtn = contentDiv.querySelector('#gtc-deep-scan-btn');
+            if (deepScanBtn) {
+                deepScanBtn.addEventListener('click', runDeepScan);
+            }
+
         } finally {
-            if (mainObserver) mainObserver.observe(document.body, { childList: true, subtree: true });
+            if (mainObserver && !isDeepScanning) mainObserver.observe(document.body, { childList: true, subtree: true });
         }
     };
+
+    /**
+     * Executes a deep scan of the conversation by scrolling up and down,
+     * collecting all components deduplicated by hash/IDs.
+     */
+    async function runDeepScan() {
+        if (isDeepScanning) return;
+        isDeepScanning = true;
+
+        const scanBtn = document.getElementById('gtc-deep-scan-btn');
+        const statusEl = document.getElementById('gtc-scan-status');
+        if (scanBtn) scanBtn.disabled = true;
+
+        const setStatus = (msg) => { if (statusEl) statusEl.textContent = msg; console.log('[GTC Deep Scan]', msg); };
+        setStatus("Finding scroll container...");
+
+        let scroller = document.querySelector('infinite-scroller.chat-history') ||
+                       document.querySelector('chat-window-content infinite-scroller');
+        if (!scroller) {
+            const scrollers = Array.from(document.querySelectorAll('infinite-scroller'));
+            scroller = scrollers.find(el => el.clientWidth > 300) || document.documentElement;
+        }
+
+        if (!scroller.hasAttribute('tabindex') && scroller !== document.documentElement) {
+            scroller.setAttribute('tabindex', '-1');
+        }
+        if (scroller !== document.documentElement) scroller.focus({ preventScroll: true });
+
+        setStatus("Ascending to top...");
+        let highestScrollHeight = scroller.scrollHeight;
+        let stallCount = 0;
+        let attempts = 0;
+
+        // Ascend to Top
+        while (attempts < 250) {
+            const scrollStep = Math.max(800, scroller.clientHeight * 0.8 || 800);
+            if (scroller === document.documentElement) window.scrollBy({ top: -scrollStep, behavior: 'instant' });
+            else scroller.scrollTop -= scrollStep;
+
+            await sleep(300);
+            const currentTop = scroller === document.documentElement ? window.scrollY : scroller.scrollTop;
+
+            if (currentTop <= 10) {
+                await sleep(1000); // give framework chance to load older turns
+                if (scroller.scrollHeight <= highestScrollHeight + 50) {
+                    stallCount++;
+                    if (stallCount >= 3) break; // Reached absolute top
+                } else {
+                    stallCount = 0;
+                    highestScrollHeight = scroller.scrollHeight;
+                }
+            } else {
+                stallCount = 0;
+            }
+            attempts++;
+        }
+
+        if (scroller === document.documentElement) window.scrollTo({ top: 0, behavior: 'instant' });
+        else scroller.scrollTop = 0;
+        await sleep(1000);
+
+        setStatus("Descending and collecting...");
+
+        // Deduplication structures
+        const seenUserTurns = new Set();
+        const seenModelTurns = new Set();
+        const seenArtifacts = new Set();
+        const seenLinkCards = new Set();
+        const seenCodeBlocks = new Set();
+        const seenTables = new Set();
+        const seenThinkingBlocks = new Set();
+        
+        let overrideData = {
+            userTurnsCount: 0, modelTurnsCount: 0,
+            userCharCount: 0, modelCharCount: 0,
+            totalArtifacts: 0, totalLinkCards: 0,
+            totalCodeBlocks: 0, totalTables: 0, totalThinkingBlocks: 0,
+            collectedImages: [] // using src as unique key logic within loop
+        };
+        const seenImages = new Set();
+
+        const getHash = (el) => {
+            // Very simple hash: using ID if available, otherwise first 50 chars of text content
+            if (el.id) return el.id;
+            const t = el.textContent.replace(/\\s+/g, ' ').trim().substring(0, 50);
+            return t.length > 0 ? t : Math.random().toString(); 
+        };
+
+        attempts = 0;
+        stallCount = 0;
+
+        // Descend and collect
+        while (attempts < 300) {
+            document.querySelectorAll(SELECTORS.userTurn).forEach(turn => {
+                const hash = getHash(turn);
+                if (!seenUserTurns.has(hash)) {
+                    seenUserTurns.add(hash);
+                    overrideData.userTurnsCount++;
+                    turn.querySelectorAll(SELECTORS.userText).forEach(node => {
+                        overrideData.userCharCount += getTextContentLength(node);
+                    });
+                    turn.querySelectorAll(SELECTORS.userImage).forEach(img => {
+                        if (!seenImages.has(img.src)) {
+                            seenImages.add(img.src);
+                            overrideData.collectedImages.push({ src: img.src, type: 'user' });
+                        }
+                    });
+                }
+            });
+
+            document.querySelectorAll(SELECTORS.modelTurn).forEach(turn => {
+                const hash = getHash(turn);
+                if (!seenModelTurns.has(hash)) {
+                    seenModelTurns.add(hash);
+                    overrideData.modelTurnsCount++;
+                    overrideData.modelCharCount += getTextContentLength(turn);
+
+                    turn.querySelectorAll(SELECTORS.codeBlock).forEach(cb => {
+                        const cbHash = getHash(cb);
+                        if (!seenCodeBlocks.has(cbHash)) { seenCodeBlocks.add(cbHash); overrideData.totalCodeBlocks++; }
+                    });
+                    turn.querySelectorAll(SELECTORS.tableBlock).forEach(tb => {
+                        const tbHash = getHash(tb);
+                        if (!seenTables.has(tbHash)) { seenTables.add(tbHash); overrideData.totalTables++; }
+                    });
+                    turn.querySelectorAll(SELECTORS.artifact).forEach(ar => {
+                        const arHash = getHash(ar);
+                        if (!seenArtifacts.has(arHash)) { seenArtifacts.add(arHash); overrideData.totalArtifacts++; }
+                    });
+                    turn.querySelectorAll(SELECTORS.linkCard).forEach(lc => {
+                        const lcHash = getHash(lc);
+                        if (!seenLinkCards.has(lcHash)) { seenLinkCards.add(lcHash); overrideData.totalLinkCards++; }
+                    });
+                    turn.querySelectorAll(SELECTORS.thinkingBlock).forEach(tk => {
+                        const tkHash = getHash(tk);
+                        if (!seenThinkingBlocks.has(tkHash)) { seenThinkingBlocks.add(tkHash); overrideData.totalThinkingBlocks++; }
+                    });
+                    turn.querySelectorAll(SELECTORS.modelImage).forEach(img => {
+                        if (!seenImages.has(img.src)) {
+                            seenImages.add(img.src);
+                            overrideData.collectedImages.push({ src: img.src, type: 'model' });
+                        }
+                    });
+                }
+            });
+
+            const scrollStep = Math.max(800, scroller.clientHeight * 0.8 || 800);
+            const currentTop = scroller === document.documentElement ? window.scrollY : scroller.scrollTop;
+            const maxScrollTop = scroller.scrollHeight - (scroller.clientHeight || window.innerHeight);
+
+            // Using >= maxScrollTop - 50 to allow slight sub-pixel rounding
+            if (currentTop >= maxScrollTop - 50) {
+                stallCount++;
+                if (stallCount >= 3) break;
+            } else {
+                stallCount = 0;
+            }
+
+            if (scroller === document.documentElement) window.scrollBy({ top: scrollStep, behavior: 'instant' });
+            else scroller.scrollTop += scrollStep;
+
+            await sleep(300);
+            attempts++;
+        }
+
+        setStatus("Scan complete!");
+        await sleep(1000);
+        setStatus("");
+        
+        if (scanBtn) scanBtn.disabled = false;
+        
+        // Push the collected deep scan data to updateStats
+        updateStats(true, overrideData); 
+        
+        isDeepScanning = false;
+        // Re-attach observer
+        if (mainObserver) mainObserver.observe(document.body, { childList: true, subtree: true });
+    }
 
     /**
      * Main initialization for the script's features.
