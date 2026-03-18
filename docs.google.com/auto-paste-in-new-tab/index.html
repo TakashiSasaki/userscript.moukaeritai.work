@@ -31,7 +31,7 @@
                 <div class="install-actions">
                     <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/docs.google.com/auto-paste-in-new-tab/auto-paste-in-new-tab.user.js" class="btn btn-primary install-btn">
                         <span class="btn-icon">⬇️</span>
-                        Install Script (v0.1.10)
+                        Install Script (v0.1.11)
                     </a>
                 </div>
                 <div class="install-status" id="install-status">
@@ -61,6 +61,7 @@
 
                 <h2>更新履歴</h2>
                 <ul>
+                    <li><strong>v0.1.11</strong>: メニュー項目のイベント発行時に、画面上の正確な座標（<code>clientX</code>, <code>clientY</code>）を付与。これによりGoogle Docsが正しいクリックとしてペーストを認識するよう修正。</li>
                     <li><strong>v0.1.10</strong>: 「貼り付け」メニュー項目実行時にディスパッチするイベントを、より人間に近い <code>mouseover</code> → <code>mousedown</code> → <code>mouseup</code> → <code>click</code> の順序に改修し、メニューが閉じる動作もエミュレートするよう微調整。</li>
                     <li><strong>v0.1.9</strong>: 「貼り付け」メニュー項目をクリックする代わりに、<code>focus()</code> して <code>Enter</code> キーのエミュレートに変更し、Google Docs側でクリックイベントが不発になる問題に対応。</li>
                     <li><strong>v0.1.8</strong>: <code>v</code> の一文字だけでマッチしてしまう判定ロジックを修正し、「Hrvatski」等の意図しない言語メニューを誤認識する不具合を解消。</li>
