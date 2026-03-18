@@ -1,13 +1,16 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.1
+// @version      0.1.2
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
+// @match        https://docs.google.com/document/*
 // @grant        GM_info
+// @grant        GM_setValue
+// @grant        GM_getValue
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @noframes
@@ -528,6 +531,13 @@
             document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images', { detail: { target: 'all' } }));
 
             const copyResult = await imageCopyResultPromise;
+
+            // Store the result using GM_setValue so it can be accessed on docs.google.com
+            if (typeof GM_setValue !== 'undefined') {
+                GM_setValue('gemini_export_image_copy_success', copyResult.success || false);
+                GM_setValue('gemini_export_image_copy_count', copyResult.count || 0);
+            }
+
             if (copyResult.success) {
                 showIndicator(`✅ ${copyResult.count || 0} 枚の画像をコピーしました`, true, false);
             } else if (copyResult.reason === 'timeout') {
