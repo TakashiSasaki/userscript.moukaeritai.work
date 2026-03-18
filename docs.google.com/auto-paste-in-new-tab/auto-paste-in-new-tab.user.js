@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Auto Paste in New Tab
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.4
+// @version      0.1.5
 // @description  Emulates Shift+F11 and Ctrl+V in Google Docs.
 // @author       Takashi Sasaki
 // @match        https://docs.google.com/document/*
@@ -25,7 +25,7 @@
             document.dispatchEvent(new CustomEvent('userscript-check-installed', {
                 detail: {
                     name: typeof GM_info !== 'undefined' ? GM_info.script.name : 'Auto Paste in New Tab',
-                    version: typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.4'
+                    version: typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.5'
                 }
             }));
         };
@@ -74,7 +74,7 @@
         background: rgba(255,255,255,0.05);
         border-radius: 4px;
     `;
-    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.4'}`;
+    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.5'}`;
     panel.appendChild(versionSpan);
 
     const methodSelect = document.createElement('select');
@@ -217,23 +217,35 @@
                     let checkCount = 0;
                     
                     const findAndClickPaste = () => {
-                        pasteItem = Array.from(document.querySelectorAll('.goog-menuitem')).find(item => {
+                        const candidates = Array.from(document.querySelectorAll('.goog-menuitem'));
+                        console.log(`[Auto Paste in New Tab] Attempt ${checkCount+1}: Found ${candidates.length} '.goog-menuitem' elements on page.`);
+                        
+                        pasteItem = candidates.find(item => {
                             const text = item.textContent || '';
-                            // Find 'Paste' or '貼り付け', exclude 'Paste without formatting' / '書式なし' etc.
-                            return (text.includes('Ctrl+V') || text.includes('Paste') || text.includes('貼り付け')) 
+                            const isMatch = (text.includes('Ctrl+V') || text.includes('Paste') || text.includes('貼り付け') || text.includes('v')) 
                                 && !text.includes('without') && !text.includes('書式なし') && !text.includes('マークダウン');
+                            
+                            if (text.trim() !== '') {
+                                console.log(`[Auto Paste in New Tab] Inspecting item length ${text.length}: "${text.trim().substring(0, 30)}" -> Is Match: ${isMatch}`);
+                            }
+                            return isMatch;
                         });
+
+                        if (pasteItem) {
+                            const rect = pasteItem.getBoundingClientRect();
+                            console.log(`[Auto Paste in New Tab] Matched Paste item rect: width=${rect.width}, height=${rect.height}`);
+                        }
 
                         if (pasteItem && pasteItem.getBoundingClientRect().width > 0) {
                             console.log('[Auto Paste in New Tab] Clicking Paste menu item');
                             ['mousedown', 'mouseup', 'click'].forEach(type => {
                                 pasteItem.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window, buttons: 1, which: 1 }));
                             });
-                        } else if (checkCount < 10) {
+                        } else if (checkCount < 15) {
                             checkCount++;
-                            setTimeout(findAndClickPaste, 50);
+                            setTimeout(findAndClickPaste, 250);
                         } else {
-                            console.error('[Auto Paste in New Tab] Paste menu item not found or not visible');
+                            console.error('[Auto Paste in New Tab] Paste menu item not found or not visible after 15 attempts.');
                         }
                     };
                     
