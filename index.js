@@ -1,3 +1,20 @@
+// --- Element Caching ---
+const itemCache = new WeakMap();
+const scriptNameToItem = new Map();
+
+function getCachedElements(item) {
+    let cached = itemCache.get(item);
+    if (!cached) {
+        cached = {
+            installBtn: item.querySelector('.install-button'),
+            latestBadge: item.querySelector('.version-badge.latest'),
+            installedBadge: item.querySelector('.version-badge.installed')
+        };
+        itemCache.set(item, cached);
+    }
+    return cached;
+}
+
 // Domain nav smooth scrolling
 const domainLinks = document.querySelectorAll('.domain-nav-link');
 domainLinks.forEach(link => {
@@ -32,8 +49,7 @@ async function fetchAndApplyLatestVersions() {
     };
 
     const updateServerVersionUI = (item, version) => {
-        const badge = item.querySelector('.version-badge.latest');
-        const installBtn = item.querySelector('.install-button');
+        const { latestBadge: badge } = getCachedElements(item);
 
         if (!badge) return;
 
@@ -52,7 +68,7 @@ async function fetchAndApplyLatestVersions() {
     };
 
     const promises = Array.from(projectItems).map(async (item) => {
-        const btn = item.querySelector('.install-button');
+        const { installBtn: btn } = getCachedElements(item);
         if (btn && btn.href) {
             const version = await fetchVersion(btn.href);
             updateServerVersionUI(item, version);
@@ -63,7 +79,7 @@ async function fetchAndApplyLatestVersions() {
 }
 
 function updateButtonState(item) {
-    const installBtn = item.querySelector('.install-button');
+    const { installBtn } = getCachedElements(item);
     if (!installBtn) return;
 
     const serverVersion = item.dataset.serverVersion;
@@ -111,27 +127,23 @@ function updateButtonState(item) {
 // --- Installed Script Detection ---
 document.addEventListener('userscript-check-installed', (event) => {
     const { name, version: installedVersion } = event.detail;
-    const projectItems = document.querySelectorAll('.project-item');
+    const item = scriptNameToItem.get(name);
 
-    projectItems.forEach(item => {
-        const btn = item.querySelector('.install-button');
-        if (btn && btn.getAttribute('data-script-name') === name) {
-
-            // Update Installed Version Badge
-            const badge = item.querySelector('.version-badge.installed');
-            if (badge) {
-                badge.textContent = `v${installedVersion}`;
-                badge.classList.remove('outdated'); // Reset
-                badge.classList.add('installed');
-            }
-
-            // Store state
-            item.dataset.installedVersion = installedVersion;
-
-            // Update Button
-            updateButtonState(item);
+    if (item) {
+        // Update Installed Version Badge
+        const { installedBadge: badge } = getCachedElements(item);
+        if (badge) {
+            badge.textContent = `v${installedVersion}`;
+            badge.classList.remove('outdated'); // Reset
+            badge.classList.add('installed');
         }
-    });
+
+        // Store state
+        item.dataset.installedVersion = installedVersion;
+
+        // Update Button
+        updateButtonState(item);
+    }
 });
 
 async function initialize() {
@@ -141,6 +153,12 @@ async function initialize() {
     projectItems.forEach(item => {
         const installBtn = item.querySelector('.install-button');
         if (!installBtn) return;
+
+        // Populate script name index
+        const scriptName = installBtn.getAttribute('data-script-name');
+        if (scriptName) {
+            scriptNameToItem.set(scriptName, item);
+        }
 
         // Strip hardcoded version from original content if present
         let cleanHTML = installBtn.innerHTML.replace(/\s*\(v[\d.]+\)/g, '');
@@ -174,6 +192,9 @@ async function initialize() {
         // But we need to insert the footer into the item, and move the button into the footer.
         item.appendChild(footer);
         footer.appendChild(installBtn);
+
+        // Populate element cache
+        getCachedElements(item);
     });
 
 
