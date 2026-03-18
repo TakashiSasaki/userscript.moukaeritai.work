@@ -5,7 +5,7 @@
 // @lastModified 2026-03-17
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution.
 // @author       Takashi Sasaki
-// @homepageURL  https://x.xom/TakashiSasaki
+// @homepageURL  https://x.com/TakashiSasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @grant        GM_setValue
@@ -532,8 +532,8 @@
     function requestExportWorker(requestData) {
         return new Promise((resolve) => {
             const timeoutId = setTimeout(() => {
-                 document.removeEventListener('gemini-artifact-exporter-worker:result', handler);
-                 resolve({ status: 'failed', title: requestData.targetTitle, reason: 'Worker timeout' });
+                document.removeEventListener('gemini-artifact-exporter-worker:result', handler);
+                resolve({ status: 'failed', title: requestData.targetTitle, reason: 'Worker timeout' });
             }, 60000); // 60s hard timeout per item
 
             const handler = (e) => {
