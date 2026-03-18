@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Auto Paste in New Tab
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.6
+// @version      0.1.7
 // @description  Emulates Shift+F11 and Ctrl+V in Google Docs.
 // @author       Takashi Sasaki
 // @match        https://docs.google.com/document/*
@@ -25,7 +25,7 @@
             document.dispatchEvent(new CustomEvent('userscript-check-installed', {
                 detail: {
                     name: typeof GM_info !== 'undefined' ? GM_info.script.name : 'Auto Paste in New Tab',
-                    version: typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.6'
+                    version: typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.7'
                 }
             }));
         };
@@ -74,7 +74,7 @@
         background: rgba(255,255,255,0.05);
         border-radius: 4px;
     `;
-    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.6'}`;
+    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.7'}`;
     panel.appendChild(versionSpan);
 
     const methodSelect = document.createElement('select');
@@ -208,7 +208,8 @@
                 const editMenu = document.getElementById('docs-edit-menu');
                 if (editMenu) {
                     console.log('[Auto Paste in New Tab] Clicking Edit menu');
-                    ['mousedown', 'mouseup'].forEach(type => {
+                    if (typeof editMenu.focus === 'function') editMenu.focus();
+                    ['mousedown', 'mouseup', 'click'].forEach(type => {
                         editMenu.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, buttons: 1 }));
                     });
 
