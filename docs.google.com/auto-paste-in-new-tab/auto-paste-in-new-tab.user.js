@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Auto Paste in New Tab
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.9
+// @version      0.1.10
 // @description  Emulates Shift+F11 and Ctrl+V in Google Docs.
 // @author       Takashi Sasaki
 // @match        https://docs.google.com/document/*
@@ -25,7 +25,7 @@
             document.dispatchEvent(new CustomEvent('userscript-check-installed', {
                 detail: {
                     name: typeof GM_info !== 'undefined' ? GM_info.script.name : 'Auto Paste in New Tab',
-                    version: typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.9'
+                    version: typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.10'
                 }
             }));
         };
@@ -74,7 +74,7 @@
         background: rgba(255,255,255,0.05);
         border-radius: 4px;
     `;
-    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.9'}`;
+    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.10'}`;
     panel.appendChild(versionSpan);
 
     const methodSelect = document.createElement('select');
@@ -238,19 +238,22 @@
                         }
 
                         if (pasteItem && pasteItem.getBoundingClientRect().width > 0) {
-                            console.log('[Auto Paste in New Tab] Focusing and pressing Enter on Paste menu item');
-                            if (typeof pasteItem.focus === 'function') pasteItem.focus();
+                            console.log('[Auto Paste in New Tab] Dispatching precise MouseEvents to Paste menu item');
                             
-                            ['keydown', 'keypress', 'keyup'].forEach(type => {
-                                pasteItem.dispatchEvent(new KeyboardEvent(type, {
-                                    bubbles: true,
-                                    cancelable: true,
-                                    key: 'Enter',
-                                    code: 'Enter',
-                                    keyCode: 13,
-                                    which: 13
-                                }));
-                            });
+                            // Simulate pointing device
+                            pasteItem.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true }));
+                            pasteItem.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, buttons: 1 }));
+                            pasteItem.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, buttons: 0 }));
+                            
+                            // Docs sometimes requires a pointerup or click with specific coordinates, but a standard click often suffices if fired after the up/down cycle
+                            setTimeout(() => {
+                                pasteItem.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, buttons: 0 }));
+                                
+                                // Close the menu by clicking elsewhere
+                                document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+                                document.body.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+                            }, 50);
+                            
                         } else if (checkCount < 15) {
                             checkCount++;
                             setTimeout(findAndClickPaste, 250);
