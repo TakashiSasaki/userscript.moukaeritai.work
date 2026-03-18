@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.27
+// @version      0.4.28
 // @lastModified 2026-03-17
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
@@ -42,8 +42,8 @@
     const SELECTORS = {
         userTurn: 'user-query',
         modelTurn: 'model-response',
-        // User image selector based on analysis of user-query.html
-        userImage: 'img[data-test-id="uploaded-img"]',
+        // User image selector, excluding profile pictures (avatars) and hidden zoom-modal images
+        userImage: 'user-message img:not([src*="googleusercontent.com/a/"]):not([width="0"]):not([height="0"])',
         // Text content selectors (broad approximation, refinement needed)
         userText: '.query-text',
         modelText: '.model-response-text, .response-content', // Needs verification on whole-dom
@@ -412,11 +412,7 @@
                         userCharCount += getTextContentLength(node);
                     });
 
-                    // Image count
-                    const imgs = turn.querySelectorAll(SELECTORS.userImage);
-                    imgs.forEach(img => {
-                        collectedImages.push({ src: img.src, type: 'user' });
-                    });
+                    // Note: image count is already collected globally above, doing it again here causes duplicate counts
                 });
 
                 const modelTurns = document.querySelectorAll(SELECTORS.modelTurn);
@@ -446,11 +442,7 @@
                     const thinkingBlocks = turn.querySelectorAll(SELECTORS.thinkingBlock);
                     totalThinkingBlocks += thinkingBlocks.length;
 
-                // Model Images
-                    const modelImgs = turn.querySelectorAll(SELECTORS.modelImage);
-                    modelImgs.forEach(img => {
-                        collectedImages.push({ src: img.src, type: 'model' });
-                    });
+                    // Note: model images already collected globally above
                 });
             }
 
@@ -458,7 +450,7 @@
             latestCollectedImages = collectedImages;
 
             const imageCount = collectedImages.length;
-            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.1.28';
+            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.4.28';
 
             if (iconDiv) {
                 iconDiv.textContent = `Gemini Turns v${scriptVersion} | U:${userTurnsCount} M:${modelTurnsCount} A:${totalArtifacts} L:${totalLinkCards}`;
