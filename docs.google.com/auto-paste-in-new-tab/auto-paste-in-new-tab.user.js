@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Auto Paste in New Tab
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.7
+// @version      0.1.8
 // @description  Emulates Shift+F11 and Ctrl+V in Google Docs.
 // @author       Takashi Sasaki
 // @match        https://docs.google.com/document/*
@@ -25,7 +25,7 @@
             document.dispatchEvent(new CustomEvent('userscript-check-installed', {
                 detail: {
                     name: typeof GM_info !== 'undefined' ? GM_info.script.name : 'Auto Paste in New Tab',
-                    version: typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.7'
+                    version: typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.8'
                 }
             }));
         };
@@ -74,7 +74,7 @@
         background: rgba(255,255,255,0.05);
         border-radius: 4px;
     `;
-    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.7'}`;
+    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.8'}`;
     panel.appendChild(versionSpan);
 
     const methodSelect = document.createElement('select');
@@ -223,7 +223,7 @@
                         
                         pasteItem = candidates.find(item => {
                             const text = item.textContent || '';
-                            const isMatch = (text.includes('Ctrl+V') || text.includes('Paste') || text.includes('貼り付け') || text.includes('v')) 
+                            const isMatch = (text.includes('Ctrl+V') || text.includes('Paste') || text.includes('貼り付け')) 
                                 && !text.includes('without') && !text.includes('書式なし') && !text.includes('マークダウン');
                             
                             if (text.trim() !== '') {
