@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.0
+// @version      0.1.1
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -235,7 +235,7 @@
 
     function showIndicator(message, isSuccess = false, isError = false) {
         const indicator = getOrCreateIndicator();
-        indicator.innerHTML = ''; // clear
+        indicator.textContent = ''; // clear
 
         const icon = document.createElement('span');
         icon.style.fontSize = '18px';
