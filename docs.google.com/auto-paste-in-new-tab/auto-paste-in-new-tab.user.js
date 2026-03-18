@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Auto Paste in New Tab
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.8
+// @version      0.1.9
 // @description  Emulates Shift+F11 and Ctrl+V in Google Docs.
 // @author       Takashi Sasaki
 // @match        https://docs.google.com/document/*
@@ -25,7 +25,7 @@
             document.dispatchEvent(new CustomEvent('userscript-check-installed', {
                 detail: {
                     name: typeof GM_info !== 'undefined' ? GM_info.script.name : 'Auto Paste in New Tab',
-                    version: typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.8'
+                    version: typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.9'
                 }
             }));
         };
@@ -74,7 +74,7 @@
         background: rgba(255,255,255,0.05);
         border-radius: 4px;
     `;
-    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.8'}`;
+    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.9'}`;
     panel.appendChild(versionSpan);
 
     const methodSelect = document.createElement('select');
@@ -238,9 +238,18 @@
                         }
 
                         if (pasteItem && pasteItem.getBoundingClientRect().width > 0) {
-                            console.log('[Auto Paste in New Tab] Clicking Paste menu item');
-                            ['mousedown', 'mouseup', 'click'].forEach(type => {
-                                pasteItem.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, buttons: 1, which: 1 }));
+                            console.log('[Auto Paste in New Tab] Focusing and pressing Enter on Paste menu item');
+                            if (typeof pasteItem.focus === 'function') pasteItem.focus();
+                            
+                            ['keydown', 'keypress', 'keyup'].forEach(type => {
+                                pasteItem.dispatchEvent(new KeyboardEvent(type, {
+                                    bubbles: true,
+                                    cancelable: true,
+                                    key: 'Enter',
+                                    code: 'Enter',
+                                    keyCode: 13,
+                                    which: 13
+                                }));
                             });
                         } else if (checkCount < 15) {
                             checkCount++;
