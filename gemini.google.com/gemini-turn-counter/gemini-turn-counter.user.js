@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.28
+// @version      0.4.29
 // @lastModified 2026-03-17
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
@@ -42,8 +42,8 @@
     const SELECTORS = {
         userTurn: 'user-query',
         modelTurn: 'model-response',
-        // User image selector, excluding profile pictures (avatars) and hidden zoom-modal images
-        userImage: 'user-message img:not([src*="googleusercontent.com/a/"]):not([width="0"]):not([height="0"])',
+        // User image selector based on attributes, excluding profile pictures (avatars)
+        userImage: 'img[data-test-id="uploaded-img"]',
         // Text content selectors (broad approximation, refinement needed)
         userText: '.query-text',
         modelText: '.model-response-text, .response-content', // Needs verification on whole-dom
@@ -450,7 +450,7 @@
             latestCollectedImages = collectedImages;
 
             const imageCount = collectedImages.length;
-            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.4.28';
+            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.4.29';
 
             if (iconDiv) {
                 iconDiv.textContent = `Gemini Turns v${scriptVersion} | U:${userTurnsCount} M:${modelTurnsCount} A:${totalArtifacts} L:${totalLinkCards}`;
