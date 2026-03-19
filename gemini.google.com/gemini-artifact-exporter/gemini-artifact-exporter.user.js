@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.0
+// @version      0.4.1
 // @lastModified 2026-03-17
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution.
 // @author       Takashi Sasaki
@@ -628,9 +628,9 @@
                 requestId: reqId,
                 targetTitle: selectedTitles[i],
                 targetElement: artifactMap.get(selectedTitles[i])?.element || null,
-                exportWaitSeconds: parseFloat(GM_getValue(EXPORT_WAIT_SECONDS_KEY, 10)),
-                canvasInitDelay: parseFloat(GM_getValue(CANVAS_INIT_DELAY_KEY, 3.0)),
-                reopenDelay: parseFloat(GM_getValue(REOPEN_DELAY_KEY, 1.5)),
+                exportWaitSeconds: 6,
+                canvasInitDelay: 1.0,
+                reopenDelay: 1.0,
                 currentIndex: i + 1,
                 totalItems: selectedTitles.length
             };
@@ -687,9 +687,6 @@
 
     // --- UI Injection & Control ---
     const PANEL_POSITION_KEY = 'gemini-exporter-panel-pos';
-    const EXPORT_WAIT_SECONDS_KEY = 'gemini-exporter-timeout-seconds';
-    const REOPEN_DELAY_KEY = 'gemini-exporter-reopen-delay';
-    const CANVAS_INIT_DELAY_KEY = 'gemini-exporter-canvas-init-delay';
     const AUTO_DELETE_KEY = 'gemini-exporter-auto-delete';
 
     function makePanelDraggable(panel, handle, storageKey) {
@@ -875,48 +872,6 @@
         togglesContainer.style.cssText = `display: flex; flex-direction: column; gap: 4px;`;
 
 
-        const createNumberInput = (key, text, defaultValue, minVal, step = 1) => {
-            const container = document.createElement('label');
-            container.style.cssText = `
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 8px;
-                cursor: pointer;
-                font-family: 'Google Sans', sans-serif;
-                font-size: 13px;
-                color: rgba(255, 255, 255, 0.8);
-                padding: 2px 8px;
-            `;
-            const numberInput = document.createElement('input');
-            numberInput.type = 'number';
-            numberInput.min = minVal.toString();
-            numberInput.step = step.toString();
-            numberInput.style.cssText = `
-                width: 50px;
-                background-color: rgba(0,0,0,0.3);
-                color: white;
-                border: 1px solid rgba(255,255,255,0.2);
-                border-radius: 4px;
-                padding: 2px 4px;
-                font-size: 13px;
-            `;
-            numberInput.value = GM_getValue(key, defaultValue);
-
-            numberInput.onchange = (e) => {
-                let value = parseFloat(e.target.value);
-                if (isNaN(value) || value < minVal) {
-                    value = minVal;
-                    e.target.value = value;
-                }
-                GM_setValue(key, value);
-            };
-
-            container.appendChild(document.createTextNode(text));
-            container.appendChild(numberInput);
-            return container;
-        };
-
         const createCheckboxInput = (key, text, defaultValue) => {
             const container = document.createElement('label');
             container.style.cssText = `
@@ -949,15 +904,9 @@
             return container;
         };
 
-        const exportWaitInput = createNumberInput(EXPORT_WAIT_SECONDS_KEY, 'Export Wait (s)', 10, 1);
         const autoDeleteInput = createCheckboxInput(AUTO_DELETE_KEY, 'Auto-Delete Chat', false);
-        const reopenDelayInput = createNumberInput(REOPEN_DELAY_KEY, 'Panel Reopen (s)', 1.5, 0, 0.5);
-        const canvasInitDelayInput = createNumberInput(CANVAS_INIT_DELAY_KEY, 'Canvas Init (s)', 3.0, 0, 0.5);
 
         togglesContainer.appendChild(autoDeleteInput);
-        togglesContainer.appendChild(exportWaitInput);
-        togglesContainer.appendChild(reopenDelayInput);
-        togglesContainer.appendChild(canvasInitDelayInput);
 
 
         const progressDisplay = document.createElement('div');
