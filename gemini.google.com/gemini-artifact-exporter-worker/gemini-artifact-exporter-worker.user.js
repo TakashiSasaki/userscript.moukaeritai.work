@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.4
+// @version      0.1.5
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -107,10 +107,32 @@
                         log('Timeout waiting for docs editor, but dispatching EmulateDocsPaste anyway as fallback.');
                     }
 
+                    log('Dispatching EmulateDocsPaste event and waiting for completion...');
+
+                    const pasteCompletionPromise = new Promise((resolve) => {
+                        // Fail-safe timeout (e.g., 30 seconds) in case the paste script hangs or fails silently
+                        const timeoutId = setTimeout(() => {
+                            log('Timeout waiting for EmulateDocsPasteSuccess. Proceeding to close tab anyway.');
+                            document.removeEventListener('EmulateDocsPasteSuccess', handler);
+                            resolve();
+                        }, 30000);
+
+                        const handler = () => {
+                            log('Received EmulateDocsPasteSuccess event. Paste completed successfully.');
+                            clearTimeout(timeoutId);
+                            document.removeEventListener('EmulateDocsPasteSuccess', handler);
+                            // Add a small buffer after the success event before closing, just to be safe
+                            setTimeout(resolve, 1000);
+                        };
+
+                        document.addEventListener('EmulateDocsPasteSuccess', handler);
+                    });
+
                     document.dispatchEvent(new CustomEvent('EmulateDocsPaste'));
 
-                    // Wait 5 seconds after paste to close the tab
-                    await sleep(5000);
+                    // Wait for the completion event (or timeout) instead of a fixed 5 seconds
+                    await pasteCompletionPromise;
+
                     log('Dispatching gemini-docs-closer-force-close to close tab.');
                     document.dispatchEvent(new CustomEvent('gemini-docs-closer-force-close'));
                 } else {
