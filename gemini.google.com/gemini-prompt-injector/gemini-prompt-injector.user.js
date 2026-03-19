@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         gemini-prompt-injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.0
+// @version      0.2.0
 // @description  Injects a prompt into Gemini via an external custom event.
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
@@ -69,6 +69,56 @@
         } else {
             console.warn('[gemini-prompt-injector] Prompt editor not found.');
         }
+    });
+
+    // Model switching logic
+    document.addEventListener('gemini-switch-model', (event) => {
+        const targetModel = event.detail?.model;
+        if (!targetModel) {
+            console.warn('[gemini-prompt-injector] No model provided in the event detail.');
+            return;
+        }
+
+        const menuButton = document.querySelector('button[aria-label="モード選択ツールを開く"]') || document.querySelector('button.input-area-switch');
+        if (!menuButton) {
+            console.warn('[gemini-prompt-injector] Model selector button not found.');
+            return;
+        }
+
+        // Open the menu
+        menuButton.click();
+
+        // Wait a short amount of time for the menu to render
+        setTimeout(() => {
+            const menuItems = Array.from(document.querySelectorAll('button[role="menuitem"]'));
+            let targetText = '';
+            
+            switch (targetModel.toLowerCase()) {
+                case 'flash':
+                case '高速':
+                case '高速モード':
+                    targetText = '高速';
+                    break;
+                case 'thinking':
+                case '思考':
+                case '思考モード':
+                    targetText = '思考';
+                    break;
+                case 'pro':
+                    targetText = 'Pro';
+                    break;
+                default:
+                    console.warn(`[gemini-prompt-injector] Unknown model requested: ${targetModel}`);
+                    return;
+            }
+
+            const targetItem = menuItems.find(el => el.textContent.includes(targetText));
+            if (targetItem) {
+                targetItem.click();
+            } else {
+                console.warn(`[gemini-prompt-injector] Could not find menu item for model: ${targetModel}`);
+            }
+        }, 150);
     });
 
 })();

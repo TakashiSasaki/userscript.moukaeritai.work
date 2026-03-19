@@ -16,15 +16,24 @@
             <li>カスタムイベント <code>gemini-inject-prompt</code> をリッスンし、指定されたテキストをプロンプトエリアに入力します。</li>
             <li>入力状態をブラウザに認識させるためのイベントエミュレーションを実行します。</li>
             <li>入力後、送信ボタンを自動的にクリックしてプロンプトを送信します。</li>
+            <li>カスタムイベント <code>gemini-switch-model</code> をリッスンし、「高速」「思考」「Pro」のモデル切り替えを自動化します。</li>
         </ul>
 
         <h2>使用方法</h2>
         <p>他の拡張機能やコンソール、別のユーザースクリプトから、以下のようにカスタムイベントを発火させることで利用します。</p>
+        
+        <h3>プロンプトの注入と送信</h3>
         <pre><code>document.dispatchEvent(new CustomEvent('gemini-inject-prompt', {
     detail: { prompt: "こんにちは、Gemini! あなたの機能について教えてください。" }
 }));</code></pre>
 
-        <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js" class="install-button" id="install-button" data-script-name="gemini-prompt-injector" data-script-version="0.1.0">Install (v0.1.0)</a>
+        <h3>モデルの切り替え</h3>
+        <p><code>detail.model</code> に <code>"flash"</code>, <code>"thinking"</code>, <code>"pro"</code> のいずれかを指定します。</p>
+        <pre><code>document.dispatchEvent(new CustomEvent('gemini-switch-model', {
+    detail: { model: "thinking" }
+}));</code></pre>
+
+        <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js" class="install-button" id="install-button" data-script-name="gemini-prompt-injector" data-script-version="0.2.0">Install (v0.2.0)</a>
         <a href="../../index.html" class="back-link">👈 戻る</a>
     </div>
 

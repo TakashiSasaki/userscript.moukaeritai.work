@@ -39,3 +39,21 @@ if (editor) {
       detail: { prompt: "こんにちは、Gemini!" }
   }));
   ```
+
+## モデル切替（高速、思考、Pro）の仕様
+
+モデル選択はプロンプト入力エリア付近のドロップダウンメニューで行われます。
+
+- **モデル選択ボタン**: `button[aria-label="モード選択ツールを開く"]` または `button.input-area-switch`
+- **メニュー項目**: メニュー展開後に表示される `button[role="menuitem"]`
+- **切り替え方法**:
+  1. `document.querySelector('button[aria-label="モード選択ツールを開く"]').click()` でメニューを開く。
+  2. 少し待機後、`document.querySelectorAll('button[role="menuitem"]')` からテキストに「高速」「思考」「Pro」を含む要素を探し、`.click()` する。
+
+### 追加カスタムイベント仕様
+- イベント名: `gemini-switch-model`
+- イベント詳細: `detail.model` (string) に `"flash"`, `"thinking"`, `"pro"` のいずれかを指定。
+- 使用例:
+  ```javascript
+  document.dispatchEvent(new CustomEvent('gemini-switch-model', { detail: { model: 'thinking' } }));
+  ```
