@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         gemini-prompt-injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.0
+// @version      0.4.1
 // @description  Injects a prompt into Gemini via an external custom event.
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
@@ -79,7 +79,7 @@
             return;
         }
 
-        const menuButton = document.querySelector('button[aria-label="モード選択ツールを開く"]') || document.querySelector('button.input-area-switch');
+        const menuButton = document.querySelector('button.input-area-switch');
         if (!menuButton) {
             console.warn('[gemini-prompt-injector] Model selector button not found.');
             return;
@@ -90,7 +90,7 @@
 
         // Wait a short amount of time for the menu to render
         setTimeout(() => {
-            const menuItems = Array.from(document.querySelectorAll('button[role="menuitem"]'));
+            const menuItems = Array.from(document.querySelectorAll('button.bard-mode-list-button'));
             let targetText = '';
             
             switch (targetModel.toLowerCase()) {
@@ -131,7 +131,7 @@
             return;
         }
 
-        const toolsButton = document.querySelector('button.toolbox-drawer-button') || document.querySelector('button[aria-label="ツール"]');
+        const toolsButton = document.querySelector('button.toolbox-drawer-button');
         if (!toolsButton) {
             console.warn('[gemini-prompt-injector] Tools menu button not found.');
             return;

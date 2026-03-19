@@ -44,11 +44,11 @@ if (editor) {
 
 モデル選択はプロンプト入力エリア付近のドロップダウンメニューで行われます。
 
-- **モデル選択ボタン**: `button[aria-label="モード選択ツールを開く"]` または `button.input-area-switch`
-- **メニュー項目**: メニュー展開後に表示される `button[role="menuitem"]`
+- **モデル選択ボタン**: `button.input-area-switch` — ロケール非依存で堅牢
+- **メニュー項目**: `button.bard-mode-list-button` — Gemini固有のセマンティッククラス
 - **切り替え方法**:
-  1. `document.querySelector('button[aria-label="モード選択ツールを開く"]').click()` でメニューを開く。
-  2. 少し待機後、`document.querySelectorAll('button[role="menuitem"]')` からテキストに「高速」「思考」「Pro」を含む要素を探し、`.click()` する。
+  1. `document.querySelector('button.input-area-switch').click()` でメニューを開く。
+  2. 少し待機後、`document.querySelectorAll('button.bard-mode-list-button')` からテキストに「高速」「思考」「Pro」を含む要素を探し、`.click()` する。
 
 ### 追加カスタムイベント仕様
 - イベント名: `gemini-switch-model`
@@ -62,7 +62,7 @@ if (editor) {
 
 Canvas機能はプロンプト入力エリア付近の「ツール」メニュー内にあります。
 
-- **ツールメニューボタン**: `button.toolbox-drawer-button` （または `aria-label="ツール"`）
+- **ツールメニューボタン**: `button.toolbox-drawer-button` — ロケール非依存で堅牢
 - **メニュー項目**: `button.toolbox-drawer-item-list-button`
 - **キャンセルボタン (有効化状態)**: `button.toolbox-drawer-item-deselect-button`
 - **有効化手順**:
