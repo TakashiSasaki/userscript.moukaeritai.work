@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gemini-prompt-injector - ユーザースクリプト</title>
+    <link rel="stylesheet" href="../../index.css">
+</head>
+<body>
+    <div class="container">
+        <h1>gemini-prompt-injector</h1>
+        <p>Gemini のプロンプトエリアに、カスタムイベント経由で任意のプロンプトを注入し、自動送信するユーザースクリプトです。</p>
+        
+        <h2>機能</h2>
+        <ul>
+            <li>カスタムイベント <code>gemini-inject-prompt</code> を受信しテキストを入力</li>
+            <li>入力後、自動的に送信ボタンをクリック</li>
+            <li>外部システム連携時のプロンプト自動入力に最適</li>
+        </ul>
+
+        <h2>使用方法</h2>
+        <p>他のスクリプトから以下のようなカスタムイベントを発行してください。</p>
+        <pre><code>document.dispatchEvent(new CustomEvent('gemini-inject-prompt', {
+    detail: { prompt: "こんにちは、Gemini!" }
+}));</code></pre>
+
+        <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js" class="install-button" id="install-button" data-script-name="gemini-prompt-injector" data-script-version="0.1.0">Install (v0.1.0)</a>
+        <a href="../../index.html" class="back-link">👈 戻る</a>
+    </div>
+
+    <script src="../../domain-landing.js"></script>
+</body>
+</html>
