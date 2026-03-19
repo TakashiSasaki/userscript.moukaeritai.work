@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.2
+// @version      0.1.3
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -63,6 +63,39 @@
     // --- State Management ---
     let isExporting = false;
     let cancelExportRequested = false;
+
+    // --- Google Docs Logic ---
+    if (location.hostname.includes('docs.google.com')) {
+        if (document.referrer && document.referrer.includes('gemini.google.com')) {
+            log('Opened from Gemini. Checking for copied images to paste...');
+            setTimeout(async () => {
+                const isImageCopied = GM_getValue('gemini_export_image_copy_success', false);
+                const imageCount = GM_getValue('gemini_export_image_copy_count', 0);
+
+                if (isImageCopied && imageCount > 0) {
+                    log(`Images were copied (${imageCount}). Dispatching EmulateDocsPaste event.`);
+
+                    // Reset the flags so it doesn't run on normal docs opened later
+                    GM_setValue('gemini_export_image_copy_success', false);
+                    GM_setValue('gemini_export_image_copy_count', 0);
+
+                    document.dispatchEvent(new CustomEvent('EmulateDocsPaste'));
+
+                    // Wait 5 seconds after paste to close the tab
+                    await sleep(5000);
+                    log('Dispatching gemini-docs-closer-force-close to close tab.');
+                    document.dispatchEvent(new CustomEvent('gemini-docs-closer-force-close'));
+                } else {
+                    log('No images copied. Proceeding as normal without pasting.');
+                    // Close the tab anyway
+                    await sleep(2000);
+                    log('Dispatching gemini-docs-closer-force-close to close tab.');
+                    document.dispatchEvent(new CustomEvent('gemini-docs-closer-force-close'));
+                }
+            }, 1000); // Wait 1 second after execution starts
+        }
+        return; // Don't run the rest of the worker logic in Google Docs
+    }
 
     // --- Utility Functions ---
 
