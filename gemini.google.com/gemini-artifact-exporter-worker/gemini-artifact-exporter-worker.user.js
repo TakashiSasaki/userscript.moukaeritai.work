@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.5
+// @version      0.1.6
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -627,7 +627,21 @@
             if (copyResult.success) {
                 showIndicator(`✅ ${copyResult.count || 0} 枚の画像をコピーしました`, true, false);
             } else if (copyResult.reason === 'timeout') {
-                showIndicator('⚠️ 画像コピーがタイムアウトしました', false, true);
+                showIndicator('⚠️ 画像コピーがタイムアウトしました。エクスポートを中断します。', false, true);
+                log('Image copy timed out. Aborting export process to prevent incomplete document.');
+
+                isExporting = false;
+                hideIndicator(5000);
+
+                document.dispatchEvent(new CustomEvent('gemini-artifact-exporter-worker:result', {
+                    detail: {
+                        requestId: req.requestId,
+                        status: 'failed',
+                        title: req.targetTitle,
+                        reason: 'image-copy-timeout'
+                    }
+                }));
+                return; // Early exit
             } else {
                 showIndicator('📭 コピーする画像がありませんでした', false, false);
             }
