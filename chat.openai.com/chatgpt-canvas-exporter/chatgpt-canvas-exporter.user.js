@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Canvas Exporter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.7.1
+// @version      0.7.2
 // @description  ChatGPTの会話ページでキャンバスの内容をエクスポートする
 // @author       Takashi Sasaki
 // @match        https://chatgpt.com/*
@@ -16,7 +16,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '0.7.1';
+    const VERSION = '0.7.2';
 
     // セレクタの定義
     const CANVAS_MESSAGE_SELECTOR = 'div[id^="textdoc-message-"]';
@@ -308,14 +308,21 @@
 
             const item = document.createElement('div');
             item.className = 'canvas-item';
-            item.innerHTML = `
-                <span class="canvas-item-title" title="${title}">${title}</span>
-                <button class="canvas-item-export-btn">Export</button>
-            `;
 
-            item.querySelector('.canvas-item-export-btn').addEventListener('click', () => {
+            const span = document.createElement('span');
+            span.className = 'canvas-item-title';
+            span.title = title;
+            span.textContent = title;
+
+            const btn = document.createElement('button');
+            btn.className = 'canvas-item-export-btn';
+            btn.textContent = 'Export';
+            btn.addEventListener('click', () => {
                 downloadCanvasFromElement(messageEl);
             });
+
+            item.appendChild(span);
+            item.appendChild(btn);
 
             listContainer.appendChild(item);
         });
