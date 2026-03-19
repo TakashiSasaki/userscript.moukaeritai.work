@@ -145,7 +145,13 @@
 <li><strong>待ち時間の調整</strong>: 自動で閉じるまでの秒数をユーザーが自由に変更可能です（最小3秒、デフォルト10秒）。</li>
 <li><strong>キャンセル</strong>: 「Stay」ボタンを押すことで、そのタブを閉じずに残すことができます。</li>
 <li><strong>ドラッグ可能</strong>: バージョン番号部分を掴んで、UI を好きな位置へ移動できます。</li>
-<li><strong>外部連携 (強制クローズ)</strong>: カスタムイベント <code>gemini-docs-closer-force-close</code> を送信することで、カウントダウンをスキップし即座にタブを閉じることができます。</li>
+<li><strong>外部連携 (カスタムイベント)</strong>: 外部のスクリプトから <code>document</code> にイベントを発行することで以下のように制御できます。
+<ul>
+    <li><code>gemini-docs-closer-pause</code>: カウントダウンを一時停止します。</li>
+    <li><code>gemini-docs-closer-resume</code>: 一時停止したカウントダウンを再開します。</li>
+    <li><code>gemini-docs-closer-force-close</code>: カウントダウンをスキップし、即座にタブを閉じます。</li>
+</ul>
+</li>
 </ul>
 <h2>インストール</h2>
 <p><a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/docs.google.com/gemini-exported-docs-auto-closer/gemini-exported-docs-auto-closer.user.js">こちらからインストール</a></p>
