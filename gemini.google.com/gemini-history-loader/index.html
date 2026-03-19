@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini History Loader</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: 0 auto; }
+        h1, h2, h3 { color: #333; }
+        code { background-color: #f4f4f4; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background-color: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <p>このユーザースクリプトは、Gemini の仮想スクロールを回避し、過去の会話履歴を一番上まで強制的に読み込むための共有モジュールです。他のユーザースクリプト（例: <code>gemini-artifact-exporter</code>）と連携してバックグラウンドで機能します。<br><strong>v0.1.0</strong>: 初回公開。メインチャットの <code>infinite-scroller</code> 制御ロジックを独立したスクリプトとして分離しました。</p>
+
+    <h2>概要</h2>
+    <p>
+        <code>gemini-artifact-exporter</code> などと連携し、<code>gemini-history-loader:request</code> イベントを受信すると、Geminiのチャット画面を最上部までプログレッシブにスクロールし、すべての履歴をDOM上に展開させます。完了すると <code>gemini-history-loader:complete</code> イベントを発行します。
+    </p>
+
+    <h2>インストール</h2>
+    <p>
+        <a href="./gemini-history-loader.user.js">こちらをクリックしてインストール</a>
+    </p>
+
+    <h2>主な機能</h2>
+    <ul>
+        <li><code>gemini-history-loader:request</code> イベントの受信</li>
+        <li>Angular の仮想スクロール (Lazy Loading) 機構を強制的にアクティブ化して過去履歴を取得するアルゴリズム</li>
+        <li>アニメーション相殺バグを回避した確実な <code>scrollTop</code> 制御</li>
+        <li><code>gemini-history-loader:complete</code> イベントのディスパッチ</li>
+    </ul>
+
+</body>
+</html>
