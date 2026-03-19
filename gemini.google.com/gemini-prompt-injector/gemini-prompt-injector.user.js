@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         gemini-prompt-injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.3.0
+// @version      0.4.0
 // @description  Injects a prompt into Gemini via an external custom event.
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
@@ -150,6 +150,16 @@
                 console.warn('[gemini-prompt-injector] Could not find Canvas menu item.');
             }
         }, 150);
+    });
+
+    // Send prompt logic
+    document.addEventListener('gemini-send-prompt', () => {
+        const sendButton = document.querySelector('button.send-button');
+        if (sendButton) {
+            sendButton.click();
+        } else {
+            console.warn('[gemini-prompt-injector] Send button not found. The prompt might be empty.');
+        }
     });
 
 })();

@@ -77,3 +77,20 @@ Canvas機能はプロンプト入力エリア付近の「ツール」メニュ�
   ```javascript
   document.dispatchEvent(new CustomEvent('gemini-enable-canvas'));
   ```
+
+## プロンプト送信の単独実行仕様
+
+プロンプト入力エリアの送信ボタンを外部か独立してクリックするための仕様です。
+
+- **送信ボタン**: `button.send-button` (または `button.submit.send-button`)
+- **特徴**: テキスト入力がない状態ではマイクボタン等になっており、テキストが存在するときのみ送信ボタンが表示（有効化）されます。クラス名が機能に直結しており、`aria-label`等（言語依存）に依存しないためグローバルに堅牢です。
+- **実行手順**:
+  `document.querySelector('button.send-button')?.click();`
+
+### 追加カスタムイベント仕様
+- イベント名: `gemini-send-prompt`
+- イベント詳細: 指定なし。
+- 使用例:
+  ```javascript
+  document.dispatchEvent(new CustomEvent('gemini-send-prompt'));
+  ```
