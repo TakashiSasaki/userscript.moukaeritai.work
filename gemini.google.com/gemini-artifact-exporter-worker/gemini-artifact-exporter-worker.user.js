@@ -87,6 +87,10 @@
                     document.dispatchEvent(new CustomEvent('gemini-docs-closer-force-close'));
                 } else {
                     log('No images copied. Proceeding as normal without pasting.');
+                    // Close the tab anyway
+                    await sleep(2000);
+                    log('Dispatching gemini-docs-closer-force-close to close tab.');
+                    document.dispatchEvent(new CustomEvent('gemini-docs-closer-force-close'));
                 }
             }, 1000); // Wait 1 second after execution starts
         }
