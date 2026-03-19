@@ -57,3 +57,23 @@ if (editor) {
   ```javascript
   document.dispatchEvent(new CustomEvent('gemini-switch-model', { detail: { model: 'thinking' } }));
   ```
+  
+## Canvas機能有効化の仕様
+
+Canvas機能はプロンプト入力エリア付近の「ツール」メニュー内にあります。
+
+- **ツールメニューボタン**: `button.toolbox-drawer-button` （または `aria-label="ツール"`）
+- **メニュー項目**: `button.toolbox-drawer-item-list-button`
+- **キャンセルボタン (有効化状態)**: `button.toolbox-drawer-item-deselect-button`
+- **有効化手順**:
+  1. すでに有効化されている場合（キャンセルボタンが存在し、かつ textContent に "Canvas" が含まれる場合）はクリックしない。
+  2. `document.querySelector('button.toolbox-drawer-button').click()` でツールメニューを開く。
+  3. 少し待機後、`document.querySelectorAll('button.toolbox-drawer-item-list-button')` からテキストに「Canvas」を含む要素を探し、`.click()` する。
+
+### 追加カスタムイベント仕様
+- イベント名: `gemini-enable-canvas`
+- イベント詳細: 指定なし。
+- 使用例:
+  ```javascript
+  document.dispatchEvent(new CustomEvent('gemini-enable-canvas'));
+  ```

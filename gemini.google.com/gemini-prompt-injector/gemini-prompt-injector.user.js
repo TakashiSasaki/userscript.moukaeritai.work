@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         gemini-prompt-injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.0
+// @version      0.3.0
 // @description  Injects a prompt into Gemini via an external custom event.
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
@@ -117,6 +117,37 @@
                 targetItem.click();
             } else {
                 console.warn(`[gemini-prompt-injector] Could not find menu item for model: ${targetModel}`);
+            }
+        }, 150);
+    });
+
+    // Canvas enabling logic
+    document.addEventListener('gemini-enable-canvas', () => {
+        // Check if Canvas is already enabled (active deselect button present)
+        const activeCanvasButtons = Array.from(document.querySelectorAll('button.toolbox-drawer-item-deselect-button'));
+        const isCanvasActive = activeCanvasButtons.some(el => el.textContent.includes('Canvas') || el.getAttribute('aria-label')?.includes('Canvas'));
+        if (isCanvasActive) {
+            console.log('[gemini-prompt-injector] Canvas is already enabled.');
+            return;
+        }
+
+        const toolsButton = document.querySelector('button.toolbox-drawer-button') || document.querySelector('button[aria-label="ツール"]');
+        if (!toolsButton) {
+            console.warn('[gemini-prompt-injector] Tools menu button not found.');
+            return;
+        }
+
+        // Open the tools menu
+        toolsButton.click();
+
+        // Wait for the menu to render
+        setTimeout(() => {
+            const menuItems = Array.from(document.querySelectorAll('button.toolbox-drawer-item-list-button'));
+            const targetItem = menuItems.find(el => el.textContent.includes('Canvas'));
+            if (targetItem) {
+                targetItem.click();
+            } else {
+                console.warn('[gemini-prompt-injector] Could not find Canvas menu item.');
             }
         }, 150);
     });
