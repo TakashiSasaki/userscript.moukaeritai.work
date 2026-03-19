@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.3
+// @version      0.1.4
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -11,6 +11,7 @@
 // @grant        GM_info
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_deleteValue
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @noframes
@@ -69,15 +70,42 @@
         if (document.referrer && document.referrer.includes('gemini.google.com')) {
             log('Opened from Gemini. Checking for copied images to paste...');
             setTimeout(async () => {
-                const isImageCopied = GM_getValue('gemini_export_image_copy_success', false);
-                const imageCount = GM_getValue('gemini_export_image_copy_count', 0);
+                const imageData = GM_getValue('gemini_export_image_data', null);
 
-                if (isImageCopied && imageCount > 0) {
-                    log(`Images were copied (${imageCount}). Dispatching EmulateDocsPaste event.`);
+                // Immediately delete to prevent race conditions with other tabs
+                if (typeof GM_deleteValue !== 'undefined') {
+                    GM_deleteValue('gemini_export_image_data');
+                } else {
+                    GM_setValue('gemini_export_image_data', null);
+                }
 
-                    // Reset the flags so it doesn't run on normal docs opened later
-                    GM_setValue('gemini_export_image_copy_success', false);
-                    GM_setValue('gemini_export_image_copy_count', 0);
+                let shouldPaste = false;
+                let imageCount = 0;
+
+                if (imageData && imageData.success && imageData.count > 0) {
+                    // Check if the data is recent (e.g., within the last 5 minutes)
+                    const dataAge = Date.now() - imageData.timestamp;
+                    if (dataAge < 5 * 60 * 1000) {
+                        shouldPaste = true;
+                        imageCount = imageData.count;
+                    } else {
+                        log(`Stale image data found (age: ${dataAge}ms). Ignoring to prevent race conditions.`);
+                    }
+                }
+
+                if (shouldPaste) {
+                    log(`Images were copied (${imageCount}). Waiting for Docs editor to be ready...`);
+
+                    // Wait for the docs editor to be ready instead of a fixed delay
+                    try {
+                        // The main editor canvas in Google Docs
+                        await waitForElement('.kix-appview-editor', document, 10000);
+                        log('Docs editor is ready. Dispatching EmulateDocsPaste event.');
+                        // Add a small extra delay to ensure event listeners are attached
+                        await sleep(500);
+                    } catch {
+                        log('Timeout waiting for docs editor, but dispatching EmulateDocsPaste anyway as fallback.');
+                    }
 
                     document.dispatchEvent(new CustomEvent('EmulateDocsPaste'));
 
@@ -86,13 +114,13 @@
                     log('Dispatching gemini-docs-closer-force-close to close tab.');
                     document.dispatchEvent(new CustomEvent('gemini-docs-closer-force-close'));
                 } else {
-                    log('No images copied. Proceeding as normal without pasting.');
+                    log('No valid images copied or data was stale. Proceeding as normal without pasting.');
                     // Close the tab anyway
                     await sleep(2000);
                     log('Dispatching gemini-docs-closer-force-close to close tab.');
                     document.dispatchEvent(new CustomEvent('gemini-docs-closer-force-close'));
                 }
-            }, 1000); // Wait 1 second after execution starts
+            }, 500); // Start checking earlier, as we now wait for the element
         }
         return; // Don't run the rest of the worker logic in Google Docs
     }
@@ -567,8 +595,11 @@
 
             // Store the result using GM_setValue so it can be accessed on docs.google.com
             if (typeof GM_setValue !== 'undefined') {
-                GM_setValue('gemini_export_image_copy_success', copyResult.success || false);
-                GM_setValue('gemini_export_image_copy_count', copyResult.count || 0);
+                GM_setValue('gemini_export_image_data', {
+                    success: copyResult.success || false,
+                    count: copyResult.count || 0,
+                    timestamp: Date.now()
+                });
             }
 
             if (copyResult.success) {
