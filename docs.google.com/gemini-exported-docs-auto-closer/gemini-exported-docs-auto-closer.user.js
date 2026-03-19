@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Exported Docs Auto-Closer
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.3
+// @version      0.3.0
 // @lastModified 2026-03-12
 // @description  Automatically closes Google Docs tabs that were opened by the Gemini Artifact Exporter after a configurable delay. (Horizontal UI)
 // @author       Takashi Sasaki
@@ -20,7 +20,7 @@
     // Report version to landing page
     const SCRIPT_NAME = 'Gemini Exported Docs Auto-Closer';
     const reportVersion = () => {
-        const version = typeof GM_info !== 'undefined' ? GM_info.script.version : '0.2.2';
+        const version = typeof GM_info !== 'undefined' ? GM_info.script.version : '0.3.0';
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: { name: SCRIPT_NAME, version: version }
         }));
@@ -38,7 +38,7 @@
     }
 
     // Load settings
-    let waitTime = parseInt(GM_getValue('waitTime', '5'));
+    let waitTime = parseInt(GM_getValue('waitTime', '10'));
     if (isNaN(waitTime) || waitTime < 3) waitTime = 3;
 
     let countdown = waitTime;
@@ -105,7 +105,7 @@
         background: rgba(255,255,255,0.05);
         border-radius: 4px;
     `;
-    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.2.3'}`;
+    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.3.0'}`;
     panel.appendChild(versionSpan);
 
     const message = document.createElement('span');
@@ -206,6 +206,21 @@
         if (!isCancelled && document.body.contains(panel)) {
             isPaused = false;
             message.textContent = `Closing in ${countdown}s...`;
+        }
+    });
+
+    document.addEventListener('gemini-docs-closer-force-close', () => {
+        if (!isCancelled && document.body.contains(panel)) {
+            clearInterval(timerId);
+            message.textContent = 'Closing tab...';
+            console.log('[Gemini Docs Closer] Force close event received. Attempting window.close().');
+            window.close();
+
+            // Fallback warning if window.close() is blocked
+            setTimeout(() => {
+                message.textContent = 'Auto-close failed (popup blocked?).';
+                cancelBtn.textContent = 'Dismiss';
+            }, 1000);
         }
     });
 
