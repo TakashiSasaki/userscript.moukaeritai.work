@@ -140,6 +140,7 @@
 
         <h2>更新履歴</h2>
         <ul>
+                <li class="changelog-item">v0.4.2: 会話履歴の全体読み込み処理（Deep Scan）を新設の <code>gemini-history-loader</code> スクリプトに委譲し、コードサイズを削減しました。</li>
                 <li class="changelog-item">v0.4.1: UIパネルからウェイト関連の設定項目（Export Wait, Canvas Init, Panel Reopen）を削除し、内部のハードコードされた最適値（6秒、1秒、1秒）に固定しました。</li>
                 <li class="changelog-item">v0.3.13 (2026-03-16): 「Export Selected」ボタンのクリック時に、<code>gemini-turn-counter</code> と連携して会話内の全画像をクリップボードに自動コピーする機能を追加。コピー結果は専用インジケーターに表示されます（画像数、なし、タイムアウト）。</li>
                 <li class="changelog-item">v0.3.08 (2026-03-11): Improved session cleanup before scanning. The script now explicitly closes any open Canvas (artifact) panel to ensure Gemini's history lazy-loader can operate at full-width.</li>

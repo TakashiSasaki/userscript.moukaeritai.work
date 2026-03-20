@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.1
+// @version      0.4.2
 // @lastModified 2026-03-17
-// @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution.
+// @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://gemini.google.com/*
@@ -248,31 +248,6 @@
         await sleep(500);
     }
 
-    function getChatScroller() {
-        // Specifically look for the chat history scroller, avoiding the narrow side-nav scroller
-        let scroller = document.querySelector('infinite-scroller.chat-history') ||
-            document.querySelector('chat-window-content infinite-scroller');
-
-        if (!scroller) {
-            const scrollers = Array.from(document.querySelectorAll('infinite-scroller'));
-            // Heuristic: The chat scroller is wide (> 300px), sidebar is narrow (~70px)
-            scroller = scrollers.find(el => el.clientWidth > 300);
-        }
-
-        if (!scroller) {
-            for (const el of document.querySelectorAll('*')) {
-                // Heuristic for other scrollable containers
-                if (el.scrollHeight > el.clientHeight + 100 && el.clientHeight > 200 && el.clientWidth > 300) {
-                    const ov = getComputedStyle(el).overflowY;
-                    if ((ov === 'auto' || ov === 'scroll') && el.scrollHeight > 2000) {
-                        if (!scroller || el.scrollHeight > scroller.scrollHeight) scroller = el;
-                    }
-                }
-            }
-        }
-        return scroller || document.documentElement;
-    }
-
     function finishScanning(modeName) {
         scannedArtifacts = Array.from(artifactMap.entries()).map(([title, data]) => ({
             title,
@@ -413,117 +388,49 @@
         setScanningUIState(true, 'deep');
         artifactMap.clear();
 
-        // 1. Close the Canvas panel if open to maximize chat view
-        await closeAllPanels();
+        log('Requesting gemini-history-loader to load all history...');
+        const reqId = `load_${Date.now()}`;
 
-        // 2. Find infinite-scroller
-        let scroller = getChatScroller();
+        const loadPromise = new Promise((resolve) => {
+            const timeoutId = setTimeout(() => {
+                log('Warning: Timeout waiting for gemini-history-loader:complete. Proceeding anyway.');
+                document.removeEventListener('gemini-history-loader:complete', handler);
+                resolve({ status: 'timeout' });
+            }, 120000); // 2-minute hard timeout for loading history
 
-        log('Ascending to the true top of the conversation...');
-
-        // Exert focus and pointer events to wake up Angular's lazy loaders
-        if (!scroller.hasAttribute('tabindex')) scroller.setAttribute('tabindex', '-1');
-        scroller.focus({ preventScroll: true });
-
-        // 3. Ascend to true top
-        let highestScrollHeight = scroller.scrollHeight;
-        let prevFirstTurnContent = '';
-        let topAttempts = 0;
-        let stallCount = 0;
-
-        while (topAttempts < 250) {
-            // Scroll up instantly by roughly one viewport height to avoid smooth animation overlap lock
-            const scrollStep = Math.max(800, scroller.clientHeight * 0.8);
-            if (scroller === document.documentElement) {
-                window.scrollBy({ top: -scrollStep, behavior: 'instant' });
-            } else {
-                scroller.scrollTop -= scrollStep; // Use direct property assignment for maximum reliability
-            }
-
-            await sleep(400); // Wait for the smooth animation
-
-            const currentScrollTop = scroller === document.documentElement ? window.scrollY : scroller.scrollTop;
-
-            if (currentScrollTop <= 10) {
-                // Reached the top of the currently loaded DOM. Wait to see if more loads.
-                await sleep(1500);
-
-                const currentFirstTurn = document.querySelector('message-content, .message-content');
-                const currentContent = currentFirstTurn ? currentFirstTurn.textContent.substring(0, 50) : '';
-
-                if (currentContent === prevFirstTurnContent && scroller.scrollHeight <= highestScrollHeight + 50) {
-                    stallCount++;
-                    log(`Waiting for history to load... (Attempt ${stallCount}/3)`);
-                    if (stallCount >= 3) {
-                        log('Reached absolute top of conversation.');
-                        break;
-                    }
-                } else {
-                    stallCount = 0; // History loaded, reset stall count
-                    log('Loaded older conversation history. Continuing ascent...');
+            const handler = (e) => {
+                if (e.detail && e.detail.reqId === reqId) {
+                    clearTimeout(timeoutId);
+                    document.removeEventListener('gemini-history-loader:complete', handler);
+                    resolve(e.detail);
                 }
+            };
+            document.addEventListener('gemini-history-loader:complete', handler);
+        });
 
-                prevFirstTurnContent = currentContent;
-                if (scroller.scrollHeight > highestScrollHeight) {
-                    highestScrollHeight = scroller.scrollHeight;
+        document.dispatchEvent(new CustomEvent('gemini-history-loader:request', { detail: { reqId: reqId } }));
+
+        // Wait for the loader script to scroll to the top and load the history into the DOM
+        const result = await loadPromise;
+        log(`History loader finished with status: ${result.status}`);
+
+        // The history is now fully loaded in the DOM. We don't need to descend manually;
+        // we can simply query all the artifacts currently rendered in the infinite-scroller.
+        log('Collecting loaded artifacts from the DOM...');
+        const chatChips = Array.from(document.querySelectorAll(SELECTORS.CHAT_ARTIFACT_CONTAINER));
+
+        chatChips.forEach(card => {
+            const titleEl = card.querySelector(SELECTORS.CHAT_ARTIFACT_TITLE);
+            if (titleEl) {
+                const title = titleEl.textContent.trim();
+                if (!artifactMap.has(title)) {
+                    artifactMap.set(title, { sources: new Set(), element: null });
                 }
-            } else {
-                stallCount = 0; // Freely scrolling
+                const data = artifactMap.get(title);
+                data.sources.add('DeepScan');
+                if (!data.element) data.element = card;
             }
-            topAttempts++;
-        }
-
-        // Ensure we are exactly at 0 after breaking
-        scroller.scrollTop = 0;
-        await sleep(1000);
-
-        log('Descending and collecting artifacts...');
-
-        // 4. Descend and Collect
-        let downAttempts = 0;
-
-        while (downAttempts < 300) {
-            // Collect visible artifacts
-            const chatChips = Array.from(document.querySelectorAll(SELECTORS.CHAT_ARTIFACT_CONTAINER));
-            chatChips.forEach(card => {
-                const titleEl = card.querySelector(SELECTORS.CHAT_ARTIFACT_TITLE);
-                if (titleEl) {
-                    const title = titleEl.textContent.trim();
-                    if (!artifactMap.has(title)) {
-                        artifactMap.set(title, { sources: new Set(), element: null });
-                    }
-                    const data = artifactMap.get(title);
-                    data.sources.add('DeepScan');
-                    if (!data.element) data.element = card;
-                }
-            });
-
-            const currentScrollTop = scroller === document.documentElement ? window.scrollY : scroller.scrollTop;
-
-            // Check if we've reached the bottom (or close to it)
-            // scroller.scrollHeight - scroller.clientHeight gives the max scrollTop
-            if (currentScrollTop >= (scroller.scrollHeight - scroller.clientHeight - 50)) {
-                stallCount++;
-                log(`Waiting for more content to load at bottom... (Attempt ${stallCount}/3)`);
-                if (stallCount >= 3) {
-                    log('Reached absolute bottom of conversation.');
-                    break;
-                }
-            } else {
-                stallCount = 0; // Still scrolling down, reset stall count
-            }
-
-            // Scroll down by 80% viewport to ensure overlap, using instantaneous jump
-            const scrollStep = Math.max(800, scroller.clientHeight * 0.8);
-            if (scroller === document.documentElement) {
-                window.scrollBy({ top: scrollStep, behavior: 'instant' });
-            } else {
-                scroller.scrollTop += scrollStep;
-            }
-
-            await sleep(600); // Wait for smooth scroll and render
-            downAttempts++;
-        }
+        });
 
         finishScanning('Deep Scan');
         isScanning = false;
