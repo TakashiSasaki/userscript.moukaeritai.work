@@ -22,7 +22,16 @@ function compareVersions(v1, v2) {
 
 async function fetchVersion(url) {
     try {
-        const response = await fetch(url, { cache: 'no-store' });
+        // Github Pages might block fetch to raw URLs due to CORS if they redirect to raw.githubusercontent.com
+        // We can rewrite the URL to raw.githubusercontent.com explicitly
+        let fetchUrl = url;
+        if (url.includes('github.com') && url.includes('/raw/')) {
+            // e.g. https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
+            // -> https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
+            fetchUrl = url.replace('github.com', 'raw.githubusercontent.com').replace('/raw/', '/');
+        }
+
+        const response = await fetch(fetchUrl, { cache: 'no-store' });
         if (!response.ok) return null;
         const text = await response.text();
         const match = text.match(/@version\s+([\d.]+)/);
