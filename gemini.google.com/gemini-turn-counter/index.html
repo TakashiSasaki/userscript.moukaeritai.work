@@ -141,6 +141,20 @@
             <li><strong>自動アップデート (Automatic Updates)</strong>: GitHub 上の raw ファイルを参照して自動更新されます。</li>
         </ul>
 
+        <h2>連携スクリプト（送信先）</h2>
+        <p>このスクリプトは、以下のスクリプトにイベントを送信し、機能してもらうことを期待しています。</p>
+        <ul>
+            <li><a href="../gemini-artifact-exporter-worker/index.html">Artifact Exporter Worker</a> (<code>gemini-turn-counter-copy-images-result</code>)</li>
+            <li><a href="../gemini-export-to-docs/index.html">Export to Docs</a> (<code>gemini-turn-counter-copy-images-result</code>)</li>
+        </ul>
+
+        <h2>連携スクリプト（受信元）</h2>
+        <p>このスクリプトは、以下のスクリプトからイベントを受信して動作します。</p>
+        <ul>
+            <li><a href="../gemini-artifact-exporter-worker/index.html">Artifact Exporter Worker</a> (<code>gemini-turn-counter-copy-images</code>)</li>
+            <li><a href="../gemini-export-to-docs/index.html">Export to Docs</a> (<code>gemini-turn-counter-copy-images</code>)</li>
+        </ul>
+
         <h2>更新履歴</h2>
         <ul>
             <li><strong>v0.4.29</strong>: 直近のGemini UI変更により <code>user-message</code> 要素がDOMから削除されたため、独自の属性（<code>data-test-id="uploaded-img"</code>）を使用して確実かつ一意にアップロード画像を検出できるようセレクタを再調整。</li>

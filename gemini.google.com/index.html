@@ -433,10 +433,61 @@
          Auto-Select Next
         </td>
        </tr>
+       <tr>
+        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+         <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-family: monospace;">
+          gemini-history-loader:request
+         </code>
+        </td>
+        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+         Artifact Exporter
+        </td>
+        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+         History Loader
+        </td>
+       </tr>
+       <tr>
+        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+         <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-family: monospace;">
+          gemini-history-loader:complete
+         </code>
+        </td>
+        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+         History Loader
+        </td>
+        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+         Artifact Exporter
+        </td>
+       </tr>
       </tbody>
      </table>
     </div>
     <ul class="project-list">
+     <li class="project-item">
+      <div class="project-title">
+       <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64"/>
+       <a href="gemini-history-loader/index.html">
+        History Loader 🔄
+       </a>
+      </div>
+      <p class="project-desc">
+       Gemini の仮想スクロールを回避し、過去の会話履歴を一番上まで強制的に読み込むための共有モジュールです。Artifact Exporter 等と連携してバックグラウンドで機能します。（単体では機能しません）<br><br>
+       <span style="font-size: 0.9em; display: block; margin-bottom: 4px;"><strong>📤 送信先 (使われる側):</strong> Artifact Exporter</span>
+       <span style="font-size: 0.9em; display: block;"><strong>📥 受信元 (使う側):</strong> Artifact Exporter</span>
+      </p>
+      <a class="install-button" data-script-name="Gemini History Loader" href="gemini-history-loader/gemini-history-loader.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">Loading...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
+                </a>
+     </li>
      <li class="project-item">
       <div class="project-title">
        <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64"/>
@@ -445,7 +496,9 @@
        </a>
       </div>
       <p class="project-desc">
-       Artifact Exporter のバックグラウンド処理を担当するワーカーです。ドキュメントエクスポートの際のDOM操作や待機処理を分離して安定性を高めます。（単体では機能しません）
+       Artifact Exporter のバックグラウンド処理を担当するワーカーです。ドキュメントエクスポートの際のDOM操作や待機処理を分離して安定性を高めます。（単体では機能しません）<br><br>
+       <span style="font-size: 0.9em; display: block; margin-bottom: 4px;"><strong>📤 送信先 (使われる側):</strong> Artifact Exporter, Turn Counter</span>
+       <span style="font-size: 0.9em; display: block;"><strong>📥 受信元 (使う側):</strong> Artifact Exporter, Turn Counter</span>
       </p>
       <a class="install-button" data-script-name="Gemini Artifact Exporter Worker" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js" target="_blank">
        <svg height="18" viewbox="0 0 24 24" width="18">
@@ -464,7 +517,9 @@
       </div>
       <p class="project-desc">
        サイドバーに表示される Article 形式のアーティファクトを Google ドキュメントにまとめてエクスポート。One Click Delete
-                    との併用で、エクスポート完了後に会話を自動削除する連携も可能です。
+                    との併用で、エクスポート完了後に会話を自動削除する連携も可能です。<br><br>
+       <span style="font-size: 0.9em; display: block; margin-bottom: 4px;"><strong>📤 送信先 (使う側):</strong> Artifact Exporter Worker, History Loader, One Click Delete</span>
+       <span style="font-size: 0.9em; display: block;"><strong>📥 受信元 (使われる側):</strong> Artifact Exporter Worker, History Loader</span>
       </p>
       <a class="install-button" data-script-name="Gemini Artifact Exporter" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js" target="_blank">
        <svg height="18" viewbox="0 0 24 24" width="18">
@@ -483,7 +538,9 @@
       </div>
       <p class="project-desc">
        回答内容を美しく整形して Google ドキュメントへ出力。「1-Turn Auto Export」機能により、One Click Delete
-                    と併用して1ターンのみの会話をエクスポート後に即座に削除する流れるような操作が可能です。
+                    と併用して1ターンのみの会話をエクスポート後に即座に削除する流れるような操作が可能です。<br><br>
+       <span style="font-size: 0.9em; display: block; margin-bottom: 4px;"><strong>📤 送信先 (使う側):</strong> Auto-Select Next, One Click Delete, Turn Counter</span>
+       <span style="font-size: 0.9em; display: block;"><strong>📥 受信元 (使われる側):</strong> Turn Counter</span>
       </p>
       <a class="install-button" data-script-name="Gemini 1-Click Export to Docs" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js" target="_blank">
        <svg height="18" viewbox="0 0 24 24" width="18">
@@ -501,7 +558,8 @@
        </a>
       </div>
       <p class="project-desc">
-       ヘッダーメニューの奥にある「削除」機能をフロントへ引き出します。サイドバーを操作することなく、現在の会話をワンクリックまたはキーボードショートカットで即座に削除できるようになります。
+       ヘッダーメニューの奥にある「削除」機能をフロントへ引き出します。サイドバーを操作することなく、現在の会話をワンクリックまたはキーボードショートカットで即座に削除できるようになります。<br><br>
+       <span style="font-size: 0.9em; display: block;"><strong>📥 受信元 (使われる側):</strong> Artifact Exporter, Export to Docs</span>
       </p>
       <a class="install-button" data-script-name="Gemini 1-Click Delete Conversation" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js" target="_blank">
        <svg height="18" viewbox="0 0 24 24" width="18">
@@ -519,7 +577,8 @@
        </a>
       </div>
       <p class="project-desc">
-       現在閲覧中の会話を削除した際、自動的に会話リストの次のアイテムを選択して表示します。削除のたびにトップページに飛ばされる標準の挙動を防ぎ、スムーズな会話の整理を可能にします。
+       現在閲覧中の会話を削除した際、自動的に会話リストの次のアイテムを選択して表示します。削除のたびにトップページに飛ばされる標準の挙動を防ぎ、スムーズな会話の整理を可能にします。<br><br>
+       <span style="font-size: 0.9em; display: block;"><strong>📥 受信元 (使われる側):</strong> Export to Docs</span>
       </p>
       <a class="install-button" data-script-name="Gemini Auto-Select Next" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-select-next/gemini-auto-select-next.user.js" target="_blank">
        <svg height="18" viewbox="0 0 24 24" width="18">
@@ -537,7 +596,9 @@
        </a>
       </div>
       <p class="project-desc">
-       ターン数、文字、画像、コード、テーブル、各アーティファクト数をリアルタイムに計測。主に Gemini の各モデルのコンテキストウィンドウ消費量を見積もるために設計されています。
+       ターン数、文字、画像、コード、テーブル、各アーティファクト数をリアルタイムに計測。主に Gemini の各モデルのコンテキストウィンドウ消費量を見積もるために設計されています。<br><br>
+       <span style="font-size: 0.9em; display: block; margin-bottom: 4px;"><strong>📤 送信先 (使われる側):</strong> Artifact Exporter Worker, Export to Docs</span>
+       <span style="font-size: 0.9em; display: block;"><strong>📥 受信元 (使う側):</strong> Artifact Exporter Worker, Export to Docs</span>
       </p>
       <a class="install-button" data-script-name="Gemini Turn Counter" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js" target="_blank">
        <svg height="18" viewbox="0 0 24 24" width="18">

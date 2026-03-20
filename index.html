@@ -33,9 +33,26 @@
             width="16" />
         moukaeritai.work
     </a>
-    <h1>Moukaeritai Userscripts</h1>
 
-    <nav class="domain-nav">
+    <div class="header-container">
+        <h1>Moukaeritai Userscripts</h1>
+        <div class="header-subtitle">
+            <span class="badge" id="total-scripts-count">Loading...</span>
+            <p>A collection of userscripts to enhance your productivity across various AI tools and web apps.</p>
+        </div>
+    </div>
+
+
+
+    <div class="controls-container">
+        <div class="search-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20">
+                <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Search scripts by name or description...">
+        </div>
+        <nav class="domain-nav">
+
         <a class="domain-nav-link" href="#gemini">
             <img alt="gemini.google.com" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=32"
                 width="16" height="16" />
@@ -88,6 +105,7 @@
             <span class="domain-count">1</span>
         </a>
     </nav>
+    </div>
 
     <!-- ═══════════════════════════════════════════════════ -->
     <!-- gemini.google.com -->
@@ -108,13 +126,17 @@
                 <p class="project-desc">
                     Gemini のサイドバーにある Article アーティファクトをまとめて Google Docs にエクスポートします。
                 </p>
-                <a class="install-button" data-script-name="Gemini Artifact Exporter"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="Gemini Artifact Exporter" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="gemini">
@@ -126,13 +148,17 @@
                 <p class="project-desc">
                     Google Gemini の会話をワンクリックで削除する機能を提供します。
                 </p>
-                <a class="install-button" data-script-name="Gemini 1-Click Delete Conversation"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="Gemini 1-Click Delete Conversation" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="gemini">
@@ -144,13 +170,17 @@
                 <p class="project-desc">
                     Google Gemini の会話やキャンバスを、ワンクリックで Google Docs にエクスポートするユーザースクリプトです。
                 </p>
-                <a class="install-button" data-script-name="Gemini 1-Click Export to Docs"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="Gemini 1-Click Export to Docs" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="gemini">
@@ -162,13 +192,43 @@
                 <p class="project-desc">
                     Google Gemini の会話リストを自動スクロールして全履歴をロードします。全履歴のバックアップや検索の準備作業として、手動スクロールの手間を大幅に削減します。
                 </p>
-                <a class="install-button" data-script-name="Gemini Auto-Scroll"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="Gemini Auto-Scroll" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
+                </a>
+            </li>
+
+            <li class="project-item" data-category="gemini">
+                <h3 class="project-title">
+                    <img alt="gemini.google.com" class="project-icon"
+                        src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=32" />
+                    <a href="gemini.google.com/gemini-history-loader/index.html">Gemini History Loader 📜</a>
+                </h3>
+                <p class="project-desc">
+                    [System Loader] Gemini の会話履歴を自動で読み込むためのシステムスクリプトです。Auto-Scroll の裏側で動作します。
+                </p>
+                <div class="dependency-badge">
+                    <span>受信元: Auto-Scroll</span>
+                </div>
+                <a class="install-button" data-script-name="Gemini History Loader" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="gemini">
@@ -180,13 +240,17 @@
                 <p class="project-desc">
                     Google Geminiのユーザープロファイルに、好きな文字列や絵文字でカスタム「バッジ」を追加します。
                 </p>
-                <a class="install-button" data-script-name="Gemini Profile Badge"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-profile-badge/gemini-profile-badge.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="Gemini Profile Badge" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-profile-badge/gemini-profile-badge.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="gemini">
@@ -198,13 +262,17 @@
                 <p class="project-desc">
                     Google Gemini 上での会話において、メッセージ数（ターン数）、文字数、画像数をリアルタイムにカウントし表示します。
                 </p>
-                <a class="install-button" data-script-name="Gemini Turn Counter"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="Gemini Turn Counter" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="gemini">
@@ -216,13 +284,17 @@
                 <p class="project-desc">
                     Gemini の検索結果一覧において、各会話カードのタイトルに連番を表示し、視認性と識別性を向上させるユーザースクリプトです。
                 </p>
-                <a class="install-button" data-script-name="Gemini Search Snippet Helper"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-search-snippet-helper/gemini-search-snippet-helper.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="Gemini Search Snippet Helper" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-search-snippet-helper/gemini-search-snippet-helper.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="gemini">
@@ -234,13 +306,17 @@
                 <p class="project-desc">
                     カスタムインストラクションに連番やコピーボタンを追加し、管理しやすくします。全件コピーも可能です。
                 </p>
-                <a class="install-button" data-script-name="Gemini Saved Info Helper"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="Gemini Saved Info Helper" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="gemini">
@@ -252,13 +328,17 @@
                 <p class="project-desc">
                     現在閲覧中の会話を削除した際、自動的に会話リストの次のアイテムを選択して表示します。削除のたびにトップページに飛ばされる標準の挙動を防ぎ、スムーズな会話の整理を可能にします。
                 </p>
-                <a class="install-button" data-script-name="Gemini Auto-Select Next"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-auto-select-next/gemini-auto-select-next.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="Gemini Auto-Select Next" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-auto-select-next/gemini-auto-select-next.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="docs">
@@ -270,13 +350,17 @@
                 <p class="project-desc">
                     Google Docs上で新しいタブを開き、クリップボードの内容を自動でペーストするスクリプトです。
                 </p>
-                <a class="install-button" data-script-name="Auto Paste in New Tab"
-                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/docs.google.com/auto-paste-in-new-tab/auto-paste-in-new-tab.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="Auto Paste in New Tab" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/docs.google.com/auto-paste-in-new-tab/auto-paste-in-new-tab.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install (v0.1.12)
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="gemini">
@@ -288,13 +372,17 @@
                 <p class="project-desc">
                     カスタムイベント経由で Gemini のプロンプトエリアにテキストを注入し、自動送信するスクリプトです。
                 </p>
-                <a class="install-button" data-script-name="gemini-prompt-injector"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="gemini-prompt-injector" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install (v0.4.1)
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
         </ul>
@@ -319,13 +407,17 @@
                 <p class="project-desc">
                     ChatGPTの会話で、ユーザーとアシスタントのターン数、画像数、文字数、コードブロック数をカウントし、画像をDataURLとしてコピーする機能を提供します。
                 </p>
-                <a class="install-button" data-script-name="ChatGPT Turn Counter"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-turn-counter/chatgpt-turn-counter.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="ChatGPT Turn Counter" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-turn-counter/chatgpt-turn-counter.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="openai">
@@ -337,13 +429,17 @@
                 <p class="project-desc">
                     ChatGPTのユーザープロファイルに、好きな文字列や絵文字でカスタム「バッジ」を追加します。
                 </p>
-                <a class="install-button" data-script-name="ChatGPT Profile Badge"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-profile-badge/chatgpt-profile-badge.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="ChatGPT Profile Badge" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-profile-badge/chatgpt-profile-badge.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="openai">
@@ -355,13 +451,17 @@
                 <p class="project-desc">
                     会話履歴のタイトルと ID を取得し、検索や TSV 形式でのリスト化を可能にします。大量の会話を整理するのに最適です。
                 </p>
-                <a class="install-button" data-script-name="ChatGPT Conversation Lister (Unified)"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-conversation-lister/chatgpt-conversation-lister.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="ChatGPT Conversation Lister (Unified)" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-conversation-lister/chatgpt-conversation-lister.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="openai">
@@ -373,13 +473,17 @@
                 <p class="project-desc">
                     ChatGPTの会話画面の左右の余白を削除し、画面幅を最大限に活用します。コードブロックや長い文章の視認性が向上します。
                 </p>
-                <a class="install-button" data-script-name="ChatGPT No Margin"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-no-margin/chatgpt-no-margin.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="ChatGPT No Margin" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-no-margin/chatgpt-no-margin.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="openai">
@@ -391,13 +495,17 @@
                 <p class="project-desc">
                     ChatGPTで現在の応答が完了した後、次の事前入力されたプロンプトの送信を自動化します。連続したプロンプト入力や自動化された会話に。
                 </p>
-                <a class="install-button" data-script-name="ChatGPT Auto Prompt Sender"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-auto-sender/chatgpt-auto-sender.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="ChatGPT Auto Prompt Sender" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/chat.openai.com/chatgpt-auto-sender/chatgpt-auto-sender.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
         </ul>
@@ -422,13 +530,17 @@
                 <p class="project-desc">
                     YouTubeプレイリストの動画IDを記録・管理。フィルタリング等のUI機能は独立したスクリプトに分離されました。バックグラウンドで動作します。
                 </p>
-                <a class="install-button" data-script-name="YouTube Playlist Saver"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver/youtube-playlist-saver.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="YouTube Playlist Saver" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver/youtube-playlist-saver.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="youtube">
@@ -440,13 +552,17 @@
                 <p class="project-desc">
                     YouTubeプレイリストを自動的にスクロールし、大量の動画があるリストの読み込みを支援します。バックグラウンド動作にも対応。Saverと併用して利用できます。
                 </p>
-                <a class="install-button" data-script-name="YouTube Playlist Scroller"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-scroller/youtube-playlist-scroller.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="YouTube Playlist Scroller" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-scroller/youtube-playlist-scroller.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="youtube">
@@ -458,13 +574,17 @@
                 <p class="project-desc">
                     プレイリストのフィルタリング、スキャン済み範囲（Range）の状態表示を提供します。Saverと連携して動作します。
                 </p>
-                <a class="install-button" data-script-name="YouTube Playlist Filter"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-filter/youtube-playlist-filter.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="YouTube Playlist Filter" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-filter/youtube-playlist-filter.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="youtube">
@@ -476,13 +596,17 @@
                 <p class="project-desc">
                     プレイリスト内の不要な動画（視聴済みの動画など）を一括削除するツール。フィルタと連携して安全に削除できます。
                 </p>
-                <a class="install-button" data-script-name="YouTube Playlist Remover"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-remover/youtube-playlist-remover.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="YouTube Playlist Remover" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-remover/youtube-playlist-remover.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="youtube">
@@ -494,13 +618,17 @@
                 <p class="project-desc">
                     プレイリストのサムネイルを非表示にして軽量化するツール。大量の動画があるリストの操作を快適にします。
                 </p>
-                <a class="install-button" data-script-name="YouTube Playlist Lite"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-lite/youtube-playlist-lite.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="YouTube Playlist Lite" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/youtube.com/youtube-playlist-lite/youtube-playlist-lite.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
         </ul>
@@ -523,13 +651,17 @@
                 <p class="project-desc">
                     NotebookLM のソースパネルに、連番表示、クイックリネーム、クイック削除ボタンを追加し、ソース管理を効率化します。
                 </p>
-                <a class="install-button" data-script-name="NotebookLM Source Delete Button"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/notebooklm.google.com/notebooklm-source-delete-button/notebooklm-source-delete-button.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="NotebookLM Source Delete Button" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/notebooklm.google.com/notebooklm-source-delete-button/notebooklm-source-delete-button.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="notebooklm">
@@ -540,13 +672,17 @@
                 <p class="project-desc">
                     NotebookLM のアーティファクト（Studio）パネルに、各アーティファクトを直接削除するためのボタンを追加します。
                 </p>
-                <a class="install-button" data-script-name="NotebookLM Artifact Delete Button"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/notebooklm.google.com/notebooklm-artifact-delete-button/notebooklm-artifact-delete-button.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="NotebookLM Artifact Delete Button" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/notebooklm.google.com/notebooklm-artifact-delete-button/notebooklm-artifact-delete-button.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
         </ul>
@@ -571,13 +707,17 @@
                 <p class="project-desc">
                     お名前ドットコムのDNSレコード設定ページからリソースレコード(RR)を自動的に記録・バックアップします。
                 </p>
-                <a class="install-button" data-script-name="お名前.com DNSレコードバックアップ"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/onamae.com/onamae-rr-backup/onamae-rr-backup.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="お名前.com DNSレコードバックアップ" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/onamae.com/onamae-rr-backup/onamae-rr-backup.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             <li class="project-item" data-category="onamae">
@@ -589,13 +729,17 @@
                 <p class="project-desc">
                     お名前.com Navi の操作を妨げる「邪悪な」広告や確認ポップアップ、チャットサポート等を自動的に非表示にします。
                 </p>
-                <a class="install-button" data-script-name="お名前.com 邪悪広告ブロッカー"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/onamae.com/onamae-block-evil/onamae-block-evil.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="お名前.com 邪悪広告ブロッカー" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/onamae.com/onamae-block-evil/onamae-block-evil.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
         </ul>
@@ -620,13 +764,17 @@
                 <p class="project-desc">
                     Grokの会話ページで、全てのコピーボタンを順に押して内容を結合し、クリップボードにコピーします。
                 </p>
-                <a class="install-button" data-script-name="Grok Conversation Copy"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/grok.com/grok-copy-all/grok-copy-all.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="Grok Conversation Copy" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/grok.com/grok-copy-all/grok-copy-all.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
         </ul>
@@ -651,13 +799,17 @@
                 <p class="project-desc">
                     Gemini Artifact Exporter によって自動的に開かれた Google ドキュメントのタブを、ワーカーからのイベントを受信して自動で閉じてブラウザのフォーカスを Gemini に戻します。
                 </p>
-                <a class="install-button" data-script-name="Gemini Exported Docs Auto-Closer"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/docs.google.com/gemini-exported-docs-auto-closer/gemini-exported-docs-auto-closer.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="Gemini Exported Docs Auto-Closer" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/docs.google.com/gemini-exported-docs-auto-closer/gemini-exported-docs-auto-closer.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
         </ul>
@@ -682,13 +834,17 @@
                 <p class="project-desc">
                     Outlook の Copilot チャットで、会話をワンクリックで削除する機能を提供するユーザースクリプトです。
                 </p>
-                <a class="install-button" data-script-name="Copilot Conversation Deleter"
-                    href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/outlook.office.com/copilot-conversation-deleter/copilot-conversation-deleter.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="Copilot Conversation Deleter" href="https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/userscript.moukaeritai.work/outlook.office.com/copilot-conversation-deleter/copilot-conversation-deleter.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
         </ul>
@@ -713,13 +869,17 @@
                 <p class="project-desc">
                     M365 Copilot ノートブックのペイン（左ナビ、中央ワークスペース、右チャット）の背景色を調整し、境界を明確にして視認性を向上させます。
                 </p>
-                <a class="install-button" data-script-name="M365 Copilot Notebook Styler"
-                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/m365.cloud.microsoft/m365-copilot-notebook-styler/m365-copilot-notebook-styler.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="M365 Copilot Notebook Styler" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/m365.cloud.microsoft/m365-copilot-notebook-styler/m365-copilot-notebook-styler.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
             
@@ -732,13 +892,17 @@
                 <p class="project-desc">
                     M365 Copilot チャットで、現在アクティブな会話をボタン一つ（または `Ctrl+Shift+BackSpace`）で削除します。
                 </p>
-                <a class="install-button" data-script-name="M365 Copilot One-Click Deleter"
-                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/m365.cloud.microsoft/m365-copilot-chat-deleter/m365-copilot-chat-deleter.user.js"
-                    target="_blank">
-                    <svg height="16" viewbox="0 0 24 24" width="16">
+                <a class="install-button" data-script-name="M365 Copilot One-Click Deleter" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/m365.cloud.microsoft/m365-copilot-chat-deleter/m365-copilot-chat-deleter.user.js" target="_blank">
+                    <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
-                    Install
+                    <div class="install-button-content">
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span>Latest: <span class="version-badge latest-version">...</span></span>
+                            <span>Installed: <span class="version-badge installed-version">-</span></span>
+                        </div>
+                    </div>
                 </a>
             </li>
         </ul>
