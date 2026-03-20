@@ -337,6 +337,87 @@ h1 {
     font-family: monospace;
 }
 
+/* Update and Installed Button States */
+.install-button.installed-btn {
+    background-color: rgba(108, 117, 125, 0.8) !important;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+.install-button.installed-btn:hover {
+    background-color: rgba(108, 117, 125, 1) !important;
+}
+
+.install-button.update-btn {
+    background-color: rgba(243, 156, 18, 0.8) !important;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+.install-button.update-btn:hover {
+    background-color: rgba(243, 156, 18, 1) !important;
+}
+
+
+/* Domain Grid */
+.domain-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 4rem auto;
+    justify-items: center;
+}
+
+.domain-card {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    width: 120px;
+    height: 120px;
+    text-decoration: none;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    backdrop-filter: blur(15px);
+    position: relative;
+}
+
+.domain-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s;
+}
+
+.domain-card img {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    background: white;
+    padding: 4px;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1;
+}
+
+.domain-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.domain-card:hover::before {
+    opacity: 1;
+}
+
+.domain-card:hover img {
+    transform: scale(1.1);
+}
+
 footer {
     text-align: center;
     margin-top: 6em;
@@ -368,21 +449,19 @@ footer hr {
     .controls-inner {
         flex-direction: column;
     }
-}
 
-/* Update and Installed Button States */
-.install-button.installed-btn {
-    background-color: rgba(108, 117, 125, 0.8) !important;
-    border-color: rgba(255, 255, 255, 0.1);
-}
-.install-button.installed-btn:hover {
-    background-color: rgba(108, 117, 125, 1) !important;
-}
+    .domain-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 1.5rem;
+    }
 
-.install-button.update-btn {
-    background-color: rgba(243, 156, 18, 0.8) !important;
-    border-color: rgba(255, 255, 255, 0.2);
-}
-.install-button.update-btn:hover {
-    background-color: rgba(243, 156, 18, 1) !important;
+    .domain-card {
+        width: 100px;
+        height: 100px;
+    }
+
+    .domain-card img {
+        width: 48px;
+        height: 48px;
+    }
 }
