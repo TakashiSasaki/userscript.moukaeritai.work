@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         gemini-prompt-injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.4
+// @version      0.4.5
 // @description  Injects a prompt into Gemini via an external custom event.
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
@@ -323,8 +323,8 @@
         header.style.alignItems = 'center';
 
         const title = document.createElement('span');
-        const scriptVersion = GM_info?.script?.version || '0.4.4';
-        title.textContent = `Prompt Injector (v${scriptVersion})`;
+        const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '';
+        title.textContent = scriptVersion ? `Prompt Injector (v${scriptVersion})` : 'Prompt Injector';
         title.style.fontWeight = 'bold';
         title.style.fontSize = '12px';
 
