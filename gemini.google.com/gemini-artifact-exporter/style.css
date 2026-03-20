@@ -146,3 +146,31 @@
     margin-top: 4px;
     height: 1.2em;
 }
+
+#gae-script-status-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.gae-status-item {
+    font-size: 11px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    color: white;
+    font-family: 'Google Sans', sans-serif;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    animation: fadein 0.3s;
+}
+.gae-status-success {
+    background-color: rgba(46, 160, 67, 0.3);
+    border: 1px solid rgba(46, 160, 67, 0.4);
+}
+.gae-status-error {
+    background-color: rgba(248, 81, 73, 0.3);
+    border: 1px solid rgba(248, 81, 73, 0.4);
+}
+@keyframes fadein {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}

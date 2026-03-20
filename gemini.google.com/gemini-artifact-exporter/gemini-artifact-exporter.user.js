@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.5
+// @version      0.4.6
 // @lastModified 2026-03-17
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
@@ -72,96 +72,27 @@
 
     // UI Helper for displaying status
     function showTargetScriptStatus(targetName, statusDetail) {
-        const uiId = 'userscript-target-status-ui';
-        let ui = document.getElementById(uiId);
-
-        if (!ui) {
-            ui = document.createElement('div');
-            ui.id = uiId;
-            ui.style.position = 'fixed';
-            ui.style.zIndex = '999999';
-            ui.style.padding = '8px 12px';
-            ui.style.backgroundColor = 'rgba(28, 28, 30, 0.9)';
-            ui.style.color = 'white';
-            ui.style.borderRadius = '8px';
-            ui.style.fontFamily = 'sans-serif';
-            ui.style.fontSize = '12px';
-            ui.style.boxShadow = '0 2px 10px rgba(0,0,0,0.5)';
-            ui.style.cursor = 'move';
-            ui.style.userSelect = 'none';
-
-            // Restore position
-            let posStr = '{"bottom": "20px", "right": "20px"}';
-            try {
-                if (typeof GM_getValue !== 'undefined') {
-                    posStr = GM_getValue('userscript-status-ui-pos', posStr);
-                }
-            } catch { /* ignore */ }
-
-            let pos = JSON.parse(posStr);
-            if (pos.top) ui.style.top = pos.top;
-            if (pos.bottom && !pos.top) ui.style.bottom = pos.bottom;
-            if (pos.left) ui.style.left = pos.left;
-            if (pos.right && !pos.left) ui.style.right = pos.right;
-
-            // Make draggable
-            let isDragging = false, startX, startY, startLeft, startTop;
-            ui.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                startX = e.clientX;
-                startY = e.clientY;
-                const rect = ui.getBoundingClientRect();
-                startLeft = rect.left;
-                startTop = rect.top;
-                ui.style.right = 'auto'; // Disable right anchoring
-                ui.style.bottom = 'auto'; // Disable bottom anchoring
-                e.preventDefault();
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
-                ui.style.left = (startLeft + dx) + 'px';
-                ui.style.top = (startTop + dy) + 'px';
-            });
-
-            document.addEventListener('mouseup', () => {
-                if (isDragging) {
-                    isDragging = false;
-                    try {
-                        if (typeof GM_setValue !== 'undefined') {
-                            GM_setValue('userscript-status-ui-pos', JSON.stringify({
-                                top: ui.style.top,
-                                left: ui.style.left
-                            }));
-                        }
-                    } catch { /* ignore */ }
-                }
-            });
-
-            document.body.appendChild(ui);
-        }
+        const container = document.getElementById('gae-script-status-container');
+        if (!container) return; // Panel might not be open yet
 
         const statusText = statusDetail
             ? `✅ ${targetName} (v${statusDetail.version})`
             : `❌ ${targetName} Not Found`;
 
-        ui.textContent = '';
-        const titleDiv = document.createElement('div');
-        titleDiv.style.fontWeight = 'bold';
-        titleDiv.textContent = 'Script Status:';
-        ui.appendChild(titleDiv);
-        const statusDiv = document.createElement('div');
-        statusDiv.textContent = statusText;
-        ui.appendChild(statusDiv);
+        const ui = document.createElement('div');
+        ui.className = 'gae-status-item ' + (statusDetail ? 'gae-status-success' : 'gae-status-error');
+        ui.textContent = statusText;
 
-        // Auto hide after 5 seconds if successful, keep if failed
-        if (statusDetail) {
-            setTimeout(() => {
-                if (ui && ui.parentNode) ui.parentNode.removeChild(ui);
-            }, 5000);
-        }
+        container.appendChild(ui);
+
+        // Auto hide the individual status item after a few seconds
+        setTimeout(() => {
+            if (ui && ui.parentNode) {
+                ui.style.transition = 'opacity 0.3s';
+                ui.style.opacity = '0';
+                setTimeout(() => { if (ui && ui.parentNode) ui.parentNode.removeChild(ui); }, 300);
+            }
+        }, statusDetail ? 4000 : 7000); // Keep errors slightly longer
     }
 
 
