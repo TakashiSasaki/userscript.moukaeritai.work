@@ -93,7 +93,26 @@
             <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
         </div>
 
-        <a href="gemini-turn-counter.user.js" class="install-button">スクリプトをインストール (v0.4.29)</a>
+        <a href="gemini-turn-counter.user.js" class="install-button" data-version="0.4.32">
+                        <span class="button-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </span>
+
+                        <div class="version-info">
+                            <span class="version-badge latest-version">v0.4.32</span>
+                            <span class="version-badge installed-version" style="display: none;"></span>
+                        </div>
+                    </a>
+<div class="dependency-badges" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
+<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini 1-Click Export to Docs</span>
+<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Artifact Exporter Worker</span>
+<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini 1-Click Export to Docs</span>
+<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini Artifact Exporter Worker</span>
+</div>
 
         <h2>1. 概要と目的</h2>
         <p>すでに作成済みの <code>chatgpt-turn-counter</code> と同様に、Google Gemini 上での会話において、メッセージ数や文字数をリアルタイムにカウントし、画面上に表示することを目的としています。</p>
