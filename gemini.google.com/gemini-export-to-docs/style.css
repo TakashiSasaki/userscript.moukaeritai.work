@@ -196,3 +196,27 @@
     background-color: #5f6368;
     cursor: not-allowed;
 }
+#ge2d-script-status-container {
+    display: none;
+    align-items: center;
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 16px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    margin-left: 4px;
+}
+#ge2d-script-status-container.visible {
+    display: flex;
+    opacity: 1;
+}
+#ge2d-script-status-container.success {
+    border-color: #2ea44f;
+}
+#ge2d-script-status-container.error {
+    border-color: #e53935;
+}
