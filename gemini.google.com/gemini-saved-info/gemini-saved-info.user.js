@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.9
+// @version      0.1.10
 // @lastModified 2026-03-02
 // @description  Adds serial numbers and copy buttons to custom instructions on Gemini.
 // @author       Takashi Sasaki
@@ -32,17 +32,18 @@
     const isInstallCheckHost = installCheckHosts.includes(location.hostname) ||
         installCheckSuffixes.some(suffix => location.hostname.endsWith(suffix));
 
+    const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+
     if (isInstallCheckHost) {
-        const report = () => {
-            document.dispatchEvent(new CustomEvent('userscript-check-installed', {
-                detail: {
-                    name: GM_info.script.name,
-                    version: GM_info.script.version
-                }
-            }));
-        };
         report();
-        document.addEventListener('userscript-ping', report);
         return;
     }
 

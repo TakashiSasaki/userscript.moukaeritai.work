@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Search Snippet Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.6
+// @version      0.1.7
 // @lastModified 2026-03-02
 // @description  Add sequential numbers to Gemini search result conversation titles.
 // @author       Takashi Sasaki
@@ -27,17 +27,18 @@
     const isInstallCheckHost = installCheckHosts.includes(location.hostname) ||
         installCheckSuffixes.some(suffix => location.hostname.endsWith(suffix));
 
+    const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+
     if (isInstallCheckHost) {
-        const report = () => {
-            document.dispatchEvent(new CustomEvent('userscript-check-installed', {
-                detail: {
-                    name: GM_info.script.name,
-                    version: GM_info.script.version
-                }
-            }));
-        };
         report();
-        document.addEventListener('userscript-ping', report);
         return;
     }
 

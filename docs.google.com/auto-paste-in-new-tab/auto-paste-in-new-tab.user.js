@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Auto Paste in New Tab
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.12
+// @version      0.1.13
 // @description  Emulates Shift+F11 and Ctrl+V in Google Docs.
 // @author       Takashi Sasaki
 // @match        https://docs.google.com/document/*
@@ -20,19 +20,134 @@
         'userscript.moukaeritai.work'
     ];
     const isInstallCheckHost = installCheckHosts.includes(location.hostname);
+    const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+
     if (isInstallCheckHost) {
-        const report = () => {
-            document.dispatchEvent(new CustomEvent('userscript-check-installed', {
-                detail: {
-                    name: typeof GM_info !== 'undefined' ? GM_info.script.name : 'Auto Paste in New Tab',
-                    version: typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.12'
-                }
-            }));
-        };
         report();
-        document.addEventListener('userscript-ping', report);
         return;
     }
+
+    // Custom Event Helper for checking if target userscript is installed
+    function checkTargetUserscript(targetName, timeout = 2000) {
+        return new Promise((resolve) => {
+            const handler = (e) => {
+                if (e.detail && e.detail.name === targetName) {
+                    clearTimeout(timeoutId);
+                    document.removeEventListener('userscript-check-installed', handler);
+                    resolve(e.detail);
+                }
+            };
+            const timeoutId = setTimeout(() => {
+                document.removeEventListener('userscript-check-installed', handler);
+                resolve(null); // Not found or timed out
+            }, timeout);
+            document.addEventListener('userscript-check-installed', handler);
+            document.dispatchEvent(new CustomEvent('userscript-ping'));
+        });
+    }
+
+    // UI Helper for displaying status
+    function showTargetScriptStatus(targetName, statusDetail) {
+        const uiId = 'userscript-target-status-ui';
+        let ui = document.getElementById(uiId);
+
+        if (!ui) {
+            ui = document.createElement('div');
+            ui.id = uiId;
+            ui.style.position = 'fixed';
+            ui.style.zIndex = '999999';
+            ui.style.padding = '8px 12px';
+            ui.style.backgroundColor = 'rgba(28, 28, 30, 0.9)';
+            ui.style.color = 'white';
+            ui.style.borderRadius = '8px';
+            ui.style.fontFamily = 'sans-serif';
+            ui.style.fontSize = '12px';
+            ui.style.boxShadow = '0 2px 10px rgba(0,0,0,0.5)';
+            ui.style.cursor = 'move';
+            ui.style.userSelect = 'none';
+
+            // Restore position
+            let posStr = '{"bottom": "20px", "right": "20px"}';
+            try {
+                if (typeof GM_getValue !== 'undefined') {
+                    posStr = GM_getValue('userscript-status-ui-pos', posStr);
+                }
+            } catch { /* ignore */ }
+
+            let pos = JSON.parse(posStr);
+            if (pos.top) ui.style.top = pos.top;
+            if (pos.bottom && !pos.top) ui.style.bottom = pos.bottom;
+            if (pos.left) ui.style.left = pos.left;
+            if (pos.right && !pos.left) ui.style.right = pos.right;
+
+            // Make draggable
+            let isDragging = false, startX, startY, startLeft, startTop;
+            ui.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                const rect = ui.getBoundingClientRect();
+                startLeft = rect.left;
+                startTop = rect.top;
+                ui.style.right = 'auto'; // Disable right anchoring
+                ui.style.bottom = 'auto'; // Disable bottom anchoring
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                ui.style.left = (startLeft + dx) + 'px';
+                ui.style.top = (startTop + dy) + 'px';
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    try {
+                        if (typeof GM_setValue !== 'undefined') {
+                            GM_setValue('userscript-status-ui-pos', JSON.stringify({
+                                top: ui.style.top,
+                                left: ui.style.left
+                            }));
+                        }
+                    } catch { /* ignore */ }
+                }
+            });
+
+            document.body.appendChild(ui);
+        }
+
+        const statusText = statusDetail
+            ? `✅ ${targetName} (v${statusDetail.version})`
+            : `❌ ${targetName} Not Found`;
+
+        ui.textContent = '';
+        const titleDiv = document.createElement('div');
+        titleDiv.style.fontWeight = 'bold';
+        titleDiv.textContent = 'Script Status:';
+        ui.appendChild(titleDiv);
+        const statusDiv = document.createElement('div');
+        statusDiv.textContent = statusText;
+        ui.appendChild(statusDiv);
+
+        // Auto hide after 5 seconds if successful, keep if failed
+        if (statusDetail) {
+            setTimeout(() => {
+                if (ui && ui.parentNode) ui.parentNode.removeChild(ui);
+            }, 5000);
+        }
+    }
+
 
     // Load position
     const savedPos = GM_getValue('panelPosition', { bottom: '24px', right: '24px' });
@@ -73,7 +188,7 @@
         background: rgba(255,255,255,0.05);
         border-radius: 4px;
     `;
-    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.12'}`;
+    versionSpan.textContent = `v${typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.13'}`;
     panel.appendChild(versionSpan);
 
     const pasteBtn = document.createElement('button');
@@ -93,7 +208,7 @@
     pasteBtn.onmouseout = () => pasteBtn.style.background = '#444';
 
     pasteBtn.addEventListener('click', () => {
-        document.dispatchEvent(new CustomEvent('EmulateDocsPaste'));
+        checkTargetUserscript('Auto Paste in New Tab').then((installed) => { showTargetScriptStatus('Auto Paste in New Tab', installed); document.dispatchEvent(new CustomEvent('EmulateDocsPaste')); });
     });
     panel.appendChild(pasteBtn);
 
