@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.24
+// @version      0.4.25
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-16
 // @author       Takashi Sasaki
@@ -9,9 +9,12 @@
 // @match        https://userscript.moukaeritai.work/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js
+// @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/style.css
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_info
+// @grant        GM_getResourceText
+// @grant        GM_addStyle
 // @noframes
 // ==/UserScript==
 
@@ -86,209 +89,11 @@
      * Styles for our custom button
      */
     function addStyles() {
-        const style = document.createElement('style');
-        style.textContent = `
-            .gemini-quick-export-btn {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                min-width: 32px;
-                height: 32px;
-                border-radius: 16px;
-                border: 1px solid #ccc;
-                background-color: #e6f4ea; /* Light green */
-                cursor: pointer;
-                margin-left: 8px;
-                color: #5f6368;
-                transition: all 0.2s;
-                position: relative;
-                z-index: 1000;
-            }
-            .gemini-quick-export-btn:hover {
-                background-color: var(--mdc-icon-button-hover-state-layer-color, rgba(68, 71, 70, 0.08));
-            }
-            .gemini-quick-export-btn.top-right {
-                position: absolute;
-                top: 8px;
-                right: 8px;
-                z-index: 10;
-                background-color: rgba(255, 255, 255, 0.8);
-                backdrop-filter: blur(4px);
-            }
-            .gemini-quick-export-btn.bottom-right {
-                position: absolute;
-                bottom: 8px;
-                right: 8px;
-                z-index: 10;
-                background-color: rgba(255, 255, 255, 0.8);
-                backdrop-filter: blur(4px);
-            }
-            @media (prefers-color-scheme: dark) {
-                .gemini-quick-export-btn.top-right,
-                .gemini-quick-export-btn.bottom-right {
-                    background-color: rgba(30, 30, 30, 0.8);
-                }
-            }
-            .gemini-quick-export-btn.exported {
-                background-color: #1e8e3e; /* Google Green */
-                color: white;
-                border-color: #1e8e3e;
-            }
-            .gemini-quick-export-btn svg {
-                fill: currentColor;
-            }
-            /* Overlay */
-            #gemini-export-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(255, 255, 255, 0.7);
-                z-index: 99999;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                font-family: inherit;
-                font-size: 16px;
-                color: #333;
-                opacity: 0;
-                pointer-events: none;
-                transition: opacity 0.3s;
-            }
-            #gemini-export-overlay.visible {
-                opacity: 1;
-                pointer-events: auto;
-            }
-            /* Spinner */
-            .gemini-spinner {
-                border: 4px solid #f3f3f3;
-                border-top: 4px solid #1a73e8;
-                border-radius: 50%;
-                width: 40px;
-                height: 40px;
-                animation: spin 1s linear infinite;
-                margin-bottom: 16px;
-            }
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-            /* 1-Turn Horizontal Action Bar */
-            #gemini-one-turn-panel {
-                position: fixed;
-                background-color: rgba(28, 28, 30, 0.85);
-                backdrop-filter: blur(12px) saturate(180%);
-                -webkit-backdrop-filter: blur(12px) saturate(180%);
-                border: 1px solid rgba(255, 255, 255, 0.15);
-                border-radius: 24px;
-                box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-                padding: 6px 12px;
-                display: none;
-                flex-direction: row;
-                align-items: center;
-                gap: 12px;
-                z-index: 9999;
-                font-family: 'Google Sans', sans-serif;
-                color: white;
-                user-select: none;
-            }
-            #gemini-one-turn-panel.visible {
-                display: flex;
-            }
-            .one-turn-drag-handle {
-                cursor: move;
-                cursor: grab;
-                color: rgba(255, 255, 255, 0.5);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                padding-right: 12px;
-                border-right: 1px solid rgba(255, 255, 255, 0.2);
-                margin-right: 12px;
-                user-select: none;
-            }
-            .one-turn-drag-icon {
-                font-size: 16px;
-                line-height: 1;
-            }
-            .one-turn-version {
-                font-size: 9px;
-                opacity: 0.7;
-                margin-top: 2px;
-                line-height: 1;
-            }
-            .one-turn-drag-handle:hover {
-                opacity: 1;
-            }
-            .one-turn-controls-col {
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-                border-right: 1px solid rgba(255, 255, 255, 0.2);
-                padding-right: 12px;
-            }
-            .one-turn-row {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                font-size: 12px;
-                color: rgba(255, 255, 255, 0.9);
-            }
-            .one-turn-row label {
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                cursor: pointer;
-            }
-            .one-turn-row span.r-label {
-                width: 60px;
-                text-align: right;
-                opacity: 0.8;
-            }
-            .one-turn-controls-col input[type="number"] {
-                width: 40px;
-                background: rgba(0,0,0,0.3);
-                border: 1px solid rgba(255,255,255,0.2);
-                border-radius: 4px;
-                color: white;
-                padding: 2px 4px;
-                text-align: center;
-            }
-            .one-turn-controls-col input[type="checkbox"] {
-                cursor: pointer;
-                accent-color: #1a73e8;
-            }
-            #gemini-btn-one-turn-exec {
-                background-color: #1a73e8;
-                color: white;
-                border: none;
-                border-radius: 16px;
-                padding: 6px 14px;
-                font-size: 13px;
-                font-weight: 500;
-                cursor: pointer;
-                transition: background-color 0.2s, transform 0.1s;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
-            }
-            #gemini-btn-one-turn-exec:hover {
-                background-color: #1b66c9;
-            }
-            #gemini-btn-one-turn-exec:active {
-                transform: scale(0.98);
-            }
-            #gemini-btn-one-turn-exec:disabled {
-                background-color: #5f6368;
-                cursor: not-allowed;
-            }
-        `;
-        document.head.appendChild(style);
-        return style;
+        const css = GM_getResourceText('customCSS');
+        GM_addStyle(css);
+        // GM_addStyle returns the style element or undefined depending on TM version
+        // Try to find it if we need to remove it later, or just let it be.
+        return document.querySelector('style:last-of-type');
     }
 
     /**

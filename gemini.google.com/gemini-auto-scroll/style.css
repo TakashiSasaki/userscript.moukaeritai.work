@@ -1,0 +1,170 @@
+#gemini-auto-scroll-panel {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid rgba(209, 213, 219, 0.3);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    font-family: 'Outfit', 'Google Sans', sans-serif;
+    padding: 12px;
+    display: none; /* Initially hidden */
+    flex-direction: column;
+    gap: 8px;
+    user-select: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 200px;
+}
+#gemini-auto-scroll-panel:hover {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(209, 213, 219, 0.5);
+    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.25);
+}
+#gemini-auto-scroll-panel.ready {
+    display: flex;
+}
+#gemini-auto-scroll-panel.minimized {
+    min-width: unset;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    padding: 0;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    cursor: pointer;
+}
+#gemini-auto-scroll-panel.minimized .panel-content,
+#gemini-auto-scroll-panel.minimized .widget-header {
+    display: none;
+}
+#gemini-auto-scroll-panel .minimized-summary {
+    display: none;
+    font-size: 20px;
+    line-height: 1;
+}
+#gemini-auto-scroll-panel.minimized .minimized-summary {
+    display: block;
+}
+
+.widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px;
+    cursor: move;
+}
+.widget-header h1 {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0;
+    color: #1a73e8;
+    letter-spacing: 0.3px;
+}
+.version-badge {
+    font-size: 10px;
+    color: #5f6368;
+    opacity: 0.7;
+}
+
+.panel-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.auto-scroll-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+.auto-scroll-btn.stopped {
+    background: #ffffff;
+    color: #3c4043;
+    border: 1px solid #dadce0;
+}
+.auto-scroll-btn.stopped:hover {
+    background: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.auto-scroll-btn.running {
+    background: #e6f4ea;
+    color: #137333;
+    border: 1px solid #ceead6;
+}
+.auto-scroll-btn.running:hover {
+    background: #d2e3d8;
+    transform: translateY(-1px);
+}
+.auto-scroll-btn.processing {
+    animation: gtc-pulse 1.5s infinite ease-in-out;
+}
+
+.stats-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #5f6368;
+    padding: 0 6px;
+    font-weight: 500;
+}
+.stat-value {
+    color: #1a73e8;
+    font-weight: 600;
+}
+
+.gtc-minimize-btn {
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+    color: #5f6368;
+    font-size: 18px;
+}
+.gtc-minimize-btn:hover {
+    background: rgba(0,0,0,0.05);
+}
+
+@keyframes gtc-pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(0.98); } 100% { opacity: 1; transform: scale(1); } }
+
+.gtc-conversation-index {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background-color: rgba(26, 115, 232, 0.85);
+    color: #fff;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 6px;
+    z-index: 10;
+    pointer-events: none;
+    font-family: 'Outfit', monospace;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* --- Custom Scrollbar Styles --- */
+::-webkit-scrollbar { width: 14px !important; height: 14px !important; background-color: transparent; display: block !important; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.03); border-radius: 10px; }
+::-webkit-scrollbar-thumb { background-color: #4e95ff; border-radius: 10px; border: 3px solid rgba(255,255,255,0.8); }
+::-webkit-scrollbar-thumb:hover { background-color: #3b82f6; }
+conversations-list, .conversations-list, infinite-scroller { scrollbar-color: #4e95ff transparent !important; scrollbar-width: thin !important; }
