@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.26
+// @version      0.4.27
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-16
 // @author       Takashi Sasaki
@@ -10,6 +10,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js
 // @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/style.css
+// @resource     templateHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/template.html
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_info
@@ -160,6 +161,26 @@
     // svg icons
     const DOCS_ICON_PATH = "M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z";
     const CHECK_ICON_PATH = "M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z";
+
+    // --- Trusted Types ---
+    let policy;
+    if (window.trustedTypes && window.trustedTypes.createPolicy) {
+        try {
+            policy = window.trustedTypes.createPolicy('geminiExportToDocs_' + Math.random().toString(36).substr(2, 9), {
+                createHTML: (string) => string
+            });
+        } catch (e) {
+            console.warn('Failed to create TrustedTypes policy', e);
+        }
+    }
+
+    const setInnerHTML = (element, html) => {
+        if (policy) {
+            element.innerHTML = policy.createHTML(html);
+        } else {
+            element.innerHTML = html;
+        }
+    };
 
     // --- Selectors (based on provided samples) ---
     const SELECTORS = {
@@ -788,22 +809,12 @@
         if (savedPos.left) panel.style.left = savedPos.left;
         else panel.style.right = savedPos.right;
 
-        const dragHandle = document.createElement('div');
-        dragHandle.className = 'one-turn-drag-handle';
-        dragHandle.title = `Gemini 1-Turn Auto Export v${GM_info.script.version}`;
+        const templateStr = GM_getResourceText('templateHTML').replace(/{{scriptVersion}}/g, GM_info.script.version);
+        setInnerHTML(panel, templateStr);
+        document.body.appendChild(panel);
 
-        const dragIcon = document.createElement('span');
-        dragIcon.className = 'one-turn-drag-icon';
-        dragIcon.textContent = '⠿';
-
-        const versionText = document.createElement('span');
-        versionText.className = 'one-turn-version';
-        versionText.textContent = `v${GM_info.script.version}`;
-
-        dragHandle.appendChild(dragIcon);
-        dragHandle.appendChild(versionText);
-
-        // Dragging Logic
+        // Bind Dragging Logic
+        const dragHandle = panel.querySelector('.one-turn-drag-handle');
         let isDragging = false;
         let offset = { x: 0, y: 0 };
 
@@ -834,92 +845,28 @@
         panel.addEventListener('mouseenter', () => { countdownPaused = true; });
         panel.addEventListener('mouseleave', () => { countdownPaused = false; });
 
-        const controlsCol = document.createElement('div');
-        controlsCol.className = 'one-turn-controls-col';
-
-        // --- ROW 1: Manual Sub-Controls ---
-        const manualRow = document.createElement('div');
-        manualRow.className = 'one-turn-row';
-
-        const manualWaitLabel = document.createElement('label');
-        const rLabelManual = document.createElement('span');
-        rLabelManual.className = 'r-label';
-        rLabelManual.textContent = 'Wait(s):';
-        manualWaitLabel.appendChild(rLabelManual);
-        const manualDelayInput = document.createElement('input');
-        manualDelayInput.type = 'number';
-        manualDelayInput.min = '0';
+        // Bind Inputs & Checkboxes
+        const manualDelayInput = panel.querySelector('#gemini-auto-delete-delay-input');
         manualDelayInput.value = GM_getValue(AUTO_DELETE_DELAY_KEY, 3);
         manualDelayInput.onchange = () => GM_setValue(AUTO_DELETE_DELAY_KEY, parseInt(manualDelayInput.value, 10) || 0);
-        manualWaitLabel.appendChild(manualDelayInput);
 
-        const deleteLabel = document.createElement('label');
-        const deleteCheckbox = document.createElement('input');
-        deleteCheckbox.type = 'checkbox';
-        deleteCheckbox.id = 'gemini-auto-delete-cb'; // For referencing in runExportProcess
+        const deleteCheckbox = panel.querySelector('#gemini-auto-delete-cb');
         deleteCheckbox.checked = GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
-        deleteLabel.appendChild(deleteCheckbox);
-        deleteLabel.appendChild(document.createTextNode('Auto-Delete'));
 
-        manualRow.appendChild(manualWaitLabel);
-        manualRow.appendChild(deleteLabel);
-
-        // --- ROW 2: Auto(URL) Sub-Controls ---
-        const autoRow = document.createElement('div');
-        autoRow.className = 'one-turn-row';
-
-        const autoWaitLabel = document.createElement('label');
-        const rLabelAuto = document.createElement('span');
-        rLabelAuto.className = 'r-label';
-        rLabelAuto.title = 'Wait time applied when 1 URL matches exactly between prompt and response';
-        rLabelAuto.textContent = 'Auto(URL):';
-        autoWaitLabel.appendChild(rLabelAuto);
-        const autoDelayInput = document.createElement('input');
-        autoDelayInput.type = 'number';
-        autoDelayInput.min = '0';
+        const autoDelayInput = panel.querySelector('#gemini-auto-url-delay-input');
         autoDelayInput.value = GM_getValue(AUTO_URL_DELAY_KEY, 5);
         autoDelayInput.onchange = () => GM_setValue(AUTO_URL_DELAY_KEY, parseInt(autoDelayInput.value, 10) || 0);
-        autoWaitLabel.appendChild(autoDelayInput);
 
-        const skipLabel = document.createElement('label');
-        skipLabel.style.marginLeft = '4px';
-        const skipTitle = document.createElement('span');
-        skipTitle.textContent = 'Skip(N):';
-        skipTitle.style.fontSize = '12px';
-        skipTitle.style.opacity = '0.7';
-        skipTitle.style.marginRight = '4px';
-        skipLabel.appendChild(skipTitle);
-        const skipInput = document.createElement('input');
-        skipInput.id = 'gemini-auto-skip-input';
-        skipInput.type = 'number';
-        skipInput.min = '0';
-        skipInput.style.width = '32px';
+        const skipInput = panel.querySelector('#gemini-auto-skip-input');
         skipInput.value = GM_getValue(AUTO_SKIP_REMAINING_KEY, 0);
         skipInput.onchange = () => GM_setValue(AUTO_SKIP_REMAINING_KEY, parseInt(skipInput.value, 10) || 0);
-        skipLabel.appendChild(skipInput);
 
-        const autoEnableLabel = document.createElement('label');
-        const autoEnableCheckbox = document.createElement('input');
-        autoEnableCheckbox.type = 'checkbox';
+        const autoEnableCheckbox = panel.querySelector('#gemini-auto-url-cb');
         autoEnableCheckbox.checked = GM_getValue(AUTO_URL_TOGGLE_KEY, false);
         autoEnableCheckbox.onchange = () => GM_setValue(AUTO_URL_TOGGLE_KEY, autoEnableCheckbox.checked);
-        autoEnableLabel.appendChild(autoEnableCheckbox);
-        autoEnableLabel.appendChild(document.createTextNode('Enable'));
 
-        autoRow.appendChild(autoWaitLabel);
-        autoRow.appendChild(skipLabel);
-        autoRow.appendChild(autoEnableLabel);
-
-        // --- ROW 3: Image Copy Button ---
-        const imageRow = document.createElement('div');
-        imageRow.className = 'one-turn-row';
-        imageRow.style.justifyContent = 'flex-end'; // Align to the right
-        
-        const copyImageBtn = document.createElement('button');
-        copyImageBtn.id = 'gemini-btn-copy-images';
-        copyImageBtn.style.cssText = 'background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: white; padding: 2px 8px; font-size: 11px; cursor: pointer; transition: background 0.2s;';
-        copyImageBtn.textContent = '📋 Copy Images';
-        
+        // Bind Copy Button
+        const copyImageBtn = panel.querySelector('#gemini-btn-copy-images');
         let copyIndicatorTimer = null;
         
         copyImageBtn.onmouseenter = () => copyImageBtn.style.background = 'rgba(255,255,255,0.2)';
@@ -952,16 +899,8 @@
             }, 3000);
         });
 
-        imageRow.appendChild(copyImageBtn);
-
-        controlsCol.appendChild(manualRow);
-        controlsCol.appendChild(autoRow);
-        controlsCol.appendChild(imageRow);
-
-        // Execute Button
-        const execBtn = document.createElement('button');
-        execBtn.id = 'gemini-btn-one-turn-exec';
-
+        // Bind Execute Button
+        const execBtn = panel.querySelector('#gemini-btn-one-turn-exec');
         const updateBtnText = () => setExecBtnContent(execBtn, deleteCheckbox.checked ? 'Export & Delete' : 'Export');
         updateBtnText();
 
@@ -975,10 +914,6 @@
             runExportProcess(manualDelayInput.value, willDelete, false);
         };
 
-        panel.appendChild(dragHandle);
-        panel.appendChild(controlsCol);
-        panel.appendChild(execBtn);
-        document.body.appendChild(panel);
         return panel;
     }
 

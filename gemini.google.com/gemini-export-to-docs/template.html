@@ -1,0 +1,46 @@
+<div class="one-turn-drag-handle" title="Gemini 1-Turn Auto Export v{{scriptVersion}}">
+    <span class="one-turn-drag-icon">⠿</span>
+    <span class="one-turn-version">v{{scriptVersion}}</span>
+</div>
+<div class="one-turn-controls-col">
+    <!-- ROW 1: Manual Sub-Controls -->
+    <div class="one-turn-row">
+        <label>
+            <span class="r-label">Wait(s):</span>
+            <input type="number" id="gemini-auto-delete-delay-input" min="0" value="3">
+        </label>
+        <label>
+            <input type="checkbox" id="gemini-auto-delete-cb" checked>
+            Auto-Delete
+        </label>
+    </div>
+    <!-- ROW 2: Auto(URL) Sub-Controls -->
+    <div class="one-turn-row">
+        <label>
+            <span class="r-label" title="Wait time applied when 1 URL matches exactly between prompt and response">Auto(URL):</span>
+            <input type="number" id="gemini-auto-url-delay-input" min="0" value="5">
+        </label>
+        <label style="margin-left: 4px;">
+            <span style="font-size: 12px; opacity: 0.7; margin-right: 4px;">Skip(N):</span>
+            <input type="number" id="gemini-auto-skip-input" min="0" style="width: 32px;" value="0">
+        </label>
+        <label>
+            <input type="checkbox" id="gemini-auto-url-cb">
+            Enable
+        </label>
+    </div>
+    <!-- ROW 3: Image Copy Button -->
+    <div class="one-turn-row" style="justify-content: flex-end;">
+        <button id="gemini-btn-copy-images" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: white; padding: 2px 8px; font-size: 11px; cursor: pointer; transition: background 0.2s;">
+            📋 Copy Images
+        </button>
+    </div>
+</div>
+<button id="gemini-btn-one-turn-exec">
+    <span style="display: flex;">
+        <svg height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
+            <path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z"></path>
+        </svg>
+    </span>
+    Export & Delete
+</button>

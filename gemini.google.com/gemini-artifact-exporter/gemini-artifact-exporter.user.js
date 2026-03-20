@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.4
+// @version      0.4.5
 // @lastModified 2026-03-17
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
@@ -14,6 +14,7 @@
 // @grant        GM_addStyle
 // @grant        GM_getResourceText
 // @resource     css https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/style.css
+// @resource     templateHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/template.html
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @noframes
@@ -163,6 +164,26 @@
         }
     }
 
+
+    // --- Trusted Types ---
+    let policy;
+    if (window.trustedTypes && window.trustedTypes.createPolicy) {
+        try {
+            policy = window.trustedTypes.createPolicy('geminiArtifactExporter_' + Math.random().toString(36).substr(2, 9), {
+                createHTML: (string) => string
+            });
+        } catch (e) {
+            console.warn('Failed to create TrustedTypes policy', e);
+        }
+    }
+
+    const setInnerHTML = (element, html) => {
+        if (policy) {
+            element.innerHTML = policy.createHTML(html);
+        } else {
+            element.innerHTML = html;
+        }
+    };
 
     const SELECTORS = {
         ACTIONS_MENU_BUTTON: 'button[data-test-id="conversation-actions-menu-icon-button"], conversation-actions-icon button',
@@ -783,89 +804,32 @@
         panel.id = 'gemini-batch-export-panel';
         panel.style.display = isConversationPage() ? 'flex' : 'none';
 
-        const header = document.createElement('div');
-        header.textContent = `Artifact Exporter v${GM_info.script.version}`;
-        header.className = 'gae-panel-header';
-
-        const buttonContainer = document.createElement('div');
-        buttonContainer.className = 'gae-button-container';
-
-        const scanBtn = document.createElement('button');
-        scanBtn.id = 'gemini-btn-scan';
-        scanBtn.textContent = 'Scan Sidebar Menu';
-        scanBtn.title = '右サイドバーにある「このチャット内のファイル一覧」を展開してスキャンします。';
-        scanBtn.className = 'gae-scan-btn';
-        scanBtn.onclick = () => scanArtifacts();
-
-        const deepScanBtn = document.createElement('button');
-        deepScanBtn.id = 'gemini-btn-deep-scan';
-        deepScanBtn.textContent = 'Scan Chat History';
-        deepScanBtn.title = 'メイン会話履歴を上部までスクロールしながら、履歴に埋まっているアーティファクトをすべて検出します。数秒かかります。';
-        deepScanBtn.className = 'gae-deep-scan-btn';
-        deepScanBtn.onclick = () => deepScanArtifacts();
-
-        const scanButtonsContainer = document.createElement('div');
-        scanButtonsContainer.className = 'gae-scan-buttons-container';
-
-        scanButtonsContainer.appendChild(scanBtn);
-        scanButtonsContainer.appendChild(deepScanBtn);
-
-        buttonContainer.appendChild(scanButtonsContainer);
-
-        const listContainer = document.createElement('div');
-        listContainer.id = 'gemini-artifact-list-container';
-
-        const exportBtn = document.createElement('button');
-        exportBtn.id = 'gemini-btn-export';
-        exportBtn.textContent = 'Export Selected';
-        exportBtn.title = '選択したアーティファクトをGoogle Docsにエクスポートします。';
-        exportBtn.className = 'gae-export-btn';
-        exportBtn.onclick = () => runBatchExport();
-
-        // --- Toggles Container ---
-        const togglesContainer = document.createElement('div');
-        togglesContainer.className = 'gae-toggles-container';
-
-
-        const createCheckboxInput = (key, text, defaultValue) => {
-            const container = document.createElement('label');
-            container.className = 'gae-checkbox-container';
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.className = 'gae-checkbox';
-            checkbox.checked = GM_getValue(key, defaultValue);
-
-            checkbox.onchange = (e) => {
-                GM_setValue(key, e.target.checked);
-            };
-
-            container.appendChild(document.createTextNode(text));
-            container.appendChild(checkbox);
-            return container;
-        };
-
-        const autoDeleteInput = createCheckboxInput(AUTO_DELETE_KEY, 'Auto-Delete Chat', false);
-
-        togglesContainer.appendChild(autoDeleteInput);
-
-
-        const progressDisplay = document.createElement('div');
-        progressDisplay.id = 'gemini-batch-export-progress';
-
-        buttonContainer.appendChild(scanButtonsContainer);
-        buttonContainer.appendChild(listContainer);
-        buttonContainer.appendChild(exportBtn);
-        buttonContainer.appendChild(progressDisplay);
-        buttonContainer.appendChild(togglesContainer);
-
-        panel.appendChild(header);
-        panel.appendChild(buttonContainer);
+        const templateStr = GM_getResourceText('templateHTML').replace(/{{scriptVersion}}/g, GM_info.script.version);
+        setInnerHTML(panel, templateStr);
         document.body.appendChild(panel);
         log('Artifact Exporter panel attached to document body.');
 
+        // Bind events
+        const scanBtn = panel.querySelector('#gemini-btn-scan');
+        if (scanBtn) scanBtn.onclick = () => scanArtifacts();
 
+        const deepScanBtn = panel.querySelector('#gemini-btn-deep-scan');
+        if (deepScanBtn) deepScanBtn.onclick = () => deepScanArtifacts();
 
-        makePanelDraggable(panel, header, PANEL_POSITION_KEY);
+        const exportBtn = panel.querySelector('#gemini-btn-export');
+        if (exportBtn) exportBtn.onclick = () => runBatchExport();
+
+        const autoDeleteCb = panel.querySelector('#gae-auto-delete-cb');
+        if (autoDeleteCb) {
+            autoDeleteCb.checked = GM_getValue(AUTO_DELETE_KEY, false);
+            autoDeleteCb.onchange = (e) => GM_setValue(AUTO_DELETE_KEY, e.target.checked);
+        }
+
+        const header = panel.querySelector('.gae-panel-header');
+        if (header) {
+            makePanelDraggable(panel, header, PANEL_POSITION_KEY);
+        }
+
         const savedPosition = GM_getValue(PANEL_POSITION_KEY, null);
         if (savedPosition && savedPosition.top && savedPosition.left) {
             panel.style.top = savedPosition.top;
