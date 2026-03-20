@@ -7,12 +7,56 @@ function getCachedElements(item) {
     if (!cached) {
         cached = {
             installBtn: item.querySelector('.install-button'),
-            latestBadge: item.querySelector('.version-badge.latest'),
-            installedBadge: item.querySelector('.version-badge.installed')
+            latestBadge: item.querySelector('.latest-version'),
+            installedBadge: item.querySelector('.installed-version'),
+            buttonText: item.querySelector('.install-button-text')
         };
         itemCache.set(item, cached);
     }
     return cached;
+}
+
+// Total Scripts Count
+function updateTotalScriptsCount() {
+    const items = document.querySelectorAll('.project-item');
+    let count = 0;
+    items.forEach(item => {
+        if (item.style.display !== 'none') count++;
+    });
+    const badge = document.getElementById('total-scripts-count');
+    if (badge) badge.textContent = count;
+}
+
+// Search and Filter Logic
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        const items = document.querySelectorAll('.project-item');
+
+        items.forEach(item => {
+            const title = item.querySelector('.project-title')?.textContent.toLowerCase() || '';
+            const desc = item.querySelector('.project-desc')?.textContent.toLowerCase() || '';
+            if (title.includes(term) || desc.includes(term)) {
+                item.style.display = 'flex'; // our items use flex
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // Hide empty sections
+        const sections = document.querySelectorAll('.domain-section');
+        sections.forEach(section => {
+            const visibleItems = section.querySelectorAll('.project-item[style="display: flex;"], .project-item:not([style*="display: none"])');
+            if (visibleItems.length === 0 && term !== '') {
+                section.style.display = 'none';
+            } else {
+                section.style.display = 'block';
+            }
+        });
+
+        updateTotalScriptsCount();
+    });
 }
 
 // Domain nav smooth scrolling
@@ -34,6 +78,22 @@ async function fetchAndApplyLatestVersions() {
 
     const fetchVersion = async (url) => {
         try {
+            // Rewrite github.com raw URLs to raw.githubusercontent.com to avoid CORS redirects
+            if (url.includes('github.com') && url.includes('/raw/')) {
+                const urlObj = new URL(url);
+                const pathParts = urlObj.pathname.split('/');
+                const rawIndex = pathParts.indexOf('raw');
+                if (rawIndex !== -1 && pathParts.length > rawIndex + 2) {
+
+                    // A simpler generic rewrite:
+                    // https://github.com/TakashiSasaki/repo/raw/refs/heads/main/path ->
+                    // https://raw.githubusercontent.com/TakashiSasaki/repo/refs/heads/main/path
+
+                    let newPath = urlObj.pathname.replace('/raw/', '/');
+                    url = `https://raw.githubusercontent.com${newPath}`;
+                }
+            }
+
             const response = await fetch(url, { cache: 'no-store' });
             if (!response.ok) {
                 console.error(`Failed to fetch ${url}: ${response.statusText}`);
@@ -48,155 +108,138 @@ async function fetchAndApplyLatestVersions() {
         }
     };
 
-    const updateServerVersionUI = (item, version) => {
-        const { latestBadge: badge } = getCachedElements(item);
-
-        if (!badge) return;
-
-        if (!version) {
-            badge.textContent = 'Error';
-            badge.classList.add('outdated');
-        } else {
-            badge.textContent = `v${version}`;
-            badge.classList.add('latest');
-            // Store version on the item for comparison logic
-            item.dataset.serverVersion = version;
-
-            // Trigger a re-evaluation of the button state
-            updateButtonState(item);
-        }
-    };
-
     const promises = Array.from(projectItems).map(async (item) => {
-        const { installBtn: btn } = getCachedElements(item);
-        if (btn && btn.href) {
-            const version = await fetchVersion(btn.href);
-            updateServerVersionUI(item, version);
+        const { installBtn, latestBadge } = getCachedElements(item);
+        if (installBtn && installBtn.href && latestBadge) {
+            const version = await fetchVersion(installBtn.href);
+            if (version) {
+                latestBadge.textContent = `v${version}`;
+                latestBadge.classList.add('installed'); // use green style
+                item.dataset.serverVersion = version;
+            } else {
+                latestBadge.textContent = 'Error';
+                latestBadge.classList.add('outdated');
+            }
+            updateButtonState(item);
         }
     });
 
     await Promise.all(promises);
 }
 
+function compareVersions(v1, v2) {
+    if (!v1 || !v2) return 0;
+    const parts1 = v1.split('.').map(Number);
+    const parts2 = v2.split('.').map(Number);
+    for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+        const p1 = parts1[i] || 0;
+        const p2 = parts2[i] || 0;
+        if (p1 > p2) return 1;
+        if (p1 < p2) return -1;
+    }
+    return 0;
+}
+
 function updateButtonState(item) {
-    const { installBtn } = getCachedElements(item);
-    if (!installBtn) return;
+    const { installBtn, buttonText } = getCachedElements(item);
+    if (!installBtn || !buttonText) return;
 
     const serverVersion = item.dataset.serverVersion;
     const installedVersion = item.dataset.installedVersion;
 
     if (!installedVersion) {
-        // Case: Not installed
-        let label = (installBtn.dataset.originalContent || '').replace(/Install/i, 'Install');
-        if (serverVersion) {
-            label = label.replace(/Install/i, `Install (v${serverVersion})`);
-        }
-        installBtn.innerHTML = label;
-        installBtn.style.backgroundColor = ''; // Default green
-        installBtn.classList.remove('installed');
+        // Not installed
+        buttonText.textContent = 'Install';
+        installBtn.classList.remove('installed-btn', 'update-btn');
         return;
     }
 
-    const compareVersions = (v1, v2) => {
-        if (!v1 || !v2) return 0;
-        const parts1 = v1.split('.').map(Number);
-        const parts2 = v2.split('.').map(Number);
-        for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
-            const p1 = parts1[i] || 0;
-            const p2 = parts2[i] || 0;
-            if (p1 > p2) return 1;
-            if (p1 < p2) return -1;
-        }
-        return 0;
-    };
-
     if (serverVersion && compareVersions(serverVersion, installedVersion) > 0) {
-        // Case: Update available
-        let label = (installBtn.dataset.originalContent || '').replace(/Install/i, 'Update');
-        label = label.replace(/Update/i, `Update (v${serverVersion})`);
-        installBtn.innerHTML = label;
-        installBtn.style.backgroundColor = '#f39c12'; // Orange
+        // Update available
+        buttonText.textContent = 'Update';
+        installBtn.classList.add('update-btn');
+        installBtn.classList.remove('installed-btn');
     } else {
-        // Case: Up to date (or server version unknown)
-        installBtn.textContent = 'Installed'; // Simplify text
-        installBtn.style.backgroundColor = '#6c757d'; // Grey
+        // Up to date
+        buttonText.textContent = 'Installed';
+        installBtn.classList.add('installed-btn');
+        installBtn.classList.remove('update-btn');
     }
 }
 
-
 // --- Installed Script Detection ---
 document.addEventListener('userscript-check-installed', (event) => {
-    const { name, version: installedVersion } = event.detail;
-    const item = scriptNameToItem.get(name);
+    // Expected detail: { name: 'Script Name', version: '1.0.0' }
+    const detail = event.detail;
+    if (!detail || !detail.name) return;
 
-    if (item) {
-        // Update Installed Version Badge
-        const { installedBadge: badge } = getCachedElements(item);
-        if (badge) {
-            badge.textContent = `v${installedVersion}`;
-            badge.classList.remove('outdated'); // Reset
-            badge.classList.add('installed');
+    // Some scripts might dispatch an array of results or single objects
+    const processResult = (name, version) => {
+        const item = scriptNameToItem.get(name);
+        if (item) {
+            const { installedBadge } = getCachedElements(item);
+            if (installedBadge) {
+                installedBadge.textContent = `v${version}`;
+                installedBadge.classList.remove('outdated');
+                installedBadge.classList.add('installed');
+            }
+            item.dataset.installedVersion = version;
+            updateButtonState(item);
         }
+    };
 
-        // Store state
-        item.dataset.installedVersion = installedVersion;
+    if (Array.isArray(detail)) {
+        detail.forEach(script => processResult(script.name, script.version));
+    } else {
+        processResult(detail.name, detail.version);
+    }
+});
 
-        // Update Button
-        updateButtonState(item);
+// Listen for messages from window.postMessage (in case userscripts use that instead of custom events)
+window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'userscript-check-installed') {
+        const detail = event.data.detail;
+        if (!detail) return;
+
+        const processResult = (name, version) => {
+            const item = scriptNameToItem.get(name);
+            if (item) {
+                const { installedBadge } = getCachedElements(item);
+                if (installedBadge) {
+                    installedBadge.textContent = `v${version}`;
+                    installedBadge.classList.remove('outdated');
+                    installedBadge.classList.add('installed');
+                }
+                item.dataset.installedVersion = version;
+                updateButtonState(item);
+            }
+        };
+
+        if (Array.isArray(detail)) {
+            detail.forEach(script => processResult(script.name, script.version));
+        } else {
+            processResult(detail.name, detail.version);
+        }
     }
 });
 
 async function initialize() {
+    updateTotalScriptsCount();
+
     const projectItems = document.querySelectorAll('.project-item');
 
-    // 1. Inject UI Structure
+    // 1. Populate script name index
     projectItems.forEach(item => {
         const installBtn = item.querySelector('.install-button');
         if (!installBtn) return;
 
-        // Populate script name index
         const scriptName = installBtn.getAttribute('data-script-name');
         if (scriptName) {
             scriptNameToItem.set(scriptName, item);
         }
 
-        // Strip hardcoded version from original content if present
-        let cleanHTML = installBtn.innerHTML.replace(/\s*\(v[\d.]+\)/g, '');
-        installBtn.innerHTML = cleanHTML;
-
-        // Save original button content once
-        installBtn.dataset.originalContent = cleanHTML;
-
-        // Create Footer Container
-        const footer = document.createElement('div');
-        footer.className = 'project-footer';
-
-        // Create Version Info Area
-        const versionInfo = document.createElement('div');
-        versionInfo.className = 'version-info';
-        versionInfo.innerHTML = `
-            <div class="version-row">
-                <span class="version-label">Latest:</span>
-                <span class="version-badge latest">...</span>
-            </div>
-            <div class="version-row">
-                <span class="version-label">Installed:</span>
-                <span class="version-badge installed">-</span>
-            </div>
-        `;
-
-        // Move button into footer
-        footer.appendChild(versionInfo);
-
-        // We need to clone or move the button. Moving is better to keep event listeners if any (though currently none are attached via JS except href)
-        // But we need to insert the footer into the item, and move the button into the footer.
-        item.appendChild(footer);
-        footer.appendChild(installBtn);
-
-        // Populate element cache
         getCachedElements(item);
     });
-
 
     // 2. Fetch latest versions
     await fetchAndApplyLatestVersions();
@@ -204,8 +247,13 @@ async function initialize() {
     // 3. Ping installed userscripts
     setTimeout(() => {
         document.dispatchEvent(new CustomEvent('userscript-ping'));
+        window.postMessage({ type: 'userscript-ping' }, '*');
     }, 1000);
 }
 
 // --- Run Initialization ---
-initialize();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialize);
+} else {
+    initialize();
+}
