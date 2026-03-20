@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pocket Tweaker (Obsoleted) - Moukaeritai Userscripts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #f8f9fa;
+            --bg-gradient: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-dim: #b0b8c4;
+            --warning: #ff4e4e;
+        }
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 2em;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .obsolete-badge {
+            display: inline-block;
+            background: var(--warning);
+            color: white;
+            padding: 0.2rem 0.8rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        h2 {
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+        .install-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: #3c4043;
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            margin-top: 2rem;
+            transition: transform 0.2s;
+        }
+        .install-button:hover {
+            transform: scale(1.05);
+            background: #5f6368;
+        }
+        .notice {
+            background: rgba(255, 78, 78, 0.1);
+            border: 1px solid var(--warning);
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="obsolete-badge">OBSOLETED</div>
+        <h1>Pocket Tweaker</h1>
+
+        <div class="notice">
+            <strong>重要なお知らせ:</strong> getpocket.com のサービス終了に伴い、このユーザースクリプトはメンテナンスを終了しています（廃止済み）。
+        </div>
+
+        <h2>スクリプト概要</h2>
+        <p>このユーザースクリプトは、Pocketウェブサイト（<code>https://getpocket.com/my-list</code>、<code>https://getpocket.com/read/*</code>）の読書体験を向上させることを目的としていました。具体的には、<code>&lt;pre&gt;</code>タグの背景色が暗すぎる問題と、<code>&lt;article&gt;</code>タグの表示領域が狭すぎるという二つの問題を解決します。</p>
+
+        <h2>主な機能</h2>
+        <ul>
+            <li><strong>記事コンテンツの幅の拡大</strong>: <code>&lt;article&gt;</code>要素の幅を自動的に「96%」に調整します。</li>
+            <li><strong>コードブロックのスタイリング</strong>: 記事内の<code>&lt;pre&gt;</code>タグの背景色や境界線を調整し、読みやすくします。</li>
+            <li><strong>動的な適用</strong>: MutationObserverを利用し、記事が切り替わった際にも自動でスタイルを適用します。</li>
+        </ul>
+
+        <a href="pocket-tweaker.user.js" class="install-button">
+            Install (v0.2.5)
+        </a>
+
+        <p style="margin-top: 3rem;">
+            <a href="../../index.html" style="color: var(--text-dim); text-decoration: none;">&larr; Back to Home</a>
+        </p>
+    </div>
+</body>
+</html>
