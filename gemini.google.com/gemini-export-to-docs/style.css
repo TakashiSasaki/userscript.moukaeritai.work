@@ -192,6 +192,21 @@
 #gemini-btn-one-turn-exec:active {
     transform: scale(0.98);
 }
+.ge2d-dependency-icon {
+    font-size: 10px;
+    opacity: 0.4;
+    filter: grayscale(100%);
+    cursor: help;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+.ge2d-dependency-icon.installed {
+    opacity: 1;
+    filter: none;
+    text-shadow: 0 0 4px rgba(46, 164, 79, 0.5);
+}
 #gemini-btn-one-turn-exec:disabled {
     background-color: #5f6368;
     cursor: not-allowed;

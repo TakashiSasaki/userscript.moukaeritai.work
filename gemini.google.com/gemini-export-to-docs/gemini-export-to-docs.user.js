@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.28
+// @version      0.4.29
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-16
 // @author       Takashi Sasaki
@@ -22,12 +22,6 @@
 (function () {
     'use strict';
 
-    const installCheckHosts = [
-        'userscript.moukaeritai.work'
-    ];
-
-    const isInstallCheckHost = installCheckHosts.includes(location.hostname);
-
     const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
@@ -37,11 +31,6 @@
         }));
     };
     document.addEventListener('userscript-ping', report);
-
-    if (isInstallCheckHost) {
-        report();
-        return;
-    }
 
     // Custom Event Helper for checking if target userscript is installed
     function checkTargetUserscript(targetName, timeout = 2000) {
@@ -636,7 +625,7 @@
                                     remaining--;
                                     GM_setValue(AUTO_SKIP_REMAINING_KEY, remaining);
                                     console.log(`[Gemini 1-Turn Auto] Auto-skipping to next. Decrementing remaining to: ${remaining}`);
-                                    
+
                                     // Update UI if panel exists
                                     const skipInput = document.getElementById('gemini-auto-skip-input');
                                     if (skipInput) {
@@ -800,10 +789,10 @@
         // Bind Copy Button
         const copyImageBtn = panel.querySelector('#gemini-btn-copy-images');
         let copyIndicatorTimer = null;
-        
+
         copyImageBtn.onmouseenter = () => copyImageBtn.style.background = 'rgba(255,255,255,0.2)';
         copyImageBtn.onmouseleave = () => copyImageBtn.style.background = 'rgba(255,255,255,0.1)';
-        
+
         copyImageBtn.onclick = () => {
             copyImageBtn.textContent = '⏳ Copying...';
             // Dispatch request to gemini-turn-counter
@@ -815,7 +804,7 @@
         // Listen for the result from gemini-turn-counter
         document.addEventListener('gemini-turn-counter-copy-images-result', (e) => {
             if (copyIndicatorTimer) clearTimeout(copyIndicatorTimer);
-            
+
             if (e.detail && e.detail.success) {
                 const count = e.detail.count || 0;
                 copyImageBtn.textContent = `✅ Copied (${count})`;
@@ -824,7 +813,7 @@
                 copyImageBtn.textContent = `❌ Failed/No imgs`;
                 copyImageBtn.style.border = '1px solid #e53935';
             }
-            
+
             copyIndicatorTimer = setTimeout(() => {
                 copyImageBtn.textContent = '📋 Copy Images';
                 copyImageBtn.style.border = '1px solid rgba(255,255,255,0.2)';
@@ -845,6 +834,27 @@
             const willDelete = deleteCheckbox.checked;
             runExportProcess(manualDelayInput.value, willDelete, false);
         };
+
+        // Check Dependencies
+        const checkDep = (id, scriptName) => {
+            checkTargetUserscript(scriptName, 1000).then(res => {
+                const el = panel.querySelector('#' + id);
+                if (el) {
+                    if (res) {
+                        el.classList.add('installed');
+                        el.title = `${scriptName} (v${res.version}) - OK`;
+                    } else {
+                        el.classList.remove('installed');
+                        el.title = `${scriptName} - Not Found`;
+                    }
+                }
+            });
+        };
+        setTimeout(() => {
+            checkDep('ge2d-dep-auto-select', 'Gemini Auto-Select Next');
+            checkDep('ge2d-dep-1click-del', 'Gemini One-Click Delete');
+            checkDep('ge2d-dep-turn-counter', 'Gemini Turn Counter');
+        }, 500);
 
         return panel;
     }
