@@ -94,7 +94,8 @@ async function fetchAndApplyLatestVersions() {
                 }
             }
 
-            const response = await fetch(url, { cache: 'no-store' });
+            const cacheBuster = url.includes('?') ? `&t=${Date.now()}` : `?t=${Date.now()}`;
+            const response = await fetch(url + cacheBuster, { cache: 'no-store' });
             if (!response.ok) {
                 console.error(`Failed to fetch ${url}: ${response.statusText}`);
                 return null;

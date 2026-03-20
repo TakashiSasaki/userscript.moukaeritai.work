@@ -31,7 +31,8 @@ async function fetchVersion(url) {
             fetchUrl = url.replace('github.com', 'raw.githubusercontent.com').replace('/raw/', '/');
         }
 
-        const response = await fetch(fetchUrl, { cache: 'no-store' });
+        const cacheBuster = fetchUrl.includes('?') ? `&t=${Date.now()}` : `?t=${Date.now()}`;
+        const response = await fetch(fetchUrl + cacheBuster, { cache: 'no-store' });
         if (!response.ok) return null;
         const text = await response.text();
         const match = text.match(/@version\s+([\d.]+)/);
