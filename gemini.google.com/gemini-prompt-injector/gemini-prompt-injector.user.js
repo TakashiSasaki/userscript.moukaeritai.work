@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         gemini-prompt-injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.3
+// @version      0.4.4
 // @description  Injects a prompt into Gemini via an external custom event.
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
@@ -323,15 +323,23 @@
         header.style.alignItems = 'center';
 
         const title = document.createElement('span');
-        title.textContent = 'GPI Test UI';
+        const scriptVersion = GM_info?.script?.version || '0.4.4';
+        title.textContent = `Prompt Injector (v${scriptVersion})`;
         title.style.fontWeight = 'bold';
+        title.style.fontSize = '12px';
 
         const minBtn = document.createElement('button');
-        minBtn.textContent = isMinimized ? '+' : '-';
+        minBtn.innerHTML = isMinimized
+            ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h16v6H4v-6z" opacity="0.5"/><path d="M4 4h16v6H4V4z"/></svg>'
+            : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
         minBtn.style.cursor = 'pointer';
         minBtn.style.border = 'none';
         minBtn.style.background = 'transparent';
-        minBtn.style.fontSize = '14px';
+        minBtn.style.padding = '2px';
+        minBtn.style.display = 'flex';
+        minBtn.style.alignItems = 'center';
+        minBtn.style.justifyContent = 'center';
+        minBtn.title = isMinimized ? '復元' : '最小化';
 
         header.appendChild(title);
         header.appendChild(minBtn);
@@ -461,7 +469,10 @@
         minBtn.onclick = () => {
             isMinimized = !isMinimized;
             content.style.display = isMinimized ? 'none' : 'block';
-            minBtn.textContent = isMinimized ? '+' : '-';
+            minBtn.innerHTML = isMinimized
+                ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h16v6H4v-6z" opacity="0.5"/><path d="M4 4h16v6H4V4z"/></svg>'
+                : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+            minBtn.title = isMinimized ? '復元' : '最小化';
             GM_setValue('gpi_ui_minimized', isMinimized);
 
             // Re-adjust position after resize
