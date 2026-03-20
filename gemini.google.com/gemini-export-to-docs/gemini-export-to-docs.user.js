@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.25
+// @version      0.4.26
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-16
 // @author       Takashi Sasaki
@@ -27,19 +27,134 @@
 
     const isInstallCheckHost = installCheckHosts.includes(location.hostname);
 
+    const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+
     if (isInstallCheckHost) {
-        const report = () => {
-            document.dispatchEvent(new CustomEvent('userscript-check-installed', {
-                detail: {
-                    name: GM_info.script.name,
-                    version: GM_info.script.version
-                }
-            }));
-        };
         report();
-        document.addEventListener('userscript-ping', report);
         return;
     }
+
+    // Custom Event Helper for checking if target userscript is installed
+    function checkTargetUserscript(targetName, timeout = 2000) {
+        return new Promise((resolve) => {
+            const handler = (e) => {
+                if (e.detail && e.detail.name === targetName) {
+                    clearTimeout(timeoutId);
+                    document.removeEventListener('userscript-check-installed', handler);
+                    resolve(e.detail);
+                }
+            };
+            const timeoutId = setTimeout(() => {
+                document.removeEventListener('userscript-check-installed', handler);
+                resolve(null); // Not found or timed out
+            }, timeout);
+            document.addEventListener('userscript-check-installed', handler);
+            document.dispatchEvent(new CustomEvent('userscript-ping'));
+        });
+    }
+
+    // UI Helper for displaying status
+    function showTargetScriptStatus(targetName, statusDetail) {
+        const uiId = 'userscript-target-status-ui';
+        let ui = document.getElementById(uiId);
+
+        if (!ui) {
+            ui = document.createElement('div');
+            ui.id = uiId;
+            ui.style.position = 'fixed';
+            ui.style.zIndex = '999999';
+            ui.style.padding = '8px 12px';
+            ui.style.backgroundColor = 'rgba(28, 28, 30, 0.9)';
+            ui.style.color = 'white';
+            ui.style.borderRadius = '8px';
+            ui.style.fontFamily = 'sans-serif';
+            ui.style.fontSize = '12px';
+            ui.style.boxShadow = '0 2px 10px rgba(0,0,0,0.5)';
+            ui.style.cursor = 'move';
+            ui.style.userSelect = 'none';
+
+            // Restore position
+            let posStr = '{"bottom": "20px", "right": "20px"}';
+            try {
+                if (typeof GM_getValue !== 'undefined') {
+                    posStr = GM_getValue('userscript-status-ui-pos', posStr);
+                }
+            } catch { /* ignore */ }
+
+            let pos = JSON.parse(posStr);
+            if (pos.top) ui.style.top = pos.top;
+            if (pos.bottom && !pos.top) ui.style.bottom = pos.bottom;
+            if (pos.left) ui.style.left = pos.left;
+            if (pos.right && !pos.left) ui.style.right = pos.right;
+
+            // Make draggable
+            let isDragging = false, startX, startY, startLeft, startTop;
+            ui.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                const rect = ui.getBoundingClientRect();
+                startLeft = rect.left;
+                startTop = rect.top;
+                ui.style.right = 'auto'; // Disable right anchoring
+                ui.style.bottom = 'auto'; // Disable bottom anchoring
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                ui.style.left = (startLeft + dx) + 'px';
+                ui.style.top = (startTop + dy) + 'px';
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    try {
+                        if (typeof GM_setValue !== 'undefined') {
+                            GM_setValue('userscript-status-ui-pos', JSON.stringify({
+                                top: ui.style.top,
+                                left: ui.style.left
+                            }));
+                        }
+                    } catch { /* ignore */ }
+                }
+            });
+
+            document.body.appendChild(ui);
+        }
+
+        const statusText = statusDetail
+            ? `✅ ${targetName} (v${statusDetail.version})`
+            : `❌ ${targetName} Not Found`;
+
+        ui.textContent = '';
+        const titleDiv = document.createElement('div');
+        titleDiv.style.fontWeight = 'bold';
+        titleDiv.textContent = 'Script Status:';
+        ui.appendChild(titleDiv);
+        const statusDiv = document.createElement('div');
+        statusDiv.textContent = statusText;
+        ui.appendChild(statusDiv);
+
+        // Auto hide after 5 seconds if successful, keep if failed
+        if (statusDetail) {
+            setTimeout(() => {
+                if (ui && ui.parentNode) ui.parentNode.removeChild(ui);
+            }, 5000);
+        }
+    }
+
     // Removed initial URL check as it will be handled dynamically
 
     // svg icons
@@ -578,7 +693,7 @@
 
                                     // Dispatch custom event to Auto-Select Next script
                                     console.log(`[Gemini 1-Turn Auto] Dispatching custom event: gemini-auto-select-next:request-next`);
-                                    window.dispatchEvent(new CustomEvent('gemini-auto-select-next:request-next'));
+                                    checkTargetUserscript('Gemini Auto-Select Next').then((installed) => { showTargetScriptStatus('Gemini Auto-Select Next', installed); window.dispatchEvent(new CustomEvent('gemini-auto-select-next:request-next')); });
                                 } else {
                                     console.log(`[Gemini 1-Turn Auto] No skips remaining or skip count is 0. Staying on current conversation.`);
                                 }
@@ -634,7 +749,7 @@
 
                 // 3. Dispatch Delete Event
                 console.log('[Gemini 1-Turn Export] Requesting conversation deletion.');
-                window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete'));
+                checkTargetUserscript('Gemini One-Click Delete').then((installed) => { showTargetScriptStatus('Gemini One-Click Delete', installed); window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete')); });
             } else {
                 console.log('[Gemini 1-Turn Export] Auto-delete skipped based on setting.');
                 if (execBtn) execBtn.textContent = 'Done!';

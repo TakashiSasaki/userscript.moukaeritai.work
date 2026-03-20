@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.6
+// @version      0.1.7
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -26,19 +26,134 @@
 
     const isInstallCheckHost = installCheckHosts.includes(location.hostname);
 
+    const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+
     if (isInstallCheckHost) {
-        const report = () => {
-            document.dispatchEvent(new CustomEvent('userscript-check-installed', {
-                detail: {
-                    name: GM_info.script.name,
-                    version: GM_info.script.version
-                }
-            }));
-        };
         report();
-        document.addEventListener('userscript-ping', report);
         return;
     }
+
+    // Custom Event Helper for checking if target userscript is installed
+    function checkTargetUserscript(targetName, timeout = 2000) {
+        return new Promise((resolve) => {
+            const handler = (e) => {
+                if (e.detail && e.detail.name === targetName) {
+                    clearTimeout(timeoutId);
+                    document.removeEventListener('userscript-check-installed', handler);
+                    resolve(e.detail);
+                }
+            };
+            const timeoutId = setTimeout(() => {
+                document.removeEventListener('userscript-check-installed', handler);
+                resolve(null); // Not found or timed out
+            }, timeout);
+            document.addEventListener('userscript-check-installed', handler);
+            document.dispatchEvent(new CustomEvent('userscript-ping'));
+        });
+    }
+
+    // UI Helper for displaying status
+    function showTargetScriptStatus(targetName, statusDetail) {
+        const uiId = 'userscript-target-status-ui';
+        let ui = document.getElementById(uiId);
+
+        if (!ui) {
+            ui = document.createElement('div');
+            ui.id = uiId;
+            ui.style.position = 'fixed';
+            ui.style.zIndex = '999999';
+            ui.style.padding = '8px 12px';
+            ui.style.backgroundColor = 'rgba(28, 28, 30, 0.9)';
+            ui.style.color = 'white';
+            ui.style.borderRadius = '8px';
+            ui.style.fontFamily = 'sans-serif';
+            ui.style.fontSize = '12px';
+            ui.style.boxShadow = '0 2px 10px rgba(0,0,0,0.5)';
+            ui.style.cursor = 'move';
+            ui.style.userSelect = 'none';
+
+            // Restore position
+            let posStr = '{"bottom": "20px", "right": "20px"}';
+            try {
+                if (typeof GM_getValue !== 'undefined') {
+                    posStr = GM_getValue('userscript-status-ui-pos', posStr);
+                }
+            } catch { /* ignore */ }
+
+            let pos = JSON.parse(posStr);
+            if (pos.top) ui.style.top = pos.top;
+            if (pos.bottom && !pos.top) ui.style.bottom = pos.bottom;
+            if (pos.left) ui.style.left = pos.left;
+            if (pos.right && !pos.left) ui.style.right = pos.right;
+
+            // Make draggable
+            let isDragging = false, startX, startY, startLeft, startTop;
+            ui.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                const rect = ui.getBoundingClientRect();
+                startLeft = rect.left;
+                startTop = rect.top;
+                ui.style.right = 'auto'; // Disable right anchoring
+                ui.style.bottom = 'auto'; // Disable bottom anchoring
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                ui.style.left = (startLeft + dx) + 'px';
+                ui.style.top = (startTop + dy) + 'px';
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    try {
+                        if (typeof GM_setValue !== 'undefined') {
+                            GM_setValue('userscript-status-ui-pos', JSON.stringify({
+                                top: ui.style.top,
+                                left: ui.style.left
+                            }));
+                        }
+                    } catch { /* ignore */ }
+                }
+            });
+
+            document.body.appendChild(ui);
+        }
+
+        const statusText = statusDetail
+            ? `✅ ${targetName} (v${statusDetail.version})`
+            : `❌ ${targetName} Not Found`;
+
+        ui.textContent = '';
+        const titleDiv = document.createElement('div');
+        titleDiv.style.fontWeight = 'bold';
+        titleDiv.textContent = 'Script Status:';
+        ui.appendChild(titleDiv);
+        const statusDiv = document.createElement('div');
+        statusDiv.textContent = statusText;
+        ui.appendChild(statusDiv);
+
+        // Auto hide after 5 seconds if successful, keep if failed
+        if (statusDetail) {
+            setTimeout(() => {
+                if (ui && ui.parentNode) ui.parentNode.removeChild(ui);
+            }, 5000);
+        }
+    }
+
 
     const SELECTORS = {
         ACTIONS_MENU_BUTTON: 'button[data-test-id="conversation-actions-menu-icon-button"], conversation-actions-icon button',
@@ -128,19 +243,19 @@
                         document.addEventListener('EmulateDocsPasteSuccess', handler);
                     });
 
-                    document.dispatchEvent(new CustomEvent('EmulateDocsPaste'));
+                    checkTargetUserscript('Auto Paste in New Tab').then((installed) => { showTargetScriptStatus('Auto Paste in New Tab', installed); document.dispatchEvent(new CustomEvent('EmulateDocsPaste')); });
 
                     // Wait for the completion event (or timeout) instead of a fixed 5 seconds
                     await pasteCompletionPromise;
 
                     log('Dispatching gemini-docs-closer-force-close to close tab.');
-                    document.dispatchEvent(new CustomEvent('gemini-docs-closer-force-close'));
+                    checkTargetUserscript('Gemini Exported Docs Auto-Closer').then((installed) => { showTargetScriptStatus('Gemini Exported Docs Auto-Closer', installed); document.dispatchEvent(new CustomEvent('gemini-docs-closer-force-close')); });
                 } else {
                     log('No valid images copied or data was stale. Proceeding as normal without pasting.');
                     // Close the tab anyway
                     await sleep(2000);
                     log('Dispatching gemini-docs-closer-force-close to close tab.');
-                    document.dispatchEvent(new CustomEvent('gemini-docs-closer-force-close'));
+                    checkTargetUserscript('Gemini Exported Docs Auto-Closer').then((installed) => { showTargetScriptStatus('Gemini Exported Docs Auto-Closer', installed); document.dispatchEvent(new CustomEvent('gemini-docs-closer-force-close')); });
                 }
             }, 500); // Start checking earlier, as we now wait for the element
         }
@@ -611,7 +726,7 @@
             });
 
             log('Dispatching gemini-turn-counter-copy-images event...');
-            document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images', { detail: { target: 'all' } }));
+            checkTargetUserscript('Gemini Turn Counter').then((installed) => { showTargetScriptStatus('Gemini Turn Counter', installed); document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images', { detail: { target: 'all' } })); });
 
             const copyResult = await imageCopyResultPromise;
 
