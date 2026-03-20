@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.31
+// @version      0.4.32
 // @lastModified 2026-03-17
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
@@ -10,6 +10,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js
 // @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/style.css
+// @resource     templateHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/template.html
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
 // @grant        GM_getResourceText
@@ -333,117 +334,124 @@
             latestCollectedImages = collectedImages;
 
             const imageCount = collectedImages.length;
-            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.4.29';
+            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.4.31';
 
             if (iconDiv) {
                 iconDiv.textContent = `Gemini Turns v${scriptVersion} | U:${userTurnsCount} M:${modelTurnsCount} A:${totalArtifacts} L:${totalLinkCards}`;
+            }
+
+            if (!contentDiv.hasAttribute('data-gtc-initialized')) {
+                const template = GM_getResourceText('templateHTML');
+                setInnerHTML(contentDiv, template.replace('{{scriptVersion}}', scriptVersion));
+                contentDiv.setAttribute('data-gtc-initialized', 'true');
+
+                // --- Initial Event Binding (Only Once) ---
+                const copyBtnU = contentDiv.querySelector('#gtc-copy-user');
+                const copyBtnM = contentDiv.querySelector('#gtc-copy-model');
+                const copyBtnAll = contentDiv.querySelector('#gtc-copy-all');
+                const statusSpan = contentDiv.querySelector('#gtc-copy-status');
+                const heightEnable = contentDiv.querySelector('#gtc-height-enable');
+                const heightInput = contentDiv.querySelector('#gtc-height-input');
+
+                const bindCopyEvent = (btn, originalLabel, typeFilter) => {
+                    if (!btn) return;
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // Dynamically evaluate targetImages when clicked
+                        let targetImages = latestCollectedImages;
+                        if (typeFilter) {
+                            targetImages = targetImages.filter(i => i.type === typeFilter);
+                        }
+
+                        if (targetImages.length === 0) return;
+
+                        btn.textContent = '...';
+                        if (statusSpan) statusSpan.textContent = '0/' + targetImages.length;
+
+                        const useHeightLimit = heightEnable ? heightEnable.checked : false;
+                        const heightLimit = useHeightLimit && heightInput ? heightInput.value : false;
+
+                        const clipboardPromise = copyImagesToHtmlClipboard(targetImages, heightLimit, statusSpan)
+                            .catch(err => {
+                                console.error('Image processing failed', err);
+                                if (statusSpan) statusSpan.textContent = 'Err';
+                                throw err;
+                            });
+
+                        const item = new ClipboardItem({ "text/html": clipboardPromise });
+                        navigator.clipboard.write([item]).then(() => {
+                            btn.textContent = 'Copied!';
+                            setTimeout(() => {
+                                btn.textContent = originalLabel;
+                                if (statusSpan && !statusSpan.textContent.includes('chars')) statusSpan.textContent = '';
+                            }, 3000);
+                        }).catch(err => {
+                            console.error('Clipboard write failed:', err);
+                            btn.textContent = 'Err';
+                        });
+                    });
+                };
+
+                bindCopyEvent(copyBtnU, '📋U', 'user');
+                bindCopyEvent(copyBtnM, '📋M', 'model');
+                bindCopyEvent(copyBtnAll, '📋All', null);
+
+                const deepScanBtn = document.getElementById('gtc-deep-scan-btn');
+                if (deepScanBtn) {
+                    deepScanBtn.addEventListener('click', runDeepScan);
+                }
             }
 
             const getThumbnailStyling = (type) => {
                 return type === 'model' ? 'border: 2px solid #a8c7fa;' : '';
             };
 
-            const thumbnailsHtml = imageCount > 0
-                ? `<div class="gtc-thumbnails">
-                    ${collectedImages.map(imgData => `<img src="${imgData.src}" class="gtc-thumbnail" style="${getThumbnailStyling(imgData.type)}" title="${imgData.type} image" />`).join('')}
-                   </div>`
-                : '';
-            setInnerHTML(contentDiv, `
-                <div style="margin-bottom: 8px; font-weight: bold; border-bottom:1px solid #555; padding-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
-                    <span>Gemini Turns</span>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:10px; font-weight:normal; opacity:0.7;">v${scriptVersion}</span>
-                        <span id="gtc-minimize-btn" class="gtc-minimize-btn" title="Minimize">−</span>
-                    </div>
-                </div>
-                <div class="gtc-row"><span>User:</span> <span class="gtc-val">${userTurnsCount} (${userCharCount.toLocaleString()})</span></div>
-                <div class="gtc-row"><span>Model:</span> <span class="gtc-val">${modelTurnsCount} (${modelCharCount.toLocaleString()})</span></div>
-                <div class="gtc-row" style="border-top:1px solid #444; margin-top:4px; padding-top:4px;"></div>
-                <div class="gtc-row">
-                     <span>Artifacts (Canvas):</span> <span class="gtc-val">${totalArtifacts}</span>
-                </div>
-                <div class="gtc-row">
-                     <span>Link Cards:</span> <span class="gtc-val">${totalLinkCards}</span>
-                </div>
-                <div class="gtc-row">
-                     <span>Code Blocks:</span> <span class="gtc-val">${totalCodeBlocks}</span>
-                </div>
-                <div class="gtc-row">
-                     <span>Tables:</span> <span class="gtc-val">${totalTables}</span>
-                </div>
-                ${totalThinkingBlocks > 0 ? `
-                <div class="gtc-row">
-                     <span>Thinking Process:</span> <span class="gtc-val">${totalThinkingBlocks}</span>
-                </div>` : ''}
-                <div class="gtc-row">
-                    <span>Images (U:M):</span> 
-                    <span>
-                        <span class="gtc-val">${collectedImages.filter(i => i.type === 'user').length}:${collectedImages.filter(i => i.type === 'model').length}</span>
-                        ${imageCount > 0 ?
-                    `<button id="gtc-copy-user" style="margin-left: 8px; padding: 2px 6px; font-size: 11px; cursor: pointer;" ${collectedImages.filter(i => i.type === 'user').length === 0 ? 'disabled' : ''}>📋U</button>
-                     <button id="gtc-copy-model" style="margin-left: 4px; padding: 2px 6px; font-size: 11px; cursor: pointer;" ${collectedImages.filter(i => i.type === 'model').length === 0 ? 'disabled' : ''}>📋M</button>
-                     <button id="gtc-copy-all" style="margin-left: 4px; padding: 2px 6px; font-size: 11px; cursor: pointer;">📋All</button>
-                     <span id="gtc-copy-status" style="margin-left: 4px; font-size: 11px;"></span>`
-                    : ''}
-                    </span>
-                </div>
-                ${imageCount > 0 ? `
-                <div class="gtc-setting-row">
-                    <input type="checkbox" id="gtc-height-enable" checked style="margin: 0; vertical-align: middle;">
-                    <label for="gtc-height-enable" style="cursor: pointer; vertical-align: middle;">Max Height:</label>
-                    <input type="number" id="gtc-height-input" value="200" class="gtc-input"> px
-                </div>` : ''}
-                ${thumbnailsHtml}
-            `);
+            // --- Update UI Text Nodes and Visibilities ---
+            contentDiv.querySelector('#gtc-val-user').textContent = `${userTurnsCount} (${userCharCount.toLocaleString()})`;
+            contentDiv.querySelector('#gtc-val-model').textContent = `${modelTurnsCount} (${modelCharCount.toLocaleString()})`;
+            contentDiv.querySelector('#gtc-val-artifacts').textContent = totalArtifacts;
+            contentDiv.querySelector('#gtc-val-linkcards').textContent = totalLinkCards;
+            contentDiv.querySelector('#gtc-val-codeblocks').textContent = totalCodeBlocks;
+            contentDiv.querySelector('#gtc-val-tables').textContent = totalTables;
 
-            // Attach Copy events
+            const thinkingRow = contentDiv.querySelector('#gtc-row-thinking');
+            if (thinkingRow) {
+                thinkingRow.style.display = totalThinkingBlocks > 0 ? 'flex' : 'none';
+                contentDiv.querySelector('#gtc-val-thinking').textContent = totalThinkingBlocks;
+            }
+
+            const userImagesCount = collectedImages.filter(i => i.type === 'user').length;
+            const modelImagesCount = collectedImages.filter(i => i.type === 'model').length;
+            contentDiv.querySelector('#gtc-val-images-ratio').textContent = `${userImagesCount}:${modelImagesCount}`;
+
             const copyBtnU = contentDiv.querySelector('#gtc-copy-user');
             const copyBtnM = contentDiv.querySelector('#gtc-copy-model');
             const copyBtnAll = contentDiv.querySelector('#gtc-copy-all');
-            const statusSpan = contentDiv.querySelector('#gtc-copy-status');
-            const heightEnable = contentDiv.querySelector('#gtc-height-enable');
-            const heightInput = contentDiv.querySelector('#gtc-height-input');
+            const heightRow = contentDiv.querySelector('#gtc-row-height');
 
-            const doCopy = (btn, originalLabel, targetImages) => {
-                if (!btn || targetImages.length === 0) return;
+            if (imageCount > 0) {
+                copyBtnU.style.display = 'inline-block';
+                copyBtnM.style.display = 'inline-block';
+                copyBtnAll.style.display = 'inline-block';
+                heightRow.style.display = 'block';
 
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    btn.textContent = '...';
-                    if (statusSpan) statusSpan.textContent = '0/' + targetImages.length;
+                copyBtnU.disabled = userImagesCount === 0;
+                copyBtnM.disabled = modelImagesCount === 0;
+            } else {
+                copyBtnU.style.display = 'none';
+                copyBtnM.style.display = 'none';
+                copyBtnAll.style.display = 'none';
+                heightRow.style.display = 'none';
+            }
 
-                    const useHeightLimit = heightEnable ? heightEnable.checked : false;
-                    const heightLimit = useHeightLimit && heightInput ? heightInput.value : false;
-
-                    // Use Promise-based ClipboardItem construction to prevent "Document is not focused" error
-                    const clipboardPromise = copyImagesToHtmlClipboard(targetImages, heightLimit, statusSpan)
-                        .catch(err => {
-                            console.error('Image processing failed', err);
-                            if (statusSpan) statusSpan.textContent = 'Err';
-                            throw err;
-                        });
-
-                    const item = new ClipboardItem({ "text/html": clipboardPromise });
-                    navigator.clipboard.write([item]).then(() => {
-                        btn.textContent = 'Copied!';
-                        setTimeout(() => {
-                            btn.textContent = originalLabel;
-                            if (statusSpan && !statusSpan.textContent.includes('chars')) statusSpan.textContent = '';
-                        }, 3000);
-                    }).catch(err => {
-                        console.error('Clipboard write failed:', err);
-                        btn.textContent = 'Err';
-                    });
-                });
-            };
-
-            doCopy(copyBtnU, '📋U', collectedImages.filter(i => i.type === 'user'));
-            doCopy(copyBtnM, '📋M', collectedImages.filter(i => i.type === 'model'));
-            doCopy(copyBtnAll, '📋All', collectedImages);
-
-            const deepScanBtn = contentDiv.querySelector('#gtc-deep-scan-btn');
-            if (deepScanBtn) {
-                deepScanBtn.addEventListener('click', runDeepScan);
+            const thumbnailsContainer = contentDiv.querySelector('#gtc-thumbnails-container');
+            if (imageCount > 0) {
+                const thumbnailsHtml = `<div class="gtc-thumbnails">
+                    ${collectedImages.map(imgData => `<img src="${imgData.src}" class="gtc-thumbnail" style="${getThumbnailStyling(imgData.type)}" title="${imgData.type} image" />`).join('')}
+                   </div>`;
+                setInnerHTML(thumbnailsContainer, thumbnailsHtml);
+            } else {
+                thumbnailsContainer.innerHTML = '';
             }
 
         } finally {
