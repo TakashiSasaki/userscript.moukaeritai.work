@@ -33,6 +33,20 @@
         <li><code>gemini-artifact-exporter-worker:result</code> イベントによる結果の返信</li>
     </ul>
 
+    <h2>連携スクリプト（送信先）</h2>
+    <p>このスクリプトは、以下のスクリプトにイベントを送信し、機能してもらうことを期待しています。</p>
+    <ul>
+        <li><a href="../gemini-artifact-exporter/index.html">Artifact Exporter</a> (<code>gemini-artifact-exporter-worker:result</code>)</li>
+        <li><a href="../gemini-turn-counter/index.html">Turn Counter</a> (<code>gemini-turn-counter-copy-images</code>)</li>
+    </ul>
+
+    <h2>連携スクリプト（受信元）</h2>
+    <p>このスクリプトは、以下のスクリプトからイベントを受信して動作します。</p>
+    <ul>
+        <li><a href="../gemini-artifact-exporter/index.html">Artifact Exporter</a> (<code>gemini-artifact-exporter-worker:request</code>, <code>gemini-artifact-exporter-worker:cancel</code>)</li>
+        <li><a href="../gemini-turn-counter/index.html">Turn Counter</a> (<code>gemini-turn-counter-copy-images-result</code>)</li>
+    </ul>
+
     <h2>技術的な詳細</h2>
     <p>
         メインUIを持つ <code>gemini-artifact-exporter</code> との責務の分離を図るため、DOM操作や待機ロジックをこのスクリプトに切り出しています。
