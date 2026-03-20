@@ -369,3 +369,20 @@ footer hr {
         flex-direction: column;
     }
 }
+
+/* Update and Installed Button States */
+.install-button.installed-btn {
+    background-color: rgba(108, 117, 125, 0.8) !important;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+.install-button.installed-btn:hover {
+    background-color: rgba(108, 117, 125, 1) !important;
+}
+
+.install-button.update-btn {
+    background-color: rgba(243, 156, 18, 0.8) !important;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+.install-button.update-btn:hover {
+    background-color: rgba(243, 156, 18, 1) !important;
+}
