@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.0
+// @version      0.3.1
 // @lastModified 2026-03-13
 // @description  Adds a 1-click floating button with shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
@@ -10,9 +10,12 @@
 // @match        http://127.0.0.1:5500/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
+// @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/style.css
 // @grant        GM_info
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_getResourceText
+// @grant        GM_addStyle
 // @noframes
 // ==/UserScript==
 
@@ -188,88 +191,16 @@
      */
     function addStyles() {
         if (document.getElementById('gemini-delete-styles')) return;
-        const style = document.createElement('style');
-        style.id = 'gemini-delete-styles';
-        style.textContent = `
-            .gemini-quick-delete-btn {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                min-width: 32px;
-                height: 32px;
-                border-radius: 16px;
-                border: 1px solid #ffcccc;
-                background-color: #ffe6e6;
-                cursor: pointer;
-                margin-left: 8px;
-                color: #5f6368;
-                transition: background-color 0.2s, opacity 0.2s;
-                position: relative;
-                z-index: 1000;
-                pointer-events: auto;
-            }
-            .gemini-quick-delete-btn:hover { background-color: #ffcccc; color: #d93025; border-color: #d93025; }
-            .gemini-quick-delete-btn.processing { opacity: 0.5; padding: 4px; border-radius: 4px; animation: pulse-red 1s infinite; cursor: wait; }
-            .gemini-quick-delete-btn:disabled { background-color: #f0f0f0; border-color: #ccc; color: #aaa; cursor: help; }
-
-            /* --- Draggable Button Styles --- */
-            #gemini-delete-panel {
-                position: fixed;
-                z-index: 10000;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                background: rgba(255, 255, 255, 0.9);
-                padding: 6px 12px;
-                border-radius: 24px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                border: 1px solid #dadce0;
-                backdrop-filter: blur(8px);
-                transition: background-color 0.2s;
-                font-family: 'Google Sans', sans-serif;
-                user-select: none;
-            }
-            .gdp-main-delete-btn {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                background-color: #d93025;
-                color: white;
-                border: none;
-                border-radius: 16px;
-                padding: 6px 14px;
-                cursor: pointer;
-                font-weight: 500;
-                font-size: 13px;
-                transition: background-color 0.2s, transform 0.1s;
-            }
-            .gdp-main-delete-btn:hover:not(:disabled) {
-                background-color: #c5221f;
-            }
-            .gdp-main-delete-btn:active:not(:disabled) {
-                transform: scale(0.98);
-            }
-            .gdp-main-delete-btn:disabled {
-                background-color: #f1f3f4;
-                color: #9aa0a6;
-                cursor: not-allowed;
-            }
-            .version-badge {
-                font-size: 11px;
-                color: #7f8c8d;
-                font-family: monospace;
-                padding: 0 4px;
-                cursor: move;
-            }
-            @media (prefers-color-scheme: dark) {
-                #gemini-delete-panel { background: rgba(32, 33, 36, 0.85); border-color: #5f6368; }
-                .gdp-main-delete-btn:disabled { background-color: #3c4043; color: #80868b; }
-                .version-badge { color: #9aa0a6; }
-            }
-            @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        `;
-        document.head.appendChild(style);
-        return style;
+        const css = GM_getResourceText('customCSS');
+        const style = GM_addStyle(css);
+        if (style) {
+            style.id = 'gemini-delete-styles';
+            return style;
+        } else {
+            const el = document.querySelector('style:last-of-type');
+            if (el) el.id = 'gemini-delete-styles';
+            return el;
+        }
     }
 
     /**

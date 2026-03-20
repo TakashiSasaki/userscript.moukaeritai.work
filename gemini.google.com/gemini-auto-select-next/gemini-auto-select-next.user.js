@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.31
+// @version      0.2.32
 // @lastModified 2026-03-14
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
@@ -10,9 +10,12 @@
 // @match        http://127.0.0.1:5500/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-select-next/gemini-auto-select-next.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-select-next/gemini-auto-select-next.user.js
+// @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-select-next/style.css
 // @grant        GM_info
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_getResourceText
+// @grant        GM_addStyle
 // @noframes
 // ==/UserScript==
 
@@ -83,63 +86,14 @@
 
     function injectStyles() {
         if (document.getElementById('gemini-auto-switch-styles')) return;
-        const style = document.createElement('style');
-        style.id = 'gemini-auto-switch-styles';
-        style.textContent = `
-            #gemini-auto-switch-panel {
-                position: fixed;
-                top: 80px;
-                right: 20px;
-                z-index: 10000;
-                background-color: rgba(255, 255, 255, 0.9);
-                border: 1px solid #dadce0;
-                border-radius: 20px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                font-family: 'Google Sans', sans-serif;
-                font-size: 13px;
-                color: #3c4043;
-                display: inline-flex;
-                align-items: center;
-                flex-wrap: nowrap;
-                gap: 10px;
-                padding: 6px 14px;
-                width: fit-content;
-                max-width: calc(100vw - 40px);
-                box-sizing: border-box;
-                white-space: nowrap;
-                user-select: none;
-                cursor: move;
-                backdrop-filter: blur(8px);
-                transition: box-shadow 0.2s;
-                visibility: hidden;
-            }
-            #gemini-auto-switch-panel.ready { visibility: visible; }
-            #gemini-auto-switch-panel:hover {
-                box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-            }
-            #gemini-auto-switch-panel .version-badge { font-size: 10px; color: #7f8c8d; font-family: monospace; }
-            #gemini-auto-switch-panel .auto-switch-label {
-                display: flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 500;
-            }
-            #gemini-auto-switch-panel .auto-switch-checkbox {
-                cursor: pointer; margin: 0; width: 14px; height: 14px;
-            }
-            #gemini-auto-switch-panel .manual-next-btn {
-                background: #1a73e8; color: white; border: none; padding: 4px 10px; border-radius: 12px;
-                cursor: pointer; font-size: 12px; font-weight: 500; transition: background 0.2s, transform 0.1s;
-                display: flex; align-items: center; gap: 4px;
-                white-space: nowrap;
-                flex: 0 0 auto;
-            }
-            #gemini-auto-switch-panel .manual-next-btn:hover { background: #1557b0; }
-            #gemini-auto-switch-panel .manual-next-btn:active { transform: scale(0.96); }
-            @media (prefers-color-scheme: dark) {
-                #gemini-auto-switch-panel { background: rgba(32, 33, 36, 0.85); color: #e8eaed; border-color: rgba(255,255,255,0.15); }
-                #gemini-auto-switch-panel .manual-next-btn { background: #8ab4f8; color: #202124; }
-                #gemini-auto-switch-panel .manual-next-btn:hover { background: #aecbfa; }
-            }
-        `;
-        document.head.appendChild(style);
+        const css = GM_getResourceText('customCSS');
+        const style = GM_addStyle(css);
+        if (style) {
+            style.id = 'gemini-auto-switch-styles';
+        } else {
+            const el = document.querySelector('style:last-of-type');
+            if (el) el.id = 'gemini-auto-switch-styles';
+        }
     }
 
     function getConversationItems() {

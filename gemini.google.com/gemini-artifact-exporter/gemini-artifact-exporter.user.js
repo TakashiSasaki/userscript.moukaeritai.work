@@ -159,7 +159,7 @@
         exportBtn.style.display = 'block';
 
         const selectAllLabel = document.createElement('label');
-        selectAllLabel.style.cssText = `display:flex; align-items:center; gap:8px; font-size:13px; font-weight:bold; color:white; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 4px; cursor: pointer;`;
+        selectAllLabel.className = 'gae-select-all-label';
         const selectAllCb = document.createElement('input');
         selectAllCb.type = 'checkbox';
         selectAllCb.checked = true;
@@ -172,12 +172,12 @@
         listContainer.appendChild(selectAllLabel);
 
         const scrollArea = document.createElement('div');
-        scrollArea.style.cssText = `max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-right: 4px;`;
+        scrollArea.className = 'gae-scroll-area';
 
         scannedArtifacts.forEach((item, index) => {
             const { title, sources } = item;
             const label = document.createElement('label');
-            label.style.cssText = `display:flex; align-items:center; gap:8px; font-size:12px; color:rgba(255,255,255,0.8); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0;`;
+            label.className = 'gae-artifact-label';
             label.title = `${title} [${sources.join(', ')}]`;
             const cb = document.createElement('input');
             cb.type = 'checkbox';
@@ -652,98 +652,35 @@
 
         log('Creating Artifact Exporter panel UI.');
 
+        injectStyles();
+
         const panel = document.createElement('div');
         panel.id = 'gemini-batch-export-panel';
-        panel.style.cssText = `
-            position: fixed;
-            z-index: 9999;
-            background-color: rgba(28, 28, 30, 0.7);
-            backdrop-filter: blur(12px) saturate(180%);
-            -webkit-backdrop-filter: blur(12px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.125);
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            display: flex;
-            flex-direction: column;
-            padding-bottom: 12px;
-            display: ${isConversationPage() ? 'flex' : 'none'};
-        `;
+        panel.style.display = isConversationPage() ? 'flex' : 'none';
 
         const header = document.createElement('div');
         header.textContent = `Artifact Exporter v${GM_info.script.version}`;
-        header.style.cssText = `
-            padding: 8px 12px;
-            cursor: move;
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 600;
-            text-align: center;
-            font-family: 'Google Sans', sans-serif;
-            font-size: 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 12px;
-        `;
+        header.className = 'gae-panel-header';
 
         const buttonContainer = document.createElement('div');
-        buttonContainer.style.cssText = `
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            padding: 0 12px;
-        `;
+        buttonContainer.className = 'gae-button-container';
 
         const scanBtn = document.createElement('button');
         scanBtn.id = 'gemini-btn-scan';
         scanBtn.textContent = 'Scan Sidebar Menu';
         scanBtn.title = '右サイドバーにある「このチャット内のファイル一覧」を展開してスキャンします。';
-        scanBtn.style.cssText = `
-            padding: 10px 16px;
-            background-color: #3c4043;
-            color: white;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 24px;
-            cursor: pointer;
-            font-family: 'Google Sans', sans-serif;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            transition: background-color 0.2s;
-        `;
-        scanBtn.onmouseover = () => { scanBtn.style.backgroundColor = '#5f6368'; };
-        scanBtn.onmouseout = () => { scanBtn.style.backgroundColor = '#3c4043'; };
+        scanBtn.className = 'gae-scan-btn';
         scanBtn.onclick = () => scanArtifacts();
 
         const deepScanBtn = document.createElement('button');
         deepScanBtn.id = 'gemini-btn-deep-scan';
         deepScanBtn.textContent = 'Scan Chat History';
         deepScanBtn.title = 'メイン会話履歴を上部までスクロールしながら、履歴に埋まっているアーティファクトをすべて検出します。数秒かかります。';
-        deepScanBtn.style.cssText = `
-            padding: 10px 16px;
-            background-color: #5bb974;
-            color: #202124;
-            border: none;
-            border-radius: 24px;
-            cursor: pointer;
-            font-family: 'Google Sans', sans-serif;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            transition: background-color 0.2s;
-        `;
-        deepScanBtn.onmouseover = () => { deepScanBtn.style.backgroundColor = '#4ca163'; };
-        deepScanBtn.onmouseout = () => { deepScanBtn.style.backgroundColor = '#5bb974'; };
+        deepScanBtn.className = 'gae-deep-scan-btn';
         deepScanBtn.onclick = () => deepScanArtifacts();
 
         const scanButtonsContainer = document.createElement('div');
-        scanButtonsContainer.style.cssText = `
-            display: flex;
-            flex-direction: row;
-            gap: 8px;
-            width: 100%;
-        `;
-
-        scanBtn.style.flex = '1';
-        deepScanBtn.style.flex = '1';
-        scanBtn.style.padding = '8px 10px';
-        deepScanBtn.style.padding = '8px 10px';
-        scanBtn.style.fontSize = '13px';
-        deepScanBtn.style.fontSize = '13px';
+        scanButtonsContainer.className = 'gae-scan-buttons-container';
 
         scanButtonsContainer.appendChild(scanBtn);
         scanButtonsContainer.appendChild(deepScanBtn);
@@ -752,54 +689,25 @@
 
         const listContainer = document.createElement('div');
         listContainer.id = 'gemini-artifact-list-container';
-        listContainer.style.cssText = `display:none; flex-direction:column; padding: 4px 8px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);`;
 
         const exportBtn = document.createElement('button');
         exportBtn.id = 'gemini-btn-export';
         exportBtn.textContent = 'Export Selected';
         exportBtn.title = '選択したアーティファクトをGoogle Docsにエクスポートします。';
-        exportBtn.style.cssText = `
-            padding: 10px 16px;
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            border-radius: 24px;
-            cursor: pointer;
-            font-family: 'Google Sans', sans-serif;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            transition: background-color 0.2s;
-            display: none;
-        `;
-        exportBtn.onmouseover = () => { exportBtn.style.backgroundColor = '#1b66c9'; };
-        exportBtn.onmouseout = () => { exportBtn.style.backgroundColor = '#1a73e8'; };
+        exportBtn.className = 'gae-export-btn';
         exportBtn.onclick = () => runBatchExport();
 
         // --- Toggles Container ---
         const togglesContainer = document.createElement('div');
-        togglesContainer.style.cssText = `display: flex; flex-direction: column; gap: 4px;`;
+        togglesContainer.className = 'gae-toggles-container';
 
 
         const createCheckboxInput = (key, text, defaultValue) => {
             const container = document.createElement('label');
-            container.style.cssText = `
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 8px;
-                cursor: pointer;
-                font-family: 'Google Sans', sans-serif;
-                font-size: 13px;
-                color: rgba(255, 255, 255, 0.8);
-                padding: 2px 8px;
-            `;
+            container.className = 'gae-checkbox-container';
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.style.cssText = `
-                width: 16px;
-                height: 16px;
-                cursor: pointer;
-                accent-color: #1a73e8;
-            `;
+            checkbox.className = 'gae-checkbox';
             checkbox.checked = GM_getValue(key, defaultValue);
 
             checkbox.onchange = (e) => {
@@ -818,14 +726,6 @@
 
         const progressDisplay = document.createElement('div');
         progressDisplay.id = 'gemini-batch-export-progress';
-        progressDisplay.style.cssText = `
-            text-align: center;
-            font-family: 'Google Sans', sans-serif;
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.7);
-            margin-top: 4px;
-            height: 1.2em; /* Reserve height to prevent layout shift */
-        `;
 
         buttonContainer.appendChild(scanButtonsContainer);
         buttonContainer.appendChild(listContainer);

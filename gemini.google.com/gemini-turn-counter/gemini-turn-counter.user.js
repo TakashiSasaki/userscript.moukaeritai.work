@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.29
+// @version      0.4.30
 // @lastModified 2026-03-17
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
@@ -9,8 +9,11 @@
 // @match        https://userscript.moukaeritai.work/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js
+// @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/style.css
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
+// @grant        GM_getResourceText
+// @grant        GM_addStyle
 // @noframes
 // ==/UserScript==
 
@@ -92,137 +95,16 @@
 
     // Inject CSS styles (Ported from chatgpt-turn-counter with minor tweaks)
     function addStyles() {
-        const style = document.createElement('style');
-        style.id = 'gemini-turn-counter-style';
-        style.textContent = `
-            #gemini-turn-counter-ui {
-                position: fixed;
-                top: 60px;
-                right: 20px;
-                background-color: #c2e7ff; /* Light blue */
-                color: #001d35; /* Dark text */
-                border-radius: 8px;
-                z-index: 9999;
-                font-family: Google Sans, Roboto, sans-serif;
-                font-size: 13px;
-                box-shadow: 0 0 10px rgba(0,0,0,0.5);
-                border: 1px solid #c2e7ff;
-                overflow: hidden;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                width: auto;
-                height: 32px;
-                padding: 0 12px;
-                user-select: none;
-                font-weight: 500;
-                white-space: nowrap;
-            }
-            #gemini-turn-counter-ui.expanded {
-                background-color: #1e1f20; /* Solid Gemini dark theme bg */
-                color: #bdc1c6;
-                border: 1px solid #444746;
-                width: auto;
-                height: auto;
-                min-width: 180px;
-                padding: 12px;
-                display: block;
-                cursor: default;
-                font-weight: normal;
-                font-size: 14px;
-            }
-            #gemini-turn-counter-ui .gtc-icon {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 100%;
-                height: 100%;
-            }
-            #gemini-turn-counter-ui.expanded .gtc-icon {
-                display: none;
-            }
-            #gemini-turn-counter-ui .gtc-content {
-                display: none;
-            }
-            #gemini-turn-counter-ui.expanded .gtc-content {
-                display: block;
-            }
-            .gtc-row {
-                display: flex;
-                justify-content: space-between;
-                gap: 15px;
-                white-space: nowrap;
-                margin-bottom: 4px;
-            }
-            .gtc-row:last-child {
-                margin-bottom: 0;
-            }
-            .gtc-val {
-                text-align: right;
-                font-variant-numeric: tabular-nums;
-                font-weight: bold;
-            }
-            .gtc-thumbnails {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 2px;
-                margin-top: 8px;
-                padding-top: 8px;
-                border-top: 1px solid #444746;
-                max-width: 220px; /* Limit width to enforce wrapping */
-            }
-            .gtc-thumbnail {
-                width: 20px;
-                height: 20px;
-                object-fit: cover;
-                border-radius: 2px;
-                border: 1px solid #444746;
-                cursor: copy;
-                transition: all 0.2s ease;
-            }
-            .gtc-thumbnail.copied {
-                border: 2px solid #8ab4f8; /* Gemini Blue */
-            }
-            #gtc-copy-status {
-                font-size: 10px;
-                margin-left: 5px;
-                color: #8ab4f8;
-            }
-            .gtc-setting-row {
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                margin-top: 4px;
-                font-size: 11px;
-                color: #bdc1c6;
-            }
-            .gtc-input {
-                background: #1e1f20;
-                border: 1px solid #444746;
-                color: #e3e3e3;
-                width: 40px;
-                padding: 1px 2px;
-                border-radius: 2px;
-                font-size: 11px;
-                text-align: right;
-            }
-            .gtc-minimize-btn {
-                cursor: pointer;
-                padding: 0 6px;
-                border-radius: 4px;
-                user-select: none;
-                transition: background 0.2s;
-                font-size: 14px;
-                line-height: 1;
-            }
-            .gtc-minimize-btn:hover {
-                background: rgba(255,255,255,0.2);
-            }
-            /* Modal & Tooltip styles would go here (omitted for initial brevity) */
-        `;
-        document.head.appendChild(style);
-        return style;
+        const css = GM_getResourceText('customCSS');
+        const style = GM_addStyle(css);
+        if (style) {
+            style.id = 'gemini-turn-counter-style';
+            return style;
+        } else {
+            const el = document.querySelector('style:last-of-type');
+            if (el) el.id = 'gemini-turn-counter-style';
+            return el;
+        }
     }
 
     // Create UI container
