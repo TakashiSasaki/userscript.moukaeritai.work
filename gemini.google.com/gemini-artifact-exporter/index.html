@@ -107,8 +107,13 @@
         </ul>
 
         <h2>使い方</h2>
+        <p><strong>注意:</strong> このスクリプトを機能させるには、以下の2つの内部用スクリプトも同時にインストールしておく必要があります。</p>
+        <ul>
+            <li><a href="../gemini-artifact-exporter-worker/index.html">gemini-artifact-exporter-worker</a> (実際のエクスポート処理を担当するワーカー)</li>
+            <li><a href="../gemini-history-loader/index.html">gemini-history-loader</a> (履歴ロード処理を担当するユーティリティ)</li>
+        </ul>
         <ol>
-            <li><strong>インストール</strong>: Tampermonkey 等のマネージャにスクリプトをインストールします。</li>
+            <li><strong>インストール</strong>: 上記の依存スクリプトと共に、Tampermonkey 等のマネージャにスクリプトをインストールします。</li>
             <li><strong>ページを開く</strong>: アーティファクトを含むGeminiの会話ページを開きます。</li>
             <li><strong>スキャン</strong>: パネルの <strong><code>Scan Sidebar Menu</code></strong> または <strong><code>Scan Chat History</code></strong> ボタンをクリックして記事一覧を取得します。</li>
             <li><strong>選択</strong>: エクスポートしたい記事にチェックを入れます（デフォルトで全選択）。</li>
