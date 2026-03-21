@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.7
+// @version      0.4.8
 // @lastModified 2026-03-21
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
@@ -685,7 +685,7 @@
         if (GM_getValue(AUTO_DELETE_KEY, false) && !cancelExport) {
             log('Auto-delete enabled. Requesting gemini-one-click-delete...');
             await sleep(1000);
-            checkTargetUserscript('Gemini One-Click Delete').then((installed) => { showTargetScriptStatus('Gemini One-Click Delete', installed); window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete')); });
+            checkTargetUserscript('Gemini 1-Click Delete Conversation').then((installed) => { showTargetScriptStatus('Gemini 1-Click Delete Conversation', installed); window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete')); });
         }
     }
 
@@ -763,7 +763,7 @@
         // Check dependencies for persistent UI indicators
         checkDep('Gemini History Loader', 'gae-dep-history-loader', 'History');
         checkDep('Gemini Artifact Exporter Worker', 'gae-dep-worker', 'Worker');
-        checkDep('Gemini One-Click Delete', 'gae-dep-1click-del', 'Delete');
+        checkDep('Gemini 1-Click Delete Conversation', 'gae-dep-1click-del', 'Delete');
 
         // Bind events
         const scanBtn = panel.querySelector('#gemini-btn-scan');
