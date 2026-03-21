@@ -29,8 +29,10 @@ Please refer to the root `AGENTS.md` for all operational procedures, including G
 
 各階層（ルートディレクトリ、ドメイン別ディレクトリ、個別のスクリプトディレクトリ）の `index.html` は、最新の状態に同期して保つ必要があります。
 
-1. **バージョン情報の同期とインストールボタンの表示**:
+1. **バージョン情報の同期とインストールボタンの要件**:
    - バージョン番号はハードコードしないでください。
+   - 各インストールボタン（メイン・依存関係ともに）のリンク先(`href`)は、必ずGitHub上の該当 `.user.js` ファイルの **Raw URL** とし、別タブで開くよう `target="_blank"` を指定してください。
+   - バージョン比較で「インストール済み(`Installed`)」と判定された場合でも、ユーザーがRawコードを確認できるよう、JavaScript側で `pointer-events: none;` 等を用いたボタンの無効化（クリッカブルの解除）は決して行わないでください。
    - インストールボタンの構造は、動的なバージョン比較機能のために、所定のDOM構造（`<div class="version-info">` 内に `.latest-version` と `.installed-version` を含む）を維持し、さらにボタン全体が横長（`display: inline-flex;`）に表示されるレイアウトを維持してください。
    - インラインスクリプトによってボタン全体のDOM（アイコン等）が上書きされないように、テキスト書き換え対象の要素（例: `<span class="button-text">`）のみを操作するようにしてください。
 
