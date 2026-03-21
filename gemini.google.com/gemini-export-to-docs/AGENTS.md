@@ -15,9 +15,14 @@ gemini.google.com ドメインに特有の指示は [AGENTS.md](/gemini.google.c
 - **Inter-script Communication**: Dispatches a `gemini-one-click-delete:request-delete` CustomEvent to trigger conversation deletion.
 
 ### Horizontal 1-Turn Action Bar
-- **Draggable Handle**: The bar's far left element (marked with `⠿`) acts as a drag handle. Uses `mousedown`, `mousemove`, and `mouseup` on `document` to handle dragging.
-- **Persistence**: Saves the current `top` and `left` coordinates to `gemini-export-panel-pos` using `GM_setValue` upon `mouseup`.
-- **Manual Toggle**: Saves the state of the auto-delete checkbox to `gemini-export-auto-delete-toggle` via `GM_setValue` to persist user preference.
+AI側が1ターンしか返答を行っていない「初期回答」の時のみ画面の右下に自動的にポップアップするコントロールパネルを実装しています。
+
+1.  **Auto URL Match Control**: プロンプトと回答の中に1つだけURLが含まれており、それらが一致する場合に自動的にエクスポート処理をキックする `Enable` チェックボックスを管理します。
+2.  **Auto Delete Control**: エクスポート完了後にチャット履歴からスレッドを削除する `1-Click Delete Conversation` スクリプトを呼び出すかを選択するチェックボックス。
+3.  **Auto-Copy Images Control**: エクスポート時に画面上に画像が含まれていれば、自動的に `gemini-turn-counter-copy-images` イベントを用いて画像をクリップボードにコピーさせるチェックボックス。
+4.  **Export/Delete Exec Button**: 手動で上記の設定を基にエクスポート＆削除処理を開始するボタン。
+5.  **Draggable Handle**: ユーザーは左端の `⠿` ハンドラをドラッグして好きな場所にパネルを移動できます（状態は localStorage の `gemini-export-panel-pos` に保存）。
+6.  **Dependency Checking**: `Auto-Select Next`, `1-Click Delete Conversation`, `Gemini Turn Counter` がインストールされているかを自動判別し、各種アイコンを表示する機能。
 - **Auto(URL) Detection**: 
   - Extracts URLs from `<user-query>` and `<message-content>` tags via regex `/(https?:\/\/[^\s"'<>()]+)/g`.
   - If enabled via `gemini-export-auto-url-toggle`, and the user query contains exactly ONE URL, and the model response contains that same URL, it triggers `runExportProcess` with forced deletion after a configurable delay (`gemini-export-auto-url-delay`).

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.31
+// @version      0.4.32
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-16
 // @author       Takashi Sasaki
@@ -435,11 +435,9 @@
         updateOneTurnVisibility();
     }
 
-    const AUTO_DELETE_DELAY_KEY = 'gemini-export-auto-delete-delay';
-    const AUTO_URL_DELAY_KEY = 'gemini-export-auto-url-delay';
     const AUTO_URL_TOGGLE_KEY = 'gemini-export-auto-url-toggle';
     const AUTO_DELETE_TOGGLE_KEY = 'gemini-export-auto-delete-toggle';
-    const AUTO_SKIP_REMAINING_KEY = 'gemini-export-auto-skip-remaining';
+    const AUTO_COPY_IMAGES_TOGGLE_KEY = 'gemini-export-auto-copy-images-toggle';
 
     // Simple debounce function to reduce polling frequency on DOM mutations
     function debounce(func, wait) {
@@ -558,9 +556,7 @@
                                 autoExportTriggered = true;
                                 console.log(`[Gemini 1-Turn Auto] Match concluded. Prompt had 1 URL matched in response.`);
 
-                                const delayStr = GM_getValue(AUTO_URL_DELAY_KEY, 5);
-                                let countdown = parseInt(delayStr, 10);
-                                if (isNaN(countdown)) countdown = 5;
+                                let countdown = 5; // Hardcoded default duration
 
                                 const execBtn = document.getElementById('gemini-btn-one-turn-exec');
                                 if (execBtn) {
@@ -601,7 +597,7 @@
                                             if (autoExportTimerId) clearInterval(autoExportTimerId);
                                             autoExportTimerId = null;
                                             execBtn.onclick = originalOnClick;
-                                            runExportProcess(0, true, true);
+                                            runExportProcess(true);
                                         } else {
                                             updateButtonUI();
                                         }
@@ -610,35 +606,11 @@
                                 } else {
                                     autoExportTimerId = setTimeout(() => {
                                         autoExportTimerId = null;
-                                        runExportProcess(0, true, true);
+                                        runExportProcess(true);
                                     }, countdown * 1000);
                                 }
                             } else {
-                                // No match logic: optional auto-skip
-                                let remaining = parseInt(GM_getValue(AUTO_SKIP_REMAINING_KEY, 0), 10);
-                                if (isNaN(remaining)) remaining = 0;
-
-                                console.log(`[Gemini 1-Turn Auto] No match found. Checking auto-skip... (Remaining skips: ${remaining}, autoExportTriggered: ${autoExportTriggered})`);
-
-                                if (remaining > 0) {
-                                    autoExportTriggered = true; // Prevent re-trigger on this page
-                                    remaining--;
-                                    GM_setValue(AUTO_SKIP_REMAINING_KEY, remaining);
-                                    console.log(`[Gemini 1-Turn Auto] Auto-skipping to next. Decrementing remaining to: ${remaining}`);
-
-                                    // Update UI if panel exists
-                                    const skipInput = document.getElementById('gemini-auto-skip-input');
-                                    if (skipInput) {
-                                        console.log(`[Gemini 1-Turn Auto] Updating UI skip input value to: ${remaining}`);
-                                        skipInput.value = remaining;
-                                    }
-
-                                    // Dispatch custom event to Auto-Select Next script
-                                    console.log(`[Gemini 1-Turn Auto] Dispatching custom event: gemini-auto-select-next:request-next`);
-                                    checkTargetUserscript('Gemini Auto-Select Next').then((installed) => { showTargetScriptStatus('Gemini Auto-Select Next', installed); window.dispatchEvent(new CustomEvent('gemini-auto-select-next:request-next')); });
-                                } else {
-                                    console.log(`[Gemini 1-Turn Auto] No skips remaining or skip count is 0. Staying on current conversation.`);
-                                }
+                                console.log(`[Gemini 1-Turn Auto] No match found. Staying on current conversation.`);
                             }
                         }
                     }
@@ -659,25 +631,39 @@
     /**
      * Reusable async extraction of the full execution flow (Clicking, Countdown, Deleting)
      */
-    async function runExportProcess(delayInputVal, willDelete, isAutoRun = false) {
+    async function runExportProcess(isAutoRun = false) {
         const moreBtn = document.querySelector(SELECTORS.moreMenuButton);
         if (!moreBtn) {
             alert('Could not find export menu.');
             return;
         }
 
+        const deleteCheckbox = document.getElementById('gemini-auto-delete-cb');
+        const willDelete = deleteCheckbox ? deleteCheckbox.checked : GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
+
         const execBtn = document.getElementById('gemini-btn-one-turn-exec');
         if (execBtn) execBtn.disabled = true;
         showOverlay();
 
         try {
+            // Auto Copy Images Check
+            const autoCopyEnabled = GM_getValue(AUTO_COPY_IMAGES_TOGGLE_KEY, true);
+            if (autoCopyEnabled) {
+                const turnContainer = document.querySelector(SELECTORS.aiTurnContainer);
+                if (turnContainer && turnContainer.querySelectorAll('img').length > 0) {
+                    console.log('[Gemini 1-Turn Export] Auto-copying images because images were found.');
+                    document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images', {
+                        detail: { target: 'all' }
+                    }));
+                }
+            }
+
             // 1. Export
             await handleTurnExport(moreBtn);
 
             if (willDelete) {
                 // 2. Countdown & Wait
-                let delay = parseInt(delayInputVal, 10);
-                if (isNaN(delay)) delay = 3;
+                let delay = 3; // Hardcoded default duration
 
                 for (let i = delay; i > 0; i--) {
                     if (execBtn) {
@@ -766,74 +752,45 @@
         panel.addEventListener('mouseenter', () => { countdownPaused = true; });
         panel.addEventListener('mouseleave', () => { countdownPaused = false; });
 
-        // Bind Inputs & Checkboxes
-        const manualDelayInput = panel.querySelector('#gemini-auto-delete-delay-input');
-        manualDelayInput.value = GM_getValue(AUTO_DELETE_DELAY_KEY, 3);
-        manualDelayInput.onchange = () => GM_setValue(AUTO_DELETE_DELAY_KEY, parseInt(manualDelayInput.value, 10) || 0);
-
+        // Bind Checkboxes
         const deleteCheckbox = panel.querySelector('#gemini-auto-delete-cb');
-        deleteCheckbox.checked = GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
-
-        const autoDelayInput = panel.querySelector('#gemini-auto-url-delay-input');
-        autoDelayInput.value = GM_getValue(AUTO_URL_DELAY_KEY, 5);
-        autoDelayInput.onchange = () => GM_setValue(AUTO_URL_DELAY_KEY, parseInt(autoDelayInput.value, 10) || 0);
-
-        const skipInput = panel.querySelector('#gemini-auto-skip-input');
-        skipInput.value = GM_getValue(AUTO_SKIP_REMAINING_KEY, 0);
-        skipInput.onchange = () => GM_setValue(AUTO_SKIP_REMAINING_KEY, parseInt(skipInput.value, 10) || 0);
+        if (deleteCheckbox) {
+            deleteCheckbox.checked = GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
+        }
 
         const autoEnableCheckbox = panel.querySelector('#gemini-auto-url-cb');
-        autoEnableCheckbox.checked = GM_getValue(AUTO_URL_TOGGLE_KEY, false);
-        autoEnableCheckbox.onchange = () => GM_setValue(AUTO_URL_TOGGLE_KEY, autoEnableCheckbox.checked);
+        if (autoEnableCheckbox) {
+            autoEnableCheckbox.checked = GM_getValue(AUTO_URL_TOGGLE_KEY, false);
+            autoEnableCheckbox.onchange = () => GM_setValue(AUTO_URL_TOGGLE_KEY, autoEnableCheckbox.checked);
+        }
 
-        // Bind Copy Button
-        const copyImageBtn = panel.querySelector('#gemini-btn-copy-images');
-        let copyIndicatorTimer = null;
-
-        copyImageBtn.onmouseenter = () => copyImageBtn.style.background = 'rgba(255,255,255,0.2)';
-        copyImageBtn.onmouseleave = () => copyImageBtn.style.background = 'rgba(255,255,255,0.1)';
-
-        copyImageBtn.onclick = () => {
-            copyImageBtn.textContent = '⏳ Copying...';
-            // Dispatch request to gemini-turn-counter
-            document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images', {
-                detail: { target: 'all' }
-            }));
-        };
-
-        // Listen for the result from gemini-turn-counter
-        document.addEventListener('gemini-turn-counter-copy-images-result', (e) => {
-            if (copyIndicatorTimer) clearTimeout(copyIndicatorTimer);
-
-            if (e.detail && e.detail.success) {
-                const count = e.detail.count || 0;
-                copyImageBtn.textContent = `✅ Copied (${count})`;
-                copyImageBtn.style.border = '1px solid #2ea44f';
-            } else {
-                copyImageBtn.textContent = `❌ Failed/No imgs`;
-                copyImageBtn.style.border = '1px solid #e53935';
-            }
-
-            copyIndicatorTimer = setTimeout(() => {
-                copyImageBtn.textContent = '📋 Copy Images';
-                copyImageBtn.style.border = '1px solid rgba(255,255,255,0.2)';
-            }, 3000);
-        });
+        const autoCopyImagesCheckbox = panel.querySelector('#gemini-auto-copy-images-cb');
+        if (autoCopyImagesCheckbox) {
+            autoCopyImagesCheckbox.checked = GM_getValue(AUTO_COPY_IMAGES_TOGGLE_KEY, true);
+            autoCopyImagesCheckbox.onchange = () => GM_setValue(AUTO_COPY_IMAGES_TOGGLE_KEY, autoCopyImagesCheckbox.checked);
+        }
 
         // Bind Execute Button
         const execBtn = panel.querySelector('#gemini-btn-one-turn-exec');
-        const updateBtnText = () => setExecBtnContent(execBtn, deleteCheckbox.checked ? 'Export & Delete' : 'Export');
+        const updateBtnText = () => {
+            if (execBtn && deleteCheckbox) {
+                setExecBtnContent(execBtn, deleteCheckbox.checked ? 'Export & Delete' : 'Export');
+            }
+        };
         updateBtnText();
 
-        deleteCheckbox.onchange = () => {
-            GM_setValue(AUTO_DELETE_TOGGLE_KEY, deleteCheckbox.checked);
-            updateBtnText();
-        };
+        if (deleteCheckbox) {
+            deleteCheckbox.onchange = () => {
+                GM_setValue(AUTO_DELETE_TOGGLE_KEY, deleteCheckbox.checked);
+                updateBtnText();
+            };
+        }
 
-        execBtn.onclick = () => {
-            const willDelete = deleteCheckbox.checked;
-            runExportProcess(manualDelayInput.value, willDelete, false);
-        };
+        if (execBtn) {
+            execBtn.onclick = () => {
+                runExportProcess(false);
+            };
+        }
 
         const checkDep = (id, scriptName) => {
             checkTargetUserscript(scriptName, 1000).then(res => {
