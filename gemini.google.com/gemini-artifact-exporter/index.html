@@ -55,7 +55,10 @@
         }
 
         .install-button {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             padding: 12px 24px;
             background-color: #2ea44f !important;
             color: white !important;
@@ -91,20 +94,20 @@
             <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
         </div>
 
-        <a href="gemini-artifact-exporter.user.js" class="install-button" data-version="0.4.5">
-                        <span class="button-icon">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                        </span>
-
-                        <div class="version-info">
-                            <span class="version-badge latest-version">v0.4.5</span>
-                            <span class="version-badge installed-version" style="display: none;"></span>
-                        </div>
-                    </a>
+        <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js" target="_blank" class="install-button" data-version="0.4.8">
+            <span class="button-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+            </span>
+            <span class="button-text">Install</span>
+            <div class="version-info">
+                <span class="version-badge latest-version">v0.4.8</span>
+                <span class="version-badge installed-version" style="display: none;"></span>
+            </div>
+        </a>
 <div class="dependency-badges" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
 <span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini 1-Click Delete Conversation</span>
 <span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Artifact Exporter Worker</span>
@@ -205,6 +208,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
+            let serverVersion = null;
             try {
                 const response = await fetch('gemini-artifact-exporter.user.js');
                 if (response.ok) {
@@ -212,22 +216,88 @@
                     const versionMatch = text.match(/\/\/ @version\s+([\d.]+)/);
                     const dateMatch = text.match(/\/\/ @lastModified\s+([\d-]+)/);
                     if (versionMatch) {
-                        const version = versionMatch[1];
+                        serverVersion = versionMatch[1];
                         const date = dateMatch ? dateMatch[1] : '不明';
 
                         const verEl = document.getElementById('ver-info');
                         const dateEl = document.getElementById('date-info');
-                        if (verEl) verEl.textContent = `v${version}`;
+                        if (verEl) verEl.textContent = `v${serverVersion}`;
                         if (dateEl) dateEl.textContent = date;
 
-                        const installBtn = document.querySelector('.install-button');
-                        if (installBtn) {
-                            installBtn.textContent = `スクリプトをインストール (v${version})`;
+                        const latestBadge = document.querySelector('.latest-version');
+                        if (latestBadge) {
+                            latestBadge.textContent = `Latest: v${serverVersion}`;
                         }
                     }
                 }
             } catch (e) {
                 console.warn('Could not fetch script version:', e);
+            }
+
+            // Helper for version comparison
+            function parseVersion(v) { return v ? v.split('.').map(Number) : []; }
+            function checkUpdate(latest, installed) {
+                if (!latest || !installed) return false;
+                const lParts = parseVersion(latest);
+                const iParts = parseVersion(installed);
+                for (let i = 0; i < Math.max(lParts.length, iParts.length); i++) {
+                    const l = lParts[i] || 0, inst = iParts[i] || 0;
+                    if (l > inst) return true;
+                    if (l < inst) return false;
+                }
+                return false;
+            }
+
+            // Listen for installed userscript reports
+            document.addEventListener('userscript-check-installed', (event) => {
+                const { name, version } = event.detail;
+                
+                // Logic for main script
+                if (name === 'Gemini Artifact Exporter') {
+                    const installedBadge = document.querySelector('.installed-version');
+                    if (installedBadge) {
+                        installedBadge.textContent = `Installed: v${version}`;
+                        installedBadge.style.display = 'inline-block';
+                    }
+                    
+                    const installBtn = document.querySelector('.install-button');
+                    const btnText = document.querySelector('.button-text');
+                    if (serverVersion && installBtn && btnText) {
+                        if (checkUpdate(serverVersion, version)) {
+                            btnText.textContent = 'Update';
+                            installBtn.style.backgroundColor = '#f39c12';
+                            installBtn.style.color = '#fff';
+                        } else {
+                            btnText.textContent = 'Installed';
+                            installBtn.style.backgroundColor = '#f6f8fa';
+                            installBtn.style.color = '#24292e';
+                        }
+                    }
+                }
+            });
+
+            // Ping installed userscripts after a short delay
+            setTimeout(() => {
+                document.dispatchEvent(new CustomEvent('userscript-ping'));
+            }, 1000);
+
+            // Poll for installation status after clicking the install button
+            const installBtn = document.querySelector('.install-button');
+            if (installBtn) {
+                installBtn.addEventListener('click', () => {
+                    let attempts = 0;
+                    const maxAttempts = 5;
+                    const intervalMs = 2000;
+                    
+                    const pollInterval = setInterval(() => {
+                        attempts++;
+                        document.dispatchEvent(new CustomEvent('userscript-ping'));
+                        
+                        if (attempts >= maxAttempts) {
+                            clearInterval(pollInterval);
+                        }
+                    }, intervalMs);
+                });
             }
         });
     </script>
