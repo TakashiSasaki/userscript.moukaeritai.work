@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.6
-// @lastModified 2026-03-17
+// @version      0.4.7
+// @lastModified 2026-03-21
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -95,6 +95,26 @@
         }, statusDetail ? 4000 : 7000); // Keep errors slightly longer
     }
 
+    // Helper for persistent dependency indicator
+    function checkDep(targetName, elementId, shortName) {
+        checkTargetUserscript(targetName).then((installed) => {
+            const el = document.getElementById(elementId);
+            if (el) {
+                const verSpan = el.querySelector('.dep-version');
+                if (installed) {
+                    el.classList.add('installed');
+                    el.title = `${targetName} - v${installed.version}`;
+                    el.style.color = '#81c995'; // Greenish 
+                    if (verSpan) verSpan.textContent = `v${installed.version}`;
+                } else {
+                    el.classList.remove('installed');
+                    el.title = `${targetName} - Not Found`;
+                    el.style.color = '#f28b82'; // Reddish
+                    if (verSpan) verSpan.textContent = 'Not Found';
+                }
+            }
+        });
+    }
 
     // --- Trusted Types ---
     let policy;
@@ -739,6 +759,11 @@
         setInnerHTML(panel, templateStr);
         document.body.appendChild(panel);
         log('Artifact Exporter panel attached to document body.');
+
+        // Check dependencies for persistent UI indicators
+        checkDep('Gemini History Loader', 'gae-dep-history-loader', 'History');
+        checkDep('Gemini Artifact Exporter Worker', 'gae-dep-worker', 'Worker');
+        checkDep('Gemini One-Click Delete', 'gae-dep-1click-del', 'Delete');
 
         // Bind events
         const scanBtn = panel.querySelector('#gemini-btn-scan');
