@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.10
+// @version      0.1.11
 // @lastModified 2026-03-02
 // @description  Adds serial numbers and copy buttons to custom instructions on Gemini.
 // @author       Takashi Sasaki
@@ -64,8 +64,8 @@
         toast.style.bottom = '20px';
         toast.style.left = '50%';
         toast.style.transform = 'translateX(-50%)';
-        toast.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        toast.style.color = 'white';
+        toast.style.backgroundColor = 'rgba(255, 182, 193, 0.9)'; // LightPink
+        toast.style.color = '#333';
         toast.style.padding = '10px 20px';
         toast.style.borderRadius = '8px';
         toast.style.zIndex = '10000';

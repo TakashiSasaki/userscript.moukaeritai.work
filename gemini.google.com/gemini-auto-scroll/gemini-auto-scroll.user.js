@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.33
+// @version      0.2.34
 // @lastModified 2026-03-14
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki

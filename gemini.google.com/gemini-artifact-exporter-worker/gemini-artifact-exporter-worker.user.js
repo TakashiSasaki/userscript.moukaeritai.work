@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.7
+// @version      0.2.2
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -71,8 +71,8 @@
             ui.style.position = 'fixed';
             ui.style.zIndex = '999999';
             ui.style.padding = '8px 12px';
-            ui.style.backgroundColor = 'rgba(28, 28, 30, 0.9)';
-            ui.style.color = 'white';
+            ui.style.backgroundColor = 'rgba(255, 182, 193, 0.9)'; // LightPink
+            ui.style.color = '#333';
             ui.style.borderRadius = '8px';
             ui.style.fontFamily = 'sans-serif';
             ui.style.fontSize = '12px';
