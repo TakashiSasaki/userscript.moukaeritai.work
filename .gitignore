@@ -12,3 +12,4 @@ node_modules/
 analyze_structure.py
 debug-info.js
 chat.openai.com/chatgpt-no-margin/NEXT_SESSION_PROMPT.md
+commit_msg_agents.txt
