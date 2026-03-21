@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.7
+// @version      0.4.8
 // @description  Injects a prompt into Gemini via an external custom event.
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
@@ -14,7 +14,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     const getTrustedHTML = (html) => {
@@ -34,12 +34,6 @@
         return html;
     };
 
-    const installCheckHosts = [
-        'userscript.moukaeritai.work'
-    ];
-
-    const isInstallCheckHost = installCheckHosts.includes(location.hostname);
-
     const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
@@ -49,11 +43,6 @@
         }));
     };
     document.addEventListener('userscript-ping', report);
-
-    if (isInstallCheckHost) {
-        report();
-        return;
-    }
 
     // Custom Event Helper for checking if target userscript is installed
     function checkTargetUserscript(targetName, timeout = 2000) {
@@ -182,12 +171,12 @@
             // Set the prompt text by inserting it into a paragraph
             // Escape HTML just in case
             const escapedText = promptText.replace(/&/g, '&amp;')
-                                          .replace(/</g, '&lt;')
-                                          .replace(/>/g, '&gt;')
-                                          .replace(/"/g, '&quot;')
-                                          .replace(/'/g, '&#039;');
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
             editor.innerHTML = getTrustedHTML(`<p>${escapedText}</p>`);
-            
+
             // Dispatch input event to notify the application
             editor.dispatchEvent(new Event('input', { bubbles: true }));
 
@@ -226,7 +215,7 @@
         setTimeout(() => {
             const menuItems = Array.from(document.querySelectorAll('button.bard-mode-list-button'));
             let targetText = '';
-            
+
             switch (targetModel.toLowerCase()) {
                 case 'flash':
                 case '高速':
