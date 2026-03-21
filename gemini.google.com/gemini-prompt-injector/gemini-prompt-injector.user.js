@@ -84,8 +84,8 @@
             ui.style.position = 'fixed';
             ui.style.zIndex = '999999';
             ui.style.padding = '8px 12px';
-            ui.style.backgroundColor = 'rgba(28, 28, 30, 0.9)';
-            ui.style.color = 'white';
+            ui.style.backgroundColor = 'rgba(255, 182, 193, 0.9)'; // LightPink
+            ui.style.color = '#333';
             ui.style.borderRadius = '8px';
             ui.style.fontFamily = 'sans-serif';
             ui.style.fontSize = '12px';
