@@ -129,13 +129,20 @@ Geminiのアップデートにより、DOM内に <infinite-scroller> 要素が2�
 *   **Scan Sidebar Menu**: 右サイドバーの「このチャット内のファイル」を展開して表示可能なアーティファクトのみを取得する（最速・安全）。
 *   **Scan Chat History**: メイン会話履歴のみを最上部までプログレッシブスクロールして隠れたアーティファクトをすべて回収する。
 
+### 9. 依存スクリプトの状態監視インジケーター (v0.4.7)
+本ユーザースクリプトは単体では動作せず、以下の3つのスクリプトに処理を強く依存している。
+1. **Gemini History Loader** (`gemini-history-loader:request`)
+2. **Gemini Artifact Exporter Worker** (`gemini-artifact-exporter-worker:request` / `cancel`)
+3. **Gemini One-Click Delete Conversation** (`gemini-one-click-delete:request-delete`)
 
+*   **状態の可視化と運用ルールの変更**: 確実な動作とユーザーのトラブルシューティングを助けるため、フローティングUIパネル（`template.html` 内の `.gae-deps-row`）の下部に、これら3つのスクリプトのインストール状態とバージョンが常時視認できるインジケーターを設置した。
+*   **通信方式**: ポーリング（`setInterval`）の利用を避けるという共通ガイドラインに従い、UIパネルの生成タイミングで一度だけ `checkTargetUserscript` を通じてPingを送信し、イベントリスナーにより非同期に表示を更新する。
 ## `index.html` のメンテナンス要件
 
 各階層（ルートディレクトリ、ドメイン別ディレクトリ、個別のスクリプトディレクトリ）の `index.html` は、最新の状態に同期して保つ必要があります。
 
 1. **バージョン情報の同期**:
-   - スクリプトのバージョンが更新された場合は、関連するすべての `index.html` 内にハードコードされているバージョン表記も忘れずに更新してください。
+   - スクリプトのバージョンはハードコードしないでください。
    - インストールボタンの構造は、動的なバージョン比較機能（Github上の最新バージョンとローカルのインストール済みバージョンの比較）のために、所定のDOM構造（`<div class="version-info">` 内に `.latest-version` と `.installed-version` を含む構造）を維持してください。
 
 2. **依存関係とイベントの明記**:
