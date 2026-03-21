@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.33
+// @version      0.2.34
 // @lastModified 2026-03-14
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
@@ -73,7 +73,6 @@
 
     const CONSTANTS = {
         STORAGE_KEY: 'gemini_auto_scroll_enabled',
-        STORAGE_KEY_MINIMIZED: 'gemini_auto_scroll_minimized',
         PANEL_POSITION_KEY: 'gemini_auto_scroll_panel_position'
     };
 
@@ -141,20 +140,6 @@
             updatePanelUI();
         }
     }
-
-    function isPanelMinimized() {
-        return localStorage.getItem(CONSTANTS.STORAGE_KEY_MINIMIZED) === 'true';
-    }
-
-    function togglePanelMinimized() {
-        const newState = !isPanelMinimized();
-        localStorage.setItem(CONSTANTS.STORAGE_KEY_MINIMIZED, newState);
-        const panel = document.getElementById('gemini-auto-scroll-panel');
-        if (panel) {
-            panel.classList.toggle('minimized', newState);
-        }
-    }
-
 
     // --- UI Injection ---
 
@@ -276,18 +261,6 @@
             scrollBtn.style.color = '';
         }
 
-        // Update Summary Text
-        const summarySpan = panel.querySelector('.minimized-summary');
-        if (summarySpan) {
-            const version = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.2.18';
-            summarySpan.textContent = `Auto-Scroll v${version} | ${count} items | ID: ${findSelectedConversationId() || 'N/A'}`;
-        }
-
-        const convIdSpan = panel.querySelector('.conversation-id');
-        if (convIdSpan) {
-            convIdSpan.textContent = findSelectedConversationId() || 'N/A';
-        }
-
         const items = getConversationItems();
         const selectedIndex = items.findIndex(item => item.classList.contains('selected'));
         if (selectedIndex !== -1) {
@@ -307,21 +280,10 @@
         panel.id = 'gemini-auto-scroll-panel';
 
         setInnerHTML(panel, `
-            <div class="minimized-summary" title="Double click to expand">📜</div>
-            <div class="widget-header">
-                <div style="display:flex; align-items:baseline; gap:6px;">
-                    <h1>Auto-Scroll</h1>
-                    <span class="version-badge">v${GM_info.script.version}</span>
-                </div>
-                <span class="gtc-minimize-btn" title="Minimize">−</span>
-            </div>
-            <div class="panel-content">
-                <button class="auto-scroll-btn">▶️ Start Auto-Scroll</button>
-                <div class="stats-row">
-                    <span>Loaded: <span class="stat-value gtc-badge">0 items</span></span>
-                    <span style="opacity: 0.5">|</span>
-                    <span>ID: <span class="stat-value conversation-id">N/A</span></span>
-                </div>
+            <button class="auto-scroll-btn">▶️ Start Auto-Scroll</button>
+            <div class="panel-info">
+                <span class="version-badge">v${GM_info.script.version}</span>
+                <span class="gtc-badge">0 items</span>
             </div>
         `);
 
@@ -333,30 +295,12 @@
             toggleAutoScroll();
         });
 
-        // Toggle Expand/Minimize when clicking minimized body
-        panel.addEventListener('click', (e) => {
-            if (hasDragged) return; // Prevent toggle if the user just finished dragging
-            if (panel.classList.contains('minimized') && !e.target.closest('button, input, .gtc-minimize-btn')) {
-                togglePanelMinimized();
-            }
-        });
-
-        const minimizeBtn = panel.querySelector('.gtc-minimize-btn');
-        if (minimizeBtn) {
-            minimizeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                togglePanelMinimized();
-            });
-        }
-
-        const header = panel.querySelector('.widget-header');
-        const summary = panel.querySelector('.minimized-summary');
         let isDragging = false;
         let hasDragged = false;
         let dragOffset = { x: 0, y: 0, startX: 0, startY: 0 };
 
         const startDrag = (e) => {
-            if (e.button !== 0 || e.target.closest('button, input, .gtc-minimize-btn')) return;
+            if (e.button !== 0 || e.target.closest('button, input')) return;
             isDragging = true;
             hasDragged = false;
             dragOffset.x = e.clientX - panel.offsetLeft;
@@ -367,8 +311,7 @@
             document.body.style.userSelect = 'none';
         };
 
-        header.addEventListener('mousedown', startDrag);
-        summary.addEventListener('mousedown', startDrag);
+        panel.addEventListener('mousedown', startDrag);
 
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
@@ -423,10 +366,6 @@
             panel.style.top = '20px';
             panel.style.right = '20px';
             panel.style.left = 'auto';
-        }
-
-        if (isPanelMinimized()) {
-            panel.classList.add('minimized');
         }
 
         panel.classList.add('ready');
