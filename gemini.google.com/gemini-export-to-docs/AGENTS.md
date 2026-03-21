@@ -1,6 +1,8 @@
 # Agent Guidelines
 
 This project follows the agent development guidelines outlined in the root [AGENTS.md](/AGENTS.md) file.
+gemini.google.com ドメインに特有の指示は [AGENTS.md](/gemini.google.com/AGENTS.md)に書かれている。
+このファイル /gemini.google.com/gemini-export-to-docs/AGENTS.md は、gemini.google.com/gemini-export-to-docs/ ディレクトリに特有の指示が書かれている。
 
 ## Technical Implementation Notes (for Agents)
 
