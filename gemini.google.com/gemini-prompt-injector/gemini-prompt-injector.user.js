@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         gemini-prompt-injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.5
+// @version      0.4.6
 // @description  Injects a prompt into Gemini via an external custom event.
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
@@ -16,6 +16,23 @@
 
 (function() {
     'use strict';
+
+    const getTrustedHTML = (html) => {
+        if (typeof trustedTypes !== 'undefined' && trustedTypes.createPolicy) {
+            if (!window.geminiPromptInjectorPolicy) {
+                try {
+                    window.geminiPromptInjectorPolicy = trustedTypes.createPolicy('gemini-prompt-injector-policy', {
+                        createHTML: (string) => string
+                    });
+                } catch (e) {
+                    console.warn('[gemini-prompt-injector] TrustedTypes policy creation error:', e);
+                    return html;
+                }
+            }
+            return window.geminiPromptInjectorPolicy.createHTML(html);
+        }
+        return html;
+    };
 
     const installCheckHosts = [
         'userscript.moukaeritai.work'
@@ -169,7 +186,7 @@
                                           .replace(/>/g, '&gt;')
                                           .replace(/"/g, '&quot;')
                                           .replace(/'/g, '&#039;');
-            editor.innerHTML = `<p>${escapedText}</p>`;
+            editor.innerHTML = getTrustedHTML(`<p>${escapedText}</p>`);
             
             // Dispatch input event to notify the application
             editor.dispatchEvent(new Event('input', { bubbles: true }));
@@ -329,9 +346,9 @@
         title.style.fontSize = '12px';
 
         const minBtn = document.createElement('button');
-        minBtn.innerHTML = isMinimized
+        minBtn.innerHTML = getTrustedHTML(isMinimized
             ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h16v6H4v-6z" opacity="0.5"/><path d="M4 4h16v6H4V4z"/></svg>'
-            : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+            : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>');
         minBtn.style.cursor = 'pointer';
         minBtn.style.border = 'none';
         minBtn.style.background = 'transparent';
@@ -469,9 +486,9 @@
         minBtn.onclick = () => {
             isMinimized = !isMinimized;
             content.style.display = isMinimized ? 'none' : 'block';
-            minBtn.innerHTML = isMinimized
+            minBtn.innerHTML = getTrustedHTML(isMinimized
                 ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h16v6H4v-6z" opacity="0.5"/><path d="M4 4h16v6H4V4z"/></svg>'
-                : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+                : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>');
             minBtn.title = isMinimized ? '復元' : '最小化';
             GM_setValue('gpi_ui_minimized', isMinimized);
 
