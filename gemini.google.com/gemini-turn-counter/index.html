@@ -93,7 +93,7 @@
             <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
         </div>
 
-        <a href="gemini-turn-counter.user.js" class="install-button" data-version="0.4.32">
+        <a href="gemini-turn-counter.user.js" class="install-button" data-version="0.4.34">
                         <span class="button-icon">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -103,7 +103,7 @@
                         </span>
 
                         <div class="version-info">
-                            <span class="version-badge latest-version">v0.4.32</span>
+                            <span class="version-badge latest-version">v0.4.34</span>
                             <span class="version-badge installed-version" style="display: none;"></span>
                         </div>
                     </a>
@@ -176,6 +176,7 @@
 
         <h2>更新履歴</h2>
         <ul>
+            <li><strong>v0.4.34</strong>: サムネイルリセット処理時の `innerHTML` を `textContent` に置き換え、Gemini のセキュリティポリシー (Trusted Types) 違反によるエラーを修正しました。</li>
             <li><strong>v0.4.33</strong>: フローティングUIの背景色をライトピンクに変更し、文字色を見やすく調整しました。</li>
             <li><strong>v0.4.29</strong>: 直近のGemini UI変更により <code>user-message</code> 要素がDOMから削除されたため、独自の属性（<code>data-test-id="uploaded-img"</code>）を使用して確実かつ一意にアップロード画像を検出できるようセレクタを再調整。</li>
             <li><strong>v0.4.28</strong>: ユーザー側のアップロード画像数を集計する際、GeminiのUI上の仕様（非表示のプロフィール画像など）が含まれてしまう不具合を修正。さらに画像収集ループが重複して二重カウントを行っていた内部ロジックを解消し、正確な枚数が反映されるように改修。</li>
