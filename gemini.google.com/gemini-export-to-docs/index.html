@@ -414,6 +414,24 @@
             setTimeout(() => {
                 document.dispatchEvent(new CustomEvent('userscript-ping'));
             }, 1000);
+
+            // Poll for installation status after clicking an install button
+            const startPolling = () => {
+                let attempts = 0;
+                const maxAttempts = 5;
+                const intervalMs = 2000;
+                const pollInterval = setInterval(() => {
+                    attempts++;
+                    document.dispatchEvent(new CustomEvent('userscript-ping'));
+                    if (attempts >= maxAttempts) clearInterval(pollInterval);
+                }, intervalMs);
+            };
+
+            const mainInstallBtn = document.querySelector('.install-button');
+            if (mainInstallBtn) mainInstallBtn.addEventListener('click', startPolling);
+
+            const depInstallBtns = document.querySelectorAll('.dep-install-btn');
+            depInstallBtns.forEach(btn => btn.addEventListener('click', startPolling));
         });
     </script>
     <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
