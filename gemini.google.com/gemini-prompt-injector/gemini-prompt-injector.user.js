@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.9
+// @version      0.4.10
 // @description  Injects a prompt into Gemini via an external custom event.
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
@@ -303,7 +303,7 @@
         uiContainer.id = 'gpi-test-ui';
         uiContainer.style.position = 'fixed';
         uiContainer.style.zIndex = '999999';
-        uiContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+        uiContainer.style.backgroundColor = 'rgba(255, 182, 193, 0.9)'; // LightPink
         uiContainer.style.border = '1px solid #ccc';
         uiContainer.style.borderRadius = '8px';
         uiContainer.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
@@ -329,9 +329,9 @@
         uiContainer.style.top = `${savedY}px`;
 
         const header = document.createElement('div');
-        header.style.padding = '8px';
+        header.style.padding = '4px 8px';
         header.style.cursor = 'move';
-        header.style.backgroundColor = '#f0f0f0';
+        header.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
         header.style.borderTopLeftRadius = '8px';
         header.style.borderTopRightRadius = '8px';
         header.style.display = 'flex';
@@ -362,12 +362,12 @@
         uiContainer.appendChild(header);
 
         const content = document.createElement('div');
-        content.style.padding = '8px';
+        content.style.padding = '4px 8px 8px 8px';
         content.style.display = isMinimized ? 'none' : 'block';
 
         // Inject Prompt Group
         const group1 = document.createElement('div');
-        group1.style.marginBottom = '8px';
+        group1.style.marginBottom = '4px';
         const textarea = document.createElement('textarea');
         textarea.style.width = '100%';
         textarea.style.height = '40px';
@@ -388,7 +388,7 @@
 
         // Send Prompt Group
         const group2 = document.createElement('div');
-        group2.style.marginBottom = '8px';
+        group2.style.marginBottom = '4px';
         const sendBtn = document.createElement('button');
         sendBtn.textContent = 'Send Current';
         sendBtn.style.width = '100%';
@@ -400,7 +400,7 @@
 
         // Switch Model Group
         const group3 = document.createElement('div');
-        group3.style.marginBottom = '8px';
+        group3.style.marginBottom = '4px';
         group3.style.display = 'flex';
         group3.style.gap = '4px';
         const selectModel = document.createElement('select');
