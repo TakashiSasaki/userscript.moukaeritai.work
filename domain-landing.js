@@ -223,6 +223,27 @@ async function initVersionCheck() {
     setTimeout(() => {
         document.dispatchEvent(new CustomEvent('userscript-ping'));
     }, 1000);
+
+    // 5. Poll for installation status after clicking an install button
+    projectItems.forEach(item => {
+        const installBtn = item.querySelector('.install-button');
+        if (installBtn) {
+            installBtn.addEventListener('click', () => {
+                let attempts = 0;
+                const maxAttempts = 5;
+                const intervalMs = 2000;
+                
+                const pollInterval = setInterval(() => {
+                    attempts++;
+                    document.dispatchEvent(new CustomEvent('userscript-ping'));
+                    
+                    if (attempts >= maxAttempts) {
+                        clearInterval(pollInterval);
+                    }
+                }, intervalMs);
+            });
+        }
+    });
 }
 
 // Run
