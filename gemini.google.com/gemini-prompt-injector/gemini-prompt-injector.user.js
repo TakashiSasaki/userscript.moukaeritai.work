@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         gemini-prompt-injector
+// @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.5
+// @version      0.4.10
 // @description  Injects a prompt into Gemini via an external custom event.
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
@@ -14,8 +14,25 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
+
+    const getTrustedHTML = (html) => {
+        if (typeof trustedTypes !== 'undefined' && trustedTypes.createPolicy) {
+            if (!window.geminiPromptInjectorPolicy) {
+                try {
+                    window.geminiPromptInjectorPolicy = trustedTypes.createPolicy('gemini-prompt-injector-policy', {
+                        createHTML: (string) => string
+                    });
+                } catch (e) {
+                    console.warn('[gemini-prompt-injector] TrustedTypes policy creation error:', e);
+                    return html;
+                }
+            }
+            return window.geminiPromptInjectorPolicy.createHTML(html);
+        }
+        return html;
+    };
 
     const installCheckHosts = [
         'userscript.moukaeritai.work'
@@ -23,18 +40,17 @@
 
     const isInstallCheckHost = installCheckHosts.includes(location.hostname);
 
-    const report = () => {
-        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
-            detail: {
-                name: GM_info.script.name,
-                version: GM_info.script.version
-            }
-        }));
-    };
-    document.addEventListener('userscript-ping', report);
-
     if (isInstallCheckHost) {
+        const report = () => {
+            document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+                detail: {
+                    name: GM_info.script.name,
+                    version: GM_info.script.version
+                }
+            }));
+        };
         report();
+        document.addEventListener('userscript-ping', report);
         return;
     }
 
@@ -165,12 +181,12 @@
             // Set the prompt text by inserting it into a paragraph
             // Escape HTML just in case
             const escapedText = promptText.replace(/&/g, '&amp;')
-                                          .replace(/</g, '&lt;')
-                                          .replace(/>/g, '&gt;')
-                                          .replace(/"/g, '&quot;')
-                                          .replace(/'/g, '&#039;');
-            editor.innerHTML = `<p>${escapedText}</p>`;
-            
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+            editor.innerHTML = getTrustedHTML(`<p>${escapedText}</p>`);
+
             // Dispatch input event to notify the application
             editor.dispatchEvent(new Event('input', { bubbles: true }));
 
@@ -209,7 +225,7 @@
         setTimeout(() => {
             const menuItems = Array.from(document.querySelectorAll('button.bard-mode-list-button'));
             let targetText = '';
-            
+
             switch (targetModel.toLowerCase()) {
                 case 'flash':
                 case '高速':
@@ -287,7 +303,7 @@
         uiContainer.id = 'gpi-test-ui';
         uiContainer.style.position = 'fixed';
         uiContainer.style.zIndex = '999999';
-        uiContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+        uiContainer.style.backgroundColor = 'rgba(255, 182, 193, 0.9)'; // LightPink
         uiContainer.style.border = '1px solid #ccc';
         uiContainer.style.borderRadius = '8px';
         uiContainer.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
@@ -313,9 +329,9 @@
         uiContainer.style.top = `${savedY}px`;
 
         const header = document.createElement('div');
-        header.style.padding = '8px';
+        header.style.padding = '4px 8px';
         header.style.cursor = 'move';
-        header.style.backgroundColor = '#f0f0f0';
+        header.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
         header.style.borderTopLeftRadius = '8px';
         header.style.borderTopRightRadius = '8px';
         header.style.display = 'flex';
@@ -329,9 +345,9 @@
         title.style.fontSize = '12px';
 
         const minBtn = document.createElement('button');
-        minBtn.innerHTML = isMinimized
+        minBtn.innerHTML = getTrustedHTML(isMinimized
             ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h16v6H4v-6z" opacity="0.5"/><path d="M4 4h16v6H4V4z"/></svg>'
-            : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+            : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>');
         minBtn.style.cursor = 'pointer';
         minBtn.style.border = 'none';
         minBtn.style.background = 'transparent';
@@ -346,12 +362,12 @@
         uiContainer.appendChild(header);
 
         const content = document.createElement('div');
-        content.style.padding = '8px';
+        content.style.padding = '4px 8px 8px 8px';
         content.style.display = isMinimized ? 'none' : 'block';
 
         // Inject Prompt Group
         const group1 = document.createElement('div');
-        group1.style.marginBottom = '8px';
+        group1.style.marginBottom = '4px';
         const textarea = document.createElement('textarea');
         textarea.style.width = '100%';
         textarea.style.height = '40px';
@@ -372,7 +388,7 @@
 
         // Send Prompt Group
         const group2 = document.createElement('div');
-        group2.style.marginBottom = '8px';
+        group2.style.marginBottom = '4px';
         const sendBtn = document.createElement('button');
         sendBtn.textContent = 'Send Current';
         sendBtn.style.width = '100%';
@@ -384,7 +400,7 @@
 
         // Switch Model Group
         const group3 = document.createElement('div');
-        group3.style.marginBottom = '8px';
+        group3.style.marginBottom = '4px';
         group3.style.display = 'flex';
         group3.style.gap = '4px';
         const selectModel = document.createElement('select');
@@ -469,9 +485,9 @@
         minBtn.onclick = () => {
             isMinimized = !isMinimized;
             content.style.display = isMinimized ? 'none' : 'block';
-            minBtn.innerHTML = isMinimized
+            minBtn.innerHTML = getTrustedHTML(isMinimized
                 ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h16v6H4v-6z" opacity="0.5"/><path d="M4 4h16v6H4V4z"/></svg>'
-                : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+                : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>');
             minBtn.title = isMinimized ? '復元' : '最小化';
             GM_setValue('gpi_ui_minimized', isMinimized);
 

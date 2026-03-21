@@ -10,13 +10,14 @@
     border-radius: 24px;
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
     font-family: 'Outfit', 'Google Sans', sans-serif;
-    padding: 12px;
+    padding: 8px;
     display: none; /* Initially hidden */
-    flex-direction: column;
-    gap: 8px;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
     user-select: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    min-width: 200px;
+    cursor: move;
 }
 #gemini-auto-scroll-panel:hover {
     background: rgba(255, 255, 255, 0.85);
@@ -26,54 +27,24 @@
 #gemini-auto-scroll-panel.ready {
     display: flex;
 }
-#gemini-auto-scroll-panel.minimized {
-    min-width: unset;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    padding: 0;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    cursor: pointer;
-}
-#gemini-auto-scroll-panel.minimized .panel-content,
-#gemini-auto-scroll-panel.minimized .widget-header {
-    display: none;
-}
-#gemini-auto-scroll-panel .minimized-summary {
-    display: none;
-    font-size: 20px;
-    line-height: 1;
-}
-#gemini-auto-scroll-panel.minimized .minimized-summary {
-    display: block;
-}
 
-.widget-header {
+.panel-info {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 0 4px;
-    cursor: move;
-}
-.widget-header h1 {
-    font-size: 13px;
-    font-weight: 600;
-    margin: 0;
-    color: #1a73e8;
-    letter-spacing: 0.3px;
-}
-.version-badge {
-    font-size: 10px;
-    color: #5f6368;
-    opacity: 0.7;
-}
-
-.panel-content {
-    display: flex;
-    flex-direction: column;
     gap: 8px;
+    padding-right: 8px;
+}
+
+.version-badge {
+    font-size: 11px;
+    color: #5f6368;
+    opacity: 0.8;
+}
+
+.gtc-badge {
+    font-size: 11px;
+    color: #1a73e8;
+    font-weight: 600;
 }
 
 .auto-scroll-btn {
@@ -112,36 +83,6 @@
 }
 .auto-scroll-btn.processing {
     animation: gtc-pulse 1.5s infinite ease-in-out;
-}
-
-.stats-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 11px;
-    color: #5f6368;
-    padding: 0 6px;
-    font-weight: 500;
-}
-.stat-value {
-    color: #1a73e8;
-    font-weight: 600;
-}
-
-.gtc-minimize-btn {
-    cursor: pointer;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: background 0.2s;
-    color: #5f6368;
-    font-size: 18px;
-}
-.gtc-minimize-btn:hover {
-    background: rgba(0,0,0,0.05);
 }
 
 @keyframes gtc-pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(0.98); } 100% { opacity: 1; transform: scale(1); } }
