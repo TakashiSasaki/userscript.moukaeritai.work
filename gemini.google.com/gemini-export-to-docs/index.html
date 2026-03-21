@@ -108,12 +108,41 @@
                 <span class="version-badge installed-version" style="display: none;"></span>
             </div>
         </a>
-<div class="dependency-badges" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini 1-Click Delete Conversation</span>
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Auto-Select Next</span>
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Turn Counter</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini Turn Counter</span>
-</div>
+        <div style="margin-top: 24px;">
+            <p><strong>依存設定（前提スクリプト）</strong>: このスクリプトの全機能を利用するには、以下の3つのスクリプトもインストールして有効にしてください。</p>
+            <div id="dependency-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                <!-- Auto-Select Next -->
+                <div class="dep-card" data-script-name="Gemini Auto-Select Next" data-url="../gemini-auto-select-next/gemini-auto-select-next.user.js" style="padding: 12px; border: 1px solid #e1e4e8; border-radius: 6px; background: #fafbfc;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <strong><a href="../gemini-auto-select-next/index.html">Gemini Auto-Select Next</a></strong>
+                        <a href="../gemini-auto-select-next/gemini-auto-select-next.user.js" class="dep-install-btn" style="font-size: 12px; padding: 4px 8px; background: #2ea44f; color: white; border-radius: 6px; text-decoration: none;">Install</a>
+                    </div>
+                    <div style="font-size: 0.8em; color: #586069; margin-top: 6px;">
+                        Latest: <span class="dep-latest">確認中...</span> | Installed: <span class="dep-installed">未インストール</span>
+                    </div>
+                </div>
+                <!-- 1-Click Delete -->
+                <div class="dep-card" data-script-name="Gemini 1-Click Delete Conversation" data-url="../gemini-one-click-delete/gemini-one-click-delete.user.js" style="padding: 12px; border: 1px solid #e1e4e8; border-radius: 6px; background: #fafbfc;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <strong><a href="../gemini-one-click-delete/index.html">Gemini 1-Click Delete Conversation</a></strong>
+                        <a href="../gemini-one-click-delete/gemini-one-click-delete.user.js" class="dep-install-btn" style="font-size: 12px; padding: 4px 8px; background: #2ea44f; color: white; border-radius: 6px; text-decoration: none;">Install</a>
+                    </div>
+                    <div style="font-size: 0.8em; color: #586069; margin-top: 6px;">
+                        Latest: <span class="dep-latest">確認中...</span> | Installed: <span class="dep-installed">未インストール</span>
+                    </div>
+                </div>
+                <!-- Turn Counter -->
+                <div class="dep-card" data-script-name="Gemini Turn Counter" data-url="../gemini-turn-counter/gemini-turn-counter.user.js" style="padding: 12px; border: 1px solid #e1e4e8; border-radius: 6px; background: #fafbfc;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <strong><a href="../gemini-turn-counter/index.html">Gemini Turn Counter</a></strong>
+                        <a href="../gemini-turn-counter/gemini-turn-counter.user.js" class="dep-install-btn" style="font-size: 12px; padding: 4px 8px; background: #2ea44f; color: white; border-radius: 6px; text-decoration: none;">Install</a>
+                    </div>
+                    <div style="font-size: 0.8em; color: #586069; margin-top: 6px;">
+                        Latest: <span class="dep-latest">確認中...</span> | Installed: <span class="dep-installed">未インストール</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <h2>目的</h2>
         <p>標準機能では複数回のクリック（メニュー展開など）が必要ですが、これを「1クリック」または「キーボードショートカット」で実行できる機能を追加します。<br>
@@ -215,19 +244,7 @@
             </li>
         </ul>
 
-        <h2>連携スクリプト（送信先）</h2>
-        <p>このスクリプトは、以下のスクリプトにイベントを送信し、機能してもらうことを期待しています。</p>
-        <ul>
-            <li><a href="../gemini-auto-select-next/index.html">Auto-Select Next</a> (<code>gemini-auto-select-next:request-next</code>)</li>
-            <li><a href="../gemini-one-click-delete/index.html">One Click Delete</a> (<code>gemini-one-click-delete:request-delete</code>)</li>
-            <li><a href="../gemini-turn-counter/index.html">Turn Counter</a> (<code>gemini-turn-counter-copy-images</code>)</li>
-        </ul>
 
-        <h2>連携スクリプト（受信元）</h2>
-        <p>このスクリプトは、以下のスクリプトからイベントを受信して動作します。</p>
-        <ul>
-            <li><a href="../gemini-turn-counter/index.html">Turn Counter</a> (<code>gemini-turn-counter-copy-images-result</code>)</li>
-        </ul>
 
         <h2>UI仕様</h2>
         <ul>
@@ -297,9 +314,63 @@
                 console.warn('Could not fetch script version:', e);
             }
 
+            // Helper for version comparison
+            function parseVersion(v) { return v ? v.split('.').map(Number) : []; }
+            function checkUpdate(latest, installed) {
+                if (!latest || !installed) return false;
+                const lParts = parseVersion(latest);
+                const iParts = parseVersion(installed);
+                for (let i = 0; i < Math.max(lParts.length, iParts.length); i++) {
+                    const l = lParts[i] || 0, inst = iParts[i] || 0;
+                    if (l > inst) return true;
+                    if (l < inst) return false;
+                }
+                return false;
+            }
+
+            // Fetch Dependency Versions
+            const depCards = document.querySelectorAll('.dep-card');
+            depCards.forEach(async (card) => {
+                const url = card.getAttribute('data-url');
+                try {
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        const text = await response.text();
+                        const vMatch = text.match(/\/\/ @version\s+([\d.]+)/);
+                        if (vMatch) {
+                            const version = vMatch[1];
+                            card.dataset.latestVersion = version;
+                            const latestSpan = card.querySelector('.dep-latest');
+                            if (latestSpan) latestSpan.textContent = `v${version}`;
+                            updateDepCardState(card);
+                        }
+                    }
+                } catch (e) {}
+            });
+
+            function updateDepCardState(card) {
+                const latest = card.dataset.latestVersion;
+                const installed = card.dataset.installedVersion;
+                const btn = card.querySelector('.dep-install-btn');
+                if (!installed || !btn) return;
+                
+                if (latest && checkUpdate(latest, installed)) {
+                    btn.textContent = 'Update';
+                    btn.style.backgroundColor = '#f39c12';
+                } else {
+                    btn.textContent = 'Installed';
+                    btn.style.backgroundColor = '#f6f8fa';
+                    btn.style.color = '#24292e';
+                    btn.style.pointerEvents = 'none';
+                    btn.style.border = '1px solid #e1e4e8';
+                }
+            }
+
             // Listen for installed userscript reports
             document.addEventListener('userscript-check-installed', (event) => {
                 const { name, version } = event.detail;
+                
+                // Logic for main script
                 if (name === 'Gemini 1-Click Export to Docs' || name === 'Gemini 1-Click Export to Docs (Dev)') {
                     const installedBadge = document.querySelector('.installed-version');
                     if (installedBadge) {
@@ -307,21 +378,10 @@
                         installedBadge.style.display = 'block';
                     }
                     
-                    // Optional: Compare versions to highlight if update needed
                     const installBtn = document.querySelector('.install-button');
                     const btnText = document.querySelector('.button-text');
                     if (serverVersion && installBtn && btnText) {
-                        const sParts = serverVersion.split('.').map(Number);
-                        const iParts = version.split('.').map(Number);
-                        let isUpdateAvailable = false;
-                        for (let i = 0; i < Math.max(sParts.length, iParts.length); i++) {
-                            const s = sParts[i] || 0;
-                            const inst = iParts[i] || 0;
-                            if (s > inst) { isUpdateAvailable = true; break; }
-                            if (s < inst) { break; }
-                        }
-                        
-                        if (isUpdateAvailable) {
+                        if (checkUpdate(serverVersion, version)) {
                             btnText.textContent = 'Update';
                             installBtn.style.backgroundColor = '#f39c12';
                             installBtn.style.color = '#fff';
@@ -333,6 +393,21 @@
                         }
                     }
                 }
+
+                // Logic for dependency scripts
+                depCards.forEach(card => {
+                    const scriptName = card.getAttribute('data-script-name');
+                    if (name === scriptName) {
+                        card.dataset.installedVersion = version;
+                        const installedSpan = card.querySelector('.dep-installed');
+                        if (installedSpan) {
+                            installedSpan.textContent = `v${version}`;
+                            installedSpan.style.color = '#2ea44f';
+                            installedSpan.style.fontWeight = 'bold';
+                        }
+                        updateDepCardState(card);
+                    }
+                });
             });
 
             // Ping installed userscripts after a short delay
