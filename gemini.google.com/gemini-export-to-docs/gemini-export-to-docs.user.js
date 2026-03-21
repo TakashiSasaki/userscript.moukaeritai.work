@@ -79,10 +79,6 @@
 
     // Removed initial URL check as it will be handled dynamically
 
-    // svg icons
-    const DOCS_ICON_PATH = "M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z";
-    const CHECK_ICON_PATH = "M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z";
-
     // --- Trusted Types ---
     let policy;
     if (window.trustedTypes && window.trustedTypes.createPolicy) {
@@ -111,16 +107,7 @@
         presentedContainer: '.presented-response-container, message-content, .message-content', // Most stable selector for the model's response wrapper
         moreMenuButton: 'button[data-test-id="more-menu-button"]', // The trigger "..."
         exportToDocsButton: 'button[data-test-id="export-to-docs-button"]', // The target in the menu
-        exportIntermediateButton: 'button[data-test-id="export-button"]', // Mobile "Export to..." button
-
-        responseHeader: '.response-container-header', // Header area code (fallback if needed)
-
-        // General
-        // Updated to include 'actions-bottom-sheet' for mobile view
-        menuPanel: '.mat-mdc-menu-panel, .mat-mdc-bottom-sheet-container, actions-bottom-sheet', // Panel that appears
-
-        // Injection targets
-        // We will try to inject next to the trigger button for turns
+        exportIntermediateButton: 'button[data-test-id="export-button"]' // Mobile "Export to..." button
     };
 
     /**
@@ -153,21 +140,22 @@
         return document.querySelector('style:last-of-type');
     }
 
-    /**
-     * Create the SVG icon element safely
-     */
-    function createIconElement(pathData) {
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute("height", "20");
-        svg.setAttribute("viewBox", "0 -960 960 960");
-        svg.setAttribute("width", "20");
-        svg.setAttribute("fill", "currentColor");
+    let templatesContainer = null;
+    function getTemplate(id) {
+        if (!templatesContainer) {
+            templatesContainer = document.createElement('div');
+            const templateHtml = GM_getResourceText('templateHTML').replace(/{{scriptVersion}}/g, GM_info.script.version);
+            setInnerHTML(templatesContainer, templateHtml);
+        }
+        const tpl = templatesContainer.querySelector(`#${id}`);
+        if (!tpl) return null;
+        return tpl.content.cloneNode(true);
+    }
 
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d", pathData);
-
-        svg.appendChild(path);
-        return svg;
+    function getIcon(type) {
+        const id = type === 'check' ? 'tpl-check-icon' : 'tpl-docs-icon';
+        const tpl = getTemplate(id);
+        return tpl ? tpl.firstElementChild : null;
     }
 
     /**
@@ -178,7 +166,8 @@
         btn.textContent = ''; // Clear existing
         const iconSpan = document.createElement('span');
         iconSpan.style.display = 'flex';
-        iconSpan.appendChild(createIconElement(DOCS_ICON_PATH));
+        const icon = getIcon('docs');
+        if (icon) iconSpan.appendChild(icon);
         btn.appendChild(iconSpan);
         btn.appendChild(document.createTextNode(text));
     }
@@ -189,20 +178,13 @@
     function showOverlay() {
         let overlay = document.getElementById('gemini-export-overlay');
         if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'gemini-export-overlay';
-
-            const spinner = document.createElement('div');
-            spinner.className = 'gemini-spinner';
-
-            const text = document.createElement('div');
-            text.textContent = 'Exporting to Docs...';
-
-            overlay.appendChild(spinner);
-            overlay.appendChild(text);
-            document.body.appendChild(overlay);
+            const tpl = getTemplate('tpl-export-overlay');
+            if (tpl) {
+                document.body.appendChild(tpl);
+                overlay = document.getElementById('gemini-export-overlay');
+            }
         }
-        overlay.classList.add('visible');
+        if (overlay) overlay.classList.add('visible');
     }
 
     function hideOverlay() {
@@ -228,7 +210,8 @@
             while (iconContainer.firstChild) {
                 iconContainer.removeChild(iconContainer.firstChild);
             }
-            iconContainer.appendChild(createIconElement(CHECK_ICON_PATH));
+            const checkIcon = getIcon('check');
+            if (checkIcon) iconContainer.appendChild(checkIcon);
         }
     }
 
@@ -244,7 +227,8 @@
         // Initial Icon
         const iconContainer = document.createElement('span');
         iconContainer.style.display = 'flex';
-        iconContainer.appendChild(createIconElement(DOCS_ICON_PATH));
+        const docsIcon = getIcon('docs');
+        if (docsIcon) iconContainer.appendChild(docsIcon);
         btn.appendChild(iconContainer);
 
         btn.onclick = async (e) => {
@@ -716,8 +700,10 @@
         if (savedPos.left) panel.style.left = savedPos.left;
         else panel.style.right = savedPos.right;
 
-        const templateStr = GM_getResourceText('templateHTML').replace(/{{scriptVersion}}/g, GM_info.script.version);
-        setInnerHTML(panel, templateStr);
+        const tpl = getTemplate('tpl-one-turn-panel');
+        if (tpl) {
+            panel.appendChild(tpl);
+        }
         document.body.appendChild(panel);
 
         // Bind Dragging Logic
