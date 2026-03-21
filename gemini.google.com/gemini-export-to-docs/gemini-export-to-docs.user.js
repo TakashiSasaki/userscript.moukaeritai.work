@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.29
+// @version      0.4.30
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-16
 // @author       Takashi Sasaki
@@ -691,7 +691,7 @@
 
                 // 3. Dispatch Delete Event
                 console.log('[Gemini 1-Turn Export] Requesting conversation deletion.');
-                checkTargetUserscript('Gemini One-Click Delete').then((installed) => { showTargetScriptStatus('Gemini One-Click Delete', installed); window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete')); });
+                checkTargetUserscript('Gemini 1-Click Delete Conversation').then((installed) => { showTargetScriptStatus('Gemini 1-Click Delete Conversation', installed); window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete')); });
             } else {
                 console.log('[Gemini 1-Turn Export] Auto-delete skipped based on setting.');
                 if (execBtn) execBtn.textContent = 'Done!';
@@ -852,7 +852,7 @@
         };
         setTimeout(() => {
             checkDep('ge2d-dep-auto-select', 'Gemini Auto-Select Next');
-            checkDep('ge2d-dep-1click-del', 'Gemini One-Click Delete');
+            checkDep('ge2d-dep-1click-del', 'Gemini 1-Click Delete Conversation');
             checkDep('ge2d-dep-turn-counter', 'Gemini Turn Counter');
         }, 500);
 
