@@ -17,7 +17,7 @@ gemini.google.com ドメインに特有の指示は [AGENTS.md](/gemini.google.c
 ### Horizontal 1-Turn Action Bar
 AI側が1ターンしか返答を行っていない「初期回答」の時のみ画面の右下に自動的にポップアップするコントロールパネルを実装しています。
 
-1.  **Auto URL Match Control**: プロンプトと回答の中に1つだけURLが含まれており、それらが一致する場合に自動的にエクスポート処理をキックする `Enable` チェックボックスを管理します。
+1.  **Auto-Export (URL) Control**: プロンプトと回答の中に1つだけURLが含まれており、それらが一致する場合に自動的にエクスポート処理をキックする `Enable` チェックボックスを管理します。
 2.  **Auto Delete Control**: エクスポート完了後にチャット履歴からスレッドを削除する `1-Click Delete Conversation` スクリプトを呼び出すかを選択するチェックボックス。
 3.  **Auto-Copy Images Control**: エクスポート時に画面上に画像が含まれていれば、自動的に `gemini-turn-counter-copy-images` イベントを用いて画像をクリップボードにコピーさせるチェックボックス。
 4.  **Export/Delete Exec Button**: 手動で上記の設定を基にエクスポート＆削除処理を開始するボタン。
