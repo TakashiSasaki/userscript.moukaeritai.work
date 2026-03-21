@@ -37,6 +37,7 @@ Please refer to the root `AGENTS.md` for all operational procedures, including G
    - バージョン比較で「インストール済み(`Installed`)」と判定された場合でも、ユーザーがRawコードを確認できるよう、JavaScript側で `pointer-events: none;` 等を用いたボタンの無効化（クリッカブルの解除）は決して行わないでください。
    - インストールボタンの構造は、動的なバージョン比較機能のために、所定のDOM構造（`<div class="version-info">` 内に `.latest-version` と `.installed-version` を含む）を維持し、さらにボタン全体が横長（`display: inline-flex;`）に表示されるレイアウトを維持してください。
    - インラインスクリプトによってボタン全体のDOM（アイコン等）が上書きされないように、テキスト書き換え対象の要素（例: `<span class="button-text">`）のみを操作するようにしてください。
+   - 新規タブでインストールした後にUIを自動更新するため、メインのインストールボタンおよび依存関係カードのインストールボタン（`.dep-install-btn`）のクリック時に `userscript-ping` を2秒間隔で計5回（10秒間）送信するポーリング処理が実装されています。これにより利用者はページをリロードすることなく「Installed」への変化を確認できます。
 
 2. **依存関係の動的ステータス明記**:
    - このスクリプトが依存する他のユーザースクリプトがある場合、`index.html` 上に最新バージョン（`fetch`で取得）とインストール済みバージョン（`userscript-check-installed` イベントで取得）が表示される動的なカードリスト構造（`<div class="dep-card">`等）を維持し、ユーザーが依存元のバージョン情報をひと目で確認できるようにしてください。
