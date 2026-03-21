@@ -22,17 +22,6 @@
 (function () {
     'use strict';
 
-    const installCheckHosts = [
-        'userscript.moukaeritai.work',
-        '127.0.0.1'
-    ];
-    const installCheckSuffixes = [
-        '.app.github.dev'
-    ];
-
-    const isInstallCheckHost = installCheckHosts.includes(location.hostname) ||
-        installCheckSuffixes.some(suffix => location.hostname.endsWith(suffix));
-
     const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
@@ -43,10 +32,6 @@
     };
     document.addEventListener('userscript-ping', report);
 
-    if (isInstallCheckHost) {
-        report();
-        return;
-    }
     const SELECTORS = {
         // Trigger button (Conversation Options)
         // Shared by Desktop and Mobile
