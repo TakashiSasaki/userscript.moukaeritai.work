@@ -2,7 +2,10 @@
     <div class="one-turn-drag-handle" title="Gemini 1-Turn Auto Export v{{scriptVersion}}">
         <span class="one-turn-drag-icon">⠿</span>
     </div>
-    <div class="one-turn-controls-col">
+    
+    <div class="one-turn-inactive-content">1-Turn Exp (Inactive)</div>
+
+    <div class="one-turn-active-content one-turn-controls-col">
         <!-- ROW 1: Manual Sub-Controls -->
         <div class="one-turn-row">
             <label>
@@ -27,8 +30,9 @@
             <span id="ge2d-dep-1click-del" class="ge2d-dependency-icon" title="1-Click Delete - Checking...">🗑️ Delete <span class="dep-version">(...)</span></span>
             <span id="ge2d-dep-turn-counter" class="ge2d-dependency-icon" title="Turn Counter - Checking...">📋 Images <span class="dep-version">(...)</span></span>
         </div>
+        </div>
     </div>
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-left: auto;">
+    <div class="one-turn-active-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-left: auto;">
         <button id="gemini-btn-one-turn-exec">
             <span style="display: flex;">
                 <svg height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
@@ -39,7 +43,7 @@
         </button>
         <div class="one-turn-version" style="margin-top: 4px;">v{{scriptVersion}}</div>
     </div>
-    <div id="ge2d-script-status-container"></div>
+    <div id="ge2d-script-status-container" class="one-turn-active-content"></div>
 </template>
 
 <template id="tpl-export-overlay">

@@ -94,7 +94,7 @@
             <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
         </div>
 
-        <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js" target="_blank" class="install-button" data-version="">
+        <a href="gemini-export-to-docs.user.js" class="install-button" data-version="0.4.35">
             <span style="display: flex; align-items: center; gap: 8px;">
                 <span class="button-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -261,6 +261,7 @@
 
         <h2>更新履歴</h2>
         <ul>
+            <li><strong>v0.4.35</strong>: 1ターン専用パネルが非表示になるのではなく、最小化（Inactive）された状態で画面に残り、スクリプトの動作状況を常に把握できるようにUIパターンを改善しました。</li>
             <li><strong>v0.4.33</strong>: SVGアイコンやUIパネルのDOM構造を `template.html` にオフロードし、JavaScriptのファイルサイズと不要なセレクタを削減するリファクタリングを実施しました。</li>
             <li><strong>v0.4.24</strong>: 1ターンの専用UIパネルに、<code>gemini-turn-counter</code> と連携して一発で全画像をコピーできる「📋 Copy Images」ボタンを追加しました。</li>
             <li><strong>v0.4.18</strong>: URLの比較を行う際に大文字・小文字を区別しないように修正し、<code>Https://</code>のように入力された場合でも正しく自動実行がトリガーされるように改善しました。</li>

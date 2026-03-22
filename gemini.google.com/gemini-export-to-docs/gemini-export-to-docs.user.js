@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.34
+// @version      0.4.35
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
-// @lastModified 2026-03-16
+// @lastModified 2026-03-22
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
@@ -490,11 +490,13 @@
         const isOneTurn = turns.length === 1;
 
         let panel = document.getElementById('gemini-one-turn-panel');
+        if (!panel) {
+            panel = createOneTurnPanel();
+            panel.classList.add('inactive'); // Default to inactive until we confirm it's 1-turn
+        }
+
         if (isOneTurn) {
-            if (!panel) {
-                panel = createOneTurnPanel();
-            }
-            panel.classList.add('visible');
+            panel.classList.remove('inactive');
 
             // --- Auto URL Export Logic ---
             if (!autoExportTriggered && GM_getValue(AUTO_URL_TOGGLE_KEY, false)) {
@@ -603,7 +605,7 @@
                 }
             }
         } else if (panel) {
-            panel.classList.remove('visible');
+            panel.classList.add('inactive');
             autoExportTriggered = false; // Reset trigger state if UI is closed (e.g., user started a new topic or more turns added)
             if (autoExportTimerId) {
                 clearInterval(autoExportTimerId);
