@@ -13,7 +13,7 @@
             </label>
             <label style="margin-left: 8px;">
                 <input type="checkbox" id="gemini-auto-url-cb">
-                Auto(URL)
+                Auto-Export
             </label>
         </div>
         <!-- ROW 2: Auto-Copy Image Checkbox -->
@@ -24,7 +24,7 @@
             </label>
         </div>
         <!-- ROW 3: Dependencies -->
-        <div class="one-turn-row" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); justify-content: center; gap: 12px; font-size: 9px; opacity: 0.8;">
+        <div class="one-turn-row" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(0,0,0,0.1); justify-content: center; gap: 12px; font-size: 9px; opacity: 0.8;">
             <span id="ge2d-dep-auto-select" class="ge2d-dependency-icon" title="Auto-Select Next - Checking...">⏭️ Auto-Select <span class="dep-version">(...)</span></span>
             <span id="ge2d-dep-1click-del" class="ge2d-dependency-icon" title="1-Click Delete - Checking...">🗑️ Delete <span class="dep-version">(...)</span></span>
             <span id="ge2d-dep-turn-counter" class="ge2d-dependency-icon" title="Turn Counter - Checking...">📋 Images <span class="dep-version">(...)</span></span>
@@ -42,7 +42,6 @@
         </button>
         <div class="one-turn-version" style="margin-top: 4px;" title="Gemini 1-Click Export to Docs">v{{scriptVersion}}</div>
     </div>
-    <div id="ge2d-script-status-container" class="one-turn-active-content"></div>
 </template>
 
 <template id="tpl-export-overlay">

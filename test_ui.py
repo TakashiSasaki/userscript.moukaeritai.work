@@ -1,65 +1,52 @@
+import time
 from playwright.sync_api import sync_playwright
 
-def run():
+def test_ui():
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        context = browser.new_context()
-        page = context.new_page()
+        browser = p.chromium.launch()
+        page = browser.new_page()
 
-        page.goto('https://example.com/')
+        # We just need to load the template and style to check UI rendering
+        page.goto("file:///app/gemini.google.com/gemini-export-to-docs/index.html")
 
-        with open('gemini.google.com/gemini-auto-select-next/gemini-auto-select-next.user.js', 'r') as f:
-            script_content = f.read()
+        # Load the custom CSS and template
+        with open("/app/gemini.google.com/gemini-export-to-docs/style.css", "r") as f:
+            css = f.read()
+        with open("/app/gemini.google.com/gemini-export-to-docs/template.html", "r") as f:
+            html = f.read()
 
-        with open('gemini.google.com/gemini-auto-select-next/style.css', 'r') as f:
-            css_content = f.read()
+        page.evaluate("""(data) => {
+            const style = document.createElement('style');
+            style.innerHTML = data.css;
+            document.head.appendChild(style);
 
-        # Let's bypass host check
-        script_content = script_content.replace(
-            'const isInstallCheckHost = installCheckHosts.includes(location.hostname);',
-            'const isInstallCheckHost = false;'
-        )
+            const div = document.createElement('div');
+            div.innerHTML = data.html;
+            document.body.appendChild(div);
 
-        # Modify the IIFE to expose init
-        script_content = script_content.replace(
-            '(function () {',
-            'window.geminiAutoSelectNextMockInit = null; (function () {'
-        ).replace(
-            'function init() {',
-            'window.geminiAutoSelectNextMockInit = init; function init() {'
-        )
+            // Reconstruct the panel structure for testing
+            const panel = document.createElement('div');
+            panel.id = 'gemini-one-turn-panel';
+            panel.style.top = '50px';
+            panel.style.left = '50px';
 
-        page.evaluate(f"""
-            document.body.innerHTML = `
-                <style>body {{ font-family: sans-serif; background: #f0f0f0; margin: 0; padding: 20px; }}</style>
-                <h1>Test Page for Gemini Auto-Select Next</h1>
-                <a href="/app/1234567890123456" class="conversation selected">Conversation 1</a>
-            `;
+            const tpl = document.getElementById('tpl-one-turn-panel');
+            panel.appendChild(tpl.content.cloneNode(true));
+            document.body.appendChild(panel);
+        }""", {"css": css, "html": html})
 
-            window.GM_info = {{ script: {{ name: 'Gemini Auto-Select Next', version: '0.2.34' }} }};
-            window.GM_setValue = () => {{}};
-            window.GM_getValue = () => {{ return {{ top: '80px', right: '20px' }}; }};
-            window.GM_getResourceText = () => `{css_content}`;
-            window.GM_addStyle = (css) => {{
-                const style = document.createElement('style');
-                style.textContent = css;
-                document.head.appendChild(style);
-                return style;
-            }};
-        """)
+        # Wait for render
+        time.sleep(1)
+        page.screenshot(path="test_ui_active.png")
 
-        page.add_script_tag(content=script_content)
-
-        # Call init directly
-        page.evaluate("window.geminiAutoSelectNextMockInit && window.geminiAutoSelectNextMockInit()")
-
-        # Wait for the panel
-        page.wait_for_selector('#gemini-auto-switch-panel.ready', state='visible', timeout=5000)
-
-        # Take a screenshot
-        page.screenshot(path='screenshot.png')
+        # Test inactive state
+        page.evaluate("""() => {
+            document.getElementById('gemini-one-turn-panel').classList.add('inactive');
+        }""")
+        time.sleep(1)
+        page.screenshot(path="test_ui_inactive.png")
 
         browser.close()
 
 if __name__ == '__main__':
-    run()
+    test_ui()

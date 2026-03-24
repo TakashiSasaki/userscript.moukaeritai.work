@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.37
+// @version      0.4.38
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2024-03-24
 // @author       Takashi Sasaki
@@ -49,32 +49,6 @@
             document.addEventListener('userscript-check-installed', handler);
             document.dispatchEvent(new CustomEvent('userscript-ping'));
         });
-    }
-
-    // UI Helper for displaying status
-    function showTargetScriptStatus(targetName, statusDetail) {
-        const container = document.getElementById('ge2d-script-status-container');
-        if (!container) {
-            console.log(`[Script Status] ${targetName}: ${statusDetail ? 'Found v' + statusDetail.version : 'Not Found'}`);
-            return;
-        }
-
-        const statusText = statusDetail
-            ? `✅ ${targetName} (v${statusDetail.version})`
-            : `❌ ${targetName} Not Found`;
-
-        container.textContent = statusText;
-        container.classList.remove('success', 'error');
-        container.classList.add('visible', statusDetail ? 'success' : 'error');
-
-        // Auto hide after 5 seconds if successful, keep if failed
-        if (statusDetail) {
-            setTimeout(() => {
-                if (container.textContent === statusText) {
-                    container.classList.remove('visible', 'success', 'error');
-                }
-            }, 5000);
-        }
     }
 
     // Removed initial URL check as it will be handled dynamically
@@ -663,7 +637,7 @@
 
                 // 3. Dispatch Delete Event
                 console.log('[Gemini 1-Turn Export] Requesting conversation deletion.');
-                checkTargetUserscript('Gemini 1-Click Delete Conversation').then((installed) => { showTargetScriptStatus('Gemini 1-Click Delete Conversation', installed); window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete')); });
+                checkTargetUserscript('Gemini 1-Click Delete Conversation').then(() => { window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete')); });
             } else {
                 console.log('[Gemini 1-Turn Export] Auto-delete skipped based on setting.');
                 if (execBtn) execBtn.textContent = 'Done!';
