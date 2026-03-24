@@ -1,4 +1,10 @@
-// ==UserScript==
+
+
+        window.GM_setValue = function(k, v) { console.log('GM_setValue', k, v); };
+        window.GM_getValue = function(k, d) { return d; };
+        window.GM_info = { script: { name: 'Gemini Artifact Exporter Worker', version: '0.2.5' } };
+
+        // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
 // @version      0.2.5
@@ -38,7 +44,6 @@
 
     if (isInstallCheckHost) {
         report();
-        return;
     }
 
     // Custom Event Helper for checking if target userscript is installed
@@ -267,7 +272,7 @@
                 }
             }, 500); // Start checking earlier, as we now wait for the element
         }
-        return; // Don't run the rest of the worker logic in Google Docs
+        // return;
     }
 
     // --- Utility Functions ---
@@ -453,15 +458,15 @@
             if (pos.right && !pos.left) indicator.style.right = pos.right;
 
             const handle = document.createElement('div');
-            handle.textContent = `v${VERSION}`;
+            handle.textContent = \`v\${VERSION}\`;
             handle.title = GM_info.script.name;
-            handle.style.cssText = `
+            handle.style.cssText = \`
                 cursor: grab;
                 font-weight: bold;
                 padding: 2px 4px;
                 background: rgba(255, 255, 255, 0.5);
                 border-radius: 4px;
-            `;
+            \`;
 
             // Make draggable
             let isDragging = false, startX, startY, startLeft, startTop;
@@ -807,6 +812,9 @@
     }
 
 
+    window.test_getOrCreateIndicator = getOrCreateIndicator;
+    window.test_showIndicator = showIndicator;
+    window.test_hideIndicator = hideIndicator;
     // --- Event Listeners ---
 
     document.addEventListener('gemini-artifact-exporter-worker:request', async (e) => {
@@ -936,7 +944,5 @@
         }
     });
 
-    // Initialize UI so the version badge is always visible when inactive
-    getOrCreateIndicator();
-
 })();
+
