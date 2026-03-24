@@ -282,7 +282,7 @@
         setInnerHTML(panel, `
             <button class="auto-scroll-btn">▶️ Start Auto-Scroll</button>
             <div class="panel-info">
-                <span class="version-badge">v${GM_info.script.version}</span>
+                <span class="version-badge" title="Gemini Auto-Scroll">v${GM_info.script.version}</span>
                 <span class="gtc-badge">0 items</span>
             </div>
         `);
@@ -299,6 +299,7 @@
         let hasDragged = false;
         let dragOffset = { x: 0, y: 0, startX: 0, startY: 0 };
 
+        const handle = panel.querySelector('.version-badge');
         const startDrag = (e) => {
             if (e.button !== 0 || e.target.closest('button, input')) return;
             isDragging = true;
@@ -311,7 +312,7 @@
             document.body.style.userSelect = 'none';
         };
 
-        panel.addEventListener('mousedown', startDrag);
+        handle.addEventListener('mousedown', startDrag);
 
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;

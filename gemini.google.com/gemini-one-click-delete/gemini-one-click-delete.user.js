@@ -345,7 +345,7 @@
                 </svg>
                 Delete Chat
             </button>
-            <span class="version-badge">v${version}</span>
+            <span class="version-badge" title="Gemini 1-Click Delete Conversation">v${version}</span>
         `);
 
         document.body.appendChild(panel);

@@ -340,9 +340,11 @@
 
         const title = document.createElement('span');
         const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '';
-        title.textContent = scriptVersion ? `Prompt Injector (v${scriptVersion})` : 'Prompt Injector';
+        title.textContent = scriptVersion ? `v${scriptVersion}` : 'Prompt Injector';
+        title.title = 'Gemini Prompt Injector';
         title.style.fontWeight = 'bold';
         title.style.fontSize = '12px';
+        title.style.cursor = 'grab';
 
         const minBtn = document.createElement('button');
         minBtn.innerHTML = getTrustedHTML(isMinimized
@@ -443,13 +445,13 @@
         let isDragging = false;
         let startX, startY, initialX, initialY;
 
-        header.addEventListener('mousedown', (e) => {
-            if (e.target === minBtn) return;
+        title.addEventListener('mousedown', (e) => {
             isDragging = true;
             startX = e.clientX;
             startY = e.clientY;
             initialX = uiContainer.offsetLeft;
             initialY = uiContainer.offsetTop;
+            title.style.cursor = 'grabbing';
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp);
         });

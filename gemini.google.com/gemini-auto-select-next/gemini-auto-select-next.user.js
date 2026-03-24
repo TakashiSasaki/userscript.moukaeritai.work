@@ -195,7 +195,7 @@
                 Auto
             </label>
             <button class="manual-next-btn" title="Explicitly skip to the next conversation">⏭️ Next</button>
-            <span class="version-badge">v${GM_info.script.version}</span>
+            <span class="version-badge" title="Gemini Auto-Select Next">v${GM_info.script.version}</span>
         `);
         document.body.appendChild(panel);
 
@@ -223,7 +223,8 @@
         let isDragging = false;
         let offset = { x: 0, y: 0 };
 
-        panel.addEventListener('mousedown', (e) => {
+        const handle = panel.querySelector('.version-badge');
+        handle.addEventListener('mousedown', (e) => {
             if (e.target.closest('button') || e.target.closest('input') || e.target.closest('label')) return;
             isDragging = true;
             offset.x = e.clientX - panel.offsetLeft;

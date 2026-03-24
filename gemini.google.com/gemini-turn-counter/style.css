@@ -41,6 +41,10 @@
     justify-content: center;
     width: 100%;
     height: 100%;
+    cursor: grab;
+}
+#gemini-turn-counter-ui .gtc-icon:active {
+    cursor: grabbing;
 }
 #gemini-turn-counter-ui.expanded .gtc-icon {
     display: none;

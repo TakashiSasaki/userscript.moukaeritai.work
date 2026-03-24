@@ -337,7 +337,8 @@
             const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.4.31';
 
             if (iconDiv) {
-                iconDiv.textContent = `Gemini Turns v${scriptVersion} | U:${userTurnsCount} M:${modelTurnsCount} A:${totalArtifacts} L:${totalLinkCards}`;
+                iconDiv.textContent = `v${scriptVersion} | U:${userTurnsCount} M:${modelTurnsCount} A:${totalArtifacts} L:${totalLinkCards}`;
+                iconDiv.title = 'Gemini Turn Counter';
             }
 
             if (!contentDiv.hasAttribute('data-gtc-initialized')) {
@@ -661,7 +662,7 @@
         let isDragging = false;
         let startX, startY, startLeft, startTop;
 
-        container.addEventListener('mousedown', (e) => {
+        const startDrag = (e) => {
             // Ignore drag if clicking interactive elements
             if (e.target.closest('button, input, .gtc-minimize-btn, .gtc-thumbnail')) return;
 
@@ -671,6 +672,11 @@
             const rect = container.getBoundingClientRect();
             startLeft = rect.left;
             startTop = rect.top;
+
+            const handle = e.target;
+            if(handle) {
+                handle.style.cursor = 'grabbing';
+            }
 
             const onMouseMove = (eMove) => {
                 const dx = eMove.clientX - startX;
@@ -689,6 +695,9 @@
             const onMouseUp = () => {
                 document.removeEventListener('mousemove', onMouseMove);
                 document.removeEventListener('mouseup', onMouseUp);
+                if(handle) {
+                    handle.style.cursor = 'grab';
+                }
                 if (isDragging) {
                     localStorage.setItem('gtc-pos-x', container.style.left);
                     localStorage.setItem('gtc-pos-y', container.style.top);
@@ -699,6 +708,15 @@
 
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp);
+        };
+
+        const iconHandle = container.querySelector('.gtc-icon');
+        if (iconHandle) iconHandle.addEventListener('mousedown', startDrag);
+
+        container.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('gtc-version')) {
+                startDrag(e);
+            }
         });
 
         container.addEventListener('click', (e) => {
