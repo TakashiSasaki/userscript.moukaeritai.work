@@ -29,15 +29,27 @@
     cursor: grab;
     user-select: none;
     padding: 4px 8px;
-    font-size: 11px;
-    font-weight: bold;
     color: #666;
     background-color: transparent;
     border-radius: 4px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     white-space: nowrap;
+}
+
+.ghl-script-title {
+    font-size: 6px;
+    font-weight: normal;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.ghl-script-version {
+    font-size: 11px;
+    font-weight: bold;
+    line-height: 1;
 }
 
 .ghl-version-handle:active {
