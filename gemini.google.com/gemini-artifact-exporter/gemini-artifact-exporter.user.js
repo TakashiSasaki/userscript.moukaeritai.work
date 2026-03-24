@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.10
+// @version      0.4.12
 // @lastModified 2026-03-21
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
@@ -606,6 +606,8 @@
 
         const progressEl = document.getElementById('gemini-batch-export-progress');
 
+        let hasError = false;
+
         for (let i = 0; i < selectedTitles.length; i++) {
             if (cancelExport) {
                 log('Batch export cancelled by user.');
@@ -663,18 +665,27 @@
                             break;
                         }
                     }
+
+                    // Critical failure handled here
+                    hasError = true;
+                    log(`Critical Failure during batch export on item: "${selectedTitles[i]}". Reason: ${result.reason}`);
+                    alert(`エクスポートに失敗しました ("${selectedTitles[i]}": ${result.reason})。\n誤削除を防ぐため、処理を中断します。`);
+                    if (progressEl) progressEl.textContent = 'Error Interrupted';
+                    setTimeout(() => { if (progressEl) progressEl.textContent = ''; }, 5000);
+                    finishExport();
+                    return; // Early exit preventing auto-delete
                 }
             }
             if (i < selectedTitles.length - 1) await sleep(500);
         }
 
-        if (progressEl) progressEl.textContent = 'Done!';
+        if (progressEl && !hasError) progressEl.textContent = 'Done!';
         setTimeout(() => { if (progressEl) progressEl.textContent = ''; }, 3000);
 
         log('BATCH EXPORT COMPLETED.');
         finishExport();
 
-        if (GM_getValue(AUTO_DELETE_KEY, false) && !cancelExport) {
+        if (GM_getValue(AUTO_DELETE_KEY, false) && !cancelExport && !hasError) {
             log('Auto-delete enabled. Requesting gemini-one-click-delete...');
             await sleep(1000);
             checkTargetUserscript('Gemini 1-Click Delete Conversation').then((installed) => { showTargetScriptStatus('Gemini 1-Click Delete Conversation', installed); window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete')); });
