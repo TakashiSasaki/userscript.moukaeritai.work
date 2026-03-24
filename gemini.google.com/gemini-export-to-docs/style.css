@@ -107,8 +107,11 @@
 }
 
 #gemini-one-turn-panel.inactive {
-    opacity: 0.7;
+    opacity: 0.9;
     padding: 4px 12px;
+    background-color: rgba(255, 182, 193, 0.9);
+    color: #333;
+    border-color: rgba(255, 182, 193, 0.9);
 }
 
 #gemini-one-turn-panel.inactive .one-turn-active-content {
@@ -118,8 +121,9 @@
 .one-turn-inactive-content {
     display: none;
     font-size: 11px;
-    opacity: 0.8;
+    opacity: 1;
     white-space: nowrap;
+    color: #333;
 }
 
 #gemini-one-turn-panel.inactive .one-turn-inactive-content {
@@ -128,10 +132,14 @@
 
 .one-turn-version {
     font-size: 9px;
-    opacity: 0.7;
+    opacity: 0.8;
     margin-top: 2px;
     line-height: 1;
     cursor: grab;
+}
+
+#gemini-one-turn-panel.inactive .one-turn-version {
+    color: #333;
 }
 .one-turn-version:active {
     cursor: grabbing;
