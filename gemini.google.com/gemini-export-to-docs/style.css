@@ -126,31 +126,21 @@
     display: block;
 }
 
-.one-turn-drag-handle {
-    cursor: move;
-    cursor: grab;
-    color: rgba(255, 255, 255, 0.5);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding-right: 12px;
-    border-right: 1px solid rgba(255, 255, 255, 0.2);
-    margin-right: 12px;
-    user-select: none;
-}
-.one-turn-drag-icon {
-    font-size: 16px;
-    line-height: 1;
-}
 .one-turn-version {
     font-size: 9px;
     opacity: 0.7;
     margin-top: 2px;
     line-height: 1;
+    cursor: grab;
 }
-.one-turn-drag-handle:hover {
-    opacity: 1;
+.one-turn-version:active {
+    cursor: grabbing;
+}
+.one-turn-inactive-content {
+    cursor: grab;
+}
+.one-turn-inactive-content:active {
+    cursor: grabbing;
 }
 .one-turn-controls-col {
     display: flex;

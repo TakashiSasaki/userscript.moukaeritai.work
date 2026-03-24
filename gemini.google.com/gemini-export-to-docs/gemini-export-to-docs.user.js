@@ -709,16 +709,20 @@
         document.body.appendChild(panel);
 
         // Bind Dragging Logic
-        const dragHandle = panel.querySelector('.one-turn-drag-handle');
         let isDragging = false;
         let offset = { x: 0, y: 0 };
 
-        dragHandle.addEventListener('mousedown', (e) => {
+        const startDrag = (e) => {
             isDragging = true;
             offset.x = e.clientX - panel.offsetLeft;
             offset.y = e.clientY - panel.offsetTop;
             panel.style.transition = 'none';
-        });
+        };
+
+        const versionActive = panel.querySelector('.one-turn-version');
+        const versionInactive = panel.querySelector('.one-turn-inactive-content');
+        if (versionActive) versionActive.addEventListener('mousedown', startDrag);
+        if (versionInactive) versionInactive.addEventListener('mousedown', startDrag);
 
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;

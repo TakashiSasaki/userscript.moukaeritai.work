@@ -29,7 +29,8 @@
 #gemini-auto-switch-panel:hover {
     box-shadow: 0 6px 16px rgba(0,0,0,0.2);
 }
-#gemini-auto-switch-panel .version-badge { font-size: 10px; color: #7f8c8d; font-family: monospace; }
+#gemini-auto-switch-panel .version-badge { font-size: 10px; color: #7f8c8d; font-family: monospace; cursor: grab; }
+#gemini-auto-switch-panel .version-badge:active { cursor: grabbing; }
 #gemini-auto-switch-panel .auto-switch-label {
     display: flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 500;
 }
