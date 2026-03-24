@@ -30,9 +30,11 @@
 
 .panel-info {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-end;
     padding: 0 4px;
     cursor: move;
+    line-height: 1.2;
 }
 .widget-header h1 {
     font-size: 13px;
