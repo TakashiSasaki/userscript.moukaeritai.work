@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.12
+// @version      0.4.13
 // @lastModified 2026-03-21
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
@@ -86,7 +86,7 @@
     }
 
     // Helper for persistent dependency indicator
-    function checkDep(targetName, elementId, shortName) {
+    function checkDep(targetName, elementId) {
         checkTargetUserscript(targetName).then((installed) => {
             const el = document.getElementById(elementId);
             if (el) {
@@ -764,9 +764,9 @@
         log('Artifact Exporter panel attached to document body.');
 
         // Check dependencies for persistent UI indicators
-        checkDep('Gemini History Loader', 'gae-dep-history-loader', 'History');
-        checkDep('Gemini Artifact Exporter Worker', 'gae-dep-worker', 'Worker');
-        checkDep('Gemini 1-Click Delete Conversation', 'gae-dep-1click-del', 'Delete');
+        checkDep('Gemini History Loader', 'gae-dep-history-loader');
+        checkDep('Gemini Artifact Exporter Worker', 'gae-dep-worker');
+        checkDep('Gemini 1-Click Delete Conversation', 'gae-dep-1click-del');
 
         // Bind events
         const scanBtn = panel.querySelector('#gemini-btn-scan');
@@ -784,9 +784,9 @@
             autoDeleteCb.onchange = (e) => GM_setValue(AUTO_DELETE_KEY, e.target.checked);
         }
 
-        const header = panel.querySelector('.gae-panel-header');
-        if (header) {
-            makePanelDraggable(panel, header, PANEL_POSITION_KEY);
+        const versionHandle = panel.querySelector('.gae-version-handle');
+        if (versionHandle) {
+            makePanelDraggable(panel, versionHandle, PANEL_POSITION_KEY);
         }
 
         const savedPosition = GM_getValue(PANEL_POSITION_KEY, null);
@@ -819,20 +819,26 @@
             return;
         }
 
-        const wasHidden = panel.style.display === 'none';
-        panel.style.display = shouldActive ? 'flex' : 'none';
+        // Always display the panel to show dependencies and version handle
+        panel.style.display = 'flex';
 
-        if (shouldActive && wasHidden) {
-            log('Visibility check passed. Showing panel.');
-        } else if (!shouldActive && !wasHidden) {
-            log(`Visibility check failed. Hiding panel (conversation=${isConversationPage()}, actionsMenu=${actionsMenuExists}, hasArtifacts=${hasArtifacts}).`);
+        const mainContent = panel.querySelector('#gae-main-content');
+        if (mainContent) {
+            const wasHidden = mainContent.style.display === 'none';
+            mainContent.style.display = shouldActive ? 'flex' : 'none';
+
+            if (shouldActive && wasHidden) {
+                log('Visibility check passed. Showing main panel contents.');
+            } else if (!shouldActive && !wasHidden) {
+                log(`Visibility check failed. Hiding main panel contents (conversation=${isConversationPage()}, actionsMenu=${actionsMenuExists}, hasArtifacts=${hasArtifacts}).`);
+            }
         }
 
         // Force style update to ensure visibility (handle lingering elements or style glitches)
-        if (shouldActive) {
-            panel.style.backgroundColor = 'rgba(255, 182, 193, 0.9)'; // LightPink
-            panel.style.zIndex = '10000';
+        panel.style.backgroundColor = 'rgba(255, 182, 193, 0.9)'; // LightPink
+        panel.style.zIndex = '10000';
 
+        if (shouldActive) {
             // Automatic Sidebar Scan Trigger
             if (!hasAutoScanned && !isExporting && !isScanning) {
                 hasAutoScanned = true;

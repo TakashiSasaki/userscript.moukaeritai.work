@@ -1,23 +1,26 @@
-<div class="gae-panel-header">Artifact Exporter v{{scriptVersion}}</div>
-<div class="gae-button-container">
-    <div id="gae-script-status-container"></div>
-    <div class="gae-scan-buttons-container">
-        <button id="gemini-btn-scan" class="gae-scan-btn" title="右サイドバーにある「このチャット内のファイル一覧」を展開してスキャンします。">Scan Sidebar Menu</button>
-        <button id="gemini-btn-deep-scan" class="gae-deep-scan-btn" title="メイン会話履歴を上部までスクロールしながら、履歴に埋まっているアーティファクトをすべて検出します。数秒かかります。">Scan Chat History</button>
+<div id="gae-script-status-container"></div>
+<div id="gae-main-content" class="gae-main-content">
+    <div class="gae-button-container">
+        <div class="gae-scan-buttons-container">
+            <button id="gemini-btn-scan" class="gae-scan-btn" title="右サイドバーにある「このチャット内のファイル一覧」を展開してスキャンします。">Scan Sidebar</button>
+            <button id="gemini-btn-deep-scan" class="gae-deep-scan-btn" title="メイン会話履歴を上部までスクロールしながら、履歴に埋まっているアーティファクトをすべて検出します。数秒かかります。">Scan Chat History</button>
+        </div>
+        <div id="gemini-artifact-list-container"></div>
+        <div class="gae-export-row">
+            <button id="gemini-btn-export" class="gae-export-btn" title="選択したアーティファクトをGoogle Docsにエクスポートします。">Export Selected</button>
+            <label class="gae-checkbox-container" title="Export後に自動でチャットを削除します">
+                <input type="checkbox" class="gae-checkbox" id="gae-auto-delete-cb"> Auto-Delete
+            </label>
+        </div>
+        <div id="gemini-batch-export-progress"></div>
     </div>
-    <div id="gemini-artifact-list-container"></div>
-    <button id="gemini-btn-export" class="gae-export-btn" title="選択したアーティファクトをGoogle Docsにエクスポートします。">Export Selected</button>
-    <div id="gemini-batch-export-progress"></div>
-    <div class="gae-toggles-container">
-        <label class="gae-checkbox-container">
-            Auto-Delete Chat
-            <input type="checkbox" class="gae-checkbox" id="gae-auto-delete-cb">
-        </label>
-    </div>
-    <!-- Dependencies -->
+</div>
+<!-- Dependencies and Version -->
+<div class="gae-bottom-bar">
     <div class="gae-deps-row">
-        <span id="gae-dep-history-loader" class="gae-dependency-icon" title="History Loader - Checking...">🔄 History <span class="dep-version">(...)</span></span>
-        <span id="gae-dep-worker" class="gae-dependency-icon" title="Exporter Worker - Checking...">⚙️ Worker <span class="dep-version">(...)</span></span>
-        <span id="gae-dep-1click-del" class="gae-dependency-icon" title="1-Click Delete - Checking...">🗑️ Delete <span class="dep-version">(...)</span></span>
+        <span id="gae-dep-history-loader" class="gae-dependency-icon" title="History Loader - Checking...">🔄 <span class="dep-version">(...)</span></span>
+        <span id="gae-dep-worker" class="gae-dependency-icon" title="Exporter Worker - Checking...">⚙️ <span class="dep-version">(...)</span></span>
+        <span id="gae-dep-1click-del" class="gae-dependency-icon" title="1-Click Delete - Checking...">🗑️ <span class="dep-version">(...)</span></span>
     </div>
+    <span id="gae-version-handle" class="gae-version-handle" title="Gemini Artifact Exporter">v{{scriptVersion}}</span>
 </div>
