@@ -292,6 +292,26 @@
         </ul>
     </div>
 
+
+    <h2>連携スクリプト</h2>
+    <p>他のユーザースクリプトとカスタムイベントを通じて連携します。</p>
+
+    <h3>送信（使う側）</h3>
+    <p>以下のスクリプトに対してイベントをディスパッチし、処理を依頼します：</p>
+    <ul>
+        <li><strong>Turn Counter</strong>: <code>gemini-turn-counter-copy-images</code> イベントを送信して画像コピー処理を依頼します。</li>
+        <li><strong>Auto Paste in New Tab</strong>: (別ドメイン) <code>EmulateDocsPaste</code> イベントを送信してDocsへの貼り付けを依頼します。</li>
+        <li><strong>Gemini Exported Docs Auto-Closer</strong>: (別ドメイン) <code>gemini-docs-closer-force-close</code> イベントを送信してDocsタブの強制終了を依頼します。</li>
+        <li><strong>One Click Delete</strong>: <code>gemini-one-click-delete:request-delete</code> イベントを送信してエクスポート完了後に会話を自動削除します。</li>
+        <li><strong>Auto-Select Next</strong>: <code>gemini-auto-select-next:request-next</code> イベントを送信して次のアイテムを自動選択します。</li>
+    </ul>
+
+    <h3>受信（使われる側）</h3>
+    <p>以下のスクリプトからイベントを受信し、自身の処理を実行します：</p>
+    <ul>
+        <li><strong>Turn Counter</strong>: <code>gemini-turn-counter-copy-images-result</code> イベントを受信して画像コピー結果を受け取ります。</li>
+    </ul>
+
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             let serverVersion = null;

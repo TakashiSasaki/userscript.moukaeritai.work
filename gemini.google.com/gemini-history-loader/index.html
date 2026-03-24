@@ -55,10 +55,7 @@
                 <span class="version-badge installed-version" style="display: none;"></span>
             </div>
         </a>
-<div class="dependency-badges" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Artifact Exporter</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini Artifact Exporter</span>
-</div>
+
     </p>
 
     <h2>主な機能</h2>
@@ -70,16 +67,22 @@
         <li><code>gemini-history-loader:complete</code> イベントのディスパッチ</li>
     </ul>
 
-    <h2>連携スクリプト（送信先）</h2>
-    <p>このスクリプトは、以下のスクリプトにイベントを送信し、機能してもらうことを期待しています。</p>
+
+
+
+    <h2>連携スクリプト</h2>
+    <p>他のユーザースクリプトとカスタムイベントを通じて連携します。</p>
+
+    <h3>送信（使う側）</h3>
+    <p>以下のスクリプトに対してイベントをディスパッチし、処理を依頼します：</p>
     <ul>
-        <li><a href="../gemini-artifact-exporter/index.html">Artifact Exporter</a> (<code>gemini-history-loader:complete</code>)</li>
+        <li><strong>Artifact Exporter</strong>: <code>gemini-history-loader:complete</code> イベントを送信して履歴の全読み込み完了を通知します。</li>
     </ul>
 
-    <h2>連携スクリプト（受信元）</h2>
-    <p>このスクリプトは、以下のスクリプトからイベントを受信して動作します。</p>
+    <h3>受信（使われる側）</h3>
+    <p>以下のスクリプトからイベントを受信し、自身の処理を実行します：</p>
     <ul>
-        <li><a href="../gemini-artifact-exporter/index.html">Artifact Exporter</a> (<code>gemini-history-loader:request</code>)</li>
+        <li><strong>Artifact Exporter</strong>: <code>gemini-history-loader:request</code> イベントを受信して履歴の全読み込み処理を開始します。</li>
     </ul>
 
     <script>

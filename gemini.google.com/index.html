@@ -317,151 +317,6 @@
     <p style="color: var(--text-dim); margin-bottom: 2rem; line-height: 1.6;">
      以下のスクリプトは、カスタムイベントを通じて相互に連携し、より強力でシームレスな体験を提供します。最大限の機能を発揮するために、一括してインストールすることを推奨します。
     </p>
-    <div class="matrix-container" style="margin-bottom: 2rem; overflow-x: auto;">
-     <h3 style="color: var(--text-main); font-weight: 500; margin-bottom: 1rem; font-size: 1.2rem;">
-      カスタムイベント連携マトリックス
-     </h3>
-     <table style="width: 100%; border-collapse: collapse; text-align: left; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; overflow: hidden; backdrop-filter: blur(10px);">
-      <thead>
-       <tr style="background: rgba(255, 255, 255, 0.1); color: var(--text-main);">
-        <th style="padding: 12px 16px; border-bottom: 1px solid var(--glass-border);">
-         イベント名
-        </th>
-        <th style="padding: 12px 16px; border-bottom: 1px solid var(--glass-border);">
-         送信元 (Dispatch)
-        </th>
-        <th style="padding: 12px 16px; border-bottom: 1px solid var(--glass-border);">
-         受信先 (Listen)
-        </th>
-       </tr>
-      </thead>
-      <tbody style="color: var(--text-dim); font-size: 0.95rem;">
-       <tr>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-family: monospace;">
-          gemini-turn-counter-copy-images
-         </code>
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         Artifact Exporter Worker
-         <br/>
-         Export to Docs
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         Turn Counter
-        </td>
-       </tr>
-       <tr>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-family: monospace;">
-          gemini-turn-counter-copy-images-result
-         </code>
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         Turn Counter
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         Artifact Exporter Worker
-         <br/>
-         Export to Docs
-        </td>
-       </tr>
-       <tr>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-family: monospace;">
-          gemini-artifact-exporter-worker:request
-         </code>
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         Artifact Exporter
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         Artifact Exporter Worker
-        </td>
-       </tr>
-       <tr>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-family: monospace;">
-          gemini-artifact-exporter-worker:result
-         </code>
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         Artifact Exporter Worker
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         Artifact Exporter
-        </td>
-       </tr>
-       <tr>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-family: monospace;">
-          gemini-artifact-exporter-worker:cancel
-         </code>
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         Artifact Exporter
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         Artifact Exporter Worker
-        </td>
-       </tr>
-       <tr>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-family: monospace;">
-          gemini-one-click-delete:request-delete
-         </code>
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         Artifact Exporter
-         <br/>
-         Export to Docs
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         One Click Delete
-        </td>
-       </tr>
-       <tr>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-family: monospace;">
-          gemini-auto-select-next:request-next
-         </code>
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         Export to Docs
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         Auto-Select Next
-        </td>
-       </tr>
-       <tr>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-family: monospace;">
-          gemini-history-loader:request
-         </code>
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         Artifact Exporter
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         History Loader
-        </td>
-       </tr>
-       <tr>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-family: monospace;">
-          gemini-history-loader:complete
-         </code>
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         History Loader
-        </td>
-        <td style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-         Artifact Exporter
-        </td>
-       </tr>
-      </tbody>
-     </table>
-    </div>
     <ul class="project-list">
      <li class="project-item">
       <div class="project-title">
@@ -471,20 +326,14 @@
        </a>
       </div>
       <p class="project-desc">
-       Gemini の仮想スクロールを回避し、過去の会話履歴を一番上まで強制的に読み込むための共有モジュールです。インストール状況を示すフローティングUIが画面に表示され、履歴取得中はプログレスを表示するパネルに展開されます。（単体では機能しません）<br><br>
-       <span style="font-size: 0.9em; display: block; margin-bottom: 4px;"><strong>📤 送信先 (使われる側):</strong> Artifact Exporter</span>
-       <span style="font-size: 0.9em; display: block;"><strong>📥 受信元 (使う側):</strong> Artifact Exporter</span>
-      </p>
+       Gemini の仮想スクロールを回避し、過去の会話履歴を一番上まで強制的に読み込むための共有モジュールです。インストール状況を示すフローティングUIが画面に表示され、履歴取得中はプログレスを表示するパネルに展開されます。（単体では機能しません）</p>
       <a class="install-button" data-script-name="Gemini History Loader" href="gemini-history-loader/gemini-history-loader.user.js" target="_blank">
                     <svg height="18" viewBox="0 0 24 24" width="18">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                     </svg>
                     <span>Install</span>
                 </a>
-<div class="dependency-badges" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Artifact Exporter</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini Artifact Exporter</span>
-</div>
+
      </li>
      <li class="project-item">
       <div class="project-title">
@@ -494,10 +343,7 @@
        </a>
       </div>
       <p class="project-desc">
-       Artifact Exporter のバックグラウンド処理を担当するワーカーです。ドキュメントエクスポートの際のDOM操作や待機処理を分離して安定性を高めます。（単体では機能しません）<br><br>
-       <span style="font-size: 0.9em; display: block; margin-bottom: 4px;"><strong>📤 送信先 (使われる側):</strong> Artifact Exporter, Turn Counter</span>
-       <span style="font-size: 0.9em; display: block;"><strong>📥 受信元 (使う側):</strong> Artifact Exporter, Turn Counter</span>
-      </p>
+       Artifact Exporter のバックグラウンド処理を担当するワーカーです。ドキュメントエクスポートの際のDOM操作や待機処理を分離して安定性を高めます。（単体では機能しません）</p>
       <a class="install-button" data-script-name="Gemini Artifact Exporter Worker" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js" target="_blank">
                         <svg height="18" viewbox="0 0 24 24" width="18">
         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
@@ -505,14 +351,7 @@
        </svg>
                         <span>Install</span>
                     </a>
-<div class="dependency-badges" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Auto Paste in New Tab</span>
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Artifact Exporter</span>
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Exported Docs Auto-Closer</span>
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Turn Counter</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini Artifact Exporter</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini Turn Counter</span>
-</div>
+
      </li>
      <li class="project-item">
       <div class="project-title">
@@ -523,10 +362,7 @@
       </div>
       <p class="project-desc">
        サイドバーに表示される Article 形式のアーティファクトを Google ドキュメントにまとめてエクスポート。One Click Delete
-                    との併用で、エクスポート完了後に会話を自動削除する連携も可能です。<br><br>
-       <span style="font-size: 0.9em; display: block; margin-bottom: 4px;"><strong>📤 送信先 (使う側):</strong> Artifact Exporter Worker, History Loader, One Click Delete</span>
-       <span style="font-size: 0.9em; display: block;"><strong>📥 受信元 (使われる側):</strong> Artifact Exporter Worker, History Loader</span>
-      </p>
+                    との併用で、エクスポート完了後に会話を自動削除する連携も可能です。</p>
       <a class="install-button" data-script-name="Gemini Artifact Exporter" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js" target="_blank">
                         <svg height="18" viewbox="0 0 24 24" width="18">
         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
@@ -534,13 +370,7 @@
        </svg>
                         <span>Install</span>
                     </a>
-<div class="dependency-badges" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini 1-Click Delete Conversation</span>
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Artifact Exporter Worker</span>
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini History Loader</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini Artifact Exporter Worker</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini History Loader</span>
-</div>
+
      </li>
      <li class="project-item">
       <div class="project-title">
@@ -551,10 +381,7 @@
       </div>
       <p class="project-desc">
        回答内容を美しく整形して Google ドキュメントへ出力。「1-Turn Auto Export」機能により、One Click Delete
-                    と併用して1ターンのみの会話をエクスポート後に即座に削除する流れるような操作が可能です。<br><br>
-       <span style="font-size: 0.9em; display: block; margin-bottom: 4px;"><strong>📤 送信先 (使う側):</strong> Auto-Select Next, One Click Delete, Turn Counter</span>
-       <span style="font-size: 0.9em; display: block;"><strong>📥 受信元 (使われる側):</strong> Turn Counter</span>
-      </p>
+                    と併用して1ターンのみの会話をエクスポート後に即座に削除する流れるような操作が可能です。</p>
       <a class="install-button" data-script-name="Gemini 1-Click Export to Docs" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js" target="_blank">
                         <svg height="18" viewbox="0 0 24 24" width="18">
         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
@@ -562,12 +389,7 @@
        </svg>
                         <span>Install</span>
                     </a>
-<div class="dependency-badges" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini 1-Click Delete Conversation</span>
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Auto-Select Next</span>
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Turn Counter</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini Turn Counter</span>
-</div>
+
      </li>
      <li class="project-item">
       <div class="project-title">
@@ -577,9 +399,7 @@
        </a>
       </div>
       <p class="project-desc">
-       ヘッダーメニューの奥にある「削除」機能をフロントへ引き出します。サイドバーを操作することなく、現在の会話をワンクリックまたはキーボードショートカットで即座に削除できるようになります。<br><br>
-       <span style="font-size: 0.9em; display: block;"><strong>📥 受信元 (使われる側):</strong> Artifact Exporter, Export to Docs</span>
-      </p>
+       ヘッダーメニューの奥にある「削除」機能をフロントへ引き出します。サイドバーを操作することなく、現在の会話をワンクリックまたはキーボードショートカットで即座に削除できるようになります。</p>
       <a class="install-button" data-script-name="Gemini 1-Click Delete Conversation" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js" target="_blank">
                         <svg height="18" viewbox="0 0 24 24" width="18">
         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
@@ -587,10 +407,7 @@
        </svg>
                         <span>Install</span>
                     </a>
-<div class="dependency-badges" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini 1-Click Export to Docs</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini Artifact Exporter</span>
-</div>
+
      </li>
      <li class="project-item">
       <div class="project-title">
@@ -600,9 +417,7 @@
        </a>
       </div>
       <p class="project-desc">
-       現在閲覧中の会話を削除した際、自動的に会話リストの次のアイテムを選択して表示します。削除のたびにトップページに飛ばされる標準の挙動を防ぎ、スムーズな会話の整理を可能にします。<br><br>
-       <span style="font-size: 0.9em; display: block;"><strong>📥 受信元 (使われる側):</strong> Export to Docs</span>
-      </p>
+       現在閲覧中の会話を削除した際、自動的に会話リストの次のアイテムを選択して表示します。削除のたびにトップページに飛ばされる標準の挙動を防ぎ、スムーズな会話の整理を可能にします。</p>
       <a class="install-button" data-script-name="Gemini Auto-Select Next" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-select-next/gemini-auto-select-next.user.js" target="_blank">
                         <svg height="18" viewbox="0 0 24 24" width="18">
         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
@@ -610,9 +425,7 @@
        </svg>
                         <span>Install</span>
                     </a>
-<div class="dependency-badges" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini 1-Click Export to Docs</span>
-</div>
+
      </li>
      <li class="project-item">
       <div class="project-title">
@@ -622,10 +435,7 @@
        </a>
       </div>
       <p class="project-desc">
-       ターン数、文字、画像、コード、テーブル、各アーティファクト数をリアルタイムに計測。主に Gemini の各モデルのコンテキストウィンドウ消費量を見積もるために設計されています。<br><br>
-       <span style="font-size: 0.9em; display: block; margin-bottom: 4px;"><strong>📤 送信先 (使われる側):</strong> Artifact Exporter Worker, Export to Docs</span>
-       <span style="font-size: 0.9em; display: block;"><strong>📥 受信元 (使う側):</strong> Artifact Exporter Worker, Export to Docs</span>
-      </p>
+       ターン数、文字、画像、コード、テーブル、各アーティファクト数をリアルタイムに計測。主に Gemini の各モデルのコンテキストウィンドウ消費量を見積もるために設計されています。</p>
       <a class="install-button" data-script-name="Gemini Turn Counter" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js" target="_blank">
                         <svg height="18" viewbox="0 0 24 24" width="18">
         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
@@ -633,12 +443,7 @@
        </svg>
                         <span>Install</span>
                     </a>
-<div class="dependency-badges" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini 1-Click Export to Docs</span>
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Artifact Exporter Worker</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini 1-Click Export to Docs</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini Artifact Exporter Worker</span>
-</div>
+
      </li>
     </ul>
    </div>

@@ -107,12 +107,7 @@
                             <span class="version-badge installed-version" style="display: none;"></span>
                         </div>
                     </a>
-<div class="dependency-badges" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini 1-Click Export to Docs</span>
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Artifact Exporter Worker</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini 1-Click Export to Docs</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini Artifact Exporter Worker</span>
-</div>
+
 
         <h2>1. 概要と目的</h2>
         <p>すでに作成済みの <code>chatgpt-turn-counter</code> と同様に、Google Gemini 上での会話において、メッセージ数や文字数をリアルタイムにカウントし、画面上に表示することを目的としています。</p>
@@ -195,6 +190,22 @@
             <li><strong>v0.1.19</strong>: SPAナビゲーション検知を <code>window.navigation</code> API に移行しパフォーマンス向上。</li>
         </ul>
     </div>
+
+
+    <h2>連携スクリプト</h2>
+    <p>他のユーザースクリプトとカスタムイベントを通じて連携します。</p>
+
+    <h3>送信（使う側）</h3>
+    <p>以下のスクリプトに対してイベントをディスパッチし、処理を依頼します：</p>
+    <ul>
+        <li><strong>Artifact Exporter Worker</strong> / <strong>Export to Docs</strong>: <code>gemini-turn-counter-copy-images-result</code> イベントを送信して画像コピーの結果（成功数やタイムアウト等）を返却します。</li>
+    </ul>
+
+    <h3>受信（使われる側）</h3>
+    <p>以下のスクリプトからイベントを受信し、自身の処理を実行します：</p>
+    <ul>
+        <li><strong>Artifact Exporter Worker</strong> / <strong>Export to Docs</strong>: <code>gemini-turn-counter-copy-images</code> イベントを受信して会話内の画像（Blob）のクリップボードへのコピー処理を実行します。</li>
+    </ul>
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {

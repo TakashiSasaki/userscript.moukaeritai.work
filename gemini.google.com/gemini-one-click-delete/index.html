@@ -106,10 +106,7 @@
                             <span class="version-badge installed-version" style="display: none;"></span>
                         </div>
                     </a>
-<div class="dependency-badges" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini 1-Click Export to Docs</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini Artifact Exporter</span>
-</div>
+
 
         <h3>UI プレビュー</h3>
         <div
@@ -206,6 +203,19 @@
     </div>
 
     <!-- Marked library for parsing markdown -->
+
+
+    <h2>連携スクリプト</h2>
+    <p>他のユーザースクリプトとカスタムイベントを通じて連携します。</p>
+
+    <h3>送信（使う側）</h3>
+    <p>現在、他のスクリプトに対してイベントを送信することはありません。</p>
+
+    <h3>受信（使われる側）</h3>
+    <p>以下のスクリプトからイベントを受信し、自身の処理を実行します：</p>
+    <ul>
+        <li><strong>Artifact Exporter</strong> / <strong>Export to Docs</strong>: <code>gemini-one-click-delete:request-delete</code> イベントを受信して会話の即座の削除を実行します。</li>
+    </ul>
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {

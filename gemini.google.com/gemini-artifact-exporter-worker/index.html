@@ -23,14 +23,7 @@
     <h2>インストール</h2>
     <p>
         <a href="./gemini-artifact-exporter-worker.user.js">こちらをクリックしてインストール</a>
-<div class="dependency-badges" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Auto Paste in New Tab</span>
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Artifact Exporter</span>
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Exported Docs Auto-Closer</span>
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Turn Counter</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini Artifact Exporter</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini Turn Counter</span>
-</div>
+
     </p>
 
     <h2>主な機能</h2>
@@ -41,18 +34,27 @@
         <li><code>gemini-artifact-exporter-worker:result</code> イベントによる結果の返信</li>
     </ul>
 
-    <h2>連携スクリプト（送信先）</h2>
-    <p>このスクリプトは、以下のスクリプトにイベントを送信し、機能してもらうことを期待しています。</p>
+
+
+
+    <h2>連携スクリプト</h2>
+    <p>他のユーザースクリプトとカスタムイベントを通じて連携します。</p>
+
+    <h3>送信（使う側）</h3>
+    <p>以下のスクリプトに対してイベントをディスパッチし、処理を依頼します：</p>
     <ul>
-        <li><a href="../gemini-artifact-exporter/index.html">Artifact Exporter</a> (<code>gemini-artifact-exporter-worker:result</code>)</li>
-        <li><a href="../gemini-turn-counter/index.html">Turn Counter</a> (<code>gemini-turn-counter-copy-images</code>)</li>
+        <li><strong>Artifact Exporter</strong>: <code>gemini-artifact-exporter-worker:result</code> イベントを送信してエクスポート処理の成功や失敗（タイムアウト等）を通知します。</li>
+        <li><strong>Turn Counter</strong>: <code>gemini-turn-counter-copy-images</code> イベントを送信して画像コピー処理を依頼します。</li>
+        <li><strong>Auto Paste in New Tab</strong>: (別ドメイン) <code>EmulateDocsPaste</code> イベントを送信してDocsへの貼り付けを依頼します。</li>
+        <li><strong>Gemini Exported Docs Auto-Closer</strong>: (別ドメイン) <code>gemini-docs-closer-force-close</code> イベントを送信してDocsタブの強制終了を依頼します。</li>
     </ul>
 
-    <h2>連携スクリプト（受信元）</h2>
-    <p>このスクリプトは、以下のスクリプトからイベントを受信して動作します。</p>
+    <h3>受信（使われる側）</h3>
+    <p>以下のスクリプトからイベントを受信し、自身の処理を実行します：</p>
     <ul>
-        <li><a href="../gemini-artifact-exporter/index.html">Artifact Exporter</a> (<code>gemini-artifact-exporter-worker:request</code>, <code>gemini-artifact-exporter-worker:cancel</code>)</li>
-        <li><a href="../gemini-turn-counter/index.html">Turn Counter</a> (<code>gemini-turn-counter-copy-images-result</code>)</li>
+        <li><strong>Artifact Exporter</strong>: <code>gemini-artifact-exporter-worker:request</code> イベントを受信してエクスポートのバックグラウンド処理を開始します。</li>
+        <li><strong>Artifact Exporter</strong>: <code>gemini-artifact-exporter-worker:cancel</code> イベントを受信して実行中のエクスポート処理をキャンセルします。</li>
+        <li><strong>Turn Counter</strong>: <code>gemini-turn-counter-copy-images-result</code> イベントを受信して画像コピー結果を受け取ります。</li>
     </ul>
 
     <h2>技術的な詳細</h2>
