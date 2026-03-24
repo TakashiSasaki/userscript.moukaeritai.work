@@ -1,36 +1,36 @@
 #gemini-artifact-list-container {
     display: none;
     flex-direction: column;
-    padding: 4px 8px;
+    padding: 4px;
     background: rgba(0,0,0,0.2);
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid rgba(255,255,255,0.1);
 }
 .gae-select-all-label {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 13px;
+    gap: 6px;
+    font-size: 12px;
     font-weight: bold;
     color: white;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     border-bottom: 1px solid rgba(255,255,255,0.2);
-    padding-bottom: 4px;
+    padding-bottom: 2px;
     cursor: pointer;
 }
 .gae-scroll-area {
-    max-height: 150px;
+    max-height: 120px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding-right: 4px;
+    gap: 2px;
+    padding-right: 2px;
 }
 .gae-artifact-label {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 12px;
+    gap: 6px;
+    font-size: 11px;
     color: rgba(255,255,255,0.8);
     cursor: pointer;
     white-space: nowrap;
@@ -45,138 +45,170 @@
     backdrop-filter: blur(12px) saturate(180%);
     -webkit-backdrop-filter: blur(12px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.125);
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     display: flex;
     flex-direction: column;
-    padding-bottom: 12px;
+    padding: 6px;
+    gap: 4px;
 }
-.gae-panel-header {
-    padding: 8px 12px;
-    cursor: move;
-    color: #333;
-    font-weight: 600;
-    text-align: center;
-    font-family: 'Google Sans', sans-serif;
-    font-size: 14px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    margin-bottom: 12px;
+.gae-main-content {
+    display: flex;
+    flex-direction: column;
 }
 .gae-button-container {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 0 12px;
+    gap: 6px;
 }
 .gae-scan-btn {
-    padding: 8px 10px;
+    padding: 6px 8px;
     background-color: #3c4043;
     color: white;
     border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 24px;
+    border-radius: 16px;
     cursor: pointer;
     font-family: 'Google Sans', sans-serif;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     transition: background-color 0.2s;
     flex: 1;
-    font-size: 13px;
+    font-size: 11px;
 }
 .gae-scan-btn:hover { background-color: #5f6368; }
 .gae-deep-scan-btn {
-    padding: 8px 10px;
+    padding: 6px 8px;
     background-color: #5bb974;
     color: #202124;
     border: none;
-    border-radius: 24px;
+    border-radius: 16px;
     cursor: pointer;
     font-family: 'Google Sans', sans-serif;
     font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     transition: background-color 0.2s;
     flex: 1;
-    font-size: 13px;
+    font-size: 11px;
 }
 .gae-deep-scan-btn:hover { background-color: #4ca163; }
 .gae-scan-buttons-container {
     display: flex;
     flex-direction: row;
-    gap: 8px;
+    gap: 4px;
     width: 100%;
 }
+.gae-export-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+}
 .gae-export-btn {
-    padding: 10px 16px;
+    padding: 6px 12px;
     background-color: #1a73e8;
     color: white;
     border: none;
-    border-radius: 24px;
+    border-radius: 16px;
     cursor: pointer;
     font-family: 'Google Sans', sans-serif;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     transition: background-color 0.2s;
+    flex: 1;
+    font-size: 11px;
     display: none;
 }
 .gae-export-btn:hover { background-color: #1b66c9; }
-.gae-toggles-container {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
 .gae-checkbox-container {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    gap: 4px;
     cursor: pointer;
     font-family: 'Google Sans', sans-serif;
-    font-size: 13px;
+    font-size: 11px;
     color: #333;
-    padding: 2px 8px;
+    white-space: nowrap;
 }
 .gae-checkbox {
-    width: 16px;
-    height: 16px;
+    width: 12px;
+    height: 12px;
     cursor: pointer;
     accent-color: #1a73e8;
+    margin: 0;
 }
 #gemini-batch-export-progress {
     text-align: center;
     font-family: 'Google Sans', sans-serif;
-    font-size: 12px;
+    font-size: 10px;
     color: #444;
-    margin-top: 4px;
     height: 1.2em;
+    margin-top: 2px;
 }
-
 #gae-script-status-container {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
 }
 .gae-status-item {
-    font-size: 11px;
-    padding: 6px 8px;
-    border-radius: 6px;
+    font-size: 10px;
+    padding: 4px 6px;
+    border-radius: 4px;
     color: white;
     font-family: 'Google Sans', sans-serif;
     text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
     animation: fadein 0.3s;
 }
 .gae-status-success {
-    background-color: rgba(46, 160, 67, 0.3);
-    border: 1px solid rgba(46, 160, 67, 0.4);
+    background-color: rgba(46, 160, 67, 0.4);
+    border: 1px solid rgba(46, 160, 67, 0.5);
 }
 .gae-status-error {
-    background-color: rgba(248, 81, 73, 0.3);
-    border: 1px solid rgba(248, 81, 73, 0.4);
+    background-color: rgba(248, 81, 73, 0.4);
+    border: 1px solid rgba(248, 81, 73, 0.5);
 }
 @keyframes fadein {
     from { opacity: 0; transform: translateY(-4px); }
     to   { opacity: 1; transform: translateY(0); }
 }
-
-.gae-deps-row { display: flex; justify-content: center; gap: 12px; font-size: 9px; opacity: 0.8; margin-top: 4px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); }
-.gae-dependency-icon { cursor: help; opacity: 0.65; transition: opacity 0.2s; white-space: nowrap; }
-.gae-dependency-icon.installed { opacity: 1; }
-.gae-dependency-icon .dep-version { font-size: 8px; opacity: 0.7; margin-left: 2px; }
-
+.gae-bottom-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding-top: 4px;
+    margin-top: 2px;
+}
+.gae-deps-row {
+    display: flex;
+    gap: 6px;
+    font-size: 10px;
+    opacity: 0.8;
+}
+.gae-dependency-icon {
+    cursor: help;
+    opacity: 0.65;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+}
+.gae-dependency-icon.installed {
+    opacity: 1;
+}
+.gae-dependency-icon .dep-version {
+    font-size: 9px;
+    opacity: 0.8;
+    margin-left: 1px;
+}
+.gae-version-handle {
+    font-size: 10px;
+    font-family: monospace;
+    color: #555;
+    cursor: grab;
+    user-select: none;
+    padding: 2px 4px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 4px;
+    font-weight: bold;
+}
+.gae-version-handle:active {
+    cursor: grabbing;
+}
