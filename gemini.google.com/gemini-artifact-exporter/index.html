@@ -108,13 +108,7 @@
                 <span class="version-badge installed-version" style="display: none;"></span>
             </div>
         </a>
-<div class="dependency-badges" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini 1-Click Delete Conversation</span>
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini Artifact Exporter Worker</span>
-<span class="badge send-badge" style="background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #90caf9;">送信先: Gemini History Loader</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini Artifact Exporter Worker</span>
-<span class="badge receive-badge" style="background: #f3e5f5; color: #7b1fa2; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; border: 1px solid #ce93d8;">受信元: Gemini History Loader</span>
-</div>
+
 
         <h2>概要</h2>
         <p>Geminiの会話ページ（例: <code>https://gemini.google.com/app/xxxxxxxx</code>）を開くと、画面上にドラッグ可能な「Artifact
@@ -206,6 +200,26 @@
             <li><strong>v0.2.38</strong>: 各種待機時間（ウェイト/タイムアウト）を調整可能にし、UIレスポンスを改善。</li>
         </ul>
     </div>
+
+
+    <h2>連携スクリプト</h2>
+    <p>他のユーザースクリプトとカスタムイベントを通じて連携します。</p>
+
+    <h3>送信（使う側）</h3>
+    <p>以下のスクリプトに対してイベントをディスパッチし、処理を依頼します：</p>
+    <ul>
+        <li><strong>Artifact Exporter Worker</strong>: <code>gemini-artifact-exporter-worker:request</code> イベントを送信してエクスポートのバックグラウンド処理を開始させます。</li>
+        <li><strong>Artifact Exporter Worker</strong>: <code>gemini-artifact-exporter-worker:cancel</code> イベントを送信して処理をキャンセルさせます。</li>
+        <li><strong>History Loader</strong>: <code>gemini-history-loader:request</code> イベントを送信して会話履歴の全体スキャン（Deep Scan）を依頼します。</li>
+        <li><strong>One Click Delete</strong>: <code>gemini-one-click-delete:request-delete</code> イベントを送信してエクスポート完了後に会話を削除します（Auto-Delete有効時）。</li>
+    </ul>
+
+    <h3>受信（使われる側）</h3>
+    <p>以下のスクリプトからイベントを受信し、自身の処理を実行します：</p>
+    <ul>
+        <li><strong>Artifact Exporter Worker</strong>: <code>gemini-artifact-exporter-worker:result</code> イベントを受信してエクスポートの進捗や結果を画面に反映します。</li>
+        <li><strong>History Loader</strong>: <code>gemini-history-loader:complete</code> イベントを受信して履歴の全読み込み完了を検知し、ファイル抽出処理を再開します。</li>
+    </ul>
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {

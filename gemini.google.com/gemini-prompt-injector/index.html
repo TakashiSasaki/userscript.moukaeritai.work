@@ -93,6 +93,22 @@
     </div>
 
     <script src="../../domain-landing.js"></script>
+
+    <h2>連携スクリプト</h2>
+    <p>他のユーザースクリプトや外部システムとカスタムイベントを通じて連携します。</p>
+
+    <h3>送信（使う側）</h3>
+    <p>現在、他のスクリプトに対してイベントを送信することはありません。</p>
+
+    <h3>受信（使われる側）</h3>
+    <p>以下のイベントを受信し、自身の処理（プロンプトの注入や設定変更）を実行します：</p>
+    <ul>
+        <li><code>gemini-inject-prompt</code>: プロンプトエリアへテキストを注入します。</li>
+        <li><code>gemini-send-prompt</code>: 注入されたプロンプトを自動送信します。</li>
+        <li><code>gemini-switch-model</code>: モデル（高速、思考、Pro）を切り替えます。</li>
+        <li><code>gemini-enable-canvas</code>: Canvas（アーティファクト）機能を有効化します。</li>
+    </ul>
+
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             let serverVersion = null;
