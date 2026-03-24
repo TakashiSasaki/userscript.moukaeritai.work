@@ -30,7 +30,7 @@
     </style>
 </head>
 <body>
-    <p>このユーザースクリプトは、Gemini の仮想スクロールを回避し、過去の会話履歴を一番上まで強制的に読み込むための共有モジュールです。<a href="../gemini-artifact-exporter/index.html">gemini-artifact-exporter</a> などの他のユーザースクリプトと連携してバックグラウンドで機能します。<br><strong>単体では機能しない、内部依存用のスクリプトです。</strong></p>
+    <p>このユーザースクリプトは、Gemini の仮想スクロールを回避し、過去の会話履歴を一番上まで強制的に読み込むための共有モジュールです。<a href="../gemini-artifact-exporter/index.html">gemini-artifact-exporter</a> などの他のユーザースクリプトと連携してバックグラウンドで機能します。<br><strong>インストール状況を示すフローティングUIが画面に表示され、履歴取得中はプログレスを表示するパネルに展開されます。</strong></p>
 
     <h2>概要</h2>
     <p>
@@ -39,7 +39,7 @@
 
     <h2>インストール</h2>
     <p>
-        <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js" target="_blank" class="install-button" data-version="0.1.2">
+        <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js" target="_blank" class="install-button" data-version="0.1.3">
             <span style="display: flex; align-items: center; gap: 8px;">
                 <span class="button-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -51,7 +51,7 @@
                 <span class="button-text">Install</span>
             </span>
             <div class="version-info">
-                <span class="version-badge latest-version">v0.1.2</span>
+                <span class="version-badge latest-version">v0.1.3</span>
                 <span class="version-badge installed-version" style="display: none;"></span>
             </div>
         </a>
@@ -66,6 +66,7 @@
         <li><code>gemini-history-loader:request</code> イベントの受信</li>
         <li>Angular の仮想スクロール (Lazy Loading) 機構を強制的にアクティブ化して過去履歴を取得するアルゴリズム</li>
         <li>アニメーション相殺バグを回避した確実な <code>scrollTop</code> 制御</li>
+        <li>コンパクトな状態表示・進捗表示用のフローティングUI（ドラッグ移動・位置記憶対応）</li>
         <li><code>gemini-history-loader:complete</code> イベントのディスパッチ</li>
     </ul>
 
