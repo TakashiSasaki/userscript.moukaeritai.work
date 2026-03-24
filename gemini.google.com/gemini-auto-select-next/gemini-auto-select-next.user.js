@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.33
+// @version      0.2.34
 // @lastModified 2026-03-14
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
@@ -188,14 +188,15 @@
         injectStyles();
         const panel = document.createElement('div');
         panel.id = 'gemini-auto-switch-panel';
-        panel.title = 'Drag to move';
         setInnerHTML(panel, `
-            <label class="auto-switch-label" title="Automatically select next conversation on delete">
-                <input type="checkbox" class="auto-switch-checkbox">
-                Auto
-            </label>
+            <div class="left-controls">
+                <label class="auto-switch-label" title="Automatically select next conversation on delete">
+                    <input type="checkbox" class="auto-switch-checkbox">
+                    Auto
+                </label>
+                <span class="version-badge" title="Gemini Auto-Select Next">v${GM_info.script.version}</span>
+            </div>
             <button class="manual-next-btn" title="Explicitly skip to the next conversation">⏭️ Next</button>
-            <span class="version-badge" title="Gemini Auto-Select Next">v${GM_info.script.version}</span>
         `);
         document.body.appendChild(panel);
 
@@ -225,7 +226,7 @@
 
         const handle = panel.querySelector('.version-badge');
         handle.addEventListener('mousedown', (e) => {
-            if (e.target.closest('button') || e.target.closest('input') || e.target.closest('label')) return;
+            e.stopPropagation();
             isDragging = true;
             offset.x = e.clientX - panel.offsetLeft;
             offset.y = e.clientY - panel.offsetTop;
