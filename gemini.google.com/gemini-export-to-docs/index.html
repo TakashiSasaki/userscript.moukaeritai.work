@@ -94,7 +94,7 @@
             <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
         </div>
 
-        <a href="gemini-export-to-docs.user.js" class="install-button" data-version="0.4.36">
+        <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js" class="install-button">
             <span style="display: flex; align-items: center; gap: 8px;">
                 <span class="button-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -261,6 +261,7 @@
 
         <h2>更新履歴</h2>
         <ul>
+            <li><strong>v0.4.37</strong>: 最小化表示（Inactive）時に「(Inactive)」というテキストを削除し、代わりに極小サイズの文字でスクリプト名（Export to Docs）を表示するようにUIを改善しました。</li>
             <li><strong>v0.4.36</strong>: 最小化表示（Inactive）時のパネル背景色をライトピンクの透過背景に変更し、視認性を高めました。</li>
             <li><strong>v0.4.35</strong>: 1ターン専用パネルが非表示になるのではなく、最小化（Inactive）された状態で画面に残り、スクリプトの動作状況を常に把握できるようにUIパターンを改善しました。</li>
             <li><strong>v0.4.33</strong>: SVGアイコンやUIパネルのDOM構造を `template.html` にオフロードし、JavaScriptのファイルサイズと不要なセレクタを削減するリファクタリングを実施しました。</li>
@@ -295,7 +296,9 @@
         document.addEventListener('DOMContentLoaded', async () => {
             let serverVersion = null;
             try {
-                const response = await fetch('gemini-export-to-docs.user.js');
+                // Fetch from Github raw URL as requested, to bypass CORS and get the latest
+                const rawUrl = 'https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js';
+                const response = await fetch(rawUrl);
                 if (response.ok) {
                     const text = await response.text();
                     const versionMatch = text.match(/\/\/ @version\s+([\d.]+)/);
