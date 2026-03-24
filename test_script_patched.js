@@ -1,4 +1,9 @@
-// ==UserScript==
+
+                const GM_setValue = function(k, v) { console.log('GM_setValue', k, v); };
+                const GM_getValue = function(k, d) { return d; };
+                const GM_info = { script: { name: 'Gemini Artifact Exporter Worker', version: '0.2.5' } };
+                const GM_deleteValue = function(k) { console.log('GM_deleteValue', k); };
+            // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
 // @version      0.2.5
@@ -17,8 +22,8 @@
 // @noframes
 // ==/UserScript==
 
-(function () {
-    'use strict';
+
+
 
     const installCheckHosts = [
         'userscript.moukaeritai.work'
@@ -38,7 +43,6 @@
 
     if (isInstallCheckHost) {
         report();
-        return;
     }
 
     // Custom Event Helper for checking if target userscript is installed
@@ -267,7 +271,7 @@
                 }
             }, 500); // Start checking earlier, as we now wait for the element
         }
-        return; // Don't run the rest of the worker logic in Google Docs
+        // return;
     }
 
     // --- Utility Functions ---
@@ -936,7 +940,8 @@
         }
     });
 
-    // Initialize UI so the version badge is always visible when inactive
-    getOrCreateIndicator();
 
-})();
+
+                window.test_getOrCreateIndicator = getOrCreateIndicator;
+                window.test_showIndicator = showIndicator;
+                window.test_hideIndicator = hideIndicator;
