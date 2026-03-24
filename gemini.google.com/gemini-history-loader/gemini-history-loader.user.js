@@ -1,13 +1,19 @@
 // ==UserScript==
 // @name         Gemini History Loader
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.2
-// @description  A utility script that forces Gemini to load the entire chat history by programmatically scrolling to the top. Listens for custom events to trigger the load.
+// @version      0.1.3
+// @description  A utility script that forces Gemini to load the entire chat history by programmatically scrolling to the top. Features a compact floating UI that expands when loading history.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @grant        GM_info
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_addStyle
+// @grant        GM_getResourceText
+// @resource     css https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/style.css
+// @resource     templateHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/template.html
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @noframes
@@ -15,6 +21,33 @@
 
 (function () {
     'use strict';
+
+    if (typeof GM_addStyle !== 'undefined' && typeof GM_getResourceText !== 'undefined') {
+        const css = GM_getResourceText('css');
+        if (css) {
+            GM_addStyle(css);
+        }
+    }
+
+    // --- Trusted Types ---
+    let policy;
+    if (window.trustedTypes && window.trustedTypes.createPolicy) {
+        try {
+            policy = window.trustedTypes.createPolicy('geminiHistoryLoader_' + Math.random().toString(36).substr(2, 9), {
+                createHTML: (string) => string
+            });
+        } catch (e) {
+            console.warn('Failed to create TrustedTypes policy', e);
+        }
+    }
+
+    const setInnerHTML = (element, html) => {
+        if (policy) {
+            element.innerHTML = policy.createHTML(html);
+        } else {
+            element.innerHTML = html;
+        }
+    };
 
     const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
@@ -93,15 +126,116 @@
         return scroller || document.documentElement;
     }
 
+    const PANEL_POSITION_KEY = 'gemini-history-loader-pos';
+    let uiPanel = null;
+    let progressTextEl = null;
+    let statusTextEl = null;
+
+    function createUI() {
+        if (uiPanel) return;
+
+        uiPanel = document.createElement('div');
+        uiPanel.id = 'gemini-history-loader-panel';
+
+        const templateStr = GM_getResourceText('templateHTML').replace(/{{scriptVersion}}/g, GM_info.script.version);
+        setInnerHTML(uiPanel, templateStr);
+        document.body.appendChild(uiPanel);
+
+        progressTextEl = uiPanel.querySelector('#ghl-progress-text');
+        statusTextEl = uiPanel.querySelector('#ghl-status-text');
+
+        const versionHandle = uiPanel.querySelector('.ghl-version-handle');
+        if (versionHandle) {
+            makePanelDraggable(uiPanel, versionHandle, PANEL_POSITION_KEY);
+        }
+
+        const savedPosition = GM_getValue(PANEL_POSITION_KEY, null);
+        if (savedPosition && savedPosition.top && savedPosition.left) {
+            uiPanel.style.top = savedPosition.top;
+            uiPanel.style.left = savedPosition.left;
+        } else {
+            // Default position, e.g., slightly offset from other scripts
+            uiPanel.style.right = '20px';
+            uiPanel.style.top = '100px';
+        }
+    }
+
+    function makePanelDraggable(panel, handle, storageKey) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+        handle.onmousedown = dragMouseDown;
+
+        function dragMouseDown(e) {
+            e = e || window.event;
+            e.preventDefault();
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+
+            if (panel.style.right || panel.style.bottom) {
+                panel.style.left = panel.offsetLeft + 'px';
+                panel.style.top = panel.offsetTop + 'px';
+                panel.style.right = '';
+                panel.style.bottom = '';
+            }
+
+            document.onmouseup = closeDragElement;
+            document.onmousemove = elementDrag;
+            handle.style.cursor = 'grabbing';
+        }
+
+        function elementDrag(e) {
+            e = e || window.event;
+            e.preventDefault();
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            panel.style.top = (panel.offsetTop - pos2) + "px";
+            panel.style.left = (panel.offsetLeft - pos1) + "px";
+        }
+
+        function closeDragElement() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+            handle.style.cursor = 'grab';
+
+            GM_setValue(storageKey, {
+                top: panel.style.top,
+                left: panel.style.left
+            });
+        }
+    }
+
+    function updateProgressUI(status, progress) {
+        if (!uiPanel) return;
+        if (statusTextEl) statusTextEl.textContent = status;
+        if (progressTextEl) progressTextEl.textContent = progress;
+    }
+
+    function toggleUIExpanded(isExpanded) {
+        if (!uiPanel) return;
+        if (isExpanded) {
+            uiPanel.classList.add('ghl-expanded');
+        } else {
+            uiPanel.classList.remove('ghl-expanded');
+            updateProgressUI('Idle', ''); // Reset
+        }
+    }
+
     let isLoading = false;
 
     async function loadChatHistory(reqId) {
+        if (!uiPanel) createUI();
+
         if (isLoading) {
             log('Already loading history. Ignoring request.');
             return;
         }
 
         isLoading = true;
+        toggleUIExpanded(true);
+        updateProgressUI('Starting...', 'Closing panels...');
+
         log(`Starting to load chat history (reqId: ${reqId})...`);
 
         try {
@@ -109,6 +243,7 @@
 
             let scroller = getChatScroller();
             log('Ascending to the true top of the conversation...');
+            updateProgressUI('Loading History...', 'Ascending...');
 
             if (!scroller.hasAttribute('tabindex')) scroller.setAttribute('tabindex', '-1');
             scroller.focus({ preventScroll: true });
@@ -139,13 +274,16 @@
                     if (currentContent === prevFirstTurnContent && scroller.scrollHeight <= highestScrollHeight + 50) {
                         stallCount++;
                         log(`Waiting for history to load... (Attempt ${stallCount}/3)`);
+                        updateProgressUI('Loading History...', `Scroll Attempt: ${topAttempts}\nStall count: ${stallCount}/3`);
                         if (stallCount >= 3) {
                             log('Reached absolute top of conversation.');
+                            updateProgressUI('Loading History...', 'Reached top of conversation.');
                             break;
                         }
                     } else {
                         stallCount = 0;
                         log('Loaded older conversation history. Continuing ascent...');
+                        updateProgressUI('Loading History...', `Loaded older history.\nContinuing ascent... (Step: ${topAttempts})`);
                     }
 
                     prevFirstTurnContent = currentContent;
@@ -162,19 +300,30 @@
             await sleep(1000);
 
             log('History load complete.');
+            updateProgressUI('Complete', 'Dispatching events...');
+            await sleep(500);
+
             document.dispatchEvent(new CustomEvent('gemini-history-loader:complete', {
                 detail: { reqId: reqId, status: 'success' }
             }));
 
         } catch (error) {
             log(`Error loading history: ${error.message}`);
+            updateProgressUI('Error', error.message);
+            await sleep(2000);
             document.dispatchEvent(new CustomEvent('gemini-history-loader:complete', {
                 detail: { reqId: reqId, status: 'error', reason: error.message }
             }));
         } finally {
             isLoading = false;
+            toggleUIExpanded(false);
         }
     }
+
+    // Auto-create UI on load so users see it's installed
+    window.addEventListener('load', () => {
+        setTimeout(createUI, 1000);
+    });
 
     document.addEventListener('gemini-history-loader:request', (e) => {
         const reqId = e.detail && e.detail.reqId ? e.detail.reqId : `req_${Date.now()}`;
