@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.2
+// @version      0.2.4
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -183,7 +183,15 @@
     // --- Google Docs Logic ---
     if (location.hostname.includes('docs.google.com')) {
         if (document.referrer && document.referrer.includes('gemini.google.com')) {
-            log('Opened from Gemini. Checking for copied images to paste...');
+            log('Opened from Gemini. Acknowledging export to origin tab...');
+
+            // Notify origin tab that this document successfully opened
+            if (typeof GM_setValue !== 'undefined') {
+                // We'll use a broad timestamp ping as acknowledgment
+                GM_setValue('gemini_export_ack', Date.now());
+            }
+
+            log('Checking for copied images to paste...');
             setTimeout(async () => {
                 const imageData = GM_getValue('gemini_export_image_data', null);
 
@@ -375,7 +383,8 @@
             }
         }
 
-        return { status: 'started', reason: 'assumed-after-click' };
+        log(`Warning: Failed to strongly detect export start. Returning timeout failure instead of assuming success.`);
+        return { status: 'failed', reason: 'start-detection-timeout' };
     }
 
     function clearStuckOverlays(aggressive) {
@@ -640,6 +649,10 @@
             const startResult = await startPromise;
             log(`Export start signal detected (${startResult.reason}).`);
 
+            if (startResult.status !== 'started') {
+                throw new Error(`Export did not reliably start (reason: ${startResult.reason}).`);
+            }
+
             clearStuckOverlays(true);
 
             log(`Waiting ${exportWaitSeconds}s for Google Docs export to settle...`);
@@ -673,8 +686,42 @@
 
             if (cancelExportRequested) return { status: 'cancelled', reason: 'user-cancelled-during-wait', title: targetTitle };
 
-            log(`--- Finished processing: "${targetTitle}" ---`);
-            return { status: 'success', reason: startResult.reason, title: targetTitle };
+            const exportId = `exp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+            log(`--- Finished processing UI actions for: "${targetTitle}" (ExportID: ${exportId}). Awaiting acknowledgment from Google Docs tab... ---`);
+
+            // Wait up to 15 seconds for Google Docs to open and set the GM_setValue acknowledgment
+            const ackTimeoutMs = 15000;
+            const ackStart = Date.now();
+            let ackReceived = false;
+
+            while (Date.now() - ackStart < ackTimeoutMs) {
+                if (cancelExportRequested) {
+                    return { status: 'cancelled', reason: 'user-cancelled-during-ack', title: targetTitle };
+                }
+
+                if (typeof GM_getValue !== 'undefined') {
+                    const ack = GM_getValue('gemini_export_ack', null);
+                    if (ack && Date.now() - ack < 60000) {
+                        ackReceived = true;
+                        // Clear the acknowledgment so it doesn't trigger for the next item
+                        if (typeof GM_deleteValue !== 'undefined') {
+                            GM_deleteValue('gemini_export_ack');
+                        } else {
+                            GM_setValue('gemini_export_ack', null);
+                        }
+                        break;
+                    }
+                }
+                await sleep(500);
+            }
+
+            if (!ackReceived) {
+                log(`Warning: Did not receive cross-origin acknowledgment for "${targetTitle}" within timeout.`);
+                return { status: 'failed', reason: 'Google Docs tab did not open or acknowledge in time', title: targetTitle };
+            }
+
+            log(`Success: Received acknowledgment from Google Docs tab for "${targetTitle}".`);
+            return { status: 'success', reason: startResult.reason, title: targetTitle, exportId: exportId };
 
         } catch (e) {
             log(`CRITICAL ERROR during processing "${targetTitle}": ${e.message}`);
@@ -708,6 +755,15 @@
 
         isExporting = true;
         cancelExportRequested = false;
+
+        // Reset acknowledgment value
+        if (typeof GM_deleteValue !== 'undefined') {
+            GM_deleteValue('gemini_export_ack');
+        } else {
+            if (typeof GM_setValue !== 'undefined') {
+                GM_setValue('gemini_export_ack', null);
+            }
+        }
         const req = e.detail;
 
         log(`Received export request for "${req.targetTitle}" (ID: ${req.requestId})`);
@@ -790,7 +846,8 @@
                 requestId: req.requestId,
                 status: result.status,
                 title: result.title,
-                reason: result.reason
+                reason: result.reason,
+                exportId: result.exportId
             }
         }));
     });
