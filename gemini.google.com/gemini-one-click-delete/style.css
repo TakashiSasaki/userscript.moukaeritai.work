@@ -25,10 +25,10 @@
     z-index: 10000;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     background: rgba(255, 182, 193, 0.9);
-    padding: 6px 12px;
-    border-radius: 24px;
+    padding: 4px 8px;
+    border-radius: 16px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     border: 1px solid #dadce0;
     backdrop-filter: blur(8px);
@@ -39,15 +39,15 @@
 .gdp-main-delete-btn {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     background-color: #d93025;
     color: white;
     border: none;
-    border-radius: 16px;
-    padding: 6px 14px;
+    border-radius: 12px;
+    padding: 4px 10px;
     cursor: pointer;
     font-weight: 500;
-    font-size: 13px;
+    font-size: 11px;
     transition: background-color 0.2s, transform 0.1s;
 }
 .gdp-main-delete-btn:hover:not(:disabled) {
@@ -62,7 +62,7 @@
     cursor: not-allowed;
 }
 .version-badge {
-    font-size: 11px;
+    font-size: 10px;
     color: #333;
     font-family: monospace;
     padding: 0 4px;
