@@ -60,6 +60,10 @@
     document.addEventListener('userscript-ping', report);
     report();
 
+    if (window.location.hostname === 'userscript.moukaeritai.work') {
+        return;
+    }
+
     function log(msg) {
         const timestamp = new Date().toISOString().split('T')[1].split('Z')[0];
         const formattedMsg = `[History Loader ${timestamp}] ${msg}`;
