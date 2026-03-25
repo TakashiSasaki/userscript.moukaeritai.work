@@ -6,10 +6,10 @@
     height: 32px;
     border-radius: 16px;
     border: 1px solid #ccc;
-    background-color: #e6f4ea; /* Light green */
+    background-color: rgba(255, 182, 193, 0.9); /* Light pink */
     cursor: pointer;
     margin-left: 8px;
-    color: #5f6368;
+    color: #333;
     transition: all 0.2s;
     position: relative;
     z-index: 1000;
@@ -22,7 +22,7 @@
     top: 8px;
     right: 8px;
     z-index: 10;
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(255, 182, 193, 0.9);
     backdrop-filter: blur(4px);
 }
 .gemini-quick-export-btn.bottom-right {
@@ -30,19 +30,19 @@
     bottom: 8px;
     right: 8px;
     z-index: 10;
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(255, 182, 193, 0.9);
     backdrop-filter: blur(4px);
 }
 @media (prefers-color-scheme: dark) {
     .gemini-quick-export-btn.top-right,
     .gemini-quick-export-btn.bottom-right {
-        background-color: rgba(30, 30, 30, 0.8);
+        background-color: rgba(255, 182, 193, 0.9);
     }
 }
 .gemini-quick-export-btn.exported {
-    background-color: #1e8e3e; /* Google Green */
+    background-color: #e91e63; /* Pink 500 */
     color: white;
-    border-color: #1e8e3e;
+    border-color: #e91e63;
 }
 .gemini-quick-export-btn svg {
     fill: currentColor;
