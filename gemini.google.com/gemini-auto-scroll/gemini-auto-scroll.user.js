@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.36
+// @version      0.2.37
 // @lastModified 2026-03-14
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
@@ -604,6 +604,10 @@
             initAutoScroll();
         } else {
             cleanupAutoScroll();
+            const panel = document.getElementById('gemini-auto-scroll-panel');
+            if (!panel) {
+                createUI();
+            }
             // Important to always update lastUrl to avoid spurious detection
             lastUrl = window.location.href;
         }

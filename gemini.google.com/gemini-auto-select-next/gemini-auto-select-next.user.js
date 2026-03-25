@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.34
+// @version      0.2.35
 // @lastModified 2026-03-14
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
@@ -316,7 +316,7 @@
             uiObserver.disconnect();
             if (mainInterval) clearInterval(mainInterval);
             const p = document.getElementById('gemini-auto-switch-panel');
-            if (p) p.remove();
+            if (!p) createUI();
         }
     }
 
