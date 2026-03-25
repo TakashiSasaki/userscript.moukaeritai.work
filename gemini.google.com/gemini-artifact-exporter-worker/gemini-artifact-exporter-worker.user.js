@@ -453,7 +453,7 @@
             if (pos.right && !pos.left) indicator.style.right = pos.right;
 
             const handle = document.createElement('div');
-            handle.textContent = `v${VERSION}`;
+            handle.innerHTML = `<div style="font-size: 10px; line-height: 1;">Worker</div><div style="line-height: 1.2;">v${VERSION}</div>`;
             handle.title = GM_info.script.name;
             handle.style.cssText = `
                 cursor: grab;
@@ -461,6 +461,11 @@
                 padding: 2px 4px;
                 background: rgba(255, 255, 255, 0.5);
                 border-radius: 4px;
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
             `;
 
             // Make draggable
