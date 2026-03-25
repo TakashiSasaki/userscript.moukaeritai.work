@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.13
+// @version      0.4.14
 // @lastModified 2026-03-21
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
@@ -756,7 +756,7 @@
 
         const panel = document.createElement('div');
         panel.id = 'gemini-batch-export-panel';
-        panel.style.display = isConversationPage() ? 'flex' : 'none';
+        panel.style.display = 'flex'; // Always visible (minimal state)
 
         const templateStr = GM_getResourceText('templateHTML').replace(/{{scriptVersion}}/g, GM_info.script.version);
         setInnerHTML(panel, templateStr);
@@ -812,16 +812,14 @@
 
         let panel = document.getElementById('gemini-batch-export-panel');
         if (!panel) {
-            if (isConversationPage()) {
-                log(`Conversation page detected. Creating panel (url=${window.location.href}).`);
-                createTriggerButtons();
-                panel = document.getElementById('gemini-batch-export-panel');
-            }
+            log(`Creating panel (url=${window.location.href}).`);
+            createTriggerButtons();
+            panel = document.getElementById('gemini-batch-export-panel');
             if (!panel) return;
         }
 
-        // Display the panel on conversation pages, hide it otherwise
-        panel.style.display = isConversationPage() ? 'flex' : 'none';
+        // The panel wrapper itself is always visible in its minimal state
+        panel.style.display = 'flex';
 
         const mainContent = panel.querySelector('#gae-main-content');
         if (mainContent) {
