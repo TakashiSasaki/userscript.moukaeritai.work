@@ -5,42 +5,38 @@
     </div>
 
     <div class="one-turn-active-content one-turn-controls-col">
-        <!-- ROW 1: Manual Sub-Controls -->
-        <div class="one-turn-row">
-            <label>
+        <!-- 2x2 Grid: Checkboxes + Exec Button -->
+        <div class="one-turn-controls-grid">
+            <label class="cb-item-1">
                 <input type="checkbox" id="gemini-auto-delete-cb" checked>
                 Auto-Delete (3s)
             </label>
-            <label style="margin-left: 8px;">
+            <label class="cb-item-2">
                 <input type="checkbox" id="gemini-auto-url-cb">
                 Auto-Export
             </label>
-        </div>
-        <!-- ROW 2: Auto-Copy Image Checkbox -->
-        <div class="one-turn-row" style="margin-top: 4px;">
-            <label>
+            <label class="cb-item-3">
                 <input type="checkbox" id="gemini-auto-copy-images-cb" checked>
                 Auto-Copy Images
             </label>
+
+            <button id="gemini-btn-one-turn-exec" class="btn-item-4">
+                <span style="display: flex;">
+                    <svg height="16" viewBox="0 -960 960 960" width="16" fill="currentColor">
+                        <path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z"></path>
+                    </svg>
+                </span>
+                Export & Delete
+            </button>
         </div>
-        <!-- ROW 3: Dependencies -->
-        <div class="one-turn-row" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(0,0,0,0.1); justify-content: center; gap: 12px; font-size: 9px; opacity: 0.8;">
+
+        <!-- ROW 3: Dependencies + Version -->
+        <div class="one-turn-row dependencies-row">
             <span id="ge2d-dep-auto-select" class="ge2d-dependency-icon" title="Auto-Select Next - Checking...">⏭️ Auto-Select <span class="dep-version">(...)</span></span>
             <span id="ge2d-dep-1click-del" class="ge2d-dependency-icon" title="1-Click Delete - Checking...">🗑️ Delete <span class="dep-version">(...)</span></span>
             <span id="ge2d-dep-turn-counter" class="ge2d-dependency-icon" title="Turn Counter - Checking...">📋 Images <span class="dep-version">(...)</span></span>
+            <span class="one-turn-version" title="Gemini 1-Click Export to Docs">v{{scriptVersion}}</span>
         </div>
-        </div>
-    </div>
-    <div class="one-turn-active-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-left: auto;">
-        <button id="gemini-btn-one-turn-exec">
-            <span style="display: flex;">
-                <svg height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
-                    <path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z"></path>
-                </svg>
-            </span>
-            Export & Delete
-        </button>
-        <div class="one-turn-version" style="margin-top: 4px;" title="Gemini 1-Click Export to Docs">v{{scriptVersion}}</div>
     </div>
 </template>
 
