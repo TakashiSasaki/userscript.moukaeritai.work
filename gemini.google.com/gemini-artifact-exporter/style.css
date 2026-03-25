@@ -174,6 +174,11 @@
     justify-content: space-between;
     align-items: center;
     gap: 8px;
+}
+
+/* Add a border and margin only when the main content is visible above it */
+.gae-main-content[style*="display: flex"] + .gae-bottom-bar,
+.gae-main-content:not([style*="display: none"]) + .gae-bottom-bar {
     border-top: 1px solid rgba(0, 0, 0, 0.1);
     padding-top: 4px;
     margin-top: 2px;

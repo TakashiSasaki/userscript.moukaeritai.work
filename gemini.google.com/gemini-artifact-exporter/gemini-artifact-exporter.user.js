@@ -810,21 +810,23 @@
         // If the essential element is missing or no artifacts are found, we hide the panel
         const shouldActive = isConversationPage() && actionsMenuExists && hasArtifacts;
 
-        const panel = document.getElementById('gemini-batch-export-panel');
+        let panel = document.getElementById('gemini-batch-export-panel');
         if (!panel) {
-            if (shouldActive) {
-                log(`Visibility check passed. Creating panel (url=${window.location.href}).`);
+            if (isConversationPage()) {
+                log(`Conversation page detected. Creating panel (url=${window.location.href}).`);
                 createTriggerButtons();
+                panel = document.getElementById('gemini-batch-export-panel');
             }
-            return;
+            if (!panel) return;
         }
 
-        // Always display the panel to show dependencies and version handle
-        panel.style.display = 'flex';
+        // Display the panel on conversation pages, hide it otherwise
+        panel.style.display = isConversationPage() ? 'flex' : 'none';
 
         const mainContent = panel.querySelector('#gae-main-content');
         if (mainContent) {
             const wasHidden = mainContent.style.display === 'none';
+            // Explicitly set the display property based on shouldActive
             mainContent.style.display = shouldActive ? 'flex' : 'none';
 
             if (shouldActive && wasHidden) {
