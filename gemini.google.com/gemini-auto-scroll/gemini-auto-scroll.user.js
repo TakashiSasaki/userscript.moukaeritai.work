@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.37
-// @lastModified 2026-03-14
+// @version      0.2.38
+// @lastModified 2026-03-30
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -14,7 +14,6 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js
 // @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/style.css
 // @grant        GM_info
-// @grant        GM_registerMenuCommand
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_getResourceText
@@ -49,17 +48,6 @@
     if (isInstallCheckHost) {
         report();
         return;
-    }
-    // --- Tampermonkey Menu ---
-    if (typeof GM_registerMenuCommand !== 'undefined') {
-        GM_registerMenuCommand("現在の会話IDを表示", () => {
-            const currentId = findSelectedConversationId();
-            if (currentId) {
-                alert(`現在の会話ID: ${currentId}`);
-            } else {
-                alert("会話IDが見つかりませんでした。");
-            }
-        });
     }
 
     const SELECTORS = {
@@ -192,35 +180,6 @@
         return items.length;
     }
 
-    function getIdFromItem(item) {
-        if (!item) return null;
-
-        // Strategy 1: href (Most reliable)
-        const href = item.getAttribute('href');
-        if (href) {
-            const match = href.match(/\/(app|gem)\/(?:[a-f0-9]+\/)?([a-f0-9]{16})/);
-            if (match) return match[2];
-        }
-
-        // Strategy 2: jslog fallback
-        const jslog = item.getAttribute('jslog');
-        if (jslog) {
-            const match = jslog.match(/c_([0-9a-f]{16})/) || jslog.match(/["']([a-f0-9]{16})["']/);
-            if (match) return match[1];
-        }
-        return null;
-    }
-
-    function findSelectedConversationId() {
-        const currentItems = getConversationItems();
-        const selectedItem = currentItems.find(item => item.classList.contains('selected') || item.getAttribute('aria-current') === 'page' || item.getAttribute('aria-current') === 'true');
-
-        if (selectedItem) {
-            const id = getIdFromItem(selectedItem);
-            if (id) return id;
-        }
-        return getConversationIdFromUrl();
-    }
 
     function updatePanelUI() {
         const panel = document.getElementById('gemini-auto-scroll-panel');
@@ -376,10 +335,6 @@
 
     // --- Utility Functions ---
 
-    function getConversationIdFromUrl() {
-        const match = window.location.pathname.match(/\/(app|gem)\/(?:[a-f0-9]+\/)?([a-f0-9]{16})/);
-        return match ? match[2] : null;
-    }
 
     function findScrollableParent(element) {
         let parent = element.parentElement;
