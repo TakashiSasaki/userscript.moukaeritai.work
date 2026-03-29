@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.8
+// @version      0.2.9
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -30,13 +30,23 @@
             const styleEl = document.createElement('style');
             styleEl.textContent = style;
             document.head.appendChild(styleEl);
+        } else {
+            console.error('[Gemini Artifact Exporter Worker] Fatal Error: style.css resource not found. The script cannot continue and will exit.');
+            return;
         }
+        
         const template = GM_getResourceText('template');
         if (template) {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = template;
             document.body.appendChild(tempDiv);
+        } else {
+            console.error('[Gemini Artifact Exporter Worker] Fatal Error: template.html resource not found. The script cannot continue and will exit.');
+            return;
         }
+    } else {
+        console.error('[Gemini Artifact Exporter Worker] Fatal Error: GM_getResourceText is not available. The script cannot continue and will exit.');
+        return;
     }
 
     const installCheckHosts = [
@@ -91,16 +101,8 @@
                 ui = clone.querySelector('#userscript-target-status-ui');
                 document.body.appendChild(clone);
             } else {
-                // Fallback
-                ui = document.createElement('div');
-                ui.id = uiId;
-                ui.style.position = 'fixed';
-                ui.style.zIndex = '999999';
-                ui.style.padding = '8px 12px';
-                ui.style.backgroundColor = 'rgba(255, 182, 193, 0.9)';
-                ui.style.color = '#333';
-                ui.style.borderRadius = '8px';
-                document.body.appendChild(ui);
+                console.error('[Gemini Artifact Exporter Worker] Fatal Error: tpl-target-status-ui not found. Status indicator cannot be displayed.');
+                return;
             }
 
             // Restore position
@@ -432,7 +434,7 @@
 
     // --- UI Indicator ---
 
-    const VERSION = '0.2.8';
+    const VERSION = '0.2.9';
     let hideTimeoutId = null;
 
     function getOrCreateIndicator() {
@@ -444,15 +446,8 @@
                 indicator = clone.querySelector('#gemini-worker-export-indicator');
                 document.body.appendChild(clone);
             } else {
-                // Fallback
-                indicator = document.createElement('div');
-                indicator.id = 'gemini-worker-export-indicator';
-                indicator.style.position = 'fixed';
-                indicator.style.zIndex = '10000';
-                indicator.style.backgroundColor = 'rgba(255, 182, 193, 0.9)';
-                indicator.style.padding = '4px 8px';
-                indicator.style.borderRadius = '8px';
-                document.body.appendChild(indicator);
+                console.error('[Gemini Artifact Exporter Worker] Fatal Error: tpl-worker-indicator not found. Worker indicator cannot be displayed.');
+                return null;
             }
 
             // Restore position
