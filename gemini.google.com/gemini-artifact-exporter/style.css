@@ -206,7 +206,7 @@
 .gae-version-handle {
     font-size: 10px;
     font-family: monospace;
-    color: #555;
+    color: #333;
     cursor: grab;
     user-select: none;
     padding: 2px 4px;

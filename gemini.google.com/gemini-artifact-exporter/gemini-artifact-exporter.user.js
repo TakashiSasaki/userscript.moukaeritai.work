@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.16
+// @version      0.4.17
 // @lastModified 2026-03-21
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
@@ -103,12 +103,12 @@
                 if (installed) {
                     el.classList.add('installed');
                     el.title = `${targetName} - v${installed.version}`;
-                    el.style.color = '#81c995'; // Greenish 
+                    el.style.color = '#137333'; // Dark Green for visibility on light pink
                     if (verSpan) verSpan.textContent = `v${installed.version}`;
                 } else {
                     el.classList.remove('installed');
                     el.title = `${targetName} - Not Found`;
-                    el.style.color = '#f28b82'; // Reddish
+                    el.style.color = '#c5221f'; // Dark Red for visibility on light pink
                     if (verSpan) verSpan.textContent = 'Not Found';
                 }
             }
