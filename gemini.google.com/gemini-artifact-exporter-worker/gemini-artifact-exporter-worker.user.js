@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.7
+// @version      0.2.8
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -12,6 +12,9 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_deleteValue
+// @grant        GM_getResourceText
+// @resource     style https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/style.css
+// @resource     template https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/template.html
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @noframes
@@ -19,6 +22,22 @@
 
 (function () {
     'use strict';
+
+    // Inject styles and templates
+    if (typeof GM_getResourceText !== 'undefined') {
+        const style = GM_getResourceText('style');
+        if (style) {
+            const styleEl = document.createElement('style');
+            styleEl.textContent = style;
+            document.head.appendChild(styleEl);
+        }
+        const template = GM_getResourceText('template');
+        if (template) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = template;
+            document.body.appendChild(tempDiv);
+        }
+    }
 
     const installCheckHosts = [
         'userscript.moukaeritai.work'
@@ -66,19 +85,23 @@
         let ui = document.getElementById(uiId);
 
         if (!ui) {
-            ui = document.createElement('div');
-            ui.id = uiId;
-            ui.style.position = 'fixed';
-            ui.style.zIndex = '999999';
-            ui.style.padding = '8px 12px';
-            ui.style.backgroundColor = 'rgba(255, 182, 193, 0.9)'; // LightPink
-            ui.style.color = '#333';
-            ui.style.borderRadius = '8px';
-            ui.style.fontFamily = 'sans-serif';
-            ui.style.fontSize = '12px';
-            ui.style.boxShadow = '0 2px 10px rgba(0,0,0,0.5)';
-            ui.style.cursor = 'move';
-            ui.style.userSelect = 'none';
+            const template = document.getElementById('tpl-target-status-ui');
+            if (template) {
+                const clone = template.content.cloneNode(true);
+                ui = clone.querySelector('#userscript-target-status-ui');
+                document.body.appendChild(clone);
+            } else {
+                // Fallback
+                ui = document.createElement('div');
+                ui.id = uiId;
+                ui.style.position = 'fixed';
+                ui.style.zIndex = '999999';
+                ui.style.padding = '8px 12px';
+                ui.style.backgroundColor = 'rgba(255, 182, 193, 0.9)';
+                ui.style.color = '#333';
+                ui.style.borderRadius = '8px';
+                document.body.appendChild(ui);
+            }
 
             // Restore position
             let posStr = '{"bottom": "20px", "right": "20px"}';
@@ -103,8 +126,8 @@
                 const rect = ui.getBoundingClientRect();
                 startLeft = rect.left;
                 startTop = rect.top;
-                ui.style.right = 'auto'; // Disable right anchoring
-                ui.style.bottom = 'auto'; // Disable bottom anchoring
+                ui.style.right = 'auto';
+                ui.style.bottom = 'auto';
                 e.preventDefault();
             });
 
@@ -129,22 +152,17 @@
                     } catch { /* ignore */ }
                 }
             });
-
-            document.body.appendChild(ui);
         }
 
         const statusText = statusDetail
             ? `✅ ${targetName} (v${statusDetail.version})`
             : `❌ ${targetName} Not Found`;
 
-        ui.textContent = '';
-        const titleDiv = document.createElement('div');
-        titleDiv.style.fontWeight = 'bold';
-        titleDiv.textContent = 'Script Status:';
-        ui.appendChild(titleDiv);
-        const statusDiv = document.createElement('div');
+        const titleDiv = ui.querySelector('.target-status-title');
+        const statusDiv = ui.querySelector('.target-status-text') || ui;
+        
+        if (titleDiv) titleDiv.textContent = 'Script Status:';
         statusDiv.textContent = statusText;
-        ui.appendChild(statusDiv);
 
         // Auto hide after 5 seconds if successful, keep if failed
         if (statusDetail) {
@@ -414,29 +432,28 @@
 
     // --- UI Indicator ---
 
-    const VERSION = '0.2.7';
+    const VERSION = '0.2.8';
     let hideTimeoutId = null;
 
     function getOrCreateIndicator() {
         let indicator = document.getElementById('gemini-worker-export-indicator');
         if (!indicator) {
-            indicator = document.createElement('div');
-            indicator.id = 'gemini-worker-export-indicator';
-            indicator.style.cssText = `
-                position: fixed;
-                z-index: 10000;
-                background-color: rgba(255, 182, 193, 0.9);
-                color: #333;
-                padding: 4px 8px;
-                border-radius: 8px;
-                font-family: sans-serif;
-                font-size: 12px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                user-select: none;
-            `;
+            const template = document.getElementById('tpl-worker-indicator');
+            if (template) {
+                const clone = template.content.cloneNode(true);
+                indicator = clone.querySelector('#gemini-worker-export-indicator');
+                document.body.appendChild(clone);
+            } else {
+                // Fallback
+                indicator = document.createElement('div');
+                indicator.id = 'gemini-worker-export-indicator';
+                indicator.style.position = 'fixed';
+                indicator.style.zIndex = '10000';
+                indicator.style.backgroundColor = 'rgba(255, 182, 193, 0.9)';
+                indicator.style.padding = '4px 8px';
+                indicator.style.borderRadius = '8px';
+                document.body.appendChild(indicator);
+            }
 
             // Restore position
             let posStr = '{"bottom": "20px", "left": "20px"}';
@@ -452,77 +469,48 @@
             if (pos.left) indicator.style.left = pos.left;
             if (pos.right && !pos.left) indicator.style.right = pos.right;
 
-            const handle = document.createElement('div');
-            const labelDiv = document.createElement('div');
-            labelDiv.style.fontSize = '10px';
-            labelDiv.style.lineHeight = '1';
-            labelDiv.textContent = 'Worker ⚙️';
-            const versionDiv = document.createElement('div');
-            versionDiv.style.lineHeight = '1.2';
-            versionDiv.textContent = `v${VERSION}`;
-            handle.appendChild(labelDiv);
-            handle.appendChild(versionDiv);
-            handle.title = GM_info.script.name;
-            handle.style.cssText = `
-                cursor: grab;
-                font-weight: bold;
-                padding: 2px 4px;
-                background: rgba(255, 255, 255, 0.5);
-                border-radius: 4px;
-                text-align: center;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-            `;
+            const handle = indicator.querySelector('.worker-indicator-handle');
+            if (handle) {
+                const versionDiv = handle.querySelector('.worker-indicator-version');
+                if (versionDiv) versionDiv.textContent = `v${VERSION}`;
+                handle.title = GM_info.script.name;
 
-            // Make draggable
-            let isDragging = false, startX, startY, startLeft, startTop;
-            handle.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                handle.style.cursor = 'grabbing';
-                startX = e.clientX;
-                startY = e.clientY;
-                const rect = indicator.getBoundingClientRect();
-                startLeft = rect.left;
-                startTop = rect.top;
-                indicator.style.right = 'auto'; // Disable right anchoring
-                indicator.style.bottom = 'auto'; // Disable bottom anchoring
-                e.preventDefault();
-            });
+                // Make draggable
+                let isDragging = false, startX, startY, startLeft, startTop;
+                handle.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    const rect = indicator.getBoundingClientRect();
+                    startLeft = rect.left;
+                    startTop = rect.top;
+                    indicator.style.right = 'auto';
+                    indicator.style.bottom = 'auto';
+                    e.preventDefault();
+                });
 
-            document.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
-                indicator.style.left = (startLeft + dx) + 'px';
-                indicator.style.top = (startTop + dy) + 'px';
-            });
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    const dx = e.clientX - startX;
+                    const dy = e.clientY - startY;
+                    indicator.style.left = (startLeft + dx) + 'px';
+                    indicator.style.top = (startTop + dy) + 'px';
+                });
 
-            document.addEventListener('mouseup', () => {
-                if (isDragging) {
-                    isDragging = false;
-                    handle.style.cursor = 'grab';
-                    try {
-                        if (typeof GM_setValue !== 'undefined') {
-                            GM_setValue('gemini-worker-export-indicator-pos', JSON.stringify({
-                                top: indicator.style.top,
-                                left: indicator.style.left
-                            }));
-                        }
-                    } catch { /* ignore */ }
-                }
-            });
-
-            const statusContainer = document.createElement('div');
-            statusContainer.id = 'gemini-worker-export-status';
-            statusContainer.style.display = 'none'; // Initially hidden
-            statusContainer.style.alignItems = 'center';
-            statusContainer.style.gap = '4px';
-
-            indicator.appendChild(handle);
-            indicator.appendChild(statusContainer);
-            document.body.appendChild(indicator);
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        try {
+                            if (typeof GM_setValue !== 'undefined') {
+                                GM_setValue('gemini-worker-export-indicator-pos', JSON.stringify({
+                                    top: indicator.style.top,
+                                    left: indicator.style.left
+                                }));
+                            }
+                        } catch { /* ignore */ }
+                    }
+                });
+            }
         }
         return indicator;
     }
@@ -540,7 +528,7 @@
         statusContainer.textContent = ''; // clear
 
         const icon = document.createElement('span');
-        icon.style.fontSize = '14px';
+        icon.className = 'worker-status-icon';
         if (isSuccess) {
             icon.textContent = '✅';
         } else if (isError) {
@@ -550,6 +538,7 @@
         }
 
         const text = document.createElement('span');
+        text.className = 'worker-status-text';
         text.textContent = message;
 
         statusContainer.appendChild(icon);
