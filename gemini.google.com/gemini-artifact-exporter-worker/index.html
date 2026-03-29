@@ -13,6 +13,11 @@
 </head>
 <body>
     <p>このユーザースクリプトは、Gemini の「アーティファクト（Article）」を Google ドキュメントにエクスポートするメインUI <a href="../gemini-artifact-exporter/index.html">gemini-artifact-exporter</a> のワーカー（バックグラウンド処理用）スクリプトです。<br><strong>単体では機能しない、内部依存用のスクリプトです。</strong></p>
+    
+    <div id="script-info"
+        style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #f39c12; font-size: 14px;">
+        <strong>最新バージョン:</strong> <span id="ver-info">v0.2.6</span><br>
+    </div>
 
     <h2>概要</h2>
     <p>
@@ -55,6 +60,12 @@
         <li><strong>Artifact Exporter</strong>: <code>gemini-artifact-exporter-worker:request</code> イベントを受信してエクスポートのバックグラウンド処理を開始します。</li>
         <li><strong>Artifact Exporter</strong>: <code>gemini-artifact-exporter-worker:cancel</code> イベントを受信して実行中のエクスポート処理をキャンセルします。</li>
         <li><strong>Turn Counter</strong>: <code>gemini-turn-counter-copy-images-result</code> イベントを受信して画像コピー結果を受け取ります。</li>
+    </ul>
+
+    <h2>更新履歴</h2>
+    <ul>
+        <li><strong>v0.2.6</strong> (2026-03-29): 最小化表示（バージョンハンドル）にスクリプトを識別するための絵文字 (⚙️) を追加しました。</li>
+        <li><strong>v0.2.5</strong> (2026-03-22): 最小化表示（バージョンハンドル）の背景をライトピンクに変更し、文字色を読みやすく調整しました。</li>
     </ul>
 
     <h2>技術的な詳細</h2>
