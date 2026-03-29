@@ -47,6 +47,9 @@
 .gemini-quick-export-btn svg {
     fill: currentColor;
 }
+.export-btn-icon {
+    display: flex;
+}
 /* Overlay */
 #gemini-export-overlay {
     position: fixed;

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.42
+// @version      0.4.43
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-30
 // @author       Takashi Sasaki
@@ -139,7 +139,7 @@
         if (!btn) return;
         btn.textContent = ''; // Clear existing
         const iconSpan = document.createElement('span');
-        iconSpan.style.display = 'flex';
+        iconSpan.className = 'export-btn-icon';
         const icon = getIcon('docs');
         if (icon) iconSpan.appendChild(icon);
         btn.appendChild(iconSpan);
@@ -193,17 +193,9 @@
      * Create the export button
      */
     function createExportButton(onClick, positionClass = null) {
-        const btn = document.createElement('button');
-        btn.className = 'gemini-quick-export-btn';
+        const tpl = getTemplate('tpl-export-button');
+        const btn = tpl ? tpl.firstElementChild : document.createElement('button');
         if (positionClass) btn.classList.add(positionClass);
-        btn.title = '1-Click Export to Docs';
-
-        // Initial Icon
-        const iconContainer = document.createElement('span');
-        iconContainer.style.display = 'flex';
-        const docsIcon = getIcon('docs');
-        if (docsIcon) iconContainer.appendChild(docsIcon);
-        btn.appendChild(iconContainer);
 
         btn.onclick = async (e) => {
             e.preventDefault();
@@ -215,14 +207,11 @@
                 await onClick();
 
                 // Success State - Sync across same container
-                // 1. Try to find the common turn container
                 const container = btn.closest(SELECTORS.turnContainer);
                 if (container) {
-                    // Turn mode: Find all buttons in this response/turn
                     const allBtns = container.querySelectorAll('.gemini-quick-export-btn');
                     allBtns.forEach(b => markAsExported(b));
                 } else {
-                    // Canvas or other mode: just update self
                     markAsExported(btn);
                 }
 
