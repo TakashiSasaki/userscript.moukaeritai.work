@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.15
+// @version      0.4.16
 // @lastModified 2026-03-21
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
@@ -30,16 +30,25 @@
         }
     }
 
-    const report = () => {
-        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
-            detail: {
-                name: GM_info.script.name,
-                version: GM_info.script.version
-            }
-        }));
-    };
-    document.addEventListener('userscript-ping', report);
-    report();
+    const installCheckHosts = [
+        'userscript.moukaeritai.work'
+    ];
+
+    const isInstallCheckHost = installCheckHosts.includes(location.hostname);
+
+    if (isInstallCheckHost) {
+        const report = () => {
+            document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+                detail: {
+                    name: GM_info.script.name,
+                    version: GM_info.script.version
+                }
+            }));
+        };
+        report();
+        document.addEventListener('userscript-ping', report);
+        return;
+    }
 
     // Custom Event Helper for checking if target userscript is installed
     function checkTargetUserscript(targetName, timeout = 2000) {
