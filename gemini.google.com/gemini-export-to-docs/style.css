@@ -129,13 +129,6 @@
     display: flex;
 }
 
-.one-turn-inactive-title {
-    font-size: 5.5px;
-    opacity: 0.9;
-    font-weight: 600;
-    margin-bottom: 2px;
-}
-
 .one-turn-inactive-version {
     font-size: 11px;
     line-height: 1;
