@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.14
+// @version      0.2.15
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @lastModified 2026-03-30
 // @author       Takashi Sasaki
@@ -14,6 +14,7 @@
 // @grant        GM_getValue
 // @grant        GM_deleteValue
 // @grant        GM_getResourceText
+// @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
 // @resource     style https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/style.css
 // @resource     template https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/template.html
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
@@ -62,6 +63,15 @@ const report = () => {
 
     // Inject styles and templates
     if (typeof GM_getResourceText !== 'undefined') {
+        // Inject shared common styles
+        const commonCSS = GM_getResourceText('geminiCommon');
+        if (commonCSS && !document.getElementById('gemini-common-styles')) {
+            const commonStyle = document.createElement('style');
+            commonStyle.textContent = commonCSS;
+            commonStyle.id = 'gemini-common-styles';
+            document.head.appendChild(commonStyle);
+        }
+
         const style = GM_getResourceText('style');
         if (style) {
             const styleEl = document.createElement('style');
@@ -115,6 +125,7 @@ const report = () => {
             if (template) {
                 const clone = template.content.cloneNode(true);
                 ui = clone.querySelector('#userscript-target-status-ui');
+                ui.className += ' gus-panel';
                 document.body.appendChild(clone);
             } else {
                 console.error('[Gemini Artifact Exporter Worker] Fatal Error: tpl-target-status-ui not found. Status indicator cannot be displayed.');
@@ -460,6 +471,7 @@ const report = () => {
             if (template) {
                 const clone = template.content.cloneNode(true);
                 indicator = clone.querySelector('#gemini-worker-export-indicator');
+                indicator.className += ' gus-panel';
                 document.body.appendChild(clone);
             } else {
                 console.error('[Gemini Artifact Exporter Worker] Fatal Error: tpl-worker-indicator not found. Worker indicator cannot be displayed.');

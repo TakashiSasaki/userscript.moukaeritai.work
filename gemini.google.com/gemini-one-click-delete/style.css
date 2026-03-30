@@ -26,15 +26,8 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    background: rgba(255, 182, 193, 0.9);
     padding: 4px 8px;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    border: 1px solid #dadce0;
-    backdrop-filter: blur(8px);
     transition: background-color 0.2s;
-    font-family: 'Google Sans', sans-serif;
-    user-select: none;
 }
 .gdp-main-delete-btn {
     display: flex;
@@ -62,19 +55,11 @@
     cursor: not-allowed;
 }
 .version-badge {
-    font-size: 10px;
-    color: #333;
-    font-family: monospace;
     padding: 0 4px;
-    cursor: grab;
-}
-.version-badge:active {
-    cursor: grabbing;
 }
 @media (prefers-color-scheme: dark) {
     /* Keep panel light pink even in dark mode */
     #gemini-delete-panel { border-color: #5f6368; }
     .gdp-main-delete-btn:disabled { background-color: #3c4043; color: #80868b; }
-    .version-badge { color: #333; }
 }
 @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }

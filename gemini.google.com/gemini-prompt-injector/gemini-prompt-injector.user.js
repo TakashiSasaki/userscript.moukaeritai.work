@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.15
+// @version      0.4.16
 // @description  Injects a prompt into Gemini via an external custom event.
 // @lastModified 2026-03-30
 // @author       Takashi Sasaki
@@ -10,6 +10,10 @@
 // @grant        GM_info
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_getResourceText
+// @grant        GM_addStyle
+// @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
+// @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/style.css
 // @homepageURL  https://x.com/TakashiSasaki
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
@@ -30,6 +34,22 @@ const report = () => {
 
     if (location.hostname === 'userscript.moukaeritai.work') {
         return;
+    }
+
+    // Inject shared common styles
+    const commonCSS = GM_getResourceText('geminiCommon');
+    if (commonCSS && !document.getElementById('gemini-common-styles')) {
+        const commonStyle = document.createElement('style');
+        commonStyle.textContent = commonCSS;
+        commonStyle.id = 'gemini-common-styles';
+        document.head.appendChild(commonStyle);
+    }
+
+    // Inject custom styles
+    const customCSS = GM_getResourceText('customCSS');
+    if (customCSS && !document.getElementById('gemini-prompt-injector-styles')) {
+        const style = GM_addStyle(customCSS);
+        if (style) style.id = 'gemini-prompt-injector-styles';
     }
 
     const getTrustedHTML = (html) => {
@@ -76,17 +96,7 @@ const report = () => {
         if (!ui) {
             ui = document.createElement('div');
             ui.id = uiId;
-            ui.style.position = 'fixed';
-            ui.style.zIndex = '999999';
-            ui.style.padding = '8px 12px';
-            ui.style.backgroundColor = 'rgba(255, 182, 193, 0.9)'; // LightPink
-            ui.style.color = '#333';
-            ui.style.borderRadius = '8px';
-            ui.style.fontFamily = 'sans-serif';
-            ui.style.fontSize = '12px';
-            ui.style.boxShadow = '0 2px 10px rgba(0,0,0,0.5)';
-            ui.style.cursor = 'move';
-            ui.style.userSelect = 'none';
+            ui.className = 'gus-panel';
 
             // Restore position
             let posStr = '{"bottom": "20px", "right": "20px"}';
@@ -147,10 +157,11 @@ const report = () => {
 
         ui.textContent = '';
         const titleDiv = document.createElement('div');
-        titleDiv.style.fontWeight = 'bold';
+        titleDiv.className = 'target-status-title';
         titleDiv.textContent = 'Script Status:';
         ui.appendChild(titleDiv);
         const statusDiv = document.createElement('div');
+        statusDiv.className = 'target-status-text';
         statusDiv.textContent = statusText;
         ui.appendChild(statusDiv);
 
@@ -296,16 +307,8 @@ const report = () => {
 
         const uiContainer = document.createElement('div');
         uiContainer.id = 'gpi-test-ui';
-        uiContainer.style.position = 'fixed';
-        uiContainer.style.zIndex = '999999';
-        uiContainer.style.backgroundColor = 'rgba(255, 182, 193, 0.9)'; // LightPink
-        uiContainer.style.border = '1px solid #ccc';
-        uiContainer.style.borderRadius = '8px';
-        uiContainer.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
-        uiContainer.style.fontFamily = 'sans-serif';
-        uiContainer.style.fontSize = '12px';
-        uiContainer.style.color = '#333';
-        uiContainer.style.userSelect = 'none';
+        uiContainer.className = 'gus-panel';
+        if (isMinimized) uiContainer.classList.add('minimized');
 
         // Retrieve saved state or default
         let isMinimized = GM_getValue('gpi_ui_minimized', false);
@@ -324,34 +327,19 @@ const report = () => {
         uiContainer.style.top = `${savedY}px`;
 
         const header = document.createElement('div');
-        header.style.padding = '4px 8px';
-        header.style.cursor = 'move';
-        header.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
-        header.style.borderTopLeftRadius = '8px';
-        header.style.borderTopRightRadius = '8px';
-        header.style.display = 'flex';
-        header.style.justifyContent = 'space-between';
-        header.style.alignItems = 'center';
+        header.className = 'gpi-header';
 
         const title = document.createElement('span');
+        title.className = 'gus-version';
         const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '';
         title.textContent = scriptVersion ? `v${scriptVersion}` : 'Prompt Injector';
         title.title = 'Gemini Prompt Injector';
-        title.style.fontWeight = 'bold';
-        title.style.fontSize = '12px';
-        title.style.cursor = 'grab';
 
         const minBtn = document.createElement('button');
+        minBtn.className = 'gpi-min-btn';
         minBtn.innerHTML = getTrustedHTML(isMinimized
             ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h16v6H4v-6z" opacity="0.5"/><path d="M4 4h16v6H4V4z"/></svg>'
             : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>');
-        minBtn.style.cursor = 'pointer';
-        minBtn.style.border = 'none';
-        minBtn.style.background = 'transparent';
-        minBtn.style.padding = '2px';
-        minBtn.style.display = 'flex';
-        minBtn.style.alignItems = 'center';
-        minBtn.style.justifyContent = 'center';
         minBtn.title = isMinimized ? '復元' : '最小化';
 
         header.appendChild(title);
@@ -359,22 +347,18 @@ const report = () => {
         uiContainer.appendChild(header);
 
         const content = document.createElement('div');
-        content.style.padding = '4px 8px 8px 8px';
+        content.className = 'gpi-content';
         content.style.display = isMinimized ? 'none' : 'block';
 
         // Inject Prompt Group
         const group1 = document.createElement('div');
-        group1.style.marginBottom = '4px';
+        group1.className = 'gpi-group';
         const textarea = document.createElement('textarea');
-        textarea.style.width = '100%';
-        textarea.style.height = '40px';
-        textarea.style.marginBottom = '4px';
-        textarea.style.boxSizing = 'border-box';
+        textarea.className = 'gpi-textarea';
         textarea.placeholder = 'Test prompt...';
         const injectBtn = document.createElement('button');
+        injectBtn.className = 'gpi-button';
         injectBtn.textContent = 'Inject & Send';
-        injectBtn.style.width = '100%';
-        injectBtn.style.cursor = 'pointer';
         injectBtn.onclick = () => {
             if (textarea.value) {
                 checkTargetUserscript('Gemini Prompt Injector').then((installed) => { showTargetScriptStatus('Gemini Prompt Injector', installed); document.dispatchEvent(new CustomEvent('gemini-inject-prompt', { detail: { prompt: textarea.value } })); });
@@ -385,11 +369,10 @@ const report = () => {
 
         // Send Prompt Group
         const group2 = document.createElement('div');
-        group2.style.marginBottom = '4px';
+        group2.className = 'gpi-group';
         const sendBtn = document.createElement('button');
+        sendBtn.className = 'gpi-button';
         sendBtn.textContent = 'Send Current';
-        sendBtn.style.width = '100%';
-        sendBtn.style.cursor = 'pointer';
         sendBtn.onclick = () => {
             checkTargetUserscript('Gemini Prompt Injector').then((installed) => { showTargetScriptStatus('Gemini Prompt Injector', installed); document.dispatchEvent(new CustomEvent('gemini-send-prompt')); });
         };
@@ -397,11 +380,9 @@ const report = () => {
 
         // Switch Model Group
         const group3 = document.createElement('div');
-        group3.style.marginBottom = '4px';
-        group3.style.display = 'flex';
-        group3.style.gap = '4px';
+        group3.className = 'gpi-row';
         const selectModel = document.createElement('select');
-        selectModel.style.flex = '1';
+        selectModel.className = 'gpi-select';
         ['flash', 'thinking', 'pro'].forEach(m => {
             const opt = document.createElement('option');
             opt.value = m;
@@ -409,8 +390,9 @@ const report = () => {
             selectModel.appendChild(opt);
         });
         const switchBtn = document.createElement('button');
+        switchBtn.className = 'gpi-button';
+        switchBtn.style.width = 'auto';
         switchBtn.textContent = 'Switch';
-        switchBtn.style.cursor = 'pointer';
         switchBtn.onclick = () => {
             checkTargetUserscript('Gemini Prompt Injector').then((installed) => { showTargetScriptStatus('Gemini Prompt Injector', installed); document.dispatchEvent(new CustomEvent('gemini-switch-model', { detail: { model: selectModel.value } })); });
         };
@@ -419,10 +401,10 @@ const report = () => {
 
         // Enable Canvas Group
         const group4 = document.createElement('div');
+        group4.className = 'gpi-group';
         const canvasBtn = document.createElement('button');
+        canvasBtn.className = 'gpi-button';
         canvasBtn.textContent = 'Enable Canvas';
-        canvasBtn.style.width = '100%';
-        canvasBtn.style.cursor = 'pointer';
         canvasBtn.onclick = () => {
             checkTargetUserscript('Gemini Prompt Injector').then((installed) => { showTargetScriptStatus('Gemini Prompt Injector', installed); document.dispatchEvent(new CustomEvent('gemini-enable-canvas')); });
         };
@@ -482,6 +464,9 @@ const report = () => {
         minBtn.onclick = () => {
             isMinimized = !isMinimized;
             content.style.display = isMinimized ? 'none' : 'block';
+            if (isMinimized) uiContainer.classList.add('minimized');
+            else uiContainer.classList.remove('minimized');
+            
             minBtn.innerHTML = getTrustedHTML(isMinimized
                 ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h16v6H4v-6z" opacity="0.5"/><path d="M4 4h16v6H4V4z"/></svg>'
                 : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>');

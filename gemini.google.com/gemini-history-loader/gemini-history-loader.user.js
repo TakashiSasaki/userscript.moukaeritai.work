@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini History Loader
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.8
+// @version      0.1.9
 // @lastModified 2026-03-30
 // @description  A utility script that forces Gemini to load the entire chat history by programmatically scrolling to the top. Features a compact floating UI that expands when loading history.
 // @author       Takashi Sasaki
@@ -13,6 +13,7 @@
 // @grant        GM_getValue
 // @grant        GM_addStyle
 // @grant        GM_getResourceText
+// @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
 // @resource     css https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/style.css
 // @resource     templateHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/template.html
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
@@ -37,6 +38,15 @@ const report = () => {
     }
 
     if (typeof GM_addStyle !== 'undefined' && typeof GM_getResourceText !== 'undefined') {
+        // Inject shared common styles
+        const commonCSS = GM_getResourceText('geminiCommon');
+        if (commonCSS && !document.getElementById('gemini-common-styles')) {
+            const commonStyle = document.createElement('style');
+            commonStyle.textContent = commonCSS;
+            commonStyle.id = 'common-styles';
+            document.head.appendChild(commonStyle);
+        }
+
         const css = GM_getResourceText('css');
         if (css) {
             GM_addStyle(css);
@@ -139,6 +149,7 @@ const report = () => {
 
         uiPanel = document.createElement('div');
         uiPanel.id = 'gemini-history-loader-panel';
+        uiPanel.className = 'gus-panel';
 
         const templateStr = GM_getResourceText('templateHTML').replace(/{{scriptVersion}}/g, GM_info.script.version);
         setInnerHTML(uiPanel, templateStr);

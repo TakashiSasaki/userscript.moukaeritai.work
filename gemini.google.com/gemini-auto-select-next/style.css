@@ -3,13 +3,7 @@
     top: 80px;
     right: 20px;
     z-index: 10000;
-    background-color: rgba(255, 182, 193, 0.9);
-    border: 1px solid #dadce0;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    font-family: 'Google Sans', sans-serif;
     font-size: 12px;
-    color: #333;
     display: inline-flex;
     align-items: center;
     flex-wrap: nowrap;
@@ -19,8 +13,6 @@
     max-width: calc(100vw - 40px);
     box-sizing: border-box;
     white-space: nowrap;
-    user-select: none;
-    backdrop-filter: blur(8px);
     transition: box-shadow 0.2s;
     visibility: hidden;
 }
@@ -35,13 +27,8 @@
     gap: 2px;
 }
 #gemini-auto-switch-panel .version-badge {
-    font-size: 9px;
-    color: #555;
-    font-family: monospace;
-    cursor: grab;
     line-height: 1;
 }
-#gemini-auto-switch-panel .version-badge:active { cursor: grabbing; }
 #gemini-auto-switch-panel .auto-switch-label {
     display: flex; align-items: center; gap: 2px; cursor: pointer; font-weight: 500; line-height: 1;
 }
@@ -59,7 +46,7 @@
 #gemini-auto-switch-panel .manual-next-btn:hover { background: #1557b0; }
 #gemini-auto-switch-panel .manual-next-btn:active { transform: scale(0.96); }
 @media (prefers-color-scheme: dark) {
-    #gemini-auto-switch-panel { background: rgba(255, 182, 193, 0.9); color: #333; border-color: rgba(255,255,255,0.15); }
+    #gemini-auto-switch-panel { border-color: rgba(255,255,255,0.15); }
     #gemini-auto-switch-panel .manual-next-btn { background: #8ab4f8; color: #202124; }
     #gemini-auto-switch-panel .manual-next-btn:hover { background: #aecbfa; }
 }

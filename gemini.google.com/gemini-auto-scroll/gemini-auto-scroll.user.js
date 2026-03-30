@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.42
+// @version      0.2.43
 // @lastModified 2026-03-30
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
@@ -10,6 +10,7 @@
 // @match        https://userscript.moukaeritai.work/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js
+// @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
 // @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/style.css
 // @grant        GM_info
 // @grant        GM_setValue
@@ -119,6 +120,15 @@ const report = () => {
     // ICONS removed, using emojis.
 
     function injectStyles() {
+        // Inject shared common styles
+        const commonCSS = GM_getResourceText('geminiCommon');
+        if (commonCSS && !document.getElementById('gemini-common-styles')) {
+            const commonStyle = document.createElement('style');
+            commonStyle.textContent = commonCSS;
+            commonStyle.id = 'gemini-common-styles';
+            document.head.appendChild(commonStyle);
+        }
+
         if (document.getElementById('gemini-auto-scroll-styles')) return;
         const css = GM_getResourceText('customCSS');
         const style = GM_addStyle(css);
@@ -222,12 +232,13 @@ const report = () => {
 
         const panel = document.createElement('div');
         panel.id = 'gemini-auto-scroll-panel';
+        panel.className = 'gus-panel';
 
         setInnerHTML(panel, `
             <button class="auto-scroll-btn">▶️ Start Auto-Scroll</button>
             <div class="panel-info">
                 <span class="gtc-badge">0 items</span>
-                <span class="version-badge" title="Gemini Auto-Scroll">v${GM_info.script.version}</span>
+                <span class="version-badge gus-version" title="Gemini Auto-Scroll">v${GM_info.script.version}</span>
             </div>
         `);
 

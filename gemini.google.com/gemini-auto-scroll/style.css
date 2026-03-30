@@ -3,26 +3,16 @@
     top: 20px;
     right: 20px;
     z-index: 10000;
-    background: rgba(255, 182, 193, 0.9); /* LightPink */
-    backdrop-filter: blur(12px) saturate(180%);
-    -webkit-backdrop-filter: blur(12px) saturate(180%);
-    border: 1px solid rgba(209, 213, 219, 0.3);
-    border-radius: 24px;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    font-family: 'Outfit', 'Google Sans', sans-serif;
     padding: 4px;
     display: none; /* Initially hidden */
     flex-direction: row;
     align-items: center;
     gap: 4px;
-    user-select: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: move;
 }
 #gemini-auto-scroll-panel:hover {
     background: rgba(255, 182, 193, 0.95);
-    border-color: rgba(209, 213, 219, 0.5);
-    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.25);
 }
 #gemini-auto-scroll-panel.ready {
     display: flex;
@@ -44,15 +34,7 @@
     letter-spacing: 0.3px;
 }
 
-.version-badge {
-    font-size: 10px;
-    color: #444;
-    opacity: 0.7;
-    cursor: grab;
-}
-.version-badge:active {
-    cursor: grabbing;
-}
+/* Styles handled by .gus-version */
 
 .gtc-badge {
     font-size: 11px;

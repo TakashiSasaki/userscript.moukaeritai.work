@@ -1,0 +1,92 @@
+/* Gemini Prompt Injector Styles */
+
+#userscript-target-status-ui {
+    /* Base styles now handled by .gus-panel */
+    min-width: 150px;
+}
+
+.target-status-title {
+    font-weight: bold;
+}
+
+#gpi-test-ui {
+    /* Base styles now handled by .gus-panel */
+    width: 300px;
+    height: auto;
+    overflow: hidden;
+}
+
+#gpi-test-ui.minimized {
+    width: 50px;
+    height: 30px;
+}
+
+.gpi-header {
+    padding: 4px 8px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.gpi-content {
+    padding: 4px 8px 8px 8px;
+}
+
+.gpi-group {
+    margin-bottom: 4px;
+}
+
+.gpi-textarea {
+    width: 100%;
+    height: 40px;
+    margin-bottom: 4px;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 11px;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 4px;
+}
+
+.gpi-button {
+    width: 100%;
+    cursor: pointer;
+    background: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.gpi-button:hover {
+    background: #1557b0;
+}
+
+.gpi-row {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.gpi-select {
+    flex: 1;
+    font-family: inherit;
+    font-size: 11px;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 4px;
+}
+
+.gpi-min-btn {
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+}

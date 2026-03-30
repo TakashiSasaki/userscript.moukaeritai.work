@@ -2,14 +2,8 @@
     position: fixed;
     top: 60px;
     right: 20px;
-    background-color: rgba(255, 182, 193, 0.9); /* LightPink */
-    color: #333; /* Dark text */
-    border-radius: 8px;
     z-index: 9999;
-    font-family: Google Sans, Roboto, sans-serif;
     font-size: 13px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    border: 1px solid rgba(255, 182, 193, 0.9);
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -18,7 +12,6 @@
     width: auto;
     height: 32px;
     padding: 0 12px;
-    user-select: none;
     font-weight: 500;
     white-space: nowrap;
 }

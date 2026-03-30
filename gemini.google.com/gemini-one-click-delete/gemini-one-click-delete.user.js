@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.9
+// @version      0.3.10
 // @lastModified 2026-03-30
 // @description  Adds a 1-click floating button with shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
@@ -9,6 +9,7 @@
 // @match        https://userscript.moukaeritai.work/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
+// @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
 // @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/style.css
 // @grant        GM_info
 // @grant        GM_setValue
@@ -131,6 +132,15 @@ const report = () => {
      * Style injection
      */
     function addStyles() {
+        // Inject shared common styles
+        const commonCSS = GM_getResourceText('geminiCommon');
+        if (commonCSS && !document.getElementById('gemini-common-styles')) {
+            const commonStyle = document.createElement('style');
+            commonStyle.textContent = commonCSS;
+            commonStyle.id = 'gemini-common-styles';
+            document.head.appendChild(commonStyle);
+        }
+
         if (document.getElementById('gemini-delete-styles')) return;
         const css = GM_getResourceText('customCSS');
         const style = GM_addStyle(css);
@@ -273,7 +283,8 @@ const report = () => {
 
         const panel = document.createElement('div');
         panel.id = 'gemini-delete-panel';
-        const version = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.3.4';
+        panel.className = 'gus-panel';
+        const version = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.3.10';
 
         setInnerHTML(panel, `
             <button class="gdp-main-delete-btn" id="gdp-global-delete-btn">
@@ -282,7 +293,7 @@ const report = () => {
                 </svg>
                 Delete Chat
             </button>
-            <span class="version-badge" title="Gemini 1-Click Delete Conversation">v${version}</span>
+            <span class="version-badge gus-version" title="Gemini 1-Click Delete Conversation">v${version}</span>
         `);
 
         document.body.appendChild(panel);

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.16
+// @version      0.1.17
 // @lastModified 2026-03-30
 // @description  Adds serial numbers and copy buttons to custom instructions on Gemini.
 // @author       Takashi Sasaki
@@ -9,6 +9,10 @@
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @grant        GM_info
+// @grant        GM_getResourceText
+// @grant        GM_addStyle
+// @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
+// @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/style.css
 // @license      MIT
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js
@@ -31,6 +35,22 @@ const report = () => {
         return;
     }
 
+    // Inject shared common styles
+    const commonCSS = GM_getResourceText('geminiCommon');
+    if (commonCSS && !document.getElementById('gemini-common-styles')) {
+        const commonStyle = document.createElement('style');
+        commonStyle.textContent = commonCSS;
+        commonStyle.id = 'gemini-common-styles';
+        document.head.appendChild(commonStyle);
+    }
+
+    // Inject custom styles
+    const customCSS = GM_getResourceText('customCSS');
+    if (customCSS && !document.getElementById('gemini-saved-info-styles')) {
+        const style = GM_addStyle(customCSS);
+        if (style) style.id = 'gemini-saved-info-styles';
+    }
+
     const TARGET_PAGE_URL = 'https://gemini.google.com/saved-info';
     const NUMBER_SPAN_CLASS = 'userscript-gemini-saved-info-number';
     const COPY_BUTTON_CLASS = 'userscript-gemini-saved-info-copy-button';
@@ -43,30 +63,17 @@ const report = () => {
      */
     function showToast(message) {
         const toast = document.createElement('div');
+        toast.className = 'userscript-gemini-saved-info-toast gus-panel';
         toast.textContent = message;
-        toast.style.position = 'fixed';
-        toast.style.bottom = '20px';
-        toast.style.left = '50%';
-        toast.style.transform = 'translateX(-50%)';
-        toast.style.backgroundColor = 'rgba(255, 182, 193, 0.9)'; // LightPink
-        toast.style.color = '#333';
-        toast.style.padding = '10px 20px';
-        toast.style.borderRadius = '8px';
-        toast.style.zIndex = '10000';
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.5s ease, bottom 0.5s ease';
-        toast.style.fontFamily = 'sans-serif';
 
         document.body.appendChild(toast);
 
         setTimeout(() => {
-            toast.style.opacity = '1';
-            toast.style.bottom = '30px';
+            toast.classList.add('visible');
         }, 10);
 
         setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.bottom = '20px';
+            toast.classList.remove('visible');
             toast.addEventListener('transitionend', () => {
                 if (toast.parentNode) {
                     toast.parentNode.removeChild(toast);
@@ -88,8 +95,6 @@ const report = () => {
         const copyAllButton = document.createElement('button');
         copyAllButton.id = COPY_ALL_BUTTON_ID;
         copyAllButton.className = 'mdc-button mat-mdc-button-base mat-mdc-outlined-button';
-        copyAllButton.style.marginLeft = '8px';
-        copyAllButton.style.setProperty('color', 'var(--mat-outlined-button-label-text-color, initial)', 'important');
 
 
         const icon = document.createElement('mat-icon');
@@ -150,7 +155,6 @@ const report = () => {
                 const numberSpan = document.createElement('span');
                 numberSpan.className = NUMBER_SPAN_CLASS;
                 numberSpan.textContent = `${index + 1}. `;
-                numberSpan.style.fontWeight = 'bold';
                 textElement.prepend(numberSpan);
             }
 

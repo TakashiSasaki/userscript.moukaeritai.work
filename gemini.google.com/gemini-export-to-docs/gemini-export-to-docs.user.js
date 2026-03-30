@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.46
+// @version      0.4.47
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-30
 // @author       Takashi Sasaki
@@ -9,6 +9,7 @@
 // @match        https://userscript.moukaeritai.work/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js
+// @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
 // @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/style.css
 // @resource     templateHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/template.html
 // @grant        GM_setValue
@@ -111,6 +112,15 @@
      * Styles for our custom button
      */
     function addStyles() {
+        // Inject shared common styles
+        const commonCSS = GM_getResourceText('geminiCommon');
+        if (commonCSS && !document.getElementById('gemini-common-styles')) {
+            const commonStyle = document.createElement('style');
+            commonStyle.textContent = commonCSS;
+            commonStyle.id = 'gemini-common-styles';
+            document.head.appendChild(commonStyle);
+        }
+
         const css = GM_getResourceText('customCSS');
         GM_addStyle(css);
         // GM_addStyle returns the style element or undefined depending on TM version
@@ -664,6 +674,7 @@
 
         const panel = document.createElement('div');
         panel.id = 'gemini-one-turn-panel';
+        panel.className = 'gus-panel';
         if (savedPos.top) panel.style.top = savedPos.top;
         else panel.style.bottom = savedPos.bottom;
         if (savedPos.left) panel.style.left = savedPos.left;

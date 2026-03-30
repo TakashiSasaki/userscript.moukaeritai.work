@@ -1,0 +1,32 @@
+/* Gemini Saved Info Helper Styles */
+
+.userscript-gemini-saved-info-toast {
+    /* Base styles now handled by .gus-panel */
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.5s ease, bottom 0.5s ease;
+}
+
+.userscript-gemini-saved-info-toast.visible {
+    opacity: 1;
+    bottom: 30px;
+}
+
+#userscript-gemini-saved-info-copy-all-button {
+    margin-left: 8px;
+    color: var(--mat-outlined-button-label-text-color, #1a73e8) !important;
+}
+
+.userscript-gemini-saved-info-number {
+    font-weight: bold;
+    margin-right: 4px;
+}
+
+.userscript-gemini-saved-info-copy-button {
+    margin-left: 4px;
+}

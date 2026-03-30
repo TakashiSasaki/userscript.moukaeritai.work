@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.39
+// @version      0.4.40
 // @lastModified 2026-03-30
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
@@ -9,6 +9,7 @@
 // @match        https://userscript.moukaeritai.work/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js
+// @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
 // @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/style.css
 // @resource     templateHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/template.html
 // @grant        GM_xmlhttpRequest
@@ -86,8 +87,17 @@ const report = () => {
         }
     };
 
-    // Inject CSS styles (Ported from chatgpt-turn-counter with minor tweaks)
+    // Inject CSS styles
     function addStyles() {
+        // Inject shared common styles
+        const commonCSS = GM_getResourceText('geminiCommon');
+        if (commonCSS && !document.getElementById('gemini-common-styles')) {
+            const commonStyle = document.createElement('style');
+            commonStyle.textContent = commonCSS;
+            commonStyle.id = 'gemini-common-styles';
+            document.head.appendChild(commonStyle);
+        }
+
         const css = GM_getResourceText('customCSS');
         const style = GM_addStyle(css);
         if (style) {
@@ -641,9 +651,10 @@ const report = () => {
         // Create UI container
         const container = document.createElement('div');
         container.id = 'gemini-turn-counter-ui';
+        container.className = 'gus-panel';
 
         setInnerHTML(container, `
-            <div class="gtc-icon">Loading...</div>
+            <div class="gtc-icon gus-version">Loading...</div>
             <div class="gtc-content">Loading...</div>
         `);
         document.body.appendChild(container);
