@@ -11,6 +11,8 @@
 
 #gpi-test-ui {
     /* Base styles now handled by .gus-panel */
+    position: fixed;
+    z-index: 999999;
     width: 300px;
     height: auto;
     overflow: hidden;

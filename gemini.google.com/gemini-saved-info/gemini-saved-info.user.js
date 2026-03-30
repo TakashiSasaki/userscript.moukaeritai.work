@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.15
+// @version      0.2.16
 // @lastModified 2026-03-30
 // @description  Adds serial numbers and copy buttons to custom instructions on Gemini.
 // @author       Takashi Sasaki
@@ -57,6 +57,27 @@ const report = () => {
     const COPY_BUTTON_CLASS = 'userscript-gemini-saved-info-copy-button';
     const COPY_ALL_BUTTON_ID = 'userscript-gemini-saved-info-copy-all-button';
     let instructionsObserver = null;
+
+    /**
+     * Creates or updates the always-visible floating version badge.
+     */
+    function updateVersionBadge(isActive) {
+        let badge = document.getElementById('gsi-version-indicator');
+        if (!badge) {
+            badge = document.createElement('div');
+            badge.id = 'gsi-version-indicator';
+            badge.className = 'gus-panel';
+            document.body.appendChild(badge);
+        }
+        const version = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '?';
+        const statusText = isActive ? '📋 Active' : '📋';
+        badge.title = 'Gemini Saved Info Helper';
+        badge.textContent = '';
+        const vSpan = document.createElement('span');
+        vSpan.className = 'gus-version';
+        vSpan.textContent = `v${version} ${statusText}`;
+        badge.appendChild(vSpan);
+    }
 
     /**
      * Shows a toast notification.
@@ -236,14 +257,19 @@ const report = () => {
         const memoriesSection = document.querySelector('div[data-test-id="memories-section"]');
 
         if (onTargetPage && memoriesSection) {
+            updateVersionBadge(true);
             if (!instructionsObserver) {
                 startInstructionsObserver(memoriesSection);
             }
         } else {
+            updateVersionBadge(false);
             stopInstructionsObserver();
         }
     });
 
     pageObserver.observe(document.body, { childList: true, subtree: true });
+
+    // Initial check on load
+    updateVersionBadge(window.location.href.startsWith(TARGET_PAGE_URL));
 
 })();

@@ -30,3 +30,13 @@
 .userscript-gemini-saved-info-copy-button {
     margin-left: 4px;
 }
+
+#gsi-version-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 999999;
+    padding: 4px 8px;
+    cursor: default;
+    font-size: 10px;
+}
