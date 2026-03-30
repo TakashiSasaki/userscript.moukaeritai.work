@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.43
+// @version      0.2.44
 // @lastModified 2026-03-30
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
@@ -547,19 +547,15 @@ const report = () => {
         if (style) style.remove();
     }
 
-    // --- SPA Routing Manager ---
+    /**
+     * Checks the URL and runs init or cleanup accordingly.
+     */
     function checkUrlAndManageScriptState() {
         const isAppPage = /^\/(app|gem)\//.test(location.pathname);
         if (isAppPage) {
             initAutoScroll();
         } else {
             cleanupAutoScroll();
-            const panel = document.getElementById('gemini-auto-scroll-panel');
-            if (!panel) {
-                createDraggablePanel();
-            }
-            // Important to always update lastUrl to avoid spurious detection
-            lastUrl = window.location.href;
         }
     }
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.22
+// @version      0.4.23
 // @lastModified 2026-03-30
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
@@ -825,13 +825,20 @@ const report = () => {
 
         let panel = document.getElementById('gemini-batch-export-panel');
         if (!panel) {
+            if (!isConversationPage()) return; // Don't even create it if not on chat page
             log(`Creating panel (url=${window.location.href}).`);
             createTriggerButtons();
             panel = document.getElementById('gemini-batch-export-panel');
             if (!panel) return;
         }
 
-        // The panel wrapper itself is always visible in its minimal state
+        // Hide entire panel if not on a conversation page
+        if (!isConversationPage()) {
+            panel.style.display = 'none';
+            return;
+        }
+
+        // The panel wrapper itself is always visible in its minimal state in chat
         panel.style.display = 'flex';
 
         const mainContent = panel.querySelector('#gae-main-content');

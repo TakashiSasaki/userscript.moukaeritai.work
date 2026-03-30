@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.17
+// @version      0.2.15
 // @lastModified 2026-03-30
 // @description  Adds serial numbers and copy buttons to custom instructions on Gemini.
 // @author       Takashi Sasaki
@@ -35,13 +35,14 @@ const report = () => {
         return;
     }
 
+    // Note: Trusted Types Policy is not currently needed as this script uses textContent/GM_addStyle,
+    // but may be required if innerHTML is added in the future.
+
     // Inject shared common styles
     const commonCSS = GM_getResourceText('geminiCommon');
     if (commonCSS && !document.getElementById('gemini-common-styles')) {
-        const commonStyle = document.createElement('style');
-        commonStyle.textContent = commonCSS;
-        commonStyle.id = 'gemini-common-styles';
-        document.head.appendChild(commonStyle);
+        const style = GM_addStyle(commonCSS);
+        if (style) style.id = 'gemini-common-styles';
     }
 
     // Inject custom styles

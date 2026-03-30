@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.40
+// @version      0.2.41
 // @lastModified 2026-03-30
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
@@ -313,13 +313,17 @@
     }
 
     function checkUrl() {
-        if (/^\/(app|gem)\//.test(location.pathname)) init();
-        else {
+        if (/^\/(app|gem)\//.test(location.pathname)) {
+            init();
+        } else {
             isInitialized = false;
             uiObserver.disconnect();
-            if (mainInterval) clearInterval(mainInterval);
+            if (mainInterval) {
+                clearInterval(mainInterval);
+                mainInterval = null;
+            }
             const p = document.getElementById('gemini-auto-switch-panel');
-            if (!p) createDraggablePanel();
+            if (p) p.remove();
         }
     }
 

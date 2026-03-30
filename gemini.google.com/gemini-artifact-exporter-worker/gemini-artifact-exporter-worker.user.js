@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.15
+// @version      0.2.16
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @lastModified 2026-03-30
 // @author       Takashi Sasaki
@@ -63,6 +63,10 @@ const report = () => {
 
     // Inject styles and templates
     if (typeof GM_getResourceText !== 'undefined') {
+        const isGemini = location.hostname === 'gemini.google.com';
+        const isDocs = location.hostname.includes('docs.google.com');
+        const isChatPage = /^\/(app|gem)\//.test(location.pathname);
+
         // Inject shared common styles
         const commonCSS = GM_getResourceText('geminiCommon');
         if (commonCSS && !document.getElementById('gemini-common-styles')) {
@@ -84,9 +88,12 @@ const report = () => {
         
         const template = GM_getResourceText('template');
         if (template) {
-            const tempDiv = document.createElement('div');
-            setInnerHTML(tempDiv, template);
-            document.body.appendChild(tempDiv);
+            // Only inject template on relevant pages to avoid DOM pollution
+            if (isDocs || (isGemini && isChatPage)) {
+                const tempDiv = document.createElement('div');
+                setInnerHTML(tempDiv, template);
+                document.body.appendChild(tempDiv);
+            }
         } else {
             console.error('[Gemini Artifact Exporter Worker] Fatal Error: template.html resource not found. The script cannot continue and will exit.');
             return;

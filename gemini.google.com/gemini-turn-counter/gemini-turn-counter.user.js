@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.40
+// @version      0.4.41
 // @lastModified 2026-03-30
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
@@ -806,11 +806,7 @@ const report = () => {
 
         if (isChatPage) {
             initMainFunctionality();
-        }
-        else {
-            if (!uiContainer) {
-                initMainFunctionality();
-            }
+        } else {
             cleanup();
         }
     }
