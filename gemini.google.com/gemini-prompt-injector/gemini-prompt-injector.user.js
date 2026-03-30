@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.3
+// @version      0.2.4
 // @description  Injects a prompt into Gemini via an external custom event.
 // @lastModified 2026-03-30
 // @author       Takashi Sasaki
@@ -310,20 +310,19 @@ const report = () => {
         function initTestUI() {
             if (document.getElementById('gpi-test-ui')) return;
 
-            // Retrieve saved state or default (must be before any use of isMinimized)
-            // Use 'var' instead of 'let' to avoid TDZ issues in Tampermonkey's sandboxed Promise wrapping
-            var isMinimized = GM_getValue('gpi_ui_minimized', false);
-            var savedX = GM_getValue('gpi_ui_x', window.innerWidth - 320);
-            var savedY = GM_getValue('gpi_ui_y', window.innerHeight - 320);
+            // Retrieve saved state or default
+            let isUIMinimized = GM_getValue('gpi_ui_minimized', false);
+            let savedX = GM_getValue('gpi_ui_x', window.innerWidth - 320);
+            let savedY = GM_getValue('gpi_ui_y', window.innerHeight - 320);
 
             const uiContainer = document.createElement('div');
             uiContainer.id = 'gpi-test-ui';
             uiContainer.className = 'gus-panel';
-            if (isMinimized) uiContainer.classList.add('minimized');
+            if (isUIMinimized) uiContainer.classList.add('minimized');
 
             // Adjust position to ensure it stays within the window
-            const uiWidth = isMinimized ? 50 : 300;
-            const uiHeight = isMinimized ? 30 : 250;
+            const uiWidth = isUIMinimized ? 50 : 300;
+            const uiHeight = isUIMinimized ? 30 : 250;
             if (savedX < 0) savedX = 0;
             if (savedY < 0) savedY = 0;
             if (savedX + uiWidth > window.innerWidth) savedX = window.innerWidth - uiWidth;
@@ -343,10 +342,10 @@ const report = () => {
 
             const minBtn = document.createElement('button');
             minBtn.className = 'gpi-min-btn';
-            minBtn.innerHTML = getTrustedHTML(isMinimized
+            minBtn.innerHTML = getTrustedHTML(isUIMinimized
                 ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h16v6H4v-6z" opacity="0.5"/><path d="M4 4h16v6H4V4z"/></svg>'
                 : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>');
-            minBtn.title = isMinimized ? '復元' : '最小化';
+            minBtn.title = isUIMinimized ? '復元' : '最小化';
 
             header.appendChild(title);
             header.appendChild(minBtn);
@@ -354,7 +353,7 @@ const report = () => {
 
             const content = document.createElement('div');
             content.className = 'gpi-content';
-            content.style.display = isMinimized ? 'none' : 'block';
+            content.style.display = isUIMinimized ? 'none' : 'block';
 
             // Inject Prompt Group
             const group1 = document.createElement('div');
@@ -468,16 +467,16 @@ const report = () => {
 
             // Minimize functionality
             minBtn.onclick = () => {
-                isMinimized = !isMinimized;
-                content.style.display = isMinimized ? 'none' : 'block';
-                if (isMinimized) uiContainer.classList.add('minimized');
+                isUIMinimized = !isUIMinimized;
+                content.style.display = isUIMinimized ? 'none' : 'block';
+                if (isUIMinimized) uiContainer.classList.add('minimized');
                 else uiContainer.classList.remove('minimized');
 
-                minBtn.innerHTML = getTrustedHTML(isMinimized
+                minBtn.innerHTML = getTrustedHTML(isUIMinimized
                     ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h16v6H4v-6z" opacity="0.5"/><path d="M4 4h16v6H4V4z"/></svg>'
                     : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>');
-                minBtn.title = isMinimized ? '復元' : '最小化';
-                GM_setValue('gpi_ui_minimized', isMinimized);
+                minBtn.title = isUIMinimized ? '復元' : '最小化';
+                GM_setValue('gpi_ui_minimized', isUIMinimized);
 
                 // Re-adjust position after resize
                 let currentX = uiContainer.offsetLeft;
