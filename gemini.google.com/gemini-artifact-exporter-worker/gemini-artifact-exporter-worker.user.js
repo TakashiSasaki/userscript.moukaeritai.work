@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.13
+// @version      0.2.14
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @lastModified 2026-03-30
 // @author       Takashi Sasaki
@@ -37,6 +37,29 @@ const report = () => {
         return;
     }
 
+    // Trusted Types Policy Creation for Gemini CSP
+    let policy;
+    if (window.trustedTypes && window.trustedTypes.createPolicy) {
+        try {
+            policy = window.trustedTypes.createPolicy('geminiArtifactExporterWorker_' + Math.random().toString(36).substr(2, 9), {
+                createHTML: (string) => string
+            });
+        } catch (e) {
+            console.warn('[Gemini Artifact Exporter Worker] Failed to create TrustedTypes policy', e);
+        }
+    }
+
+    /**
+     * Set innerHTML safely using TrustedTypes policy if available
+     */
+    function setInnerHTML(element, html) {
+        if (policy) {
+            element.innerHTML = policy.createHTML(html);
+        } else {
+            element.innerHTML = html;
+        }
+    }
+
     // Inject styles and templates
     if (typeof GM_getResourceText !== 'undefined') {
         const style = GM_getResourceText('style');
@@ -52,7 +75,7 @@ const report = () => {
         const template = GM_getResourceText('template');
         if (template) {
             const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = template;
+            setInnerHTML(tempDiv, template);
             document.body.appendChild(tempDiv);
         } else {
             console.error('[Gemini Artifact Exporter Worker] Fatal Error: template.html resource not found. The script cannot continue and will exit.');
