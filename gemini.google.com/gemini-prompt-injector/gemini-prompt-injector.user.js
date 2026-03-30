@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.4
+// @version      0.2.5
 // @description  Injects a prompt into Gemini via an external custom event.
 // @lastModified 2026-03-30
 // @author       Takashi Sasaki
@@ -40,8 +40,6 @@ const report = () => {
     const { emoji: gusEmoji } = registerGeminiUserscript(GM_info.script.name, GM_info.script.version);
 
     const initUserScript = () => {
-
-        const initUserScript = () => {
 
             const policy = window.geminiCreateTrustedHTMLPolicy('gemini-prompt-injector-policy');
 
@@ -282,27 +280,27 @@ const report = () => {
             function initTestUI() {
                 if (document.getElementById('gpi-test-ui')) return;
 
-                // Retrieve saved state or default (must be before any use of isMinimized)
-                // Use 'var' instead of 'let' to avoid TDZ issues in Tampermonkey's sandboxed Promise wrapping
-                var isMinimized = GM_getValue('gpi_ui_minimized', false);
-                var savedX = GM_getValue('gpi_ui_x', window.innerWidth - 320);
-                var savedY = GM_getValue('gpi_ui_y', window.innerHeight - 320);
+                // Retrieve saved state or default (must be before any use of isGpiUIMinimized)
+                // Prefer 'let' with specific names to to avoid TDZ issues in Tampermonkey's sandboxed Promise wrapping
+                let isGpiUIMinimized = GM_getValue('gpi_ui_minimized', false);
+                let gpiSavedX = GM_getValue('gpi_ui_x', window.innerWidth - 320);
+                let gpiSavedY = GM_getValue('gpi_ui_y', window.innerHeight - 320);
 
                 const uiContainer = document.createElement('div');
                 uiContainer.id = 'gpi-test-ui';
                 uiContainer.className = 'gus-panel';
-                if (isMinimized) uiContainer.classList.add('minimized');
+                if (isGpiUIMinimized) uiContainer.classList.add('minimized');
 
                 // Adjust position to ensure it stays within the window
-                const uiWidth = isMinimized ? 50 : 300;
-                const uiHeight = isMinimized ? 30 : 250;
-                if (savedX < 0) savedX = 0;
-                if (savedY < 0) savedY = 0;
-                if (savedX + uiWidth > window.innerWidth) savedX = window.innerWidth - uiWidth;
-                if (savedY + uiHeight > window.innerHeight) savedY = window.innerHeight - uiHeight;
+                const uiWidth = isGpiUIMinimized ? 50 : 300;
+                const uiHeight = isGpiUIMinimized ? 30 : 250;
+                if (gpiSavedX < 0) gpiSavedX = 0;
+                if (gpiSavedY < 0) gpiSavedY = 0;
+                if (gpiSavedX + uiWidth > window.innerWidth) gpiSavedX = window.innerWidth - uiWidth;
+                if (gpiSavedY + uiHeight > window.innerHeight) gpiSavedY = window.innerHeight - uiHeight;
 
-                uiContainer.style.left = `${savedX}px`;
-                uiContainer.style.top = `${savedY}px`;
+                uiContainer.style.left = `${gpiSavedX}px`;
+                uiContainer.style.top = `${gpiSavedY}px`;
 
                 const header = document.createElement('div');
                 header.className = 'gpi-header';
@@ -315,10 +313,10 @@ const report = () => {
 
                 const minBtn = document.createElement('button');
                 minBtn.className = 'gpi-min-btn';
-                window.geminiSetInnerHTML(minBtn, isMinimized
+                window.geminiSetInnerHTML(minBtn, isGpiUIMinimized
                     ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h16v6H4v-6z" opacity="0.5"/><path d="M4 4h16v6H4V4z"/></svg>'
                     : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>', policy);
-                minBtn.title = isMinimized ? '復元' : '最小化';
+                minBtn.title = isGpiUIMinimized ? '復元' : '最小化';
 
                 header.appendChild(title);
                 header.appendChild(minBtn);
@@ -326,7 +324,7 @@ const report = () => {
 
                 const content = document.createElement('div');
                 content.className = 'gpi-content';
-                content.style.display = isMinimized ? 'none' : 'block';
+                content.style.display = isGpiUIMinimized ? 'none' : 'block';
 
                 // Inject Prompt Group
                 const group1 = document.createElement('div');
@@ -440,16 +438,16 @@ const report = () => {
 
                 // Minimize functionality
                 minBtn.onclick = () => {
-                    isMinimized = !isMinimized;
-                    content.style.display = isMinimized ? 'none' : 'block';
-                    if (isMinimized) uiContainer.classList.add('minimized');
+                    isGpiUIMinimized = !isGpiUIMinimized;
+                    content.style.display = isGpiUIMinimized ? 'none' : 'block';
+                    if (isGpiUIMinimized) uiContainer.classList.add('minimized');
                     else uiContainer.classList.remove('minimized');
 
-                    window.geminiSetInnerHTML(minBtn, isMinimized
+                    window.geminiSetInnerHTML(minBtn, isGpiUIMinimized
                         ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h16v6H4v-6z" opacity="0.5"/><path d="M4 4h16v6H4V4z"/></svg>'
                         : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>', policy);
-                    minBtn.title = isMinimized ? '復元' : '最小化';
-                    GM_setValue('gpi_ui_minimized', isMinimized);
+                    minBtn.title = isGpiUIMinimized ? '復元' : '最小化';
+                    GM_setValue('gpi_ui_minimized', isGpiUIMinimized);
 
                     // Re-adjust position after resize
                     let currentX = uiContainer.offsetLeft;
@@ -507,13 +505,6 @@ const report = () => {
                 init();
             }
 
-        };
-
-        if (document.readyState === 'complete') {
-            initUserScript();
-        } else {
-            window.addEventListener('load', initUserScript);
-        }
     };
 
     if (document.readyState === 'complete') {
