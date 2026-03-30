@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         Gemini Search Snippet Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.12
+// @version      0.1.13
 // @lastModified 2026-03-30
 // @description  Add sequential numbers to Gemini search result conversation titles.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @grant        GM_info
+// @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @noframes
 // ==/UserScript==
 
@@ -26,6 +27,9 @@ const report = () => {
     if (location.hostname === 'userscript.moukaeritai.work') {
         return;
     }
+
+    // Reserve a load-order slot (no gus-version badge in this script)
+    registerGeminiUserscript(GM_info.script.name, GM_info.script.version);
 
     const SNIPPET_SELECTOR = 'search-snippet';
     const TITLE_SELECTOR = '.title';

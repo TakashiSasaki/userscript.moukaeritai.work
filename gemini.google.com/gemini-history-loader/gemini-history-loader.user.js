@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini History Loader
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.10
+// @version      0.1.11
 // @lastModified 2026-03-30
 // @description  A utility script that forces Gemini to load the entire chat history by programmatically scrolling to the top. Features a compact floating UI that expands when loading history.
 // @author       Takashi Sasaki
@@ -16,6 +16,7 @@
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
 // @resource     css https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/style.css
 // @resource     templateHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/template.html
+// @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @noframes
@@ -36,6 +37,8 @@ const report = () => {
     if (location.hostname === 'userscript.moukaeritai.work') {
         return;
     }
+
+    const { emoji: gusEmoji } = registerGeminiUserscript(GM_info.script.name, GM_info.script.version);
 
     if (typeof GM_addStyle !== 'undefined' && typeof GM_getResourceText !== 'undefined') {
         // Inject shared common styles
@@ -151,7 +154,7 @@ const report = () => {
         uiPanel.id = 'gemini-history-loader-panel';
         uiPanel.className = 'gus-panel';
 
-        const templateStr = GM_getResourceText('templateHTML').replace(/{{scriptVersion}}/g, GM_info.script.version);
+        const templateStr = GM_getResourceText('templateHTML').replace(/{{scriptVersion}}/g, `${gusEmoji}${GM_info.script.version}`);
         setInnerHTML(uiPanel, templateStr);
         document.body.appendChild(uiPanel);
 

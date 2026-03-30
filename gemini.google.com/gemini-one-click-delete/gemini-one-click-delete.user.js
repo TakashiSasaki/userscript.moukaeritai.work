@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.11
+// @version      0.3.12
 // @lastModified 2026-03-30
 // @description  Adds a 1-click floating button with shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
@@ -11,6 +11,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
 // @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/style.css
+// @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @grant        GM_info
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -34,6 +35,8 @@ const report = () => {
     if (location.hostname === 'userscript.moukaeritai.work') {
         return;
     }
+
+    const { emoji: gusEmoji } = registerGeminiUserscript(GM_info.script.name, GM_info.script.version);
 
     const SELECTORS = {
         // Trigger button (Conversation Options)
@@ -293,7 +296,7 @@ const report = () => {
                 </svg>
                 Delete Chat
             </button>
-            <span class="version-badge gus-version" title="Gemini 1-Click Delete Conversation">v${version}</span>
+            <span class="version-badge gus-version" title="Gemini 1-Click Delete Conversation">${gusEmoji}v${version}</span>
         `);
 
         document.body.appendChild(panel);

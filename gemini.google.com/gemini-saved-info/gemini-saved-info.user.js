@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.17
+// @version      0.2.18
 // @lastModified 2026-03-30
 // @description  Adds serial numbers and copy buttons to custom instructions on Gemini.
 // @author       Takashi Sasaki
@@ -13,6 +13,7 @@
 // @grant        GM_addStyle
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
 // @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/style.css
+// @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @license      MIT
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js
@@ -34,6 +35,8 @@ const report = () => {
     if (location.hostname === 'userscript.moukaeritai.work') {
         return;
     }
+
+    const { emoji: gusEmoji } = registerGeminiUserscript(GM_info.script.name, GM_info.script.version);
 
     // Note: Trusted Types Policy is not currently needed as this script uses textContent/GM_addStyle,
     // but may be required if innerHTML is added in the future.
@@ -256,7 +259,7 @@ const report = () => {
         badge.textContent = '';
         const vSpan = document.createElement('span');
         vSpan.className = 'gus-version';
-        vSpan.textContent = isActive ? `v${version} 📋 Active` : `v${version} 📋`;
+        vSpan.textContent = isActive ? `${gusEmoji}v${version} 📋 Active` : `${gusEmoji}v${version} 📋`;
         badge.appendChild(vSpan);
     }
 

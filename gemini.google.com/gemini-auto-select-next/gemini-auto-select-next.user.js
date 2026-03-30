@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.41
+// @version      0.2.42
 // @lastModified 2026-03-30
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
@@ -11,6 +11,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-select-next/gemini-auto-select-next.user.js
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
 // @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-select-next/style.css
+// @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @grant        GM_info
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -36,6 +37,8 @@
     if (location.hostname === 'userscript.moukaeritai.work') {
         return;
     }
+
+    const { emoji: gusEmoji } = registerGeminiUserscript(GM_info.script.name, GM_info.script.version);
 
     const SELECTORS = {
         CONVERSATION_ITEM: 'a.conversation, a[data-test-id="conversation"]',
@@ -197,7 +200,7 @@
                     <input type="checkbox" class="auto-switch-checkbox">
                     Auto
                 </label>
-                <span class="version-badge gus-version" title="Gemini Auto-Select Next">v${GM_info.script.version}</span>
+                <span class="version-badge gus-version" title="Gemini Auto-Select Next">${gusEmoji}v${GM_info.script.version}</span>
             </div>
             <button class="manual-next-btn" title="Explicitly skip to the next conversation">⏭️ Next</button>
         `);

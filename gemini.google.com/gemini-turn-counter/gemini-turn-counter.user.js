@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.41
+// @version      0.4.42
 // @lastModified 2026-03-30
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
@@ -12,6 +12,7 @@
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
 // @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/style.css
 // @resource     templateHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/template.html
+// @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
 // @grant        GM_getResourceText
@@ -34,6 +35,7 @@ const report = () => {
     if (location.hostname === 'userscript.moukaeritai.work') {
         return;
     }
+    const { emoji: gusEmoji } = registerGeminiUserscript(GM_info.script.name, GM_info.script.version);
     // Removed initial URL check as it will be handled dynamically
 
     // Settings
@@ -338,13 +340,13 @@ const report = () => {
             const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.4.31';
 
             if (iconDiv) {
-                iconDiv.textContent = `v${scriptVersion} | U:${userTurnsCount} M:${modelTurnsCount} A:${totalArtifacts} L:${totalLinkCards}`;
+                iconDiv.textContent = `${gusEmoji}v${scriptVersion} | U:${userTurnsCount} M:${modelTurnsCount} A:${totalArtifacts} L:${totalLinkCards}`;
                 iconDiv.title = 'Gemini Turn Counter';
             }
 
             if (!contentDiv.hasAttribute('data-gtc-initialized')) {
                 const template = GM_getResourceText('templateHTML');
-                setInnerHTML(contentDiv, template.replace('{{scriptVersion}}', scriptVersion));
+                setInnerHTML(contentDiv, template.replace('{{scriptVersion}}', `${gusEmoji}${scriptVersion}`));
                 contentDiv.setAttribute('data-gtc-initialized', 'true');
 
                 // --- Initial Event Binding (Only Once) ---

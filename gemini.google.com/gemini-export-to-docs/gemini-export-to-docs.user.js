@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.48
+// @version      0.4.49
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-30
 // @author       Takashi Sasaki
@@ -12,6 +12,7 @@
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
 // @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/style.css
 // @resource     templateHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/template.html
+// @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_info
@@ -36,6 +37,8 @@
     if (location.hostname === 'userscript.moukaeritai.work') {
         return;
     }
+
+    const { emoji: gusEmoji } = registerGeminiUserscript(GM_info.script.name, GM_info.script.version);
 
     // Custom Event Helper for checking if target userscript is installed
     function checkTargetUserscript(targetName, timeout = 2000) {
@@ -132,7 +135,7 @@
     function getTemplate(id) {
         if (!templatesContainer) {
             templatesContainer = document.createElement('div');
-            const templateHtml = GM_getResourceText('templateHTML').replace(/{{scriptVersion}}/g, GM_info.script.version);
+            const templateHtml = GM_getResourceText('templateHTML').replace(/{{scriptVersion}}/g, `${gusEmoji}${GM_info.script.version}`);
             setInnerHTML(templatesContainer, templateHtml);
         }
         const tpl = templatesContainer.querySelector(`#${id}`);

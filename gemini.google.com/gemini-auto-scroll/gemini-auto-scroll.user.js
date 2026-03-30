@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.44
+// @version      0.2.45
 // @lastModified 2026-03-30
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
@@ -12,6 +12,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
 // @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/style.css
+// @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @grant        GM_info
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -35,6 +36,8 @@ const report = () => {
     if (location.hostname === 'userscript.moukaeritai.work') {
         return;
     }
+
+    const { emoji: gusEmoji } = registerGeminiUserscript(GM_info.script.name, GM_info.script.version);
 
     const SELECTORS = {
         CONVERSATION_ITEM: 'a.conversation, a[data-test-id="conversation"]',
@@ -238,7 +241,7 @@ const report = () => {
             <button class="auto-scroll-btn">▶️ Start Auto-Scroll</button>
             <div class="panel-info">
                 <span class="gtc-badge">0 items</span>
-                <span class="version-badge gus-version" title="Gemini Auto-Scroll">v${GM_info.script.version}</span>
+                <span class="version-badge gus-version" title="Gemini Auto-Scroll">${gusEmoji}v${GM_info.script.version}</span>
             </div>
         `);
 

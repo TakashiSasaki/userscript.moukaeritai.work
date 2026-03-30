@@ -11,6 +11,7 @@ export default [
                 ...globals.greasemonkey, // Includes GM_* variables
                 GM_info: "readonly",
                 $: "readonly", // jQuery if used
+                registerGeminiUserscript: "readonly", // Loaded via @require from gemini-common.js
             },
         },
         rules: {
