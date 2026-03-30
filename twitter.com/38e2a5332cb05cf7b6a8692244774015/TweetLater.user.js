@@ -1,17 +1,18 @@
 // ==UserScript==
 // @name         Schedule to tweet at 5 minute later
-// @namespace    https://gist.github.com/TakashiSasaki/38e2a5332cb05cf7b6a8692244774015/raw/TweetLater.user.js
-// @version      0.9.0
+// @namespace    userscript.moukaeritai.work
+// @version      0.9.1
 // @description  Set the scheduled time to 5 minutes after the current time in the scheduled tweet dialog.
-// @author       Takashi SASAKI (@TakashiSasaki on Twitter)
+// @author       Takashi Sasaki
+// @homepageURL  https://x.com/TakashiSasaki
 // @match        https://twitter.com/
 // @match        https://twitter.com/home
 // @match        https://twitter.com/compose/tweet
 // @match        https://twitter.com/compose/tweet/schedule
 // @icon         https://www.google.com/s2/favicons?domain=twitter.com
 // @grant        none
-// @updateURL    https://gist.github.com/TakashiSasaki/38e2a5332cb05cf7b6a8692244774015/raw/TweetLater.user.js
-// @downloadURL  https://gist.github.com/TakashiSasaki/38e2a5332cb05cf7b6a8692244774015/raw/TweetLater.user.js
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/twitter.com/38e2a5332cb05cf7b6a8692244774015/TweetLater.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/twitter.com/38e2a5332cb05cf7b6a8692244774015/TweetLater.user.js
 // ==/UserScript==
 (function() {
     'use strict';
@@ -58,12 +59,10 @@
         console.log(epoch);
         observer.disconnect();
         const later5minDate = new Date(epoch);
-        const year = later5minDate.getYear();
         const month = later5minDate.getMonth();
         const date = later5minDate.getDate();
         const hours = later5minDate.getHours();
         const minutes = later5minDate.getMinutes();
-        const seconds = later5minDate.getSeconds();
 
         const selector1 = document.querySelector("div[aria-label='Date'] :nth-of-type(1) select option:nth-of-type(" + (month + 2) + ")");
         //console.log(selector1);
