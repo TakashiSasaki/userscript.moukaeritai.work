@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.11
+// @version      0.4.15
 // @description  Injects a prompt into Gemini via an external custom event.
 // @lastModified 2026-03-30
 // @author       Takashi Sasaki
@@ -18,6 +18,19 @@
 
 (function () {
     'use strict';
+const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        return;
+    }
 
     const getTrustedHTML = (html) => {
         if (typeof trustedTypes !== 'undefined' && trustedTypes.createPolicy) {
@@ -35,26 +48,6 @@
         }
         return html;
     };
-
-    const installCheckHosts = [
-        'userscript.moukaeritai.work'
-    ];
-
-    const isInstallCheckHost = installCheckHosts.includes(location.hostname);
-
-    if (isInstallCheckHost) {
-        const report = () => {
-            document.dispatchEvent(new CustomEvent('userscript-check-installed', {
-                detail: {
-                    name: GM_info.script.name,
-                    version: GM_info.script.version
-                }
-            }));
-        };
-        report();
-        document.addEventListener('userscript-ping', report);
-        return;
-    }
 
     // Custom Event Helper for checking if target userscript is installed
     function checkTargetUserscript(targetName, timeout = 2000) {

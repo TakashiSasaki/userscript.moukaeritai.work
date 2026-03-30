@@ -1,13 +1,12 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.35
-// @lastModified 2026-03-14
+// @version      0.2.39
+// @lastModified 2026-03-30
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
-// @match        http://127.0.0.1:5500/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-select-next/gemini-auto-select-next.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-select-next/gemini-auto-select-next.user.js
 // @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-select-next/style.css
@@ -22,12 +21,6 @@
 (function () {
     'use strict';
 
-    const installCheckHosts = [
-        'userscript.moukaeritai.work',
-        '127.0.0.1'
-    ];
-
-    const isInstallCheckHost = installCheckHosts.includes(location.hostname);
 
     const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
@@ -39,8 +32,7 @@
     };
     document.addEventListener('userscript-ping', report);
 
-    if (isInstallCheckHost) {
-        report();
+    if (location.hostname === 'userscript.moukaeritai.work') {
         return;
     }
 

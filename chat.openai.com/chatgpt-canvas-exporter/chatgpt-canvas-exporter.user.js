@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         ChatGPT Canvas Exporter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.7.2
+// @version      0.7.5
 // @description  ChatGPTの会話ページでキャンバスの内容をエクスポートする
 // @author       Takashi Sasaki
 // @match        https://chatgpt.com/*
+// @match        https://userscript.moukaeritai.work/*
 // @grant        GM_download
 // @grant        GM_xmlhttpRequest
+// @grant        GM_info
 // @require      https://cdn.jsdelivr.net/npm/fflate/umd/index.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-canvas-exporter/chatgpt-canvas-exporter.user.js
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-canvas-exporter/chatgpt-canvas-exporter.user.js
@@ -15,8 +17,21 @@
 
 (function () {
     'use strict';
+const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
 
-    const VERSION = '0.7.2';
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        return;
+    }
+
+    const VERSION = '0.7.5';
 
     // セレクタの定義
     const CANVAS_MESSAGE_SELECTOR = 'div[id^="textdoc-message-"]';

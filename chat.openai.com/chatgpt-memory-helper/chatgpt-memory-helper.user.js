@@ -1,17 +1,31 @@
 // ==UserScript==
 // @name         ChatGPT Memory Helper
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3
+// @version      0.3.3
 // @description  Adds serial numbers to memories in ChatGPT's memory management dialog.
-// @author       moukaeritai
-// @match        https://chat.openai.com/*
-// @grant        none
+// @author       Takashi Sasaki
+// @match        https://chatgpt.com/*
+// @match        https://userscript.moukaeritai.work/*
+// @grant        GM_info
 // @license      MIT
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=openai.com
 // ==/UserScript==
 
 (function() {
     'use strict';
+const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        return;
+    }
 
     const updateSerialNumbers = (dialog) => {
         const memoryItems = dialog.querySelectorAll('tbody > div.group');

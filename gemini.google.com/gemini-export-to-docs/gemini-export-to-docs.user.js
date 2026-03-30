@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.43
+// @version      0.4.46
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-30
 // @author       Takashi Sasaki
@@ -31,6 +31,10 @@
         }));
     };
     document.addEventListener('userscript-ping', report);
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        return;
+    }
 
     // Custom Event Helper for checking if target userscript is installed
     function checkTargetUserscript(targetName, timeout = 2000) {
@@ -909,7 +913,7 @@
             cleanup();
             const oneTurnPanel = document.getElementById('gemini-one-turn-panel');
             if (!oneTurnPanel) {
-                createUi();
+                createOneTurnPanel();
             }
         }
     }

@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.35
-// @lastModified 2026-03-21
+// @version      0.4.39
+// @lastModified 2026-03-30
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -20,14 +20,7 @@
 
 (function () {
     'use strict';
-
-    const installCheckHosts = [
-        'userscript.moukaeritai.work'
-    ];
-
-    const isInstallCheckHost = installCheckHosts.includes(location.hostname);
-
-    const report = () => {
+const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
                 name: GM_info.script.name,
@@ -37,8 +30,7 @@
     };
     document.addEventListener('userscript-ping', report);
 
-    if (isInstallCheckHost) {
-        report();
+    if (location.hostname === 'userscript.moukaeritai.work') {
         return;
     }
     // Removed initial URL check as it will be handled dynamically

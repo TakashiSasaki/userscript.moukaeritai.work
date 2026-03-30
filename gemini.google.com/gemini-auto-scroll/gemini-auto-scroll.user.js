@@ -1,15 +1,13 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.38
+// @version      0.2.42
 // @lastModified 2026-03-30
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
-// @match        http://127.0.0.1:5500/*
-// @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js
 // @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/style.css
@@ -23,19 +21,7 @@
 
 (function () {
     'use strict';
-
-    const installCheckHosts = [
-        'userscript.moukaeritai.work',
-        '127.0.0.1'
-    ];
-    const installCheckSuffixes = [
-        '.app.github.dev'
-    ];
-
-    const isInstallCheckHost = installCheckHosts.includes(location.hostname) ||
-        installCheckSuffixes.some(suffix => location.hostname.endsWith(suffix));
-
-    const report = () => {
+const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
                 name: GM_info.script.name,
@@ -45,8 +31,7 @@
     };
     document.addEventListener('userscript-ping', report);
 
-    if (isInstallCheckHost) {
-        report();
+    if (location.hostname === 'userscript.moukaeritai.work') {
         return;
     }
 

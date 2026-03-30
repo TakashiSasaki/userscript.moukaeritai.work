@@ -1,8 +1,9 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.9
+// @version      0.2.13
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
+// @lastModified 2026-03-30
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://gemini.google.com/*
@@ -22,6 +23,19 @@
 
 (function () {
     'use strict';
+const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        return;
+    }
 
     // Inject styles and templates
     if (typeof GM_getResourceText !== 'undefined') {
@@ -46,27 +60,6 @@
         }
     } else {
         console.error('[Gemini Artifact Exporter Worker] Fatal Error: GM_getResourceText is not available. The script cannot continue and will exit.');
-        return;
-    }
-
-    const installCheckHosts = [
-        'userscript.moukaeritai.work'
-    ];
-
-    const isInstallCheckHost = installCheckHosts.includes(location.hostname);
-
-    const report = () => {
-        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
-            detail: {
-                name: GM_info.script.name,
-                version: GM_info.script.version
-            }
-        }));
-    };
-    document.addEventListener('userscript-ping', report);
-
-    if (isInstallCheckHost) {
-        report();
         return;
     }
 

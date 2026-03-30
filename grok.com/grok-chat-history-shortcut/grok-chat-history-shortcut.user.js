@@ -1,20 +1,33 @@
-// ==UserScript==
 // @name         Grok Chat History Shortcut
-// @namespace    http://tampermonkey.net/
-// @version      0.13
+// @namespace    userscript.moukaeritai.work
+// @version      0.15
 // @description  Click history, highlight panel, scroll to deep-pink span, focus it, and outline link on Grok Chat
 // @match        https://grok.com/chat/*
+// @match        https://userscript.moukaeritai.work/*
 // @homepageURL  https://x.com/TakashiSasaki
 // @author       Takashi Sasaki
 // @icon         https://grok.com/favicon.ico
 // @license      MIT
-// @grant        none
-// @downloadURL https://update.greasyfork.org/scripts/533295/Grok%20Chat%20History%20Shortcut.user.js
-// @updateURL https://update.greasyfork.org/scripts/533295/Grok%20Chat%20History%20Shortcut.meta.js
+// @grant        GM_info
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-chat-history-shortcut/grok-chat-history-shortcut.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-chat-history-shortcut/grok-chat-history-shortcut.user.js
 // ==/UserScript==
 
 (function() {
     'use strict';
+const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        return;
+    }
 
     document.addEventListener('keydown', function(event) {
         // Trigger on Ctrl+Shift+Backspace

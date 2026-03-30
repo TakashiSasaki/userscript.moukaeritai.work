@@ -1,15 +1,13 @@
 // ==UserScript==
 // @name         お名前.com 邪悪広告ブロッカー
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.10
+// @version      0.1.13
 // @description  お名前.com Navi の操作を妨げる「邪悪な」広告や確認ポップアップを自動的に非表示にします。
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://navi.onamae.com/domain/setting/dns/control/input
 // @match        https://navi.onamae.com/domain/setting/dns/control/done
 // @match        https://userscript.moukaeritai.work/*
-// @match        http://127.0.0.1:5500/*
-// @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
 // @grant        GM_addStyle
 // @grant        GM_info
 // @run-at       document-start
@@ -19,18 +17,17 @@
 
 (function () {
     'use strict';
+const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
 
-    if (location.hostname === 'userscript.moukaeritai.work' || location.hostname === '127.0.0.1' || location.hostname === 'fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev') {
-        const report = () => {
-            document.dispatchEvent(new CustomEvent('userscript-check-installed', {
-                detail: {
-                    name: GM_info.script.name,
-                    version: GM_info.script.version
-                }
-            }));
-        };
-        report();
-        document.addEventListener('userscript-ping', report);
+    if (location.hostname === 'userscript.moukaeritai.work') {
         return;
     }
 

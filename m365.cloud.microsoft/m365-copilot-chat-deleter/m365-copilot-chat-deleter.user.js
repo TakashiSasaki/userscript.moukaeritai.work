@@ -1,31 +1,17 @@
 // ==UserScript==
 // @name         M365 Copilot One-Click Delete
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.0
+// @version      0.1.2
 // @description  Adds a floating button and Ctrl+Shift+Backspace shortcut to delete the currently active M365 Copilot chat.
 // @author       Takashi Sasaki
 // @match        https://m365.cloud.microsoft/chat/*
 // @match        https://userscript.moukaeritai.work/*
-// @match        http://127.0.0.1:5500/*
-// @match        https://*.app.github.dev/*
 // @grant        GM_info
 // ==/UserScript==
-// ===============================================================
-// Installation Check Logic (required for all userscripts in this project)
-// ==============================================================================
-const installCheckHosts = [
-    'userscript.moukaeritai.work',
-    '127.0.0.1'
-];
-const installCheckSuffixes = [
-    '.app.github.dev'
-];
 
-const isInstallCheckHost = installCheckHosts.includes(location.hostname) ||
-    installCheckSuffixes.some(suffix => location.hostname.endsWith(suffix));
-
-if (isInstallCheckHost) {
-    const report = () => {
+(function () {
+    'use strict';
+const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
                 name: GM_info.script.name,
@@ -33,15 +19,11 @@ if (isInstallCheckHost) {
             }
         }));
     };
-    report();
     document.addEventListener('userscript-ping', report);
-} else {
 
-    // ==============================================================================
-    // Main Logic
-    // ==============================================================================
-    (function () {
-        'use strict';
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        return;
+    }
 
         // Constants
         const SELECTORS = {
@@ -281,4 +263,3 @@ if (isInstallCheckHost) {
         }
 
     })();
-}

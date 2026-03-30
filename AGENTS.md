@@ -55,7 +55,8 @@
 ### JSの品質とリンティング
 JavaScript（`.user.js`）のコードを変更した後は、必ずESLintを実行して文法エラーや潜在的なバグがないか確認してください。
 
--   **コマンド**: `npx eslint path/to/script.user.js`
+-   **コマンド**: `npx eslint path/to/script.user.js` (または `bun x eslint` を試してください)
+-   **Skill**: `.agents/skills/eslint-execution/SKILL.md` に記載されているスキルを使用して、自動フォールバックが可能です。
 -   **要件**: コミット前にすべてのエラーを解消し、警告も可能な限り修正してください。
 -   **注意事項**: 変更が小さくてもESLintの実行を省略しないこと。
 
@@ -71,23 +72,17 @@ JavaScript（`.user.js`）のコードを変更した後は、必ずESLintを実
 すべてのスクリプトで以下のコードスニペットを使用してください。
 
 ```javascript
-    const installCheckHosts = [
-        'userscript.moukaeritai.work'
-    ];
+    const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
 
-    const isInstallCheckHost = installCheckHosts.includes(location.hostname);
-
-    if (isInstallCheckHost) {
-        const report = () => {
-            document.dispatchEvent(new CustomEvent('userscript-check-installed', {
-                detail: {
-                    name: GM_info.script.name,
-                    version: GM_info.script.version
-                }
-            }));
-        };
-        report();
-        document.addEventListener('userscript-ping', report);
+    if (location.hostname === 'userscript.moukaeritai.work') {
         return;
     }
 ```

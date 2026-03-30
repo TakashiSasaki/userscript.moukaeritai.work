@@ -1,18 +1,32 @@
-// ==UserScript==
 // @name         Add Delete Button for Chat Conversations on Claude.ai
-// @namespace    https://moukaeritai.work/chatgpt-delete-button
-// @version      0.4.20240326
+// @namespace    userscript.moukaeritai.work
+// @version      0.5.1
 // @description  Add a delete button to easily remove chat conversations on Claude.ai.
 // @author       Takashi Sasaki
-// @homepage     https://twitter.com/TakashiSasaki
+// @homepage     https://x.com/TakashiSasaki
+// @match        https://claude.ai/chat/*
 // @match        https://claude.ai/chats
-// @grant        none
-// @downloadURL  https://gist.githubusercontent.com/TakashiSasaki/dac0b1778eaeabfb9dcfb04dd386070c/raw/userscript.js
-// @updateURL    https://gist.githubusercontent.com/TakashiSasaki/dac0b1778eaeabfb9dcfb04dd386070c/raw/userscript.js
+// @match        https://userscript.moukaeritai.work/*
+// @grant        GM_info
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/claude.ai/Add%20Delete%20Button%20for%20Chat%20Conversations%20on%20Claude.ai-0.4.20240326.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/claude.ai/Add%20Delete%20Button%20for%20Chat%20Conversations%20on%20Claude.ai-0.4.20240326.user.js
 // ==/UserScript==
 
 (function() {
     'use strict';
+const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        return;
+    }
 
 
 

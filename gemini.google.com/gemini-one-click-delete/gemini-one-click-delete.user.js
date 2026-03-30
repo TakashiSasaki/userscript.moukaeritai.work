@@ -1,28 +1,26 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.5
-// @lastModified 2026-03-13
+// @version      0.3.8
+// @lastModified 2026-03-30
 // @description  Adds a 1-click floating button with shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
-// @match        http://127.0.0.1:5500/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
 // @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/style.css
 // @grant        GM_info
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @grant        GM_getResourceText
+// @grant        GM_RESOURCEText
 // @grant        GM_addStyle
 // @noframes
 // ==/UserScript==
 
 (function () {
     'use strict';
-
-    const report = () => {
+const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
                 name: GM_info.script.name,
@@ -31,6 +29,10 @@
         }));
     };
     document.addEventListener('userscript-ping', report);
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        return;
+    }
 
     const SELECTORS = {
         // Trigger button (Conversation Options)

@@ -1,15 +1,13 @@
 // ==UserScript==
 // @name         ChatGPT No Margin
 // @namespace    userscript.moukaeritai.work
-// @version      1.2.5
+// @version      1.2.8
 // @description  This script customizes the ChatGPT interface by reducing the margin around each message in the conversation view. It aims to create a tighter layout, thereby making the interface cleaner and allowing more content to be visible at once.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://chat.openai.com/*
 // @match        https://chatgpt.com/*
 // @match        https://userscript.moukaeritai.work/*
-// @match        http://127.0.0.1:5500/*
-// @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
 // @icon         https://cdn.oaistatic.com/_next/static/media/apple-touch-icon.59f2e898.png
 // @grant        GM_info
 // @grant        GM_setValue
@@ -20,30 +18,17 @@
 
 (function() {
     'use strict';
-
-    // Portal API Guard
-    if (location.href.startsWith("https://userscript.moukaeritai.work") ||
-        location.href.startsWith("http://127.0.0.1:5500") ||
-        location.href.startsWith("https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev")) {
-
-        // Dispatch installed event
-        window.dispatchEvent(new CustomEvent('userscript-check-installed', {
+const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
                 name: GM_info.script.name,
                 version: GM_info.script.version
             }
         }));
+    };
+    document.addEventListener('userscript-ping', report);
 
-        // Listen for ping
-        window.addEventListener('userscript-ping', () => {
-            window.dispatchEvent(new CustomEvent('userscript-pong', {
-                detail: {
-                    name: GM_info.script.name,
-                    version: GM_info.script.version
-                }
-            }));
-        });
-
+    if (location.hostname === 'userscript.moukaeritai.work') {
         return;
     }
 

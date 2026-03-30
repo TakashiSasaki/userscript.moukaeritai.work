@@ -1,20 +1,35 @@
 // ==UserScript==
 // @name         Battery Recycle Station
-// @namespace    http://tampermonkey.net/
-// @version      0.1.20220824.2
+// @namespace    userscript.moukaeritai.work
+// @version      0.1.20220824.3
 // @description  try to take over the world!
-// @author       Takashi SASAKI
-// @website      https://twitter.com/TakashiSasaki
+// @author       Takashi Sasaki
+// @homepage     https://x.com/TakashiSasaki
 // @match        https://www.jbrc-sys.com/brsp/a2A/*
-// @match      https://www.jbrc-sys.com/brsp/a2A
+// @match        https://www.jbrc-sys.com/brsp/a2A
+// @match        https://userscript.moukaeritai.work/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=jbrc.com
 // @grant        GM_addStyle
-// @updateURL    https://gist.github.com/TakashiSasaki/4d507c70fdc60faff72c60fb183d0360/raw/jbrc-battery-recycle-station.user.js
-// @downloadURL  https://gist.github.com/TakashiSasaki/4d507c70fdc60faff72c60fb183d0360/raw/jbrc-battery-recycle-station.user.js
+// @grant        GM_info
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/jbrc-sys.com/Battery%20Recycle%20Station-0.1.20220824.2.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/jbrc-sys.com/Battery%20Recycle%20Station-0.1.20220824.2.user.js
 // ==/UserScript==
 
 (function() {
     'use strict';
+const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        return;
+    }
 
     unhide();
     drawDivTampermonkey();

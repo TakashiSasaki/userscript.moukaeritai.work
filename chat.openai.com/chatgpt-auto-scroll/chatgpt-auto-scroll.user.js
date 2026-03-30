@@ -1,13 +1,11 @@
 // ==UserScript==
 // @name         ChatGPT Auto Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.14
+// @version      1.0.18
 // @description  Automatically scrolls the conversation list to load all items.
 // @author       Takashi SASAKI (https://twitter.com/TakashiSasaki)
 // @match        https://chatgpt.com/*
 // @match        https://userscript.moukaeritai.work/*
-// @match        http://127.0.0.1:5500/*
-// @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=openai.com
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-auto-scroll/chatgpt-auto-scroll.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-auto-scroll/chatgpt-auto-scroll.user.js
@@ -19,19 +17,17 @@
 
 (function() {
     'use strict';
+const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
 
-    // Portal API Guard
-    if (location.hostname === 'userscript.moukaeritai.work' || location.hostname === '127.0.0.1' || location.hostname === 'fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev') {
-        const report = () => {
-            document.dispatchEvent(new CustomEvent('userscript-check-installed', {
-                detail: {
-                    name: GM_info.script.name,
-                    version: GM_info.script.version
-                }
-            }));
-        };
-        report();
-        document.addEventListener('userscript-ping', report);
+    if (location.hostname === 'userscript.moukaeritai.work') {
         return;
     }
 

@@ -1,13 +1,11 @@
 // ==UserScript==
 // @name         NotebookLM Artifact Delete Button
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.2
+// @version      0.1.5
 // @description  Add delete buttons to NotebookLM artifacts (notes, audio, etc.)
 // @author       Takashi Sasaki
 // @match        https://notebooklm.google.com/*
 // @match        https://userscript.moukaeritai.work/*
-// @match        http://127.0.0.1:5500/*
-// @match        https://fuzzy-halibut-qgr4qgggrh494p-5500.app.github.dev/*
 // @grant        GM_info
 // @homepageURL  https://x.com/TakashiSasaki
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/notebooklm.google.com/notebooklm-artifact-delete-button/notebooklm-artifact-delete-button.user.js
@@ -16,21 +14,17 @@
 
 (function() {
     'use strict';
+const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
 
-    const SCRIPT_ID = 'notebooklm-artifact-delete-button';
-
-    // Portal API Guard
-    if (location.host === "userscript.moukaeritai.work" || location.host === "127.0.0.1:5500" || location.host.endsWith(".app.github.dev")) {
-        const report = () => {
-            window.dispatchEvent(new CustomEvent('userscript-check-installed', {
-                detail: {
-                    name: GM_info.script.name,
-                    version: GM_info.script.version
-                }
-            }));
-        };
-        report();
-        window.addEventListener('userscript-ping', report);
+    if (location.hostname === 'userscript.moukaeritai.work') {
         return;
     }
 

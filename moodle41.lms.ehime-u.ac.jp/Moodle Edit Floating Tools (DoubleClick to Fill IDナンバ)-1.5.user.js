@@ -1,16 +1,35 @@
 // ==UserScript==
 // @name         Moodle Edit Floating Tools (DoubleClick to Fill IDナンバ)
-// @namespace    http://tampermonkey.net/
-// @version      1.5
+// @namespace    userscript.moukaeritai.work
+// @version      1.6
 // @description  Floating bar with Save/Cancel, wide IDナンバ input, placeholder is previous value, double-click placeholder to fill
+// @author       Takashi Sasaki
+// @homepage     https://x.com/TakashiSasaki
 // @match        https://moodle41.lms.ehime-u.ac.jp/moodle/question/bank/editquestion/question.php*
+// @match        https://userscript.moukaeritai.work/*
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_info
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/moodle41.lms.ehime-u.ac.jp/Moodle%20Edit%20Floating%20Tools%20%28DoubleClick%20to%20Fill%20ID%E3%83%8A%E3%83%B3%E3%83%90%29-1.5.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/moodle41.lms.ehime-u.ac.jp/Moodle%20Edit%20Floating%20Tools%20%28DoubleClick%20to%20Fill%20ID%E3%83%8A%E3%83%B3%E3%83%90%29-1.5.user.js
 // ==/UserScript==
 
 (function() {
     'use strict';
+const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        return;
+    }
 
     const LAST_IDNUMBER_KEY = 'moodle_last_idnumber';
 

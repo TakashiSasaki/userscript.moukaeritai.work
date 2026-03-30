@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Outlook Userscripts - Moukaeritai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://userscript.moukaeritai.work/outlook.office.com/index.html" rel="canonical" />
+    <link href="../index.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <nav class="top-nav">
+            <a class="top-nav-link" href="../index.html">
+                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
+                    <path
+                        d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
+                </svg>
+                Home
+            </a>
+        </nav>
+
+        <header>
+            <h1>Outlook App Tools</h1>
+            <p class="header-desc">
+                Outlook / Microsoft 365 Copilot の会話管理をより快適に。
+            </p>
+        </header>
+
+        <ul class="project-list">
+            <li class="project-item">
+                <div class="project-title">
+                    <img alt="Outlook" src="https://www.google.com/s2/favicons?domain=outlook.office.com&sz=64" />
+                    <a href="copilot-conversation-deleter/index.html">Copilot Conversation Deleter 🗑️</a>
+                </div>
+                <p class="project-desc">
+                    Outlook 上の Copilot 会話を一括削除するツールです。
+                </p>
+                <a class="install-button" data-script-name="Copilot Conversation Deleter"
+                    href="copilot-conversation-deleter/copilot-conversation-deleter.user.js"
+                    target="_blank" data-version="0.3.8">
+                        <svg height="18" viewbox="0 0 24 24" width="18">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                        <span>Install (v0.3.8)</span>
+                        <div class="version-info">
+                            <span class="version-badge latest-version">v0.3.8</span>
+                            <span class="version-badge installed-version" style="display: none;"></span>
+                        </div>
+                    </a>
+            </li>
+        </ul>
+
+        <footer>
+            <p>
+                <small>Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a> | <a
+                        href="https://userscript.moukaeritai.work/">moukaeritai.work</a></small>
+            </p>
+        </footer>
+    </div>
+    <script src="../domain-landing.js"></script>
+</body>
+
+</html>

@@ -16,14 +16,7 @@
 
 (function() {
     'use strict';
-
-    const installCheckHosts = [
-        'userscript.moukaeritai.work'
-    ];
-
-    const isInstallCheckHost = installCheckHosts.includes(location.hostname);
-
-    if (isInstallCheckHost) {
+if (location.hostname === 'userscript.moukaeritai.work') {
         const report = () => {
             document.dispatchEvent(new CustomEvent('userscript-check-installed', {
                 detail: {

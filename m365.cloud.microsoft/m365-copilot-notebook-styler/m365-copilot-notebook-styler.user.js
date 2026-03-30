@@ -1,34 +1,20 @@
 // ==UserScript==
 // @name         M365 Copilot Notebook Styler
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.1
+// @version      0.1.4
 // @description  Adds subtle background colors to M365 Copilot Notebook panes to clarify boundaries.
 // @author       Takashi Sasaki
 // @match        https://m365.cloud.microsoft/chat/*
 // @match        https://m365.cloud.microsoft/notebooks/*
 // @match        https://userscript.moukaeritai.work/*
-// @match        http://127.0.0.1:5500/*
-// @match        https://*.app.github.dev/*
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_info
 // ==/UserScript==
-// ===============================================================
-// Installation Check Logic (required for all userscripts in this project)
-// ==============================================================================
-const installCheckHosts = [
-    'userscript.moukaeritai.work',
-    '127.0.0.1'
-];
-const installCheckSuffixes = [
-    '.app.github.dev'
-];
 
-const isInstallCheckHost = installCheckHosts.includes(location.hostname) ||
-    installCheckSuffixes.some(suffix => location.hostname.endsWith(suffix));
-
-if (isInstallCheckHost) {
-    const report = () => {
+(function () {
+    'use strict';
+const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
                 name: GM_info.script.name,
@@ -36,10 +22,11 @@ if (isInstallCheckHost) {
             }
         }));
     };
-    report();
     document.addEventListener('userscript-ping', report);
-    // Explicitly return to stop execution on the install check page
-} else {
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        return;
+    }
 
     // ==============================================================================
     // Main Logic
@@ -360,4 +347,5 @@ if (isInstallCheckHost) {
         }
 
     })();
-}
+
+})();

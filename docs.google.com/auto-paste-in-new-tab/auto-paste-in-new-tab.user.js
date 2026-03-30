@@ -1,26 +1,21 @@
 // ==UserScript==
 // @name         Auto Paste in New Tab
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.13
+// @version      0.1.16
 // @description  Emulates Shift+F11 and Ctrl+V in Google Docs.
 // @author       Takashi Sasaki
 // @match        https://docs.google.com/document/*
 // @match        https://userscript.moukaeritai.work/*
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_info
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/docs.google.com/auto-paste-in-new-tab/auto-paste-in-new-tab.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/docs.google.com/auto-paste-in-new-tab/auto-paste-in-new-tab.user.js
 // ==/UserScript==
 
 (function () {
     'use strict';
-
-    // Install check logic
-    const installCheckHosts = [
-        'userscript.moukaeritai.work'
-    ];
-    const isInstallCheckHost = installCheckHosts.includes(location.hostname);
-    const report = () => {
+const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
                 name: GM_info.script.name,
@@ -30,8 +25,7 @@
     };
     document.addEventListener('userscript-ping', report);
 
-    if (isInstallCheckHost) {
-        report();
+    if (location.hostname === 'userscript.moukaeritai.work') {
         return;
     }
 

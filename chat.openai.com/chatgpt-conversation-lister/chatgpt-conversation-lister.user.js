@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         ChatGPT Conversation Lister
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.15
+// @version      1.0.18
 // @description  Retrieves, searches, and exports conversations in ChatGPT's web interface.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://chatgpt.com/*
+// @match        https://userscript.moukaeritai.work/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-conversation-lister/chatgpt-conversation-lister.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-conversation-lister/chatgpt-conversation-lister.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=openai.com
@@ -18,6 +19,19 @@
 
 (function() {
     'use strict';
+const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        return;
+    }
 
     // --- Constants and Configuration ---
 

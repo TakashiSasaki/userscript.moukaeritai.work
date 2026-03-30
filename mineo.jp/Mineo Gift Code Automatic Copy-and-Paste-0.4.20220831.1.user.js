@@ -1,10 +1,12 @@
 // ==UserScript==
 // @name         Mineo Gift Code Automatic Copy-and-Paste
-// @namespace    https://scrapbox.io/tech-notes/
-// @version      0.4.20220831.1
+// @namespace    userscript.moukaeritai.work
+// @version      0.4.20220831.2
 // @description  Mineoのギフトコードを自動的にクリップボードにコピーします。Mineoのギフトコードを入力することができるページで前記のギフトコードをペーストします。Mineoのギフト容量として自動的に9999を入力します。パケットチャージの入力欄を非表示にします。ゆずるねを自動的に宣言します。
-// @author       Takashi SASAKI (@TakashiSasaki on Twitter)
+// @author       Takashi Sasaki
+// @homepage     https://x.com/TakashiSasaki
 // @match        https://my.mineo.jp/mvno_cp/*.action
+// @match        https://userscript.moukaeritai.work/*
 // @icon         https://www.google.com/s2/favicons?domain=mineo.jp
 // @grant        GM_setClipboard
 // @grant        GM_notification
@@ -12,12 +14,26 @@
 // @grant        GM_getValue
 // @grant        GM_registerMenuCommand
 // @grant        GM_addStyle
-// @updateURL    https://gist.github.com/TakashiSasaki/4fe4b7e2b94b1f4479d797c9107eb252/raw/MineoGift.user.js
-// @downloadURL  https://gist.github.com/TakashiSasaki/4fe4b7e2b94b1f4479d797c9107eb252/raw/MineoGift.user.js
+// @grant        GM_info
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/mineo.jp/Mineo%20Gift%20Code%20Automatic%20Copy-and-Paste-0.4.20220831.1.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/mineo.jp/Mineo%20Gift%20Code%20Automatic%20Copy-and-Paste-0.4.20220831.1.user.js
 // ==/UserScript==
 
 (function() {
     'use strict';
+const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        return;
+    }
     var h1 = document.querySelector("form h1");
     if(h1 != null){
         if(h1.innerText == "パケットギフト発行完了") {

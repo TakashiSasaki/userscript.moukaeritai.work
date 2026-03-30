@@ -1,17 +1,32 @@
-// ==UserScript==
 // @name         Grok Conversation Highlighter with Dynamic Selection
-// @namespace    https://x.com/TakashiSasaki
-// @version      1.20
+// @namespace    userscript.moukaeritai.work
+// @version      1.22
 // @description  Auto-scroll, dynamically find the highlighted item by its gray wrapper, then click & highlight the “もっと見る” button in cyan
-// @author       Takashi Sasasaki
+// @author       Takashi Sasaki
 // @match        https://x.com/i/grok?conversation=*
+// @match        https://userscript.moukaeritai.work/*
 // @icon         https://x.com/favicon.ico
-// @grant        none
+// @grant        GM_info
 // @run-at       document-idle
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-conversation-highlighter/Grok%20Conversation%20Highlighter%20with%20Dynamic%20Selection-1.20.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-conversation-highlighter/Grok%20Conversation%20Highlighter%20with%20Dynamic%20Selection-1.20.user.js
 // ==/UserScript==
 
 (function() {
   'use strict';
+const report = () => {
+      document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+          detail: {
+              name: GM_info.script.name,
+              version: GM_info.script.version
+          }
+      }));
+  };
+  document.addEventListener('userscript-ping', report);
+
+  if (location.hostname === 'userscript.moukaeritai.work') {
+      return;
+  }
 
   /** Wait until an element matching selector appears in DOM */
   function waitFor(selector, timeout = 10000) {

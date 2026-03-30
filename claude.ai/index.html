@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Claude.ai Userscripts - Moukaeritai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://userscript.moukaeritai.work/claude.ai/index.html" rel="canonical" />
+    <style>
+        :root {
+            --primary: #7c3aed;
+            --primary-dark: #6d28d9;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 2em;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 4em;
+            padding-top: 2em;
+        }
+
+        h1 {
+            font-weight: 600;
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #a78bfa, #c4b5fd);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .header-desc {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .top-nav {
+            position: absolute;
+            top: 2em;
+            left: 2em;
+            z-index: 10;
+        }
+
+        .top-nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-dim);
+            font-weight: 400;
+            padding: 8px 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .top-nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
+        }
+
+        .project-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .project-item {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(15px);
+            overflow: hidden;
+        }
+
+        .project-item:hover {
+            transform: translateY(-10px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .project-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 0 0 1.2rem 0;
+        }
+
+        .project-title img {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+        }
+
+        .project-title a {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        .project-desc {
+            flex-grow: 1;
+            color: var(--text-dim);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .install-button {
+            align-self: flex-start;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .install-button:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 6em;
+            padding-bottom: 3em;
+            color: var(--text-dim);
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <nav class="top-nav">
+            <a class="top-nav-link" href="../index.html">
+                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
+                    <path
+                        d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
+                </svg>
+                Home
+            </a>
+        </nav>
+
+        <header>
+            <h1>Claude Utilities</h1>
+            <p class="header-desc">
+                Claude.ai の体験をさらにスムーズに。会話の管理や操作性を向上させるユーザースクリプトです。
+            </p>
+        </header>
+
+        <ul class="project-list">
+            <li class="project-item">
+                <div class="project-title">
+                    <img alt="Claude" src="https://www.google.com/s2/favicons?domain=claude.ai&sz=64" />
+                    <a href="#">Add Delete Button 🗑️</a>
+                </div>
+                <p class="project-desc">
+                    Claude.ai の会話リストに削除ボタンを追加し、不要な会話を素早く整理できるようにします。
+                </p>
+                <a class="install-button" data-script-name="Add Delete Button for Chat Conversations on Claude.ai"
+                    href="Add Delete Button for Chat Conversations on Claude.ai-0.4.20240326.user.js"
+                    target="_blank" data-version="0.5.0">
+                    <svg height="18" viewbox="0 0 24 24" width="18">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                    </svg>
+                    <span>Install (v0.5.1)</span>
+                    <div class="version-info">
+                        <span class="version-badge latest-version">v0.5.1</span>
+                        <span class="version-badge installed-version" style="display: none;"></span>
+                    </div>
+                </a>
+            </li>
+        </ul>
+
+        <footer>
+            <p>
+                <small>Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a> | <a
+                        href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a></small>
+            </p>
+        </footer>
+    </div>
+
+    <script src="../domain-landing.js"></script>
+</body>
+
+</html>
