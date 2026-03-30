@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.43
+// @version      0.4.44
 // @lastModified 2026-03-30
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
@@ -121,8 +121,6 @@ const report = () => {
         // Moved to initMainFunctionality
 
         // --- Core Logic ---
-
-        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
         const getTextContentLength = (element) => {
             if (!element) return 0;
@@ -503,11 +501,11 @@ const report = () => {
                 if (scroller === document.documentElement) window.scrollBy({ top: -scrollStep, behavior: 'instant' });
                 else scroller.scrollTop -= scrollStep;
 
-                await sleep(300);
+                await window.geminiSleep(300);
                 const currentTop = scroller === document.documentElement ? window.scrollY : scroller.scrollTop;
 
                 if (currentTop <= 10) {
-                    await sleep(1000); // give framework chance to load older turns
+                    await window.geminiSleep(1000); // give framework chance to load older turns
                     if (scroller.scrollHeight <= highestScrollHeight + 50) {
                         stallCount++;
                         if (stallCount >= 3) break; // Reached absolute top
@@ -523,7 +521,7 @@ const report = () => {
 
             if (scroller === document.documentElement) window.scrollTo({ top: 0, behavior: 'instant' });
             else scroller.scrollTop = 0;
-            await sleep(1000);
+            await window.geminiSleep(1000);
 
             setStatus("Descending and collecting...");
 
@@ -625,12 +623,12 @@ const report = () => {
                 if (scroller === document.documentElement) window.scrollBy({ top: scrollStep, behavior: 'instant' });
                 else scroller.scrollTop += scrollStep;
 
-                await sleep(300);
+                await window.geminiSleep(300);
                 attempts++;
             }
 
             setStatus("Scan complete!");
-            await sleep(1000);
+            await window.geminiSleep(1000);
             setStatus("");
 
             if (scanBtn) scanBtn.disabled = false;

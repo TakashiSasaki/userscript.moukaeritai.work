@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini History Loader
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.12
+// @version      0.1.13
 // @lastModified 2026-03-30
 // @description  A utility script that forces Gemini to load the entire chat history by programmatically scrolling to the top. Features a compact floating UI that expands when loading history.
 // @author       Takashi Sasaki
@@ -84,18 +84,6 @@ const report = () => {
             console.log(formattedMsg);
         }
 
-        async function sleep(ms) {
-            return new Promise(resolve => {
-                const start = Date.now();
-                const interval = setInterval(() => {
-                    if (Date.now() - start >= ms) {
-                        clearInterval(interval);
-                        resolve();
-                    }
-                }, Math.min(ms, 50));
-            });
-        }
-
         function isVisible(el) {
             if (!el || !el.isConnected) return false;
             const style = window.getComputedStyle(el);
@@ -110,7 +98,7 @@ const report = () => {
             if (canvasCloseBtn) {
                 log('Closing Canvas panel to enable history loading...');
                 canvasCloseBtn.click();
-                await sleep(800);
+                await window.geminiSleep(800);
             }
 
             document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
@@ -119,7 +107,7 @@ const report = () => {
             if (backdrop && isVisible(backdrop)) {
                 backdrop.click();
             }
-            await sleep(500);
+            await window.geminiSleep(500);
         }
 
         function getChatScroller() {
@@ -280,12 +268,12 @@ const report = () => {
                         scroller.scrollTop -= scrollStep;
                     }
 
-                    await sleep(400);
+                    await window.geminiSleep(400);
 
                     const currentScrollTop = scroller === document.documentElement ? window.scrollY : scroller.scrollTop;
 
                     if (currentScrollTop <= 10) {
-                        await sleep(1500);
+                        await window.geminiSleep(1500);
 
                         const currentFirstTurn = document.querySelector('message-content, .message-content');
                         const currentContent = currentFirstTurn ? currentFirstTurn.textContent.substring(0, 50) : '';
@@ -316,11 +304,11 @@ const report = () => {
                 }
 
                 scroller.scrollTop = 0;
-                await sleep(1000);
+                await window.geminiSleep(1000);
 
                 log('History load complete.');
                 updateProgressUI('Complete', 'Dispatching events...');
-                await sleep(500);
+                await window.geminiSleep(500);
 
                 document.dispatchEvent(new CustomEvent('gemini-history-loader:complete', {
                     detail: { reqId: reqId, status: 'success' }
@@ -329,7 +317,7 @@ const report = () => {
             } catch (error) {
                 log(`Error loading history: ${error.message}`);
                 updateProgressUI('Error', error.message);
-                await sleep(2000);
+                await window.geminiSleep(2000);
                 document.dispatchEvent(new CustomEvent('gemini-history-loader:complete', {
                     detail: { reqId: reqId, status: 'error', reason: error.message }
                 }));
