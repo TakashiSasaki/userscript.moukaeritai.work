@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.1
+// @version      0.2.2
 // @description  Injects a prompt into Gemini via an external custom event.
 // @lastModified 2026-03-30
 // @author       Takashi Sasaki
@@ -309,9 +309,10 @@ const report = () => {
         if (document.getElementById('gpi-test-ui')) return;
 
         // Retrieve saved state or default (must be before any use of isMinimized)
-        let isMinimized = GM_getValue('gpi_ui_minimized', false);
-        let savedX = GM_getValue('gpi_ui_x', window.innerWidth - 320);
-        let savedY = GM_getValue('gpi_ui_y', window.innerHeight - 320);
+        // Use 'var' instead of 'let' to avoid TDZ issues in Tampermonkey's sandboxed Promise wrapping
+        var isMinimized = GM_getValue('gpi_ui_minimized', false);
+        var savedX = GM_getValue('gpi_ui_x', window.innerWidth - 320);
+        var savedY = GM_getValue('gpi_ui_y', window.innerHeight - 320);
 
         const uiContainer = document.createElement('div');
         uiContainer.id = 'gpi-test-ui';

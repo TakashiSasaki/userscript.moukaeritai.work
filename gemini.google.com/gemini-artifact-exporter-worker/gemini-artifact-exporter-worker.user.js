@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.17
+// @version      0.2.18
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @lastModified 2026-03-30
 // @author       Takashi Sasaki
@@ -973,6 +973,11 @@ const report = () => {
     });
 
     // Initialize UI so the version badge is always visible when inactive
-    getOrCreateIndicator();
+    // Only run on pages where we injected the template HTML (chat pages / docs)
+    const _isGeminiChatPage = location.hostname === 'gemini.google.com' && /^\/(app|gem)\//.test(location.pathname);
+    const _isDocsPage = location.hostname.includes('docs.google.com');
+    if (_isGeminiChatPage || _isDocsPage) {
+        getOrCreateIndicator();
+    }
 
 })();
