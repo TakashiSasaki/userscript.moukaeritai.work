@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Search Snippet Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.14
+// @version      0.1.15
 // @lastModified 2026-03-30
 // @description  Add sequential numbers to Gemini search result conversation titles.
 // @author       Takashi Sasaki
@@ -33,85 +33,94 @@ const report = () => {
 
     const initUserScript = () => {
 
-        const SNIPPET_SELECTOR = 'search-snippet';
-        const TITLE_SELECTOR = '.title';
-        const NUMBER_CLASS = 'search-snippet-helper-number';
-        const SEARCH_PAGE_PREFIX = 'https://gemini.google.com/search';
+        const initUserScript = () => {
 
-        function isSearchPage() {
-            return window.location.href.startsWith(SEARCH_PAGE_PREFIX);
-        }
+            const SNIPPET_SELECTOR = 'search-snippet';
+            const TITLE_SELECTOR = '.title';
+            const NUMBER_CLASS = 'search-snippet-helper-number';
+            const SEARCH_PAGE_PREFIX = 'https://gemini.google.com/search';
 
-        // --- URL Change Detection ---
-        function onUrlChange() {
-            if (isSearchPage()) {
-                addNumbers();
+            function isSearchPage() {
+                return window.location.href.startsWith(SEARCH_PAGE_PREFIX);
             }
-        }
 
-        // 1. Listen for browser back/forward
-        window.addEventListener('popstate', onUrlChange);
+            // --- URL Change Detection ---
+            function onUrlChange() {
+                if (isSearchPage()) {
+                    addNumbers();
+                }
+            }
 
-        // 2. Monkey-patch pushState and replaceState for SPA navigation
-        const originalPushState = history.pushState;
-        history.pushState = function () {
-            const ret = originalPushState.apply(this, arguments);
-            onUrlChange();
-            return ret;
-        };
+            // 1. Listen for browser back/forward
+            window.addEventListener('popstate', onUrlChange);
 
-        const originalReplaceState = history.replaceState;
-        history.replaceState = function () {
-            const ret = originalReplaceState.apply(this, arguments);
-            onUrlChange();
-            return ret;
-        };
-        // -----------------------------
+            // 2. Monkey-patch pushState and replaceState for SPA navigation
+            const originalPushState = history.pushState;
+            history.pushState = function () {
+                const ret = originalPushState.apply(this, arguments);
+                onUrlChange();
+                return ret;
+            };
 
-        function addNumbers() {
-            if (!isSearchPage()) return;
+            const originalReplaceState = history.replaceState;
+            history.replaceState = function () {
+                const ret = originalReplaceState.apply(this, arguments);
+                onUrlChange();
+                return ret;
+            };
+            // -----------------------------
 
-            const snippets = document.querySelectorAll(SNIPPET_SELECTOR);
-            snippets.forEach((snippet, index) => {
-                const title = snippet.querySelector(TITLE_SELECTOR);
-                if (title) {
-                    let numberSpan = title.querySelector(`.${NUMBER_CLASS}`);
-                    if (!numberSpan) {
-                        numberSpan = document.createElement('span');
-                        numberSpan.className = NUMBER_CLASS;
-                        numberSpan.style.fontSize = '0.75em';
-                        numberSpan.style.color = 'var(--text-dim, #888)'; // Trying to use variable or fallback
-                        numberSpan.style.marginRight = '6px';
-                        numberSpan.style.opacity = '0.7';
-                        numberSpan.style.fontFamily = 'monospace';
-                        title.insertBefore(numberSpan, title.firstChild);
+            function addNumbers() {
+                if (!isSearchPage()) return;
+
+                const snippets = document.querySelectorAll(SNIPPET_SELECTOR);
+                snippets.forEach((snippet, index) => {
+                    const title = snippet.querySelector(TITLE_SELECTOR);
+                    if (title) {
+                        let numberSpan = title.querySelector(`.${NUMBER_CLASS}`);
+                        if (!numberSpan) {
+                            numberSpan = document.createElement('span');
+                            numberSpan.className = NUMBER_CLASS;
+                            numberSpan.style.fontSize = '0.75em';
+                            numberSpan.style.color = 'var(--text-dim, #888)'; // Trying to use variable or fallback
+                            numberSpan.style.marginRight = '6px';
+                            numberSpan.style.opacity = '0.7';
+                            numberSpan.style.fontFamily = 'monospace';
+                            title.insertBefore(numberSpan, title.firstChild);
+                        }
+                        // Always update the number to ensure correctness when lists change
+                        numberSpan.textContent = `${index + 1}.`;
                     }
-                    // Always update the number to ensure correctness when lists change
-                    numberSpan.textContent = `${index + 1}.`;
+                });
+            }
+
+            const observer = new MutationObserver((mutations) => {
+                if (!isSearchPage()) return;
+
+                let shouldUpdate = false;
+                for (const mutation of mutations) {
+                    if (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0) {
+                        shouldUpdate = true;
+                        break;
+                    }
+                }
+
+                if (shouldUpdate) {
+                    requestAnimationFrame(addNumbers);
                 }
             });
+
+            observer.observe(document.body, { childList: true, subtree: true });
+
+            // Initial run
+            addNumbers();
+        };
+
+        if (document.readyState === 'complete') {
+            initUserScript();
+        } else {
+            window.addEventListener('load', initUserScript);
         }
-
-        const observer = new MutationObserver((mutations) => {
-            if (!isSearchPage()) return;
-
-            let shouldUpdate = false;
-            for (const mutation of mutations) {
-                if (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0) {
-                    shouldUpdate = true;
-                    break;
-                }
-            }
-
-            if (shouldUpdate) {
-                requestAnimationFrame(addNumbers);
-            }
-        });
-
-        observer.observe(document.body, { childList: true, subtree: true });
-
-        // Initial run
-        addNumbers();
     };
 
     if (document.readyState === 'complete') {
