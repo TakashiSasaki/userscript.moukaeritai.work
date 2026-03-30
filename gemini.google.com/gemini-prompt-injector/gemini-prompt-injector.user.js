@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.8
+// @version      0.1.9
 // @description  Injects a prompt into Gemini via an external custom event.
 // @lastModified 2026-03-30
 // @author       Takashi Sasaki
@@ -305,15 +305,15 @@ const report = () => {
     function initTestUI() {
         if (document.getElementById('gpi-test-ui')) return;
 
+        // Retrieve saved state or default (must be before any use of isMinimized)
+        let isMinimized = GM_getValue('gpi_ui_minimized', false);
+        let savedX = GM_getValue('gpi_ui_x', window.innerWidth - 320);
+        let savedY = GM_getValue('gpi_ui_y', window.innerHeight - 320);
+
         const uiContainer = document.createElement('div');
         uiContainer.id = 'gpi-test-ui';
         uiContainer.className = 'gus-panel';
         if (isMinimized) uiContainer.classList.add('minimized');
-
-        // Retrieve saved state or default
-        let isMinimized = GM_getValue('gpi_ui_minimized', false);
-        let savedX = GM_getValue('gpi_ui_x', window.innerWidth - 320);
-        let savedY = GM_getValue('gpi_ui_y', window.innerHeight - 320);
 
         // Adjust position to ensure it stays within the window
         const uiWidth = isMinimized ? 50 : 300;
