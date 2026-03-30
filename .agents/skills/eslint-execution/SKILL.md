@@ -15,21 +15,9 @@ This skill provides a standardized way to run ESLint on userscripts within this 
 
 ## How to use
 
-### Standard Execution (npm/npx)
+### Recommended Execution (Bun)
 
-If `npm` is available in the environment:
-
-```powershell
-# Install dependencies if not already done
-npm install
-
-# Run ESLint on a specific file
-npx eslint path/to/your/script.user.js
-```
-
-### Fallback Execution (Bun)
-
-If `npm` or `npx` is not recognized (common in restricted Windows environments):
+Since `bun` is confirmed to be highly reliable in this environment, it is RECOMMENDED to use it as the primary tool.
 
 ```powershell
 # Install dependencies using bun
@@ -39,12 +27,23 @@ bun install
 bun x eslint path/to/your/script.user.js
 ```
 
+### Alternative Execution (npm/npx)
+
+If `bun` is unavailable or `npm/npx` is preferred:
+
+```powershell
+# Install dependencies
+npm install
+
+# Run ESLint on a specific file
+npx eslint path/to/your/script.user.js
+```
+
 ## Recommended Workflow
 
-1.  Always try `npx eslint` first.
-2.  If the command fails with "term not recognized," check for `bun` by running `bun --version`.
-3.  If `bun` exists, use `bun x eslint`.
-4.  Ensure all errors are resolved before committing, as per `AGENTS.md` guidelines.
+1.  Always try `bun x eslint` first.
+2.  If `bun` is missing, try `npx eslint`.
+3.  Ensure all errors are resolved before committing, as per `AGENTS.md` guidelines.
 
 ## Troubleshooting & Lessons Learned
 

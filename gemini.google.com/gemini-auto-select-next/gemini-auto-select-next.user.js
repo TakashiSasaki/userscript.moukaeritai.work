@@ -308,7 +308,7 @@
             uiObserver.disconnect();
             if (mainInterval) clearInterval(mainInterval);
             const p = document.getElementById('gemini-auto-switch-panel');
-            if (!p) createUI();
+            if (!p) createDraggablePanel();
         }
     }
 

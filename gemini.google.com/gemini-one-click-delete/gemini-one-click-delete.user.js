@@ -125,54 +125,7 @@ const report = () => {
         }));
     }
 
-    /**
-     * Create safely constructed SVG element (Trusted Types compliant)
-     */
-    function createSvgElement() {
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute("height", "20");
-        svg.setAttribute("viewBox", "0 -960 960 960");
-        svg.setAttribute("width", "20");
-        svg.setAttribute("fill", "currentColor");
 
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d", "M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z");
-
-        svg.appendChild(path);
-        return svg;
-    }
-
-    /**
-     * Create the custom delete button
-     */
-    function createDeleteButton(onClick, isFloating = false) {
-        const btn = document.createElement('button');
-        btn.className = isFloating ? 'gemini-quick-delete-btn floating' : 'gemini-quick-delete-btn';
-        btn.title = '1-Click Delete Conversation';
-        if (isFloating) {
-            // For floating button, we might want to start disabled until we verify sidebar presence
-            btn.style.display = 'none'; // Initially hidden
-        }
-        btn.appendChild(createSvgElement());
-
-        btn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (btn.classList.contains('processing') || btn.disabled) return;
-
-            btn.classList.add('processing');
-            try {
-                await onClick();
-            } catch (err) {
-                console.error('Delete failed:', err);
-                alert('Failed to delete conversation. See console.');
-            } finally {
-                btn.classList.remove('processing');
-            }
-        });
-
-        return btn;
-    }
 
     /**
      * Style injection
@@ -246,24 +199,6 @@ const report = () => {
         console.log('Delete Confirmed.');
     }
 
-    /**
-     * Helper to get Conversation ID from Main View
-     */
-    function getConversationIdFromMainView() {
-        // Try to find it in jslog of message content
-        const elements = document.querySelectorAll(SELECTORS.messageContent);
-        for (const el of elements) {
-            const jslog = el.getAttribute('jslog');
-            if (jslog) {
-                // Regex to find c_<hex>
-                const match = jslog.match(/"(c_[a-f0-9]{16})"/);
-                if (match && match[1]) {
-                    return match[1];
-                }
-            }
-        }
-        return null;
-    }
 
     /**
      * Helper to find Sidebar Item by ID
@@ -459,7 +394,7 @@ const report = () => {
     /**
      * Handle External Delete Request (e.g. from gemini-artifact-exporter)
      */
-    async function handleExternalDeleteRequest(e) {
+    async function handleExternalDeleteRequest(_e) {
         console.log('[Gemini 1-Click Delete] Received external delete request.');
 
         // Safety delay to allow Gemini UI to settle after potential exports
@@ -541,7 +476,7 @@ const report = () => {
             cleanup();
             const panel = document.getElementById('gemini-delete-panel');
             if (!panel) {
-                createUi();
+                createDraggablePanel();
             }
         }
     }

@@ -5,21 +5,21 @@ param(
 
 # Detect and run ESLint with fallback
 
-# 1. Try npx
+# 1. Try bun
 try {
-    Write-Host "Trying npx eslint..." -ForegroundColor Cyan
-    npx eslint "$TargetFile"
+    Write-Host "Trying bun x eslint..." -ForegroundColor Cyan
+    bun x eslint "$TargetFile"
     if ($LASTEXITCODE -eq 0) {
         return
     }
 } catch {
-    # Ignore error and try bun
+    # Ignore error and try npx
 }
 
-# 1. Try bun
+# 2. Try npx
 try {
-    Write-Host "npx not found or failed, trying bun x eslint..." -ForegroundColor Yellow
-    bun x eslint "$TargetFile"
+    Write-Host "bun not found or failed, trying npx eslint..." -ForegroundColor Yellow
+    npx eslint "$TargetFile"
     if ($LASTEXITCODE -eq 0) {
         return
     }

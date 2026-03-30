@@ -1,0 +1,12 @@
+Fix ESLint errors and prioritize Bun in execution skill
+
+- Resolved all 8 problems (3 errors, 5 warnings) in gemini.google.com userscripts.
+- Corrected typos in UI initialization calls (createUI/createUi -> createDraggablePanel) in:
+  - gemini-auto-scroll.user.js
+  - gemini-auto-select-next.user.js
+  - gemini-one-click-delete.user.js
+- Removed unused functions and variables to satisfy ESLint:
+  - gemini-one-click-delete.user.js: createDeleteButton, getConversationIdFromMainView, createSvgElement.
+  - gemini-turn-counter.user.js: styleElement.
+- Handled unused arguments by prefixing with underscore (e -> _e) in handleExternalDeleteRequest.
+- Updated the 'eslint-execution' skill and its run-eslint.ps1 helper to prioritize Bun over npm/npx for better reliability.

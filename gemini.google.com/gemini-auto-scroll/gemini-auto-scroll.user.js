@@ -470,7 +470,6 @@ const report = () => {
         for (const mutation of mutations) {
             for (const removedNode of mutation.removedNodes) {
                 if (removedNode.nodeType === 1) { // Element node
-                    const isConversation = removedNode.matches(SELECTORS.CONVERSATION_ITEM) || removedNode.querySelector(SELECTORS.CONVERSATION_ITEM);
                     // Selection handling removed correctly as per migration to gemini-auto-select-next
                 }
             }
@@ -546,7 +545,7 @@ const report = () => {
             cleanupAutoScroll();
             const panel = document.getElementById('gemini-auto-scroll-panel');
             if (!panel) {
-                createUI();
+                createDraggablePanel();
             }
             // Important to always update lastUrl to avoid spurious detection
             lastUrl = window.location.href;

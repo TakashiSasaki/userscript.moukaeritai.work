@@ -60,7 +60,6 @@ const report = () => {
 
     // --- State Management ---
     let mainObserver = null;
-    let styleElement = null;
     let isInitialized = false;
     let uiContainer = null; // Store reference to the main UI container
     let updateStatsTimeout = null;
@@ -637,7 +636,7 @@ const report = () => {
         if (isInitialized) return;
         console.log('[Gemini Turn Counter] Initializing...');
 
-        styleElement = addStyles(); // addStyles() needs to return the style element
+        addStyles();
 
         // Create UI container
         const container = document.createElement('div');
@@ -773,10 +772,6 @@ const report = () => {
             updateStatsTimeout = null;
         }
         // Keep UI and style even when cleaning up functional logic
-        // if (styleElement) {
-        //     styleElement.remove();
-        //     styleElement = null;
-        // }
         // if (uiContainer) {
         //     uiContainer.remove();
         //     uiContainer = null;
