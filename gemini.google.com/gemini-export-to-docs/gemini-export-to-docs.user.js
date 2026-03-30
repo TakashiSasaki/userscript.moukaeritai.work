@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.50
+// @version      0.4.51
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-03-30
 // @author       Takashi Sasaki
@@ -93,13 +93,6 @@
             exportToDocsButton: 'button[data-test-id="export-to-docs-button"]', // The target in the menu
             exportIntermediateButton: 'button[data-test-id="export-button"]' // Mobile "Export to..." button
         };
-
-        /**
-         * Sleep for a given amount of milliseconds
-         */
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
 
         /**
          * Trigger a native click event
@@ -278,7 +271,7 @@
             while (Date.now() - start < timeout) {
                 const btn = findExportButton(document.body);
                 if (btn) return btn;
-                await sleep(100);
+                await window.geminiSleep(100);
             }
             // Last ditch: sometimes it's in a different container or slow to animate
             return findExportButton(document.body);
@@ -298,7 +291,7 @@
             simulateClick(triggerBtn);
 
             // 2. Wait slightly for menu animation start
-            await sleep(200);
+            await window.geminiSleep(200);
 
             // 3. Try to find the button directly (Desktop case)
             let exportBtn = await waitForExportButton(1000);
@@ -323,13 +316,13 @@
                         intermediateBtn = textMatch;
                         break;
                     }
-                    await sleep(100);
+                    await window.geminiSleep(100);
                 }
 
                 if (intermediateBtn) {
                     console.log('Mobile layout detected: clicking intermediate export button');
                     simulateClick(intermediateBtn);
-                    await sleep(500); // Wait for submenu
+                    await window.geminiSleep(500); // Wait for submenu
 
                     // Re-try finding the final button
                     exportBtn = await waitForExportButton(2000);
@@ -354,7 +347,7 @@
             console.log('Turn Export Clicked');
 
             // Close menu if it persists (auto-closes usually)
-            await sleep(100);
+            await window.geminiSleep(100);
             const closeBackdrop = document.querySelector('.cdk-overlay-backdrop');
             if (closeBackdrop) simulateClick(closeBackdrop);
         }
@@ -639,7 +632,7 @@
                             execBtn.style.backgroundColor = '#e53935'; // Red deleting warning
                             execBtn.style.color = 'white';
                         }
-                        await sleep(1000);
+                        await window.geminiSleep(1000);
                     }
                     if (execBtn) execBtn.textContent = 'Deleting...';
 
@@ -649,7 +642,7 @@
                 } else {
                     console.log('[Gemini 1-Turn Export] Auto-delete skipped based on setting.');
                     if (execBtn) execBtn.textContent = 'Done!';
-                    await sleep(2000);
+                    await window.geminiSleep(2000);
                 }
 
             } catch (err) {

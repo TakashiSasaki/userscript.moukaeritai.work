@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.13
+// @version      0.3.14
 // @lastModified 2026-03-30
 // @description  Adds a 1-click floating button with shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
@@ -102,24 +102,6 @@ const report = () => {
         }
 
         /**
-         * Sleep helper
-         */
-        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-        /**
-         * Wait for element helper
-         */
-        async function waitForElement(selector, timeout = 5000, context = document) {
-            const start = Date.now();
-            while (Date.now() - start < timeout) {
-                const el = context.querySelector(selector);
-                if (el) return el;
-                await sleep(100);
-            }
-            return null;
-        }
-
-        /**
          * Simulate click event
          */
         function simulateClick(element) {
@@ -168,12 +150,20 @@ const report = () => {
             // 1. Open Menu
             simulateClick(triggerBtn);
 
-            // 2. Wait for Menu Panel
-            const menu = await waitForElement(SELECTORS.menuPanel);
-            if (!menu) throw new Error('Menu panel did not appear.');
+            let menu;
+            try {
+                // 2. Wait for Menu Panel (selector, context, timeout)
+                menu = await window.geminiWaitForElement(SELECTORS.menuPanel, document, 5000);
+            } catch {
+                throw new Error('Menu panel did not appear.');
+            }
 
             // Wait for buttons to populate in the dynamic menu
-            await waitForElement('button', 2000, menu);
+            try {
+                await window.geminiWaitForElement('button', menu, 2000);
+            } catch {
+                console.warn('Timeout waiting for buttons to populate in menu.');
+            }
 
             // 3. Find Delete Button in Menu
             // Try precise selector first
@@ -194,11 +184,19 @@ const report = () => {
             simulateClick(deleteBtn);
 
             // 5. Wait for Confirmation Dialog
-            const dialog = await waitForElement(SELECTORS.dialogContainer);
-            if (!dialog) throw new Error('Confirmation dialog did not appear.');
+            let dialog;
+            try {
+                dialog = await window.geminiWaitForElement(SELECTORS.dialogContainer, document, 5000);
+            } catch {
+                throw new Error('Confirmation dialog did not appear.');
+            }
 
             // Wait for buttons to populate in the dialog
-            await waitForElement('button', 2000, dialog);
+            try {
+                await window.geminiWaitForElement('button', dialog, 2000);
+            } catch {
+                console.warn('Timeout waiting for buttons to populate in dialog.');
+            }
 
             // 6. Find Confirm Button
             let confirmBtn = dialog.querySelector(SELECTORS.confirmButton);
@@ -414,7 +412,7 @@ const report = () => {
             console.log('[Gemini 1-Click Delete] Received external delete request.');
 
             // Safety delay to allow Gemini UI to settle after potential exports
-            await sleep(1000);
+            await window.geminiSleep(1000);
 
             // Ensure panel state is up to date to find targets
             updatePanelState();

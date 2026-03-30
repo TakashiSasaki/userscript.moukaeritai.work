@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.25
+// @version      0.4.26
 // @lastModified 2026-03-30
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
@@ -165,57 +165,6 @@ const report = () => {
             return /^\/(app|gem)\//.test(window.location.pathname);
         }
 
-        function waitForElement(selector, context = document, timeout = 5000) {
-            log(`Waiting for element: ${selector}...`);
-            return new Promise((resolve, reject) => {
-                const el = context.querySelector(selector);
-                if (el) {
-                    log(`Element ${selector} found immediately.`);
-                    return resolve(el);
-                }
-
-                let timeoutId = null;
-                const observer = new MutationObserver(() => {
-                    const el = context.querySelector(selector);
-                    if (el) {
-                        if (timeoutId) {
-                            clearTimeout(timeoutId);
-                        }
-                        log(`Element ${selector} detected by observer.`);
-                        observer.disconnect();
-                        resolve(el);
-                    }
-                });
-
-                observer.observe(context === document ? document.body : context, {
-                    childList: true,
-                    subtree: true
-                });
-
-                timeoutId = setTimeout(() => {
-                    observer.disconnect();
-                    log(`Timeout reached for: ${selector}`);
-                    reject(new Error(`Timeout waiting for ${selector}`));
-                }, timeout);
-            });
-        }
-
-        async function sleep(ms) {
-            // Round 6: Replace standard setTimeout with background-aware polling.
-            // Chrome aggressively throttles/suspends pure setTimeout in background tabs.
-            // Polling Date.now() ensures that even if interval ticks are delayed to ~1s+,
-            // the math remains correct and it resolves on the next available tick,
-            // rather than being permanently suspended.
-            return new Promise(resolve => {
-                const start = Date.now();
-                const interval = setInterval(() => {
-                    if (Date.now() - start >= ms) {
-                        clearInterval(interval);
-                        resolve();
-                    }
-                }, Math.min(ms, 50)); // Check every 50ms, but don't ping faster than requested ms
-            });
-        }
 
         /**
          * More robust visibility check that doesn't rely solely on offsetParent,
@@ -338,7 +287,7 @@ const report = () => {
             if (canvasCloseBtn) {
                 log('Closing Canvas panel to enable history loading...');
                 canvasCloseBtn.click();
-                await sleep(800); // Wait for layout shift
+                await window.geminiSleep(800); // Wait for layout shift
             }
 
             // 2. Generic Escape key
@@ -349,7 +298,7 @@ const report = () => {
             if (backdrop && isVisible(backdrop)) {
                 backdrop.click();
             }
-            await sleep(500);
+            await window.geminiSleep(500);
         }
 
         function finishScanning(modeName) {
@@ -403,7 +352,7 @@ const report = () => {
             actionMenuBtn.click();
             let filesMenuItem;
             try {
-                const menu = await waitForElement(SELECTORS.MENU_PANEL, document, 3000);
+                const menu = await window.geminiWaitForElement(SELECTORS.MENU_PANEL, document, 3000);
                 filesMenuItem = menu.querySelector(SELECTORS.FILES_MENU_ITEM);
                 if (!filesMenuItem) {
                     // Text-based fallback
@@ -428,7 +377,7 @@ const report = () => {
             log('Waiting for chips to load in panel...');
             let initialChips = [];
             for (let i = 0; i < 20; i++) {
-                await sleep(250);
+                await window.geminiSleep(250);
                 initialChips = Array.from(document.querySelectorAll(SELECTORS.SIDEBAR_CHIP));
                 if (initialChips.length > 0) break;
             }
@@ -450,7 +399,7 @@ const report = () => {
             log('Scanning sidebar list by scrolling...');
             if (scrollContainer) {
                 scrollContainer.scrollTop = 0;
-                await sleep(500);
+                await window.geminiSleep(500);
                 let lastScrollTop = -1;
 
                 for (let i = 0; i < 100; i++) {
@@ -465,7 +414,7 @@ const report = () => {
                     if (scrollContainer.scrollTop === lastScrollTop) break;
                     lastScrollTop = scrollContainer.scrollTop;
                     scrollContainer.scrollBy({ top: 500, behavior: 'smooth' });
-                    await sleep(500);
+                    await window.geminiSleep(500);
                 }
                 scrollContainer.scrollTop = 0;
             } else {
@@ -654,7 +603,7 @@ const report = () => {
 
                 if (result.status === 'failed' && !cancelExport) {
                     log(`Worker failed for "${selectedTitles[i]}" (${result.reason}). Retrying once...`);
-                    await sleep(1000);
+                    await window.geminiSleep(1000);
                     reqData.requestId = `req_${Date.now()}_${i}_retry`;
                     result = await requestExportWorker(reqData);
                 }
@@ -693,7 +642,7 @@ const report = () => {
                         return; // Early exit preventing auto-delete
                     }
                 }
-                if (i < selectedTitles.length - 1) await sleep(500);
+                if (i < selectedTitles.length - 1) await window.geminiSleep(500);
             }
 
             if (progressEl && !hasError) progressEl.textContent = 'Done!';
@@ -704,7 +653,7 @@ const report = () => {
 
             if (GM_getValue(AUTO_DELETE_KEY, false) && !cancelExport && !hasError) {
                 log('Auto-delete enabled. Requesting gemini-one-click-delete...');
-                await sleep(1000);
+                await window.geminiSleep(1000);
                 checkTargetUserscript('Gemini 1-Click Delete Conversation').then((installed) => { showTargetScriptStatus('Gemini 1-Click Delete Conversation', installed); window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete')); });
             }
         }

@@ -64,7 +64,8 @@
 
     <h2>更新履歴</h2>
     <ul>
-        <li><strong>v0.2.9</strong> (2026-03-30): CSSやHTMLテンプレートの読み込みに失敗した場合の不完全なフォールバックUIの表示をやめ、コンソールにエラーを出力して安全に早期終了するよう挙動を改善しました。</li>
+        <li><strong>v0.2.20</strong>: 汎用ユーティリティ関数（sleepやwaitForElementなど）をgemini-common.jsにオフロードし、コードを共通化しました。</li>
+            <li><strong>v0.2.9</strong> (2026-03-30): CSSやHTMLテンプレートの読み込みに失敗した場合の不完全なフォールバックUIの表示をやめ、コンソールにエラーを出力して安全に早期終了するよう挙動を改善しました。</li>
         <li><strong>v0.2.8</strong> (2026-03-30): UIの構築（スタイルとHTML構造）を <code>style.css</code> と <code>template.html</code> にオフロードし、JavaScript のコード量を削減するリファクタリングを実施しました。</li>
         <li><strong>v0.2.7</strong> (2026-03-29): Gemini の TrustedHTML ポリシーに対応するため、<code>innerHTML</code> の使用を廃止し、DOM API を使った安全な実装に変更しました。</li>
         <li><strong>v0.2.6</strong> (2026-03-29): 最小化表示（バージョンハンドル）にスクリプトを識別するための絵文字 (⚙️) を追加しました。</li>

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.19
+// @version      0.2.20
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @lastModified 2026-03-30
 // @author       Takashi Sasaki
@@ -282,10 +282,10 @@ const report = () => {
                         // Wait for the docs editor to be ready instead of a fixed delay
                         try {
                             // The main editor canvas in Google Docs
-                            await waitForElement('.kix-appview-editor', document, 10000);
+                            await window.geminiWaitForElement('.kix-appview-editor', document, 10000);
                             log('Docs editor is ready. Dispatching EmulateDocsPaste event.');
                             // Add a small extra delay to ensure event listeners are attached
-                            await sleep(500);
+                            await window.geminiSleep(500);
                         } catch {
                             log('Timeout waiting for docs editor, but dispatching EmulateDocsPaste anyway as fallback.');
                         }
@@ -321,7 +321,7 @@ const report = () => {
                     } else {
                         log('No valid images copied or data was stale. Proceeding as normal without pasting.');
                         // Close the tab anyway
-                        await sleep(2000);
+                        await window.geminiSleep(2000);
                         log('Dispatching gemini-docs-closer-force-close to close tab.');
                         checkTargetUserscript('Gemini Exported Docs Auto-Closer').then((installed) => { showTargetScriptStatus('Gemini Exported Docs Auto-Closer', installed); document.dispatchEvent(new CustomEvent('gemini-docs-closer-force-close')); });
                     }
@@ -331,53 +331,6 @@ const report = () => {
         }
 
         // --- Utility Functions ---
-
-        function waitForElement(selector, context = document, timeout = 5000) {
-            log(`Waiting for element: ${selector}...`);
-            return new Promise((resolve, reject) => {
-                const el = context.querySelector(selector);
-                if (el) {
-                    log(`Element ${selector} found immediately.`);
-                    return resolve(el);
-                }
-
-                let timeoutId = null;
-                const observer = new MutationObserver(() => {
-                    const el = context.querySelector(selector);
-                    if (el) {
-                        if (timeoutId) {
-                            clearTimeout(timeoutId);
-                        }
-                        log(`Element ${selector} detected by observer.`);
-                        observer.disconnect();
-                        resolve(el);
-                    }
-                });
-
-                observer.observe(context === document ? document.body : context, {
-                    childList: true,
-                    subtree: true
-                });
-
-                timeoutId = setTimeout(() => {
-                    observer.disconnect();
-                    log(`Timeout reached for: ${selector}`);
-                    reject(new Error(`Timeout waiting for ${selector}`));
-                }, timeout);
-            });
-        }
-
-        async function sleep(ms) {
-            return new Promise(resolve => {
-                const start = Date.now();
-                const interval = setInterval(() => {
-                    if (Date.now() - start >= ms) {
-                        clearInterval(interval);
-                        resolve();
-                    }
-                }, Math.min(ms, 50));
-            });
-        }
 
         function robustClick(el) {
             if (!el) return;
@@ -415,7 +368,7 @@ const report = () => {
             const start = Date.now();
 
             while ((Date.now() - start) < detectTimeoutMs) {
-                await sleep(200);
+                await window.geminiSleep(200);
 
                 const snackbarTexts = getVisibleSnackbars()
                     .map(el => (el.textContent || '').trim())
@@ -605,7 +558,7 @@ const report = () => {
             const scrollContainer = document.querySelector('div.scrollable-container');
             if (scrollContainer) {
                 scrollContainer.scrollTop = 0;
-                await sleep(300);
+                await window.geminiSleep(300);
 
                 let lastScrollTop = -1;
                 for (let i = 0; i < 50; i++) {
@@ -621,7 +574,7 @@ const report = () => {
                     if (scrollContainer.scrollTop === lastScrollTop) break;
                     lastScrollTop = scrollContainer.scrollTop;
                     scrollContainer.scrollBy({ top: 500 });
-                    await sleep(400);
+                    await window.geminiSleep(400);
                 }
             }
 
@@ -634,7 +587,7 @@ const report = () => {
 
             if (chatScroller === window) window.scrollTo({ top: 0 });
             else chatScroller.scrollTop = 0;
-            await sleep(300);
+            await window.geminiSleep(300);
 
             for (let i = 0; i < 50; i++) {
                 const cards = Array.from(document.querySelectorAll(SELECTORS.CHAT_ARTIFACT_CONTAINER));
@@ -650,7 +603,7 @@ const report = () => {
                 lastChatScrollTop = getChatScroll();
                 if (chatScroller === window) window.scrollBy({ top: 800 });
                 else chatScroller.scrollBy({ top: 800 });
-                await sleep(500);
+                await window.geminiSleep(500);
             }
 
             log(` -> Failure: No chip with title "${title}" found anywhere.`);
@@ -667,7 +620,7 @@ const report = () => {
                 chip = targetElement;
                 // Scroll it into view just in case
                 chip.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                await sleep(500);
+                await window.geminiSleep(500);
             } else {
                 log(`targetElement is null or disconnected. Falling back to findChipByTitle for "${targetTitle}".`);
                 chip = await findChipByTitle(targetTitle);
@@ -677,13 +630,13 @@ const report = () => {
             if (!chip) {
                 log(`Chip "${targetTitle}" not found. Re-opening files panel...`);
                 clearStuckOverlays(true);
-                await sleep(300);
+                await window.geminiSleep(300);
 
                 const actionMenuBtn = document.querySelector(SELECTORS.ACTIONS_MENU_BUTTON);
                 if (actionMenuBtn) {
                     robustClick(actionMenuBtn);
                     try {
-                        const menu = await waitForElement(SELECTORS.MENU_PANEL, document, 5000);
+                        const menu = await window.geminiWaitForElement(SELECTORS.MENU_PANEL, document, 5000);
                         let filesMenuItem = menu.querySelector(SELECTORS.FILES_MENU_ITEM);
                         if (!filesMenuItem) {
                             const items = Array.from(menu.querySelectorAll('.mat-mdc-menu-item, button[role="menuitem"]'));
@@ -695,7 +648,7 @@ const report = () => {
 
                         if (filesMenuItem) {
                             robustClick(filesMenuItem);
-                            await sleep(reopenDelay * 1000 + 1000);
+                            await window.geminiSleep(reopenDelay * 1000 + 1000);
                             chip = await findChipByTitle(targetTitle);
                         }
                     } catch (err) {
@@ -710,7 +663,7 @@ const report = () => {
 
             log(`--- Start processing artifact: "${targetTitle}" ---`);
             chip.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            await sleep(500);
+            await window.geminiSleep(500);
 
             if (cancelExportRequested) return { status: 'cancelled', reason: 'user-cancelled', title: targetTitle };
 
@@ -718,14 +671,14 @@ const report = () => {
             chip.click();
 
             log('Waiting for canvas to load...');
-            await sleep(canvasInitDelay * 1000);
+            await window.geminiSleep(canvasInitDelay * 1000);
 
             if (cancelExportRequested) return { status: 'cancelled', reason: 'user-cancelled', title: targetTitle };
 
             try {
                 log('Attempting to click Share button...');
-                const shareBtn = await waitForElement(SELECTORS.SHARE_BUTTON, document, 5000);
-                await sleep(500);
+                const shareBtn = await window.geminiWaitForElement(SELECTORS.SHARE_BUTTON, document, 5000);
+                await window.geminiSleep(500);
                 shareBtn.click();
                 log('Share button clicked.');
 
@@ -743,7 +696,7 @@ const report = () => {
                         });
 
                     if (exportBtn) break;
-                    await sleep(250);
+                    await window.geminiSleep(250);
                     exportRetries++;
                 }
 
@@ -756,7 +709,7 @@ const report = () => {
                 const exportMenu = exportBtn.closest(SELECTORS.MENU_PANEL) || document.querySelector(SELECTORS.MENU_PANEL);
                 const startPromise = waitForExportStart(exportBtn, exportMenu);
 
-                await sleep(500);
+                await window.geminiSleep(500);
                 exportBtn.click();
                 log('Export to Docs button clicked. Waiting for start signal...');
 
@@ -775,7 +728,7 @@ const report = () => {
                 const waitEnd = Date.now() + (exportWaitSeconds * 1000);
                 while (Date.now() < waitEnd) {
                      if (cancelExportRequested) break;
-                     await sleep(500);
+                     await window.geminiSleep(500);
                 }
 
                 dismissSnackbars();
@@ -785,12 +738,12 @@ const report = () => {
                 if (closeBtn) {
                     log(`[Verify] Canvas close button found. Clicking to close canvas...`);
                     robustClick(closeBtn);
-                    await sleep(1000);
+                    await window.geminiSleep(1000);
 
                     const sidebarToggle = document.querySelector(SELECTORS.FILES_MENU_ITEM) || document.querySelector('button[mattooltip="Files in this chat"], button[aria-label="Files in this chat"]');
                     if (sidebarToggle) {
                         robustClick(sidebarToggle);
-                        await sleep(500);
+                        await window.geminiSleep(500);
                     }
 
                     clearStuckOverlays(false);
@@ -826,7 +779,7 @@ const report = () => {
                             break;
                         }
                     }
-                    await sleep(500);
+                    await window.geminiSleep(500);
                 }
 
                 if (!ackReceived) {
@@ -930,7 +883,7 @@ const report = () => {
                 } else {
                     showIndicator('📭 コピーする画像がありませんでした', false, false);
                 }
-                await sleep(2000); // Wait a bit so the user can read the result before exporting starts
+                await window.geminiSleep(2000); // Wait a bit so the user can read the result before exporting starts
             }
 
             const progressText = (req.currentIndex !== undefined && req.totalItems !== undefined)
