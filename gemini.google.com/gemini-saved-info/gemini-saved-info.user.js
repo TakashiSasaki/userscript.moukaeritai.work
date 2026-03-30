@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.16
+// @version      0.2.17
 // @lastModified 2026-03-30
 // @description  Adds serial numbers and copy buttons to custom instructions on Gemini.
 // @author       Takashi Sasaki
@@ -58,26 +58,6 @@ const report = () => {
     const COPY_ALL_BUTTON_ID = 'userscript-gemini-saved-info-copy-all-button';
     let instructionsObserver = null;
 
-    /**
-     * Creates or updates the always-visible floating version badge.
-     */
-    function updateVersionBadge(isActive) {
-        let badge = document.getElementById('gsi-version-indicator');
-        if (!badge) {
-            badge = document.createElement('div');
-            badge.id = 'gsi-version-indicator';
-            badge.className = 'gus-panel';
-            document.body.appendChild(badge);
-        }
-        const version = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '?';
-        const statusText = isActive ? '📋 Active' : '📋';
-        badge.title = 'Gemini Saved Info Helper';
-        badge.textContent = '';
-        const vSpan = document.createElement('span');
-        vSpan.className = 'gus-version';
-        vSpan.textContent = `v${version} ${statusText}`;
-        badge.appendChild(vSpan);
-    }
 
     /**
      * Shows a toast notification.
@@ -251,8 +231,36 @@ const report = () => {
 
     /**
      * Main observer to watch for page navigation.
+     * Scope: document.body, childList + subtree — but debounced to prevent
+     * the observer from re-firing on its own DOM changes (infinite loop).
      */
-    const pageObserver = new MutationObserver(() => {
+    let lastIsActive = null; // Track state to avoid redundant DOM updates
+
+    /**
+     * Creates or updates the always-visible floating version badge.
+     * Only updates the DOM when the active state actually changes.
+     */
+    function updateVersionBadge(isActive) {
+        if (lastIsActive === isActive) return; // No change → skip DOM update
+        lastIsActive = isActive;
+
+        let badge = document.getElementById('gsi-version-indicator');
+        if (!badge) {
+            badge = document.createElement('div');
+            badge.id = 'gsi-version-indicator';
+            badge.className = 'gus-panel';
+            document.body.appendChild(badge);
+        }
+        const version = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '?';
+        badge.title = 'Gemini Saved Info Helper';
+        badge.textContent = '';
+        const vSpan = document.createElement('span');
+        vSpan.className = 'gus-version';
+        vSpan.textContent = isActive ? `v${version} 📋 Active` : `v${version} 📋`;
+        badge.appendChild(vSpan);
+    }
+
+    function checkAndApply() {
         const onTargetPage = window.location.href.startsWith(TARGET_PAGE_URL);
         const memoriesSection = document.querySelector('div[data-test-id="memories-section"]');
 
@@ -265,11 +273,31 @@ const report = () => {
             updateVersionBadge(false);
             stopInstructionsObserver();
         }
+    }
+
+    // Prefer Navigation API for SPA navigation (no DOM side effects)
+    if (window.navigation) {
+        window.navigation.addEventListener('navigatesuccess', () => {
+            checkAndApply();
+        });
+    }
+
+    // Debounced MutationObserver as fallback / for waiting for memories-section to appear
+    let debounceTimer = null;
+    const pageObserver = new MutationObserver(() => {
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            debounceTimer = null;
+            checkAndApply();
+        }, 200);
     });
 
-    pageObserver.observe(document.body, { childList: true, subtree: true });
+    // Observe only childList changes on body (not subtree) for top-level Angular route changes,
+    // PLUS observe the memories-section container when on target page — but NOT from pageObserver.
+    // This narrow target avoids pageObserver triggering on badge/toast child mutations.
+    pageObserver.observe(document.body, { childList: true });
 
     // Initial check on load
-    updateVersionBadge(window.location.href.startsWith(TARGET_PAGE_URL));
+    checkAndApply();
 
 })();
