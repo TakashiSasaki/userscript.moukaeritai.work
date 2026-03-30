@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.8
+// @version      0.3.9
 // @lastModified 2026-03-30
 // @description  Adds a 1-click floating button with shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
@@ -13,7 +13,7 @@
 // @grant        GM_info
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @grant        GM_RESOURCEText
+// @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
 // ==/UserScript==
