@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.5
+// @version      0.2.6
 // @description  Injects a prompt into Gemini via an external custom event.
-// @lastModified 2026-03-30
+// @lastModified 2026-03-31
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
 // @match        https://gemini.google.com/*
@@ -308,7 +308,7 @@ const report = () => {
                 const title = document.createElement('span');
                 title.className = 'gus-version';
                 const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '';
-                title.textContent = scriptVersion ? `${gusEmoji}v${scriptVersion}` : 'Prompt Injector';
+                title.textContent = scriptVersion ? `💉 ${scriptVersion} ${gusEmoji}` : 'Prompt Injector';
                 title.title = 'Gemini Prompt Injector';
 
                 const minBtn = document.createElement('button');

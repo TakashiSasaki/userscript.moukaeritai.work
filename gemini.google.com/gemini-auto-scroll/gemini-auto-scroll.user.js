@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.47
-// @lastModified 2026-03-30
+// @version      0.2.48
+// @lastModified 2026-03-31
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -231,7 +231,7 @@ const report = () => {
                     <button class="auto-scroll-btn">▶️ Start Auto-Scroll</button>
                     <div class="panel-info">
                         <span class="gtc-badge">0 items</span>
-                        <span class="version-badge gus-version" title="Gemini Auto-Scroll">${gusEmoji}v${GM_info.script.version}</span>
+                        <span class="version-badge gus-version" title="Gemini Auto-Scroll">📜 ${GM_info.script.version} ${gusEmoji}</span>
                     </div>
                 `, policy);
 

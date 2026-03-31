@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.20
-// @lastModified 2026-03-30
+// @version      0.2.21
+// @lastModified 2026-03-31
 // @description  Adds serial numbers and copy buttons to custom instructions on Gemini.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -263,7 +263,7 @@ const report = () => {
                 badge.textContent = '';
                 const vSpan = document.createElement('span');
                 vSpan.className = 'gus-version';
-                vSpan.textContent = isActive ? `${gusEmoji}v${version} 📋 Active` : `${gusEmoji}v${version} 📋`;
+                vSpan.textContent = isActive ? `📋 ${version} ${gusEmoji} Active` : `📋 ${version} ${gusEmoji}`;
                 badge.appendChild(vSpan);
             }
 

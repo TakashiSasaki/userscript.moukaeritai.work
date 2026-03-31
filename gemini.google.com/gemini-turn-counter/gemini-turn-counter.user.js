@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.45
-// @lastModified 2026-03-30
+// @version      0.4.46
+// @lastModified 2026-03-31
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -328,13 +328,13 @@ const report = () => {
                     const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.4.31';
 
                     if (iconDiv) {
-                        iconDiv.textContent = `${gusEmoji}v${scriptVersion} | U:${userTurnsCount} M:${modelTurnsCount} A:${totalArtifacts} L:${totalLinkCards}`;
+                        iconDiv.textContent = `📊 ${scriptVersion} ${gusEmoji} | U:${userTurnsCount} M:${modelTurnsCount} A:${totalArtifacts} L:${totalLinkCards}`;
                         iconDiv.title = 'Gemini Turn Counter';
                     }
 
                     if (!contentDiv.hasAttribute('data-gtc-initialized')) {
                         const template = GM_getResourceText('templateHTML');
-                        window.geminiSetInnerHTML(contentDiv, template.replace('{{scriptVersion}}', `${gusEmoji}${scriptVersion}`), policy);
+                        window.geminiSetInnerHTML(contentDiv, template.replace('{{scriptVersion}}', `📊 ${scriptVersion} ${gusEmoji}`), policy);
                         contentDiv.setAttribute('data-gtc-initialized', 'true');
 
                         // --- Initial Event Binding (Only Once) ---
@@ -644,7 +644,7 @@ const report = () => {
                 container.className = 'gus-panel';
 
                 window.geminiSetInnerHTML(container, `
-                    <div class="gtc-icon gus-version">Loading...</div>
+                    <span class="gtc-icon gus-version">Loading...</span>
                     <div class="gtc-content">Loading...</div>
                 `, policy);
                 document.body.appendChild(container);
