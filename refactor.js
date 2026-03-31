@@ -84,11 +84,6 @@ files.forEach(file => {
 
             const newContent = [...preamble, ...newBody, ...tail].join('\n');
             fs.writeFileSync(file, newContent, 'utf8');
-            console.log('Processed', file);
-        } else {
-            console.log('Could not find IIFE end in', file);
         }
-    } else {
-        console.log('Could not find injection point in', file);
     }
 });
