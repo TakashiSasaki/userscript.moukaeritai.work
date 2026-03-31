@@ -11,7 +11,10 @@
     --gus-panel-color: #333;
     --gus-version-font: monospace;
     --gus-version-size: 10px;
-    --gus-version-color: #555;
+    --gus-version-color: #000;
+    --gus-version-bg: rgba(255, 230, 235, 0.9); /* Slightly whitish pink */
+    --gus-version-radius: 4px;
+    --gus-version-padding: 2px 4px;
 }
 
 /* Common panel base class */
@@ -28,15 +31,19 @@
 }
 
 /* Common version badge */
-.gus-version {
+span.gus-version {
     font-size: var(--gus-version-size) !important;
     color: var(--gus-version-color) !important;
+    background-color: var(--gus-version-bg) !important;
     font-family: var(--gus-version-font) !important;
     cursor: grab !important;
     user-select: none !important;
     line-height: 1 !important;
+    padding: var(--gus-version-padding) !important;
+    border-radius: var(--gus-version-radius) !important;
+    display: inline-block !important;
 }
 
-.gus-version:active {
+span.gus-version:active {
     cursor: grabbing !important;
 }

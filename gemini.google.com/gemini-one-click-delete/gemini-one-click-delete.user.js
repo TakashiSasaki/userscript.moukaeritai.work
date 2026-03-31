@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.15
-// @lastModified 2026-03-30
+// @version      0.3.16
+// @lastModified 2026-03-31
 // @description  Adds a 1-click floating button with shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -284,7 +284,7 @@ const report = () => {
                         </svg>
                         Delete Chat
                     </button>
-                    <span class="version-badge gus-version" title="Gemini 1-Click Delete Conversation">${gusEmoji}v${version}</span>
+                    <span class="version-badge gus-version" title="Gemini 1-Click Delete Conversation">🗑️ ${version} ${gusEmoji}</span>
                 `, policy);
 
                 document.body.appendChild(panel);

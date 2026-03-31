@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini History Loader
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.14
-// @lastModified 2026-03-30
+// @version      0.1.15
+// @lastModified 2026-03-31
 // @description  A utility script that forces Gemini to load the entire chat history by programmatically scrolling to the top. Features a compact floating UI that expands when loading history.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -132,7 +132,7 @@ const report = () => {
                 uiPanel.id = 'gemini-history-loader-panel';
                 uiPanel.className = 'gus-panel';
 
-                const templateStr = GM_getResourceText('templateHTML').replace(/{{scriptVersion}}/g, `${gusEmoji}${GM_info.script.version}`);
+                const templateStr = GM_getResourceText('templateHTML').replace(/{{scriptVersion}}/g, `🔄 ${GM_info.script.version} ${gusEmoji}`);
                 window.geminiSetInnerHTML(uiPanel, templateStr, policy);
                 document.body.appendChild(uiPanel);
 

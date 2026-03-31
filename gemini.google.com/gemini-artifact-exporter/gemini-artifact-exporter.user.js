@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.27
-// @lastModified 2026-03-30
+// @version      0.4.28
+// @lastModified 2026-03-31
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -629,7 +629,7 @@ const report = () => {
                 panel.className = 'gus-panel';
                 panel.style.display = 'flex'; // Always visible (minimal state)
 
-                const templateStr = GM_getResourceText('templateHTML').replace(/{{scriptVersion}}/g, `${gusEmoji}${GM_info.script.version}`);
+                const templateStr = GM_getResourceText('templateHTML').replace(/📦 {{scriptVersion}}/g, `📦 ${GM_info.script.version} ${gusEmoji}`);
                 window.geminiSetInnerHTML(panel, templateStr, policy);
                 document.body.appendChild(panel);
                 log('Artifact Exporter panel attached to document body.');

@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Profile Badge
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.29
-// @lastModified 2026-03-30
+// @version      0.1.30
+// @lastModified 2026-03-31
 // @description  Add a custom text/emoji badge to the user profile area on Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki

@@ -4,7 +4,7 @@
 (function () {
     'use strict';
 
-    const EMOJIS = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫'];
+    const EMOJIS = ['❶', '❷', '❸', '❹', '❺', '❻', '❼', '❽', '❾', '❿', '⓫', '⓬', '⓭', '⓮', '⓯', '⓰', '⓱', '⓲', '⓳', '⓴'];
 
     /**
      * Registers a Gemini userscript and assigns it a load-order emoji number.
