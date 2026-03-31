@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Canvas Exporter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.7.2
+// @version      0.7.3
 // @description  ChatGPTの会話ページでキャンバスの内容をエクスポートする
 // @author       Takashi Sasaki
 // @match        https://chatgpt.com/*
@@ -16,7 +16,11 @@
 (function () {
     'use strict';
 
-    const VERSION = '0.7.2';
+    const VERSION = '0.7.3';
+
+    // 画像タイプの正規表現
+    const IMAGE_TYPE_REGEX = /jpe?g|webp|gif/i;
+    const IMAGE_EXT_REGEX = /\.(jpe?g|webp|gif)(?:$|[?#])/i;
 
     // セレクタの定義
     const CANVAS_MESSAGE_SELECTOR = 'div[id^="textdoc-message-"]';
@@ -175,13 +179,17 @@
                 fetchImageData(src).then(result => {
                     let ext = 'png'; // デフォルト
                     if (result.type) {
-                        if (result.type.includes('jpeg') || result.type.includes('jpg')) ext = 'jpg';
-                        else if (result.type.includes('webp')) ext = 'webp';
-                        else if (result.type.includes('gif')) ext = 'gif';
+                        const match = IMAGE_TYPE_REGEX.exec(result.type);
+                        if (match) {
+                            const m = match[0].toLowerCase();
+                            ext = m === 'jpeg' ? 'jpg' : m;
+                        }
                     } else {
-                        if (src.includes('.jpg') || src.includes('.jpeg')) ext = 'jpg';
-                        else if (src.includes('.webp')) ext = 'webp';
-                        else if (src.includes('.gif')) ext = 'gif';
+                        const match = IMAGE_EXT_REGEX.exec(src);
+                        if (match) {
+                            const m = match[1].toLowerCase();
+                            ext = m === 'jpeg' ? 'jpg' : m;
+                        }
                     }
 
                     const imgName = `images/image_${currentImgId}.${ext}`;

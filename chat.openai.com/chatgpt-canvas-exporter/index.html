@@ -167,6 +167,24 @@
             width: 24px;
             height: 24px;
             animation: bounce 2s infinite;
+            flex-shrink: 0;
+        }
+
+        .version-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-left: 12px;
+            text-align: left;
+            line-height: 1.2;
+        }
+
+        .version-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1px 4px;
+            border-radius: 4px;
         }
 
         @keyframes bounce {
@@ -244,13 +262,17 @@
             <div class="install-section">
                 <!-- 直接インストールリンク -->
                 <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-canvas-exporter/chatgpt-canvas-exporter.user.js"
-                    class="install-btn">
+                    class="install-btn" data-script-name="ChatGPT Canvas Exporter" data-version="0.7.3">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                         stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
-                    ユーザースクリプトをインストールする
+                    <span>ユーザースクリプトをインストールする</span>
+                    <div class="version-info">
+                        <span class="version-badge latest-version">v0.7.3</span>
+                        <span class="version-badge installed-version" style="display: none;"></span>
+                    </div>
                 </a>
                 <p class="requirements">ご利用には <a href="https://www.tampermonkey.net/" target="_blank">Tampermonkey</a>
                     もしくは <a href="https://violentmonkey.github.io/" target="_blank">Violentmonkey</a> 拡張機能が必要です。</p>
