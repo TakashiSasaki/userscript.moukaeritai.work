@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Search Snippet Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.16
-// @lastModified 2026-03-31
+// @version      0.1.17
+// @lastModified 2026-04-01
 // @description  Add sequential numbers to Gemini search result conversation titles.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
