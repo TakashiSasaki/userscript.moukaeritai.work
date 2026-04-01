@@ -143,39 +143,69 @@
     };
 
     /**
-     * Makes a panel element draggable using a specific handle element.
-     * Automatically saves the position if GM_setValue is provided along with a storageKey.
+     * Makes a panel element draggable and persists its position using localStorage.
+     * Eliminates the need for GM_setValue/GM_getValue dependencies for panel positioning.
+     *
      * @param {HTMLElement} panel - The panel element to be moved.
-     * @param {HTMLElement} handle - The handle element used for dragging (usually a header or version badge).
-     * @param {Function} [gmSetValue] - The GM_setValue function to persist position (optional).
-     * @param {string} [storageKey] - The key to use when saving the position.
+     * @param {HTMLElement} handle - The handle element used for dragging (e.g., version badge).
+     * @param {string} storageKey - A unique string key for localStorage (e.g., 'gus-pos-scriptname').
+     * @param {Object} [defaultPos={ right: '20px', bottom: '20px' }] - Default CSS position if no saved state exists.
      */
-    window.geminiMakePanelDraggable = function (panel, handle, gmSetValue, storageKey) {
+    window.geminiSetupDraggablePanel = function (panel, handle, storageKey, defaultPos = { right: '20px', bottom: '20px' }) {
+        if (!panel || !handle || !storageKey) return;
+
+        // 1. Restore position from LocalStorage
+        try {
+            const savedPosRaw = localStorage.getItem(storageKey);
+            if (savedPosRaw) {
+                const savedPos = JSON.parse(savedPosRaw);
+                if (savedPos && savedPos.top !== undefined && savedPos.left !== undefined) {
+                    panel.style.top = savedPos.top;
+                    panel.style.left = savedPos.left;
+                    // Reset relative positioning
+                    panel.style.right = 'auto';
+                    panel.style.bottom = 'auto';
+                } else {
+                    Object.assign(panel.style, defaultPos);
+                }
+            } else {
+                Object.assign(panel.style, defaultPos);
+            }
+        } catch (e) {
+            Object.assign(panel.style, defaultPos);
+        }
+
+        // 2. Setup Drag Logic
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
-        handle.onmousedown = dragMouseDown;
+        // Use grab cursor by default
+        handle.style.cursor = 'grab';
 
-        function dragMouseDown(e) {
+        handle.onmousedown = function dragMouseDown(e) {
             e = e || window.event;
-            // Prevent default unless it's an input element to avoid text selection issues while dragging
-            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-                e.preventDefault();
+            // Ignore interactive elements
+            if (['INPUT', 'TEXTAREA', 'BUTTON', 'SELECT'].includes(e.target.tagName)) {
+                return;
             }
+            e.preventDefault();
             pos3 = e.clientX;
             pos4 = e.clientY;
 
-            // Convert right/bottom positioning to absolute left/top for dragging
-            if (panel.style.right || panel.style.bottom) {
+            // Convert relative positioning to absolute before dragging
+            if (panel.style.right && panel.style.right !== 'auto' || panel.style.bottom && panel.style.bottom !== 'auto') {
                 panel.style.left = panel.offsetLeft + 'px';
                 panel.style.top = panel.offsetTop + 'px';
-                panel.style.right = '';
-                panel.style.bottom = '';
+                panel.style.right = 'auto';
+                panel.style.bottom = 'auto';
             }
 
             document.onmouseup = closeDragElement;
             document.onmousemove = elementDrag;
+
+            // Visual feedback
             handle.style.cursor = 'grabbing';
-        }
+            panel.style.transition = 'none'; // Disable smooth transitions during drag
+        };
 
         function elementDrag(e) {
             e = e || window.event;
@@ -185,11 +215,13 @@
             pos3 = e.clientX;
             pos4 = e.clientY;
 
-            // Constrain within window bounds (rudimentary)
             let newTop = panel.offsetTop - pos2;
             let newLeft = panel.offsetLeft - pos1;
 
-            // Optional: add bounds checking if needed, but original code didn't strictly enforce it during drag in all cases.
+            // Basic window boundary constraints
+            newTop = Math.max(0, Math.min(newTop, window.innerHeight - panel.offsetHeight));
+            newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - panel.offsetWidth));
+
             panel.style.top = newTop + "px";
             panel.style.left = newLeft + "px";
         }
@@ -197,15 +229,17 @@
         function closeDragElement() {
             document.onmouseup = null;
             document.onmousemove = null;
-            handle.style.cursor = 'move';
-            // handle.style.cursor is overridden by css sometimes, grabbing is inline, so resetting to '' might be better or 'move'/'grab' based on original CSS.
             handle.style.cursor = 'grab';
+            panel.style.transition = ''; // Restore transitions
 
-            if (gmSetValue && storageKey) {
-                gmSetValue(storageKey, {
+            // 3. Save to LocalStorage
+            try {
+                localStorage.setItem(storageKey, JSON.stringify({
                     top: panel.style.top,
                     left: panel.style.left
-                });
+                }));
+            } catch (e) {
+                console.warn('[GUS] Failed to save panel position to localStorage', e);
             }
         }
     };

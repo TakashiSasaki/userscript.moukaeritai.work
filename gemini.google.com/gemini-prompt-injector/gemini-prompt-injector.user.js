@@ -8,8 +8,6 @@
 // @match        https://userscript.moukaeritai.work/*
 // @match        https://gemini.google.com/*
 // @grant        GM_info
-// @grant        GM_setValue
-// @grant        GM_getValue
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
@@ -88,40 +86,7 @@ const report = () => {
                     if (pos.right && !pos.left) ui.style.right = pos.right;
 
                     // Make draggable
-                    let isDragging = false, startX, startY, startLeft, startTop;
-                    ui.addEventListener('mousedown', (e) => {
-                        isDragging = true;
-                        startX = e.clientX;
-                        startY = e.clientY;
-                        const rect = ui.getBoundingClientRect();
-                        startLeft = rect.left;
-                        startTop = rect.top;
-                        ui.style.right = 'auto'; // Disable right anchoring
-                        ui.style.bottom = 'auto'; // Disable bottom anchoring
-                        e.preventDefault();
-                    });
-
-                    document.addEventListener('mousemove', (e) => {
-                        if (!isDragging) return;
-                        const dx = e.clientX - startX;
-                        const dy = e.clientY - startY;
-                        ui.style.left = (startLeft + dx) + 'px';
-                        ui.style.top = (startTop + dy) + 'px';
-                    });
-
-                    document.addEventListener('mouseup', () => {
-                        if (isDragging) {
-                            isDragging = false;
-                            try {
-                                if (typeof GM_setValue !== 'undefined') {
-                                    GM_setValue('userscript-status-ui-pos', JSON.stringify({
-                                        top: ui.style.top,
-                                        left: ui.style.left
-                                    }));
-                                }
-                            } catch { /* ignore */ }
-                        }
-                    });
+                    window.geminiSetupDraggablePanel(ui, ui, 'userscript-status-ui-pos', { right: '20px', top: '100px' });
 
                     document.body.appendChild(ui);
                 }
@@ -395,46 +360,7 @@ const report = () => {
                 document.body.appendChild(uiContainer);
 
                 // Drag functionality
-                let isDragging = false;
-                let startX, startY, initialX, initialY;
-
-                title.addEventListener('mousedown', (e) => {
-                    isDragging = true;
-                    startX = e.clientX;
-                    startY = e.clientY;
-                    initialX = uiContainer.offsetLeft;
-                    initialY = uiContainer.offsetTop;
-                    title.style.cursor = 'grabbing';
-                    document.addEventListener('mousemove', onMouseMove);
-                    document.addEventListener('mouseup', onMouseUp);
-                });
-
-                function onMouseMove(e) {
-                    if (!isDragging) return;
-                    let newX = initialX + (e.clientX - startX);
-                    let newY = initialY + (e.clientY - startY);
-
-                    // Keep within bounds
-                    const width = uiContainer.offsetWidth;
-                    const height = uiContainer.offsetHeight;
-                    if (newX < 0) newX = 0;
-                    if (newY < 0) newY = 0;
-                    if (newX + width > window.innerWidth) newX = window.innerWidth - width;
-                    if (newY + height > window.innerHeight) newY = window.innerHeight - height;
-
-                    uiContainer.style.left = `${newX}px`;
-                    uiContainer.style.top = `${newY}px`;
-                }
-
-                function onMouseUp() {
-                    if (isDragging) {
-                        isDragging = false;
-                        document.removeEventListener('mousemove', onMouseMove);
-                        document.removeEventListener('mouseup', onMouseUp);
-                        GM_setValue('gpi_ui_x', uiContainer.offsetLeft);
-                        GM_setValue('gpi_ui_y', uiContainer.offsetTop);
-                    }
-                }
+                window.geminiSetupDraggablePanel(uiContainer, title, 'gpi_ui_pos', { right: '20px', bottom: '180px' });
 
                 // Minimize functionality
                 minBtn.onclick = () => {

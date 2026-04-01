@@ -190,7 +190,7 @@
                             <input type="checkbox" class="auto-switch-checkbox">
                             Auto
                         </label>
-                        <span class="version-badge gus-version" title="Gemini Auto-Select Next">${gusEmoji}v${GM_info.script.version}</span>
+                        <span class="version-badge gus-version" title="Gemini Auto-Select Next">⏭️ ${GM_info.script.version} ${gusEmoji}</span>
                     </div>
                     <button class="manual-next-btn" title="Explicitly skip to the next conversation">⏭️ Next</button>
                 `, policy);
@@ -207,43 +207,14 @@
                     selectNextConversation(0, true);
                 });
 
-                // Position persistence
-                const savedPos = GM_getValue(CONSTANTS.PANEL_POSITION_KEY, { top: '80px', right: '20px' });
-                panel.style.top = savedPos.top;
-                if (savedPos.left) panel.style.left = savedPos.left;
-                else panel.style.right = savedPos.right;
-
                 requestAnimationFrame(() => {
                     panel.classList.add('ready');
                 });
 
-                let isDragging = false;
-                let offset = { x: 0, y: 0 };
-
                 const handle = panel.querySelector('.version-badge');
-                handle.addEventListener('mousedown', (e) => {
-                    e.stopPropagation();
-                    isDragging = true;
-                    offset.x = e.clientX - panel.offsetLeft;
-                    offset.y = e.clientY - panel.offsetTop;
-                    panel.style.transition = 'none';
-                });
-
-                document.addEventListener('mousemove', (e) => {
-                    if (!isDragging) return;
-                    e.preventDefault();
-                    panel.style.right = 'auto';
-                    panel.style.left = (e.clientX - offset.x) + 'px';
-                    panel.style.top = (e.clientY - offset.y) + 'px';
-                });
-
-                document.addEventListener('mouseup', () => {
-                    if (isDragging) {
-                        isDragging = false;
-                        panel.style.transition = '';
-                        GM_setValue(CONSTANTS.PANEL_POSITION_KEY, { top: panel.style.top, left: panel.style.left });
-                    }
-                });
+                if (handle) {
+                    window.geminiSetupDraggablePanel(panel, handle, CONSTANTS.PANEL_POSITION_KEY, { top: '80px', right: '20px' });
+                }
 
                 updatePanelUI();
             }
