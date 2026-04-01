@@ -657,16 +657,7 @@ const report = () => {
 
                 const versionHandle = panel.querySelector('.gae-version-handle');
                 if (versionHandle) {
-                    window.geminiMakePanelDraggable(panel, versionHandle, typeof GM_setValue !== 'undefined' ? GM_setValue : null, PANEL_POSITION_KEY);
-                }
-
-                const savedPosition = GM_getValue(PANEL_POSITION_KEY, null);
-                if (savedPosition && savedPosition.top && savedPosition.left) {
-                    panel.style.top = savedPosition.top;
-                    panel.style.left = savedPosition.left;
-                } else {
-                    panel.style.right = '20px';
-                    panel.style.bottom = '20px';
+                    window.geminiSetupDraggablePanel(panel, versionHandle, PANEL_POSITION_KEY, { right: '20px', bottom: '20px' });
                 }
             }
 

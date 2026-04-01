@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page Dragging</title>
+    <style id="gemini-common-styles">
+        /* Copied from gemini-common.css */
+        :root {
+            --gus-panel-bg: rgba(255, 182, 193, 0.9); /* LightPink */
+            --gus-panel-radius: 12px;
+            --gus-panel-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            --gus-panel-border: 1px solid rgba(0, 0, 0, 0.08);
+            --gus-panel-backdrop: blur(8px);
+            --gus-panel-font: 'Outfit', 'Google Sans', 'Roboto', sans-serif;
+            --gus-panel-color: #333;
+            --gus-version-font: monospace;
+            --gus-version-size: 10px;
+            --gus-version-color: #000;
+            --gus-version-bg: rgba(255, 230, 235, 0.9); /* Slightly whitish pink */
+            --gus-version-radius: 4px;
+            --gus-version-padding: 2px 4px;
+        }
+        .gus-panel {
+            background-color: var(--gus-panel-bg) !important;
+            border-radius: var(--gus-panel-radius) !important;
+            box-shadow: var(--gus-panel-shadow) !important;
+            border: var(--gus-panel-border) !important;
+            backdrop-filter: var(--gus-panel-backdrop) !important;
+            -webkit-backdrop-filter: var(--gus-panel-backdrop) !important;
+            font-family: var(--gus-panel-font) !important;
+            color: var(--gus-panel-color) !important;
+            user-select: none !important;
+            position: fixed;
+            width: 150px;
+        }
+        span.gus-version {
+            font-size: var(--gus-version-size) !important;
+            color: var(--gus-version-color) !important;
+            background-color: var(--gus-version-bg) !important;
+            font-family: var(--gus-version-font) !important;
+            cursor: grab !important;
+            user-select: none !important;
+            line-height: 1 !important;
+            padding: var(--gus-version-padding) !important;
+            border-radius: var(--gus-version-radius) !important;
+            display: inline-block !important;
+        }
+    </style>
+</head>
+<body style="background: #f0f0f0;">
+    <div id="test-panel" class="gus-panel" style="padding: 20px;">
+        <div style="margin-bottom: 10px;">Test Panel</div>
+        <span id="test-handle" class="gus-version" title="Gemini Test Script">📦 1.2.3 ❶</span>
+    </div>
+
+    <script>
+        // Copy the common dragging script
+        window.geminiSetupDraggablePanel = function (panel, handle, storageKey, defaultPos = { right: '20px', bottom: '20px' }) {
+        if (!panel || !handle || !storageKey) return;
+
+        // 1. Restore position from LocalStorage
+        try {
+            const savedPosRaw = localStorage.getItem(storageKey);
+            if (savedPosRaw) {
+                const savedPos = JSON.parse(savedPosRaw);
+                if (savedPos && savedPos.top !== undefined && savedPos.left !== undefined) {
+                    panel.style.top = savedPos.top;
+                    panel.style.left = savedPos.left;
+                    // Reset relative positioning
+                    panel.style.right = 'auto';
+                    panel.style.bottom = 'auto';
+                } else {
+                    Object.assign(panel.style, defaultPos);
+                }
+            } else {
+                Object.assign(panel.style, defaultPos);
+            }
+        } catch (e) {
+            Object.assign(panel.style, defaultPos);
+        }
+
+        // 2. Setup Drag Logic
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+        // Use grab cursor by default
+        handle.style.cursor = 'grab';
+
+        handle.onmousedown = function dragMouseDown(e) {
+            e = e || window.event;
+            // Ignore interactive elements
+            if (['INPUT', 'TEXTAREA', 'BUTTON', 'SELECT'].includes(e.target.tagName)) {
+                return;
+            }
+            e.preventDefault();
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+
+            // Convert relative positioning to absolute before dragging
+            if (panel.style.right && panel.style.right !== 'auto' || panel.style.bottom && panel.style.bottom !== 'auto') {
+                panel.style.left = panel.offsetLeft + 'px';
+                panel.style.top = panel.offsetTop + 'px';
+                panel.style.right = 'auto';
+                panel.style.bottom = 'auto';
+            }
+
+            document.onmouseup = closeDragElement;
+            document.onmousemove = elementDrag;
+
+            // Visual feedback
+            handle.style.cursor = 'grabbing';
+            panel.style.transition = 'none'; // Disable smooth transitions during drag
+        };
+
+        function elementDrag(e) {
+            e = e || window.event;
+            e.preventDefault();
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+
+            let newTop = panel.offsetTop - pos2;
+            let newLeft = panel.offsetLeft - pos1;
+
+            // Basic window boundary constraints
+            newTop = Math.max(0, Math.min(newTop, window.innerHeight - panel.offsetHeight));
+            newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - panel.offsetWidth));
+
+            panel.style.top = newTop + "px";
+            panel.style.left = newLeft + "px";
+        }
+
+        function closeDragElement() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+            handle.style.cursor = 'grab';
+            panel.style.transition = ''; // Restore transitions
+
+            // 3. Save to LocalStorage
+            try {
+                localStorage.setItem(storageKey, JSON.stringify({
+                    top: panel.style.top,
+                    left: panel.style.left
+                }));
+            } catch (e) {
+                console.warn('[GUS] Failed to save panel position to localStorage', e);
+            }
+        }
+    };
+
+    // Initialize
+    window.geminiSetupDraggablePanel(document.getElementById('test-panel'), document.getElementById('test-handle'), 'test-drag-key', { right: '20px', top: '20px' });
+    </script>
+</body>
+</html>

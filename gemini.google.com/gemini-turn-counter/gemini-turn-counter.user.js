@@ -651,79 +651,22 @@ const report = () => {
                 uiContainer = container; // Store reference
 
                 // UI Events
-                let isDragging = false;
-                let startX, startY, startLeft, startTop;
-
-                const startDrag = (e) => {
-                    // Ignore drag if clicking interactive elements
-                    if (e.target.closest('button, input, .gtc-minimize-btn, .gtc-thumbnail')) return;
-
-                    isDragging = false;
-                    startX = e.clientX;
-                    startY = e.clientY;
-                    const rect = container.getBoundingClientRect();
-                    startLeft = rect.left;
-                    startTop = rect.top;
-
-                    const handle = e.target;
-                    if(handle) {
-                        handle.style.cursor = 'grabbing';
-                    }
-
-                    const onMouseMove = (eMove) => {
-                        const dx = eMove.clientX - startX;
-                        const dy = eMove.clientY - startY;
-                        // Threshold to differentiate click vs drag
-                        if (!isDragging && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
-                            isDragging = true;
-                        }
-                        if (isDragging) {
-                            container.style.right = 'auto'; // Disable default right constraint
-                            container.style.left = `${startLeft + dx}px`;
-                            container.style.top = `${startTop + dy}px`;
-                        }
-                    };
-
-                    const onMouseUp = () => {
-                        document.removeEventListener('mousemove', onMouseMove);
-                        document.removeEventListener('mouseup', onMouseUp);
-                        if(handle) {
-                            handle.style.cursor = 'grab';
-                        }
-                        if (isDragging) {
-                            localStorage.setItem('gtc-pos-x', container.style.left);
-                            localStorage.setItem('gtc-pos-y', container.style.top);
-                            // Wait until next tick so the click handler can detect if we were dragging
-                            setTimeout(() => isDragging = false, 0);
-                        }
-                    };
-
-                    document.addEventListener('mousemove', onMouseMove);
-                    document.addEventListener('mouseup', onMouseUp);
-                };
-
                 const iconHandle = container.querySelector('.gtc-icon');
-                if (iconHandle) iconHandle.addEventListener('mousedown', startDrag);
-
-                container.addEventListener('mousedown', (e) => {
-                    if (e.target.classList.contains('gtc-version')) {
-                        startDrag(e);
-                    }
-                });
+                if (iconHandle) {
+                    window.geminiSetupDraggablePanel(container, iconHandle, 'gtc-pos-ui', { right: '20px', top: '160px', left: 'auto' });
+                }
 
                 container.addEventListener('click', (e) => {
-                    if (isDragging) {
-                        // Prevent expanding/collapsing if the user just dragged the panel
-                        e.stopPropagation();
-                        e.preventDefault();
-                        return;
-                    }
+                    // Prevent expanding if clicking on buttons or inputs
+                    if (['INPUT', 'BUTTON', 'TEXTAREA'].includes(e.target.tagName)) return;
 
                     if (e.target.closest('#gtc-minimize-btn')) {
                         container.classList.remove('expanded');
                         localStorage.setItem('gtc-minimized', 'true');
                         e.stopPropagation();
-                    } else if (!container.classList.contains('expanded')) {
+                    } else if (!container.classList.contains('expanded') && !e.target.classList.contains('gtc-icon')) {
+                        // Let clicking the icon (which is the handle) also expand it if not dragging, but
+                        // setupDraggablePanel stops propagation if dragged. We'll rely on simple click.
                         container.classList.add('expanded');
                         localStorage.setItem('gtc-minimized', 'false');
                     }

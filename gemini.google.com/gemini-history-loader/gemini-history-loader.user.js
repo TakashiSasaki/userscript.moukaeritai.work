@@ -9,8 +9,6 @@
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @grant        GM_info
-// @grant        GM_setValue
-// @grant        GM_getValue
 // @grant        GM_addStyle
 // @grant        GM_getResourceText
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
@@ -139,19 +137,9 @@ const report = () => {
                 progressTextEl = uiPanel.querySelector('#ghl-progress-text');
                 statusTextEl = uiPanel.querySelector('#ghl-status-text');
 
-                const versionHandle = uiPanel.querySelector('.ghl-version-handle');
+                const versionHandle = uiPanel.querySelector('.ghl-script-version');
                 if (versionHandle) {
-                    window.geminiMakePanelDraggable(uiPanel, versionHandle, typeof GM_setValue !== 'undefined' ? GM_setValue : null, PANEL_POSITION_KEY);
-                }
-
-                const savedPosition = GM_getValue(PANEL_POSITION_KEY, null);
-                if (savedPosition && savedPosition.top && savedPosition.left) {
-                    uiPanel.style.top = savedPosition.top;
-                    uiPanel.style.left = savedPosition.left;
-                } else {
-                    // Default position, e.g., slightly offset from other scripts
-                    uiPanel.style.right = '20px';
-                    uiPanel.style.top = '100px';
+                    window.geminiSetupDraggablePanel(uiPanel, versionHandle, PANEL_POSITION_KEY, { right: '20px', top: '100px' });
                 }
             }
 

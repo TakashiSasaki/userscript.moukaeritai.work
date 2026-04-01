@@ -243,78 +243,9 @@ const report = () => {
                     toggleAutoScroll();
                 });
 
-                let isDragging = false;
-                let hasDragged = false;
-                let dragOffset = { x: 0, y: 0, startX: 0, startY: 0 };
-
                 const handle = panel.querySelector('.version-badge');
-                const startDrag = (e) => {
-                    if (e.button !== 0 || e.target.closest('button, input')) return;
-                    isDragging = true;
-                    hasDragged = false;
-                    dragOffset.x = e.clientX - panel.offsetLeft;
-                    dragOffset.y = e.clientY - panel.offsetTop;
-                    dragOffset.startX = e.clientX;
-                    dragOffset.startY = e.clientY;
-                    panel.style.transition = 'none';
-                    document.body.style.userSelect = 'none';
-                };
-
-                handle.addEventListener('mousedown', startDrag);
-
-                document.addEventListener('mousemove', (e) => {
-                    if (!isDragging) return;
-                    e.preventDefault();
-
-                    if (!hasDragged && (Math.abs(e.clientX - dragOffset.startX) > 3 || Math.abs(e.clientY - dragOffset.startY) > 3)) {
-                        hasDragged = true;
-                    }
-
-                    if (!hasDragged) return; // Wait until threshold is met to prevent jitter
-
-                    let newX = e.clientX - dragOffset.x;
-                    let newY = e.clientY - dragOffset.y;
-
-                    // Clamp position to be within viewport
-                    newX = Math.max(0, Math.min(newX, window.innerWidth - panel.offsetWidth));
-                    newY = Math.max(0, Math.min(newY, window.innerHeight - panel.offsetHeight));
-
-                    panel.style.left = `${newX}px`;
-                    panel.style.top = `${newY}px`;
-                    panel.style.right = 'auto';
-                });
-
-                document.addEventListener('mouseup', async () => {
-                    if (!isDragging) return;
-                    isDragging = false;
-                    panel.style.transition = '';
-                    document.body.style.userSelect = '';
-                    if (hasDragged) {
-                        const pos = { top: panel.style.top, left: panel.style.left };
-                        await GM_setValue(CONSTANTS.PANEL_POSITION_KEY, pos);
-                        // Delay clearing hasDragged so the click handler can catch it
-                        setTimeout(() => hasDragged = false, 50);
-                    }
-                });
-
-                try {
-                    const savedPos = await GM_getValue(CONSTANTS.PANEL_POSITION_KEY);
-                    if (savedPos && savedPos.top && savedPos.left) {
-                        panel.style.top = savedPos.top;
-                        panel.style.left = savedPos.left;
-                        panel.style.right = 'auto';
-                    } else {
-                        // Default position if none is saved
-                        panel.style.top = '20px';
-                        panel.style.right = '20px';
-                        panel.style.left = 'auto';
-                    }
-                } catch (e) {
-                    console.error('[GeminiAutoScroll] Failed to load panel position.', e);
-                    // Fallback default position
-                    panel.style.top = '20px';
-                    panel.style.right = '20px';
-                    panel.style.left = 'auto';
+                if (handle) {
+                    window.geminiSetupDraggablePanel(panel, handle, CONSTANTS.PANEL_POSITION_KEY, { top: '20px', right: '20px', left: 'auto' });
                 }
 
                 panel.classList.add('ready');

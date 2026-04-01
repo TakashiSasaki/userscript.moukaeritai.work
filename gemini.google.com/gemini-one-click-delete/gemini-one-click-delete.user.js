@@ -13,8 +13,6 @@
 // @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/style.css
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @grant        GM_info
-// @grant        GM_setValue
-// @grant        GM_getValue
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
@@ -80,14 +78,6 @@ const report = () => {
             let keydownListener = null;
             let styleElement = null;
             let isInitialized = false;
-
-            const STORAGE_KEYS = {
-                PANEL_POS_X: 'gemini_delete_panel_pos_x',
-                PANEL_POS_Y: 'gemini_delete_panel_pos_y'
-            };
-
-
-
 
             /**
              * Simulate click event
@@ -289,16 +279,6 @@ const report = () => {
 
                 document.body.appendChild(panel);
 
-                // Position logic
-                let left = GM_getValue(STORAGE_KEYS.PANEL_POS_X, window.innerWidth - 220);
-                let top = GM_getValue(STORAGE_KEYS.PANEL_POS_Y, 80);
-
-                left = Math.max(0, Math.min(left, window.innerWidth - panel.offsetWidth || window.innerWidth));
-                top = Math.max(0, Math.min(top, window.innerHeight - panel.offsetHeight || window.innerHeight));
-
-                panel.style.left = `${left}px`;
-                panel.style.top = `${top}px`;
-
                 // Event listeners
                 const delBtn = panel.querySelector('#gdp-global-delete-btn');
                 delBtn.addEventListener('click', async (e) => {
@@ -317,40 +297,10 @@ const report = () => {
                     }
                 });
 
-                // Drag Logic
                 const handle = panel.querySelector('.version-badge');
-                let isDragging = false;
-                let dragOffset = { x: 0, y: 0 };
-
-                handle.addEventListener('mousedown', (e) => {
-                    if (e.button !== 0) return;
-                    isDragging = true;
-                    dragOffset.x = e.clientX - panel.offsetLeft;
-                    dragOffset.y = e.clientY - panel.offsetTop;
-                    panel.style.transition = 'none';
-                    document.body.style.userSelect = 'none';
-                });
-
-                document.addEventListener('mousemove', (e) => {
-                    if (!isDragging) return;
-                    e.preventDefault();
-
-                    let newX = Math.max(0, Math.min(e.clientX - dragOffset.x, window.innerWidth - panel.offsetWidth));
-                    let newY = Math.max(0, Math.min(e.clientY - dragOffset.y, window.innerHeight - panel.offsetHeight));
-
-                    panel.style.left = `${newX}px`;
-                    panel.style.top = `${newY}px`;
-                    panel.style.right = 'auto'; // Break fixed right position
-                });
-
-                document.addEventListener('mouseup', () => {
-                    if (!isDragging) return;
-                    isDragging = false;
-                    panel.style.transition = '';
-                    document.body.style.userSelect = '';
-                    GM_setValue(STORAGE_KEYS.PANEL_POS_X, panel.offsetLeft);
-                    GM_setValue(STORAGE_KEYS.PANEL_POS_Y, panel.offsetTop);
-                });
+                if (handle) {
+                    window.geminiSetupDraggablePanel(panel, handle, 'gemini_1click_delete_panel_pos', { right: '20px', bottom: '120px' });
+                }
             }
 
             /**

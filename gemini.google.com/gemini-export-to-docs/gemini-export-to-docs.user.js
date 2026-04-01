@@ -638,16 +638,9 @@
             }
 
             function createOneTurnPanel() {
-                // Load position
-                const savedPos = GM_getValue('gemini-export-panel-pos', { bottom: '20px', right: '20px' });
-
                 const panel = document.createElement('div');
                 panel.id = 'gemini-one-turn-panel';
                 panel.className = 'gus-panel';
-                if (savedPos.top) panel.style.top = savedPos.top;
-                else panel.style.bottom = savedPos.bottom;
-                if (savedPos.left) panel.style.left = savedPos.left;
-                else panel.style.right = savedPos.right;
 
                 const tpl = getTemplate('tpl-one-turn-panel');
                 if (tpl) {
@@ -656,36 +649,10 @@
                 document.body.appendChild(panel);
 
                 // Bind Dragging Logic
-                let isDragging = false;
-                let offset = { x: 0, y: 0 };
-
-                const startDrag = (e) => {
-                    isDragging = true;
-                    offset.x = e.clientX - panel.offsetLeft;
-                    offset.y = e.clientY - panel.offsetTop;
-                    panel.style.transition = 'none';
-                };
-
                 const versionActive = panel.querySelector('.one-turn-version');
                 const versionInactive = panel.querySelector('.one-turn-inactive-content');
-                if (versionActive) versionActive.addEventListener('mousedown', startDrag);
-                if (versionInactive) versionInactive.addEventListener('mousedown', startDrag);
-
-                document.addEventListener('mousemove', (e) => {
-                    if (!isDragging) return;
-                    panel.style.bottom = 'auto';
-                    panel.style.right = 'auto';
-                    panel.style.top = (e.clientY - offset.y) + 'px';
-                    panel.style.left = (e.clientX - offset.x) + 'px';
-                });
-
-                document.addEventListener('mouseup', () => {
-                    if (isDragging) {
-                        isDragging = false;
-                        panel.style.transition = '';
-                        GM_setValue('gemini-export-panel-pos', { top: panel.style.top, left: panel.style.left });
-                    }
-                });
+                if (versionActive) window.geminiSetupDraggablePanel(panel, versionActive, 'gemini-export-panel-pos', { bottom: '20px', right: '20px' });
+                if (versionInactive) window.geminiSetupDraggablePanel(panel, versionInactive, 'gemini-export-panel-pos', { bottom: '20px', right: '20px' });
 
                 // Hover pause logic
                 panel.addEventListener('mouseenter', () => { countdownPaused = true; });

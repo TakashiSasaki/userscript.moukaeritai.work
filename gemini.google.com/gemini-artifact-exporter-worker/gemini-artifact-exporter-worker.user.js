@@ -129,40 +129,7 @@ const report = () => {
                     if (pos.right && !pos.left) ui.style.right = pos.right;
 
                     // Make draggable
-                    let isDragging = false, startX, startY, startLeft, startTop;
-                    ui.addEventListener('mousedown', (e) => {
-                        isDragging = true;
-                        startX = e.clientX;
-                        startY = e.clientY;
-                        const rect = ui.getBoundingClientRect();
-                        startLeft = rect.left;
-                        startTop = rect.top;
-                        ui.style.right = 'auto';
-                        ui.style.bottom = 'auto';
-                        e.preventDefault();
-                    });
-
-                    document.addEventListener('mousemove', (e) => {
-                        if (!isDragging) return;
-                        const dx = e.clientX - startX;
-                        const dy = e.clientY - startY;
-                        ui.style.left = (startLeft + dx) + 'px';
-                        ui.style.top = (startTop + dy) + 'px';
-                    });
-
-                    document.addEventListener('mouseup', () => {
-                        if (isDragging) {
-                            isDragging = false;
-                            try {
-                                if (typeof GM_setValue !== 'undefined') {
-                                    GM_setValue('userscript-status-ui-pos', JSON.stringify({
-                                        top: ui.style.top,
-                                        left: ui.style.left
-                                    }));
-                                }
-                            } catch { /* ignore */ }
-                        }
-                    });
+                    window.geminiSetupDraggablePanel(ui, ui, 'userscript-status-ui-pos', { right: '20px', top: '100px' });
                 }
 
                 const statusText = statusDetail
@@ -434,40 +401,7 @@ const report = () => {
                         handle.title = GM_info.script.name;
 
                         // Make draggable
-                        let isDragging = false, startX, startY, startLeft, startTop;
-                        handle.addEventListener('mousedown', (e) => {
-                            isDragging = true;
-                            startX = e.clientX;
-                            startY = e.clientY;
-                            const rect = indicator.getBoundingClientRect();
-                            startLeft = rect.left;
-                            startTop = rect.top;
-                            indicator.style.right = 'auto';
-                            indicator.style.bottom = 'auto';
-                            e.preventDefault();
-                        });
-
-                        document.addEventListener('mousemove', (e) => {
-                            if (!isDragging) return;
-                            const dx = e.clientX - startX;
-                            const dy = e.clientY - startY;
-                            indicator.style.left = (startLeft + dx) + 'px';
-                            indicator.style.top = (startTop + dy) + 'px';
-                        });
-
-                        document.addEventListener('mouseup', () => {
-                            if (isDragging) {
-                                isDragging = false;
-                                try {
-                                    if (typeof GM_setValue !== 'undefined') {
-                                        GM_setValue('gemini-worker-export-indicator-pos', JSON.stringify({
-                                            top: indicator.style.top,
-                                            left: indicator.style.left
-                                        }));
-                                    }
-                                } catch { /* ignore */ }
-                            }
-                        });
+                        window.geminiSetupDraggablePanel(indicator, handle, 'gemini-worker-export-indicator-pos', { right: '20px', bottom: '20px' });
                     }
                 }
                 return indicator;
