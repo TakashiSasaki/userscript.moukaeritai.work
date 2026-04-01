@@ -181,31 +181,34 @@
         // Use grab cursor by default
         handle.style.cursor = 'grab';
 
-        handle.onmousedown = function dragMouseDown(e) {
+        handle.addEventListener('mousedown', dragMouseDown);
+
+        function dragMouseDown(e) {
             e = e || window.event;
-            // Ignore interactive elements
-            if (['INPUT', 'TEXTAREA', 'BUTTON', 'SELECT'].includes(e.target.tagName)) {
+            // Ignore if clicking on interactive child elements within the handle
+            if (e.target.closest('input, textarea, button, select, a')) {
                 return;
             }
             e.preventDefault();
             pos3 = e.clientX;
             pos4 = e.clientY;
 
-            // Convert relative positioning to absolute before dragging
+            // Convert relative positioning to absolute before dragging, using getBoundingClientRect for reliability
             if (panel.style.right && panel.style.right !== 'auto' || panel.style.bottom && panel.style.bottom !== 'auto') {
-                panel.style.left = panel.offsetLeft + 'px';
-                panel.style.top = panel.offsetTop + 'px';
+                const rect = panel.getBoundingClientRect();
+                panel.style.left = rect.left + 'px';
+                panel.style.top = rect.top + 'px';
                 panel.style.right = 'auto';
                 panel.style.bottom = 'auto';
             }
 
-            document.onmouseup = closeDragElement;
-            document.onmousemove = elementDrag;
+            document.addEventListener('mouseup', closeDragElement);
+            document.addEventListener('mousemove', elementDrag);
 
             // Visual feedback
             handle.style.cursor = 'grabbing';
             panel.style.transition = 'none'; // Disable smooth transitions during drag
-        };
+        }
 
         function elementDrag(e) {
             e = e || window.event;
@@ -215,6 +218,7 @@
             pos3 = e.clientX;
             pos4 = e.clientY;
 
+            // Using offsetTop/Left is fine here since we just set top/left explicitly to pixels above
             let newTop = panel.offsetTop - pos2;
             let newLeft = panel.offsetLeft - pos1;
 
@@ -227,8 +231,8 @@
         }
 
         function closeDragElement() {
-            document.onmouseup = null;
-            document.onmousemove = null;
+            document.removeEventListener('mouseup', closeDragElement);
+            document.removeEventListener('mousemove', elementDrag);
             handle.style.cursor = 'grab';
             panel.style.transition = ''; // Restore transitions
 
