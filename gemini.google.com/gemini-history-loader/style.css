@@ -29,13 +29,6 @@
     white-space: nowrap;
 }
 
-.ghl-script-title {
-    font-size: 6px;
-    font-weight: normal;
-    line-height: 1;
-    margin-bottom: 2px;
-}
-
 /* Styles handled by .gus-version */
 
 .ghl-version-handle:active {
