@@ -4,6 +4,16 @@ commit_message*.txt
 COMMIT_MSG_TEMP.txt
 commit_temp.txt
 
+# Test and temporary artifacts
+*.test.js
+*.spec.js
+test-results/
+verification/
+test*.html
+test_script*.js
+test_ui*
+screenshot.png
+
 # Development environment
 .venv/
 node_modules/
