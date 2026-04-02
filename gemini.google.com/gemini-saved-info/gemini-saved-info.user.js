@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.23
+// @version      0.2.24
 // @lastModified  2026-04-02
 // @description  Adds serial numbers and copy buttons to custom instructions on Gemini.
 // @author       Takashi Sasaki
@@ -252,19 +252,26 @@ const report = () => {
                 lastIsActive = isActive;
 
                 let badge = document.getElementById('gsi-version-indicator');
+                let isNewBadge = false;
                 if (!badge) {
                     badge = document.createElement('div');
                     badge.id = 'gsi-version-indicator';
                     badge.className = 'gus-panel';
                     document.body.appendChild(badge);
+                    isNewBadge = true;
                 }
                 const version = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '?';
                 badge.title = 'Gemini Saved Info Helper';
                 badge.textContent = '';
                 const vSpan = document.createElement('span');
                 vSpan.className = 'gus-version';
-                vSpan.textContent = isActive ? `📋 ${version} ${gusEmoji} Active` : `📋 ${version} ${gusEmoji}`;
+                vSpan.textContent = `📋 ${version} ${gusEmoji}`;
                 badge.appendChild(vSpan);
+
+                // Setup draggable panel
+                if (window.geminiSetupDraggablePanel) {
+                    window.geminiSetupDraggablePanel(badge, vSpan, 'gus-pos-gemini-saved-info');
+                }
             }
 
             function checkAndApply() {
