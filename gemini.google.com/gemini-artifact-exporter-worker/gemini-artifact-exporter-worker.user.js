@@ -3,7 +3,7 @@
 // @namespace    userscript.moukaeritai.work
 // @version      0.2.24
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
-// @lastModified  2026-04-02
+// @lastModified 2026-04-02
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://gemini.google.com/*
@@ -363,7 +363,7 @@ const report = () => {
 
             // --- UI Indicator ---
 
-            const VERSION = '0.2.24';
+            const VERSION = GM_info.script.version;
             let hideTimeoutId = null;
 
             function getOrCreateIndicator() {
