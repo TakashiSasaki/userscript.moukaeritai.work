@@ -92,3 +92,11 @@
     justify-content: center;
     color: inherit;
 }
+
+.gpi-status-container {
+    margin-top: 8px;
+}
+.gpi-status-container .gae-status-item {
+    font-size: 11px;
+    padding: 2px;
+}

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.9
+// @version      0.2.10
 // @description  Injects a prompt into Gemini via an external custom event.
 // @lastModified  2026-04-02
 // @author       Takashi Sasaki
@@ -62,58 +62,6 @@ const report = () => {
 
 
 
-
-            // UI Helper for displaying status
-            function showTargetScriptStatus(targetName, statusDetail) {
-                const uiId = 'userscript-target-status-ui';
-                let ui = document.getElementById(uiId);
-
-                if (!ui) {
-                    ui = document.createElement('div');
-                    ui.id = uiId;
-                    ui.className = 'gus-panel';
-
-                    // Restore position
-                    let posStr = '{"bottom": "20px", "right": "20px"}';
-                    try {
-                        if (typeof GM_getValue !== 'undefined') {
-                            posStr = GM_getValue('userscript-status-ui-pos', posStr);
-                        }
-                    } catch { /* ignore */ }
-
-                    let pos = JSON.parse(posStr);
-                    if (pos.top) ui.style.top = pos.top;
-                    if (pos.bottom && !pos.top) ui.style.bottom = pos.bottom;
-                    if (pos.left) ui.style.left = pos.left;
-                    if (pos.right && !pos.left) ui.style.right = pos.right;
-
-                    // Make draggable
-                    window.geminiSetupDraggablePanel(ui, ui, 'userscript-status-ui-pos', { right: '20px', top: '100px' });
-
-                    document.body.appendChild(ui);
-                }
-
-                const statusText = statusDetail
-                    ? `✅ ${targetName} (v${statusDetail.version})`
-                    : `❌ ${targetName} Not Found`;
-
-                ui.textContent = '';
-                const titleDiv = document.createElement('div');
-                titleDiv.className = 'target-status-title';
-                titleDiv.textContent = 'Script Status:';
-                ui.appendChild(titleDiv);
-                const statusDiv = document.createElement('div');
-                statusDiv.className = 'target-status-text';
-                statusDiv.textContent = statusText;
-                ui.appendChild(statusDiv);
-
-                // Auto hide after 5 seconds if successful, keep if failed
-                if (statusDetail) {
-                    setTimeout(() => {
-                        if (ui && ui.parentNode) ui.parentNode.removeChild(ui);
-                    }, 5000);
-                }
-            }
 
 
             // Main logic for gemini.google.com
@@ -304,7 +252,7 @@ const report = () => {
                 injectBtn.textContent = 'Inject & Send';
                 injectBtn.onclick = () => {
                     if (textarea.value) {
-                        window.geminiCheckTargetUserscript('Gemini Prompt Injector').then((installed) => { showTargetScriptStatus('Gemini Prompt Injector', installed); document.dispatchEvent(new CustomEvent('gemini-inject-prompt', { detail: { prompt: textarea.value } })); });
+                        window.geminiCheckTargetUserscript('Gemini Prompt Injector').then((installed) => { window.geminiShowTargetScriptStatus('gpi-status-container', 'Gemini Prompt Injector', installed); document.dispatchEvent(new CustomEvent('gemini-inject-prompt', { detail: { prompt: textarea.value } })); });
                     }
                 };
                 group1.appendChild(textarea);
@@ -317,7 +265,7 @@ const report = () => {
                 sendBtn.className = 'gpi-button';
                 sendBtn.textContent = 'Send Current';
                 sendBtn.onclick = () => {
-                    window.geminiCheckTargetUserscript('Gemini Prompt Injector').then((installed) => { showTargetScriptStatus('Gemini Prompt Injector', installed); document.dispatchEvent(new CustomEvent('gemini-send-prompt')); });
+                    window.geminiCheckTargetUserscript('Gemini Prompt Injector').then((installed) => { window.geminiShowTargetScriptStatus('gpi-status-container', 'Gemini Prompt Injector', installed); document.dispatchEvent(new CustomEvent('gemini-send-prompt')); });
                 };
                 group2.appendChild(sendBtn);
 
@@ -337,7 +285,7 @@ const report = () => {
                 switchBtn.style.width = 'auto';
                 switchBtn.textContent = 'Switch';
                 switchBtn.onclick = () => {
-                    window.geminiCheckTargetUserscript('Gemini Prompt Injector').then((installed) => { showTargetScriptStatus('Gemini Prompt Injector', installed); document.dispatchEvent(new CustomEvent('gemini-switch-model', { detail: { model: selectModel.value } })); });
+                    window.geminiCheckTargetUserscript('Gemini Prompt Injector').then((installed) => { window.geminiShowTargetScriptStatus('gpi-status-container', 'Gemini Prompt Injector', installed); document.dispatchEvent(new CustomEvent('gemini-switch-model', { detail: { model: selectModel.value } })); });
                 };
                 group3.appendChild(selectModel);
                 group3.appendChild(switchBtn);
@@ -349,7 +297,7 @@ const report = () => {
                 canvasBtn.className = 'gpi-button';
                 canvasBtn.textContent = 'Enable Canvas';
                 canvasBtn.onclick = () => {
-                    window.geminiCheckTargetUserscript('Gemini Prompt Injector').then((installed) => { showTargetScriptStatus('Gemini Prompt Injector', installed); document.dispatchEvent(new CustomEvent('gemini-enable-canvas')); });
+                    window.geminiCheckTargetUserscript('Gemini Prompt Injector').then((installed) => { window.geminiShowTargetScriptStatus('gpi-status-container', 'Gemini Prompt Injector', installed); document.dispatchEvent(new CustomEvent('gemini-enable-canvas')); });
                 };
                 group4.appendChild(canvasBtn);
 
@@ -357,6 +305,12 @@ const report = () => {
                 content.appendChild(group2);
                 content.appendChild(group3);
                 content.appendChild(group4);
+
+                const statusContainer = document.createElement('div');
+                statusContainer.id = 'gpi-status-container';
+                statusContainer.className = 'gpi-status-container';
+                content.appendChild(statusContainer);
+
                 uiContainer.appendChild(content);
 
                 document.body.appendChild(uiContainer);
