@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.24
+// @version      0.2.25
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @lastModified 2026-04-02
 // @author       Takashi Sasaki
@@ -114,19 +114,7 @@ const report = () => {
                         return;
                     }
 
-                    // Restore position
-                    let posStr = '{"bottom": "20px", "right": "20px"}';
-                    try {
-                        if (typeof GM_getValue !== 'undefined') {
-                            posStr = GM_getValue('userscript-status-ui-pos', posStr);
-                        }
-                    } catch { /* ignore */ }
-
-                    let pos = JSON.parse(posStr);
-                    if (pos.top) ui.style.top = pos.top;
-                    if (pos.bottom && !pos.top) ui.style.bottom = pos.bottom;
-                    if (pos.left) ui.style.left = pos.left;
-                    if (pos.right && !pos.left) ui.style.right = pos.right;
+                    // Position is managed entirely by geminiSetupDraggablePanel
 
                     // Make draggable
                     window.geminiSetupDraggablePanel(ui, ui, 'userscript-status-ui-pos', { right: '20px', top: '100px' });
@@ -380,19 +368,7 @@ const report = () => {
                         return null;
                     }
 
-                    // Restore position
-                    let posStr = '{"bottom": "20px", "left": "20px"}';
-                    try {
-                        if (typeof GM_getValue !== 'undefined') {
-                            posStr = GM_getValue('gemini-worker-export-indicator-pos', posStr);
-                        }
-                    } catch { /* ignore */ }
-
-                    let pos = JSON.parse(posStr);
-                    if (pos.top) indicator.style.top = pos.top;
-                    if (pos.bottom && !pos.top) indicator.style.bottom = pos.bottom;
-                    if (pos.left) indicator.style.left = pos.left;
-                    if (pos.right && !pos.left) indicator.style.right = pos.right;
+                    // Position is managed entirely by geminiSetupDraggablePanel
 
                     const handle = indicator.querySelector('.worker-indicator-handle');
                     if (handle) {

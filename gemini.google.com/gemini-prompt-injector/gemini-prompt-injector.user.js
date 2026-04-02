@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.9
+// @version      1.2.5
 // @description  Injects a prompt into Gemini via an external custom event.
-// @lastModified  2026-04-02
+// @lastModified 2026-04-02
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
 // @match        https://gemini.google.com/*
@@ -73,19 +73,7 @@ const report = () => {
                     ui.id = uiId;
                     ui.className = 'gus-panel';
 
-                    // Restore position
-                    let posStr = '{"bottom": "20px", "right": "20px"}';
-                    try {
-                        if (typeof GM_getValue !== 'undefined') {
-                            posStr = GM_getValue('userscript-status-ui-pos', posStr);
-                        }
-                    } catch { /* ignore */ }
-
-                    let pos = JSON.parse(posStr);
-                    if (pos.top) ui.style.top = pos.top;
-                    if (pos.bottom && !pos.top) ui.style.bottom = pos.bottom;
-                    if (pos.left) ui.style.left = pos.left;
-                    if (pos.right && !pos.left) ui.style.right = pos.right;
+                    // Position is managed entirely by geminiSetupDraggablePanel
 
                     // Make draggable
                     window.geminiSetupDraggablePanel(ui, ui, 'userscript-status-ui-pos', { right: '20px', top: '100px' });
