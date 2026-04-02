@@ -1,20 +1,18 @@
-commit_message.txt
+# Temporary commit message files
+commit_msg*.txt
+commit_message*.txt
 COMMIT_MSG_TEMP.txt
 commit_temp.txt
-C:/Users/takas/Desktop/userscript/commit_message.txt
-chat.openai.com/chatgpt-turn-counter/samples/analyze_samples.py
-chat.openai.com/chatgpt-turn-counter/samples/preprocess_samples.py
-chat.openai.com/chatgpt-turn-counter/samples/samples-analysis.md
-chat.openai.com/chatgpt-turn-counter/samples/verification_copy_all_modal.html
-chat.openai.com/chatgpt-turn-counter/samples/verification_mime_fix.html
-.venv
+
+# Development environment
+.venv/
 node_modules/
-analyze_structure.py
+antigravity.lnk
+
+# Sample scripts and debug files
+**/*.py
 debug-info.js
 chat.openai.com/chatgpt-no-margin/NEXT_SESSION_PROMPT.md
-commit_msg_agents.txt
-commit_msg_gae_docs_agents.txt
-commit_message_eslint.txt
-commit_message_grant_fix.txt
-commit_message_gallery_fix.txt
-antigravity.lnk
+
+# Repository specific samples (deprecated)
+chat.openai.com/chatgpt-turn-counter/samples/
