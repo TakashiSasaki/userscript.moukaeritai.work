@@ -3,7 +3,7 @@
 // @namespace    userscript.moukaeritai.work
 // @version      0.2.10
 // @description  Injects a prompt into Gemini via an external custom event.
-// @lastModified  2026-04-02
+// @lastModified 2026-04-02
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
 // @match        https://gemini.google.com/*
@@ -59,10 +59,45 @@ const report = () => {
                 if (style) style.id = 'gemini-prompt-injector-styles';
             }
 
+            // UI Helper for displaying status
+            function showTargetScriptStatus(targetName, statusDetail) {
+                const uiId = 'userscript-target-status-ui';
+                let ui = document.getElementById(uiId);
 
+                if (!ui) {
+                    ui = document.createElement('div');
+                    ui.id = uiId;
+                    ui.className = 'gus-panel';
 
+                    // Position is managed entirely by geminiSetupDraggablePanel
 
+                    // Make draggable
+                    window.geminiSetupDraggablePanel(ui, ui, 'userscript-status-ui-pos', { right: '20px', top: '100px' });
 
+                    document.body.appendChild(ui);
+                }
+
+                const statusText = statusDetail
+                    ? `✅ ${targetName} (v${statusDetail.version})`
+                    : `❌ ${targetName} Not Found`;
+
+                ui.textContent = '';
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'target-status-title';
+                titleDiv.textContent = 'Script Status:';
+                ui.appendChild(titleDiv);
+                const statusDiv = document.createElement('div');
+                statusDiv.className = 'target-status-text';
+                statusDiv.textContent = statusText;
+                ui.appendChild(statusDiv);
+
+                // Auto hide after 5 seconds if successful, keep if failed
+                if (statusDetail) {
+                    setTimeout(() => {
+                        if (ui && ui.parentNode) ui.parentNode.removeChild(ui);
+                    }, 5000);
+                }
+            }
 
             // Main logic for gemini.google.com
             document.addEventListener('gemini-inject-prompt', (event) => {

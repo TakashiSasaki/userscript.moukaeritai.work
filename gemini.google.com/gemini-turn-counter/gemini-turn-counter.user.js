@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.49
+// @version      0.4.50
 // @lastModified 2026-04-02
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
@@ -275,7 +275,7 @@ const report = () => {
                     const container = document.getElementById('gemini-turn-counter-ui');
                     if (!container) return; // Should not happen if initialized correctly
 
-                    const iconDiv = container.querySelector('.gtc-icon');
+                    const iconDiv = container.querySelector('span.gus-version');
                     const contentDiv = container.querySelector('.gtc-content');
 
                     if (!overrideData) {
@@ -325,10 +325,9 @@ const report = () => {
                     latestCollectedImages = collectedImages;
 
                     const imageCount = collectedImages.length;
-                    const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.4.31';
-
+                    const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.4.50';
                     if (iconDiv) {
-                        iconDiv.textContent = `📊 ${scriptVersion} ${gusEmoji} | U:${userTurnsCount} M:${modelTurnsCount} A:${totalArtifacts} L:${totalLinkCards}`;
+                        iconDiv.textContent = `🔢 ${scriptVersion} ${gusEmoji}`;
                         iconDiv.title = 'Gemini Turn Counter';
                     }
 
@@ -651,9 +650,9 @@ const report = () => {
                 uiContainer = container; // Store reference
 
                 // UI Events
-                const iconHandle = container.querySelector('.gtc-icon');
-                if (iconHandle) {
-                    window.geminiSetupDraggablePanel(container, iconHandle, 'gtc-pos-ui', { right: '20px', top: '160px', left: 'auto' });
+                const dragHandle = container.querySelector('span.gus-version');
+                if (dragHandle) {
+                    window.geminiSetupDraggablePanel(container, dragHandle, 'gtc-pos-ui', { right: '20px', top: '160px', left: 'auto' });
                 }
 
                 container.addEventListener('click', (e) => {

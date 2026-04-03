@@ -93,7 +93,7 @@
             <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
         </div>
 
-        <a href="gemini-turn-counter.user.js" class="install-button" data-version="0.4.49">
+        <a href="gemini-turn-counter.user.js" class="install-button" data-version="0.4.50">
                         <span class="button-icon">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -171,7 +171,8 @@
 
         <h2>更新履歴</h2>
         <ul>
-            <li><strong>v0.4.49</strong>: バージョン表記のハードコードを廃止し、GM_infoから取得するように変更</li>
+                        <li><strong>v0.4.50</strong>: フローティングUIのドラッグハンドルをgus-versionに修正し、バージョン表示のフォーマットを標準化</li>
+<li><strong>v0.4.49</strong>: バージョン表記のハードコードを廃止し、GM_infoから取得するように変更</li>
             <li><strong>v0.4.48</strong>: バージョン表記のバッジをマウスオーバーで拡大表示するように変更。</li>
             <li><strong>v0.4.48</strong>: パネル展開時にバージョン表記が重複して表示される問題を修正しました。</li>
 
@@ -229,17 +230,24 @@
 
                         // Update info labels
                         const verEl = document.getElementById('ver-info');
+                        if (verEl) verEl.textContent = 'v' + version;
                         const dateEl = document.getElementById('date-info');
-                        if (verEl) verEl.textContent = `v${version}`;
                         if (dateEl) dateEl.textContent = date;
 
-                        const installBtn = document.querySelector('.install-button');
-                        if (installBtn) {
-                            installBtn.textContent = `スクリプトをインストール (v${version})`;
-                        }
+                        // Update install button version text
+                        const btnSpan = document.querySelector('.install-button span:not(.button-icon)');
+                        if (btnSpan) btnSpan.textContent = 'スクリプトをインストール (v' + version + ')';
+                    } else {
+                        document.getElementById('ver-info').textContent = '取得エラー';
+                        document.getElementById('date-info').textContent = '取得エラー';
                     }
+                } else {
+                    document.getElementById('ver-info').textContent = '取得エラー';
+                    document.getElementById('date-info').textContent = '取得エラー';
                 }
             } catch (e) {
+                document.getElementById('ver-info').textContent = '取得エラー';
+                document.getElementById('date-info').textContent = '取得エラー';
                 console.warn('Could not fetch script version:', e);
             }
         });
