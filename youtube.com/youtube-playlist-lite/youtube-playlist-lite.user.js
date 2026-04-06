@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.21
+// @version      0.1.22
 // @description  YouTubeプレイリスト表示でサムネイルを非表示にして軽量化するためのツールです。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -240,8 +240,26 @@ const report = () => {
         const titleLabel = document.createElement('span');
         const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.21';
         titleLabel.textContent = `Lite v${v}`;
-        Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' });
+        Object.assign(titleLabel.style, { 
+            fontWeight: 'bold', 
+            fontSize: '11px', 
+            cursor: 'pointer',
+            transition: 'all 0.2s ease-in-out',
+            display: 'inline-block'
+        });
         titleLabel.title = 'Double-click to toggle minimization';
+
+        titleLabel.addEventListener('mouseenter', () => {
+            titleLabel.style.fontSize = '12px';
+            titleLabel.style.transform = 'scale(1.1)';
+            titleLabel.style.color = '#00f';
+        });
+        titleLabel.addEventListener('mouseleave', () => {
+            titleLabel.style.fontSize = '11px';
+            titleLabel.style.transform = 'scale(1)';
+            titleLabel.style.color = '#333';
+        });
+
         titleLabel.addEventListener('dblclick', (e) => {
             if (isAutoMinimized) return; // Prevent expansion on inactive pages
             isManuallyMinimized = !isManuallyMinimized;

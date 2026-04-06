@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.27
+// @version      0.1.28
 // @lastModified  2026-04-06
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -162,8 +162,25 @@ const report = () => {
         const titleLabel = document.createElement('span');
         const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.21';
         titleLabel.textContent = `Playlist Filter v${v}`;
-        Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' });
+        Object.assign(titleLabel.style, { 
+            fontWeight: 'bold', 
+            fontSize: '11px', 
+            cursor: 'pointer',
+            transition: 'all 0.2s ease-in-out',
+            display: 'inline-block'
+        });
         titleLabel.title = 'Double-click to toggle minimization';
+
+        titleLabel.addEventListener('mouseenter', () => {
+            titleLabel.style.fontSize = '12px';
+            titleLabel.style.transform = 'scale(1.1)';
+            titleLabel.style.color = '#00f';
+        });
+        titleLabel.addEventListener('mouseleave', () => {
+            titleLabel.style.fontSize = '11px';
+            titleLabel.style.transform = 'scale(1)';
+            titleLabel.style.color = '#333';
+        });
 
         titleLabel.addEventListener('dblclick', (e) => {
             if (isAutoMinimized) return;
