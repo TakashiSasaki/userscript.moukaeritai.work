@@ -1,20 +1,37 @@
-# Agent Guidelines
+# YouTube Playlist Lite - Agent Implementation Notes
 
-This project follows the agent development guidelines outlined in the root [AGENTS.md](/AGENTS.md) file.
+This document provides technical details for AI agents developing or maintaining the **YouTube Playlist Lite** userscript. For general project rules, refer to the root [AGENTS.md](/AGENTS.md).
 
-Please refer to the root `AGENTS.md` for all operational procedures, including Git practices, documentation structure, and HTML sample preprocessing.
+## 1. Domain & Scope
+- **Target URL**: Strictly limited to YouTube Playlist pages (`https://www.youtube.com/playlist*`).
+- **Context Handling**:
+  - Automatically transitions to **Inactive** state (UI collapses and features stop) on non-playlist pages (e.g., watch page, search results).
+  - Use `location.pathname.startsWith('/playlist')` for context validation.
 
+## 2. Technical Selectors
+| Role | Selector |
+| :--- | :--- |
+| **Thumbnail Elements** | `ytd-playlist-video-renderer ytd-thumbnail`, `ytd-playlist-header-renderer ytd-hero-playlist-thumbnail-renderer` |
+| **Observer Root** | `ytd-playlist-video-list-renderer #contents` |
+| **Miniplayer** | `ytd-miniplayer` |
 
-## `index.html` のメンテナンス要件
+## 3. Design & UI Strategy
+- **Shared UI Patterns**:
+  - **Activity-Linked Panel State**: The panel's open/collapsed state is primarily controlled by `isAutoMinimized` based on the page context.
+  - **Manual Override**: Users can manually toggle the collapsed state via **Double-Click** on the version label text (e.g., "Lite v0.1.19"). This is tracked by `isManuallyMinimized`.
+- **States**:
+  - `Active`: UI contents visible (unless manually minimized), opacity 1.0.
+  - `Inactive`: UI contents hidden, opacity 0.85, status badge "Inactive".
 
-各階層（ルートディレクトリ、ドメイン別ディレクトリ、個別のスクリプトディレクトリ）の `index.html` は、最新の状態に同期して保つ必要があります。
+## 4. Performance & Monitoring
+- **MutationObserver**:
+  - Monitors the `#contents` div of the playlist list with `subtree: true`.
+  - Uses a **150ms debounce** (`performDebouncedCleanup`) to avoid CPU spikes during infinite scrolling.
+- **Cleanup Strategy**:
+  - Performs "Early Cleanup" on `yt-navigate-start` to stop observers and clear styles before the next navigation load.
+  - Re-initializes on `yt-navigate-finish` with a slight delay (500ms).
+- **Miniplayer Removal**: Integrated into the debounced cleanup sweep instead of using polling.
 
-1. **バージョン情報の同期**:
-   - スクリプトのバージョンが更新された場合は、関連するすべての `index.html` 内にハードコードされているバージョン表記も忘れずに更新してください。
-   - インストールボタンの構造は、動的なバージョン比較機能（Github上の最新バージョンとローカルのインストール済みバージョンの比較）のために、所定のDOM構造（`<div class="version-info">` 内に `.latest-version` と `.installed-version` を含む構造）を維持してください。
-
-2. **依存関係とイベントの明記**:
-   - 複数のユーザースクリプト間で連携する機能（CustomEventを用いたメッセージの送受信など）がある場合、スクリプトの紹介カードや詳細ページには、その依存関係（「送信先」「受信元」など）を明確に記載してください。
-
-3. **ドキュメントの網羅性**:
-   - 新しいスクリプト（システムローダーなどの裏側で動くスクリプトを含む）を追加した場合は、必ず該当するドメインの `index.html` およびルートの `index.html` の一覧にも漏れなく追加してください。
+## 5. Metadata Sync
+- **Registration**: This script must be listed in the root `index.html` and the `youtube.com/index.html` domain index.
+- **Versioning**: Always bump the patch version on code changes and sync version labels in `index.html`.
