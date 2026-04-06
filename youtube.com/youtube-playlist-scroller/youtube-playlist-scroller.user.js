@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.12
+// @version      0.1.13
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -46,6 +46,8 @@ const report = () => {
     let isActive = false;
     let loadingObserver = null;
     let loadingObserverTimerId = null;
+    let loadingCheckIntervalId = null;
+    const cachedSpinners = new Set();
 
     function saveSettings() {
         GM_setValue(SETTINGS_KEY, settings);
@@ -385,6 +387,12 @@ const report = () => {
             loadingObserver = null;
         }
 
+        if (loadingCheckIntervalId) {
+            clearInterval(loadingCheckIntervalId);
+            loadingCheckIntervalId = null;
+        }
+        cachedSpinners.clear();
+
         showPanel();
         setPanelActiveState(false);
     }
@@ -403,14 +411,60 @@ const report = () => {
             return;
         }
 
-        loadingObserver = new MutationObserver(() => {
-            checkLoadingState();
+        cachedSpinners.clear();
+        const initialSpinners = container.querySelectorAll('tp-yt-paper-spinner, tp-yt-paper-spinner-lite');
+        initialSpinners.forEach(spinner => cachedSpinners.add(spinner));
+
+        loadingObserver = new MutationObserver((mutations) => {
+            let shouldCheck = false;
+            for (const mutation of mutations) {
+                if (mutation.type === 'childList') {
+                    for (const node of mutation.addedNodes) {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            if (node.tagName === 'TP-YT-PAPER-SPINNER' || node.tagName === 'TP-YT-PAPER-SPINNER-LITE') {
+                                cachedSpinners.add(node);
+                                shouldCheck = true;
+                            } else if (node.querySelectorAll) {
+                                const newSpinners = node.querySelectorAll('tp-yt-paper-spinner, tp-yt-paper-spinner-lite');
+                                if (newSpinners.length > 0) {
+                                    newSpinners.forEach(spinner => cachedSpinners.add(spinner));
+                                    shouldCheck = true;
+                                }
+                            }
+                        }
+                    }
+                    for (const node of mutation.removedNodes) {
+                         if (node.nodeType === Node.ELEMENT_NODE) {
+                            if (node.tagName === 'TP-YT-PAPER-SPINNER' || node.tagName === 'TP-YT-PAPER-SPINNER-LITE') {
+                                cachedSpinners.delete(node);
+                                shouldCheck = true;
+                            } else if (node.querySelectorAll) {
+                                const removedSpinners = node.querySelectorAll('tp-yt-paper-spinner, tp-yt-paper-spinner-lite');
+                                if (removedSpinners.length > 0) {
+                                    removedSpinners.forEach(spinner => cachedSpinners.delete(spinner));
+                                    shouldCheck = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (shouldCheck) {
+                checkLoadingState();
+            }
         });
 
         loadingObserver.observe(container, {
             childList: true,
-            subtree: true // Need subtree because spinner might be nested in #spinner-container
+            subtree: true
         });
+
+        if (loadingCheckIntervalId) {
+            clearInterval(loadingCheckIntervalId);
+        }
+        loadingCheckIntervalId = setInterval(() => {
+            checkLoadingState();
+        }, 500);
 
         // Initial check
         checkLoadingState();
@@ -418,15 +472,14 @@ const report = () => {
 
     function checkLoadingState() {
         if (!isActive || !isPlaylistPage()) return;
-        // Broad check for any spinner in the list renderer
-        const spinners = document.querySelectorAll('ytd-playlist-video-list-renderer tp-yt-paper-spinner, ytd-playlist-video-list-renderer tp-yt-paper-spinner-lite');
+
         let isLoading = false;
 
-        for (const spinner of spinners) {
+        for (const spinner of cachedSpinners) {
             // Check if active (attribute) or not hidden (aria) AND visible in layout
-            const isActive = spinner.hasAttribute('active') || spinner.getAttribute('aria-hidden') !== 'true';
+            const isActiveState = spinner.hasAttribute('active') || spinner.getAttribute('aria-hidden') !== 'true';
             const isVisible = window.getComputedStyle(spinner).display !== 'none';
-            if (isActive && isVisible) {
+            if (isActiveState && isVisible) {
                 isLoading = true;
                 break;
             }
