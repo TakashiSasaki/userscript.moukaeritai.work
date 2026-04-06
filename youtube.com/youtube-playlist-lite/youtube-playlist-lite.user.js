@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.17
-// @description  YouTubeプレイリストや再生履歴でサムネイルを非表示にして軽量化するためのツールです。
+// @version      0.1.18
+// @description  YouTubeプレイリスト表示でサムネイルを非表示にして軽量化するためのツールです。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -40,6 +40,7 @@ const report = () => {
     const INIT_DELAY_RANGE_MS = { min: 1000, max: 3000 };
 
     let isAutoMinimized = false;
+    let isManuallyMinimized = false;
     let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '260px', right: '20px' });
     let isHideThumbnails = GM_getValue(HIDE_THUMB_KEY, false);
     let isForceRemove = GM_getValue(FORCE_REMOVE_KEY, false);
@@ -51,18 +52,11 @@ const report = () => {
             matchSelector: 'ytd-thumbnail, ytd-hero-playlist-thumbnail-renderer',
             ancestorSelector: 'ytd-playlist-video-renderer, ytd-playlist-header-renderer',
             observerRootSelector: 'ytd-playlist-video-list-renderer #contents'
-        },
-        history: {
-            thumbSelector: 'ytd-item-section-renderer a.yt-lockup-view-model__content-image, ytd-item-section-renderer yt-thumbnail-view-model',
-            matchSelector: 'a.yt-lockup-view-model__content-image, yt-thumbnail-view-model',
-            ancestorSelector: 'ytd-item-section-renderer',
-            observerRootSelector: 'ytd-section-list-renderer #contents'
         }
     };
 
     function getPageConfig() {
-        if (location.pathname === '/playlist') return PAGE_CONFIG.playlist;
-        if (location.pathname.startsWith('/feed/history')) return PAGE_CONFIG.history;
+        if (location.pathname.startsWith('/playlist')) return PAGE_CONFIG.playlist;
         return null;
     }
 
@@ -79,17 +73,19 @@ const report = () => {
             label.style.color = active ? '#188038' : '#666';
         }
 
-        if (contentContainer) {
-            contentContainer.style.display = active ? 'flex' : 'none';
-        }
-
         if (panel) {
             panel.style.opacity = active ? '1' : '0.85';
         }
     }
 
     function updatePanelVisibility() {
-        setPanelActiveState(!isAutoMinimized);
+        const isActive = !isAutoMinimized;
+        setPanelActiveState(isActive);
+
+        if (contentContainer) {
+            const shouldShowContent = isActive && !isManuallyMinimized;
+            contentContainer.style.display = shouldShowContent ? 'flex' : 'none';
+        }
     }
 
     function applySettings() {
@@ -247,9 +243,16 @@ const report = () => {
         });
 
         const titleLabel = document.createElement('span');
-        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.11';
+        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.18';
         titleLabel.textContent = `Lite v${v}`;
-        Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '11px', pointerEvents: 'none' });
+        Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' });
+        titleLabel.title = 'Double-click to toggle minimization';
+        titleLabel.addEventListener('dblclick', (e) => {
+            if (isAutoMinimized) return;
+            isManuallyMinimized = !isManuallyMinimized;
+            updatePanelVisibility();
+            e.stopPropagation();
+        });
 
         const activeLabel = document.createElement('span');
         activeLabel.id = 'yt-lite-active-indicator';
