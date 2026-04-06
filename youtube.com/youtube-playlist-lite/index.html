@@ -29,24 +29,25 @@
 <li><strong>Hide (CSS)</strong>: サムネイルをCSS (<code>display: none</code>) で隠します。最も安全な方法で、オフにすればすぐに再表示されます。</li>
 <li><strong>Auto Remove (DOM)</strong>: 新しく追加されたサムネイル要素をDOMから物理的に削除します。<strong>メモリ節約効果が高い</strong>ですが、再表示するにはページのリロードが必要です。</li>
 <li><strong>Clear Thumbs Now</strong>: 現在読み込まれている全てのサムネイルを即座にDOMから削除します。</li>
-<li><strong>Active/Inactive インジケーター</strong>: パネル右上で稼働状況を表示します。対象ページでは Active、非対象ページでは Inactive になります。</li>
+<li><strong>自動最小化</strong>: スクリプトの対象外ページではパネルが自動的に切り詰め（最小化）され、余計な表示を抑制します。</li>
 </ul>
 <h2>インストール</h2>
 <p>👉 <strong><a href="youtube-playlist-lite.user.js">Install YouTube Playlist Lite</a></strong></p>
 <h2>使い方</h2>
 <ol>
 <li>プレイリスト/再生履歴画面で、右下に表示される <strong>Lite</strong> パネルを確認します。</li>
-<li>パネル右上のインジケーターが <strong>Active</strong> であることを確認します（対象外ページでは <strong>Inactive</strong> 表示になります）。</li>
+<li>対象外ページではパネルが自動的に最小化されます。</li>
 <li><strong>Hide (CSS)</strong> をオンにすると、見た目上でサムネイルが消えます。</li>
 <li><strong>Auto Remove (DOM)</strong> をオンにすると、今後読み込まれるサムネイルが自動で物理削除されます。</li>
 <li><strong>Clear Thumbs Now</strong> ボタンを押すと、現在表示されているサムネイルをまとめて削除します。</li>
 </ol>
 <h2>更新履歴</h2>
 <ul>
+<li><strong>v0.1.21</strong>: Active/Inactive インジケーターを廃止し、非アクティブ時はパネルを強制的に最小化するように改善。ダブルクリックの判定をタイトル部分のみに限定。</li>
 <li><strong>v0.1.20</strong>: UI表示が最小化されているか全体表示されているかを記憶してそれを次回のロード時に反映させるように修正。</li>
 <li><strong>v0.1.19</strong>: MutationObserverにデバウンス処理を導入し、無限スクロール時のCPU負荷を大幅に軽減。ミニプレーヤー除去ロジックの効率化。</li>
 <li><strong>v0.1.18</strong>: 再生履歴ページのサポートを終了し、プレイリスト表示ページのみに動作を限定。バージョン番号のダブルクリックによる手動UI最小化機能を追加。</li>
-<li><strong>v0.1.9</strong>: パネル右上に Active/Inactive インジケーターを追加。</li>
+<li><strong>v0.1.18</strong>: 再生履歴ページのサポートを終了し、プレイリスト表示ページのみに動作を限定。バージョン番号のダブルクリックによる手動UI最小化機能を追加。</li>
 <li><strong>v0.1.8</strong>: 初期化ディレイを1-3秒のランダムに変更し、他スクリプトと同時に起動しづらく改善。</li>
 <li><strong>v0.1.6</strong>: 手動の最小化ボタンを撤去し、対象ページ以外ではパネル内容を自動的に閉じる方式に変更。</li>
 <li><strong>v0.1.5</strong>: 非対象ページではパネルを自動で最小化し、対象URLでのみ機能を有効化。</li>
@@ -65,7 +66,7 @@
                 </svg>
                         <span>Install</span>
                         <div class="version-info">
-                            <span class="version-badge latest-version">Loading...</span>
+                            <span class="version-badge latest-version">v0.1.21</span>
                             <span class="version-badge installed-version" style="display: none;"></span>
                         </div>
                     </a>

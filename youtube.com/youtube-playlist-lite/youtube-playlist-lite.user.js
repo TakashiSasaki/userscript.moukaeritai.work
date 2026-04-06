@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.20
+// @version      0.1.21
 // @description  YouTubeプレイリスト表示でサムネイルを非表示にして軽量化するためのツールです。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -75,22 +75,8 @@ const report = () => {
     let panel = null;
     let contentContainer = null;
 
-    function setPanelActiveState(active) {
-        const label = document.getElementById('yt-lite-active-indicator');
-        if (label) {
-            label.textContent = active ? 'Active' : 'Inactive';
-            label.style.backgroundColor = active ? '#e6f4ea' : '#e0e0e0';
-            label.style.color = active ? '#188038' : '#666';
-        }
-
-        if (panel) {
-            panel.style.opacity = active ? '1' : '0.85';
-        }
-    }
-
     function updatePanelVisibility() {
         const isActive = !isAutoMinimized;
-        setPanelActiveState(isActive);
 
         if (contentContainer) {
             const shouldShowContent = isActive && !isManuallyMinimized;
@@ -252,28 +238,16 @@ const report = () => {
         });
 
         const titleLabel = document.createElement('span');
-        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.20';
+        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.21';
         titleLabel.textContent = `Lite v${v}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' });
         titleLabel.title = 'Double-click to toggle minimization';
         titleLabel.addEventListener('dblclick', (e) => {
-            if (isAutoMinimized) return;
+            if (isAutoMinimized) return; // Prevent expansion on inactive pages
             isManuallyMinimized = !isManuallyMinimized;
             GM_setValue(MINIMIZED_STATE_KEY, isManuallyMinimized);
             updatePanelVisibility();
             e.stopPropagation();
-        });
-
-        const activeLabel = document.createElement('span');
-        activeLabel.id = 'yt-lite-active-indicator';
-        activeLabel.textContent = 'Inactive';
-        Object.assign(activeLabel.style, {
-            fontSize: '11px',
-            fontWeight: 'bold',
-            padding: '2px 6px',
-            borderRadius: '10px',
-            backgroundColor: '#e0e0e0',
-            color: '#666'
         });
 
         contentContainer = document.createElement('div');
@@ -281,7 +255,6 @@ const report = () => {
         Object.assign(contentContainer.style, { display: 'flex', flexDirection: 'column', gap: '8px' });
 
         headerRow.appendChild(titleLabel);
-        headerRow.appendChild(activeLabel);
         panel.appendChild(headerRow);
         panel.appendChild(contentContainer);
 
