@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.18
+// @version      0.1.19
 // @description  YouTubeプレイリスト表示でサムネイルを非表示にして軽量化するためのツールです。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -58,6 +58,15 @@ const report = () => {
     function getPageConfig() {
         if (location.pathname.startsWith('/playlist')) return PAGE_CONFIG.playlist;
         return null;
+    }
+
+    // --- Utilities ---
+    function debounce(fn, ms) {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => fn.apply(this, args), ms);
+        };
     }
 
     // --- Core Logic ---
@@ -123,17 +132,22 @@ const report = () => {
         if (isForceRemove) {
             stopObserver();
             startObserver();
-            clearExistingThumbnails(pageConfig);
+            performDebouncedCleanup();
         } else {
             stopObserver();
         }
 
+        // Miniplayer Removal (One-time check on settings apply)
         if (isRemoveMiniplayer) {
-            const miniplayer = document.querySelector('ytd-miniplayer');
-            if (miniplayer) {
-                miniplayer.remove();
-                console.log('[YouTube Playlist Lite] Removed miniplayer.');
-            }
+            removeMiniplayerIfPresent();
+        }
+    }
+
+    function removeMiniplayerIfPresent() {
+        const miniplayer = document.querySelector('ytd-miniplayer');
+        if (miniplayer) {
+            miniplayer.remove();
+            console.log('[YouTube Playlist Lite] Removed miniplayer.');
         }
     }
 
@@ -146,6 +160,16 @@ const report = () => {
         }
     }
 
+    const performDebouncedCleanup = debounce(() => {
+        const pageConfig = getPageConfig();
+        if (pageConfig && isForceRemove) {
+            clearExistingThumbnails(pageConfig);
+        }
+        if (isRemoveMiniplayer) {
+            removeMiniplayerIfPresent();
+        }
+    }, 150);
+
     let observer = null;
     function startObserver() {
         if (observer) return;
@@ -157,24 +181,8 @@ const report = () => {
             setTimeout(startObserver, 1000);
             return;
         }
-        observer = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-                mutation.addedNodes.forEach(node => {
-                    if (node.nodeType === Node.ELEMENT_NODE) {
-                        const element = node;
-                        if (element.matches(pageConfig.matchSelector) && element.closest(pageConfig.ancestorSelector)) {
-                            element.remove();
-                        }
-                        const targets = element.querySelectorAll(pageConfig.thumbSelector);
-                        targets.forEach(target => {
-                            if (target.closest(pageConfig.ancestorSelector)) {
-                                target.remove();
-                            }
-                        });
-                    }
-                });
-            }
-        });
+
+        observer = new MutationObserver(performDebouncedCleanup);
         observer.observe(root, { childList: true, subtree: true });
     }
 
