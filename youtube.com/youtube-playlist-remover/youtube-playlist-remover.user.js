@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.44
+// @version      0.1.45
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -115,6 +115,8 @@ const report = () => {
     // These are the targets for the "Remove Above" action.
     const itemsAboveAndValidSet = new Set();
     let observer = null;
+    let mutationObserver = null;
+    let playlistContainer = null;
 
     function isPlaylistPage() {
         return location.hostname === 'www.youtube.com' &&
@@ -369,6 +371,44 @@ const report = () => {
     // We only want to delete items that are:
     // 1. Above the viewport.
     // 2. Visible (display != none). If Filter script hides them, we must NOT delete them.
+
+    function setupMutationObserver() {
+        if (mutationObserver) return;
+
+        // Find the container where items are added
+        playlistContainer = document.querySelector('ytd-playlist-video-list-renderer #contents') ||
+                            document.querySelector('ytd-playlist-video-list-renderer');
+
+        if (!playlistContainer) {
+            // If container isn't there yet, try again soon
+            setTimeout(setupMutationObserver, 1000);
+            return;
+        }
+
+        mutationObserver = new MutationObserver((mutations) => {
+            if (!isActive) return;
+            mutations.forEach(mutation => {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === 1) { // Element node
+                        if (node.tagName && node.tagName.toLowerCase() === 'ytd-playlist-video-renderer') {
+                            ensureObserver();
+                            observer.observe(node);
+                        } else {
+                            // Check if the item is nested inside the added node
+                            const items = node.querySelectorAll('ytd-playlist-video-renderer');
+                            if (items.length > 0) {
+                                ensureObserver();
+                                items.forEach(item => observer.observe(item));
+                            }
+                        }
+                    }
+                });
+            });
+        });
+
+        mutationObserver.observe(playlistContainer, { childList: true, subtree: true });
+    }
+
     function ensureObserver() {
         if (observer) return;
         observer = new IntersectionObserver((entries) => {
@@ -396,14 +436,11 @@ const report = () => {
     }
 
 
-    function refreshObserver() {
+
+    function lightweightCleanup() {
         if (!isActive || !isPlaylistPage()) return;
-        ensureObserver();
-        const items = document.querySelectorAll('ytd-playlist-video-renderer');
-        items.forEach(item => {
-            observer.observe(item);
-        });
-        // Also clean up set if items were removed from DOM or became hidden
+
+        // Only clean up set if items were removed from DOM or became hidden
         itemsAboveAndValidSet.forEach(item => {
             if (isItemHiddenByFilter(item)) {
                 itemsAboveAndValidSet.delete(item);
@@ -411,6 +448,7 @@ const report = () => {
         });
         updateCandidatesInfo();
     }
+
 
     // --- Removal Logic ---
 
@@ -685,12 +723,19 @@ const report = () => {
         showPanel();
         setPanelActiveState(true);
         itemsAboveAndValidSet.clear();
-        refreshObserver();
+
+        ensureObserver();
+        const existingItems = document.querySelectorAll('ytd-playlist-video-renderer');
+        existingItems.forEach(item => {
+            observer.observe(item);
+        });
+        setupMutationObserver();
+
         updateStatus('Idle');
         updatePhase('Idle');
 
         if (!refreshIntervalId) {
-            refreshIntervalId = window.setInterval(refreshObserver, 5000);
+            refreshIntervalId = window.setInterval(lightweightCleanup, 5000);
         }
 
         console.log('[YouTube Playlist Remover] Running...');
@@ -709,6 +754,12 @@ const report = () => {
             observer.disconnect();
             observer = null;
         }
+
+        if (mutationObserver) {
+            mutationObserver.disconnect();
+            mutationObserver = null;
+        }
+        playlistContainer = null;
 
         itemsAboveAndValidSet.clear();
         isRemoving = false;
