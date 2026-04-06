@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.19
+// @version      0.1.20
+// @lastModified  2026-04-06
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -45,8 +46,16 @@ const report = () => {
     let isInputActive = false; // Flag to pause filtering during input
     let resumeTimerId = null;
 
+
     let listObserver = null;
     let observerForRange = null;
+
+    // --- Performance Optimization Globals ---
+    let allCachedItems = new Set();
+    let pendingProcessItems = new Set();
+    let isProcessing = false;
+    let processTimerId = null;
+
 
     function isPlaylistPage() {
         return location.hostname === 'www.youtube.com' &&
@@ -327,21 +336,55 @@ const report = () => {
         }, { root: null, threshold: 0 });
     }
 
-    function applyFilters() {
-        if (!isActive || !isPlaylistPage()) return;
-        if (isInputActive) return; // Skip if user is typing
-        ensureRangeObserver();
+    function scheduleProcessing() {
+        if (isProcessing) return;
+        if (processTimerId) return;
 
-        isFiltering = Boolean(filterState.title || filterState.channel);
-        updateStatus('filtering', true);
+        processTimerId = setTimeout(() => {
+            processTimerId = null;
+            processChunk();
+        }, 0);
+    }
 
-        const items = document.querySelectorAll('ytd-playlist-video-renderer');
-        let visible = 0;
+    function processChunk() {
+        if (!isActive || !isPlaylistPage() || isInputActive) {
+            isProcessing = false;
+            updateStatus('filtering', false);
+            return;
+        }
 
+        isProcessing = true;
+
+        const CHUNK_SIZE = 50;
         const titleLower = filterState.title.toLowerCase();
         const channelLower = filterState.channel.toLowerCase();
 
-        items.forEach(item => {
+        const itemsToProcess = [];
+        for (const item of pendingProcessItems) {
+            itemsToProcess.push(item);
+            pendingProcessItems.delete(item);
+            if (itemsToProcess.length >= CHUNK_SIZE) {
+                break;
+            }
+        }
+
+        if (itemsToProcess.length === 0) {
+            // Finished processing chunk
+            isProcessing = false;
+            updateCounts();
+            updateStatus('filtering', false);
+            setTimeout(updateRangeInfo, 100);
+            return;
+        }
+
+        updateStatus('filtering', true);
+
+        itemsToProcess.forEach(item => {
+            if (!item.isConnected) {
+                allCachedItems.delete(item);
+                return;
+            }
+
             const titleEl = item.querySelector('#video-title');
             const title = titleEl ? titleEl.textContent.trim().toLowerCase() : '';
 
@@ -354,32 +397,62 @@ const report = () => {
             const isMatched = matchTitle && matchChannel;
 
             if (isMatched) {
-                item.style.display = '';
-                visible++;
+                if (item.style.display !== '') item.style.display = '';
 
-                // Render [MATCHED] badge if filtering is active
                 if (isFiltering) {
                     renderMatchedIndicator(item, true);
                 } else {
-                    renderMatchedIndicator(item, false); // Clear if no filter
+                    renderMatchedIndicator(item, false);
                 }
 
-                // Add to observer for "Range" logic
                 observerForRange.observe(item);
-
             } else {
-                item.style.display = 'none';
-                renderMatchedIndicator(item, false); // Clear
+                if (item.style.display !== 'none') item.style.display = 'none';
+                renderMatchedIndicator(item, false);
                 observerForRange.unobserve(item);
             }
         });
 
-        // Update Counts
-        const countEl = document.getElementById('yt-filter-count');
-        if (countEl) countEl.textContent = `Results: ${visible} / ${items.length}`;
+        // Schedule next chunk
+        processTimerId = setTimeout(processChunk, 0);
+    }
 
-        updateStatus('filtering', false);
-        setTimeout(updateRangeInfo, 100);
+    function updateCounts() {
+        let visibleCount = 0;
+        let totalCount = 0;
+        allCachedItems.forEach(item => {
+            if (!item.isConnected) {
+                allCachedItems.delete(item);
+            } else {
+                totalCount++;
+                if (item.style.display !== 'none') {
+                    visibleCount++;
+                }
+            }
+        });
+        const countEl = document.getElementById('yt-filter-count');
+        if (countEl) countEl.textContent = `Results: ${visibleCount} / ${totalCount}`;
+    }
+
+    function applyFilters() {
+        if (!isActive || !isPlaylistPage()) return;
+        if (isInputActive) return;
+        ensureRangeObserver();
+
+        isFiltering = Boolean(filterState.title || filterState.channel);
+        updateStatus('filtering', true);
+
+        // Add existing known items to re-process
+        allCachedItems.forEach(item => pendingProcessItems.add(item));
+
+        // Scan DOM for any items missed before MutationObserver or initial load
+        const items = document.querySelectorAll('ytd-playlist-video-renderer');
+        items.forEach(item => {
+            allCachedItems.add(item);
+            pendingProcessItems.add(item);
+        });
+
+        scheduleProcessing();
     }
 
     // --- Range Logic ---
@@ -417,18 +490,30 @@ const report = () => {
         }
 
         listObserver = new MutationObserver((mutations) => {
-            let added = false;
+            let hasNewItems = false;
             for (const m of mutations) {
-                if (m.addedNodes.length > 0) {
-                    added = true;
-                    break;
-                }
+                m.addedNodes.forEach(node => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        if (node.tagName.toLowerCase() === 'ytd-playlist-video-renderer') {
+                            allCachedItems.add(node);
+                            pendingProcessItems.add(node);
+                            hasNewItems = true;
+                        } else {
+                            const found = node.querySelectorAll('ytd-playlist-video-renderer');
+                            if (found.length > 0) {
+                                found.forEach(n => {
+                                    allCachedItems.add(n);
+                                    pendingProcessItems.add(n);
+                                });
+                                hasNewItems = true;
+                            }
+                        }
+                    }
+                });
             }
-            if (added) {
-                // Throttle applied via the interval mostly, but we can force a check.
-                // Or just let applyFilters run. 
-                // Let's run applyFilters immediately (debounced if needed, but simple is fine)
-                applyFilters();
+            if (hasNewItems) {
+                ensureRangeObserver();
+                scheduleProcessing();
             }
         });
         listObserver.observe(container, { childList: true });
@@ -482,8 +567,16 @@ const report = () => {
         }
 
         if (!filterIntervalId) {
-            filterIntervalId = window.setInterval(applyFilters, 5000);
+            // Use lightweight recheck instead of full DOM scan
+            filterIntervalId = window.setInterval(recheckCachedItems, 5000);
         }
+    }
+
+
+    function recheckCachedItems() {
+        if (!isActive || !isPlaylistPage() || isInputActive) return;
+        allCachedItems.forEach(item => pendingProcessItems.add(item));
+        scheduleProcessing();
     }
 
     function pauseFilteringForInput() {
@@ -539,9 +632,13 @@ const report = () => {
 
         createPanel();
         showPanel();
+
         setPanelActiveState(true);
         itemsAboveSet.clear();
         itemsVisibleSet.clear();
+        allCachedItems.clear();
+        pendingProcessItems.clear();
+
 
         startBackgroundWork({ applyNow: true });
 
@@ -557,10 +654,14 @@ const report = () => {
             resumeTimerId = null;
         }
 
+
         stopBackgroundWork();
 
         itemsAboveSet.clear();
         itemsVisibleSet.clear();
+        allCachedItems.clear();
+        pendingProcessItems.clear();
+
         showPanel();
         setPanelActiveState(false);
     }
