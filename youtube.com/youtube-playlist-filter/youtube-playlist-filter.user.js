@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.25
+// @version      0.1.26
 // @lastModified  2026-04-06
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -36,7 +36,7 @@ const report = () => {
     const PLAYLIST_PATH = '/playlist';
     const PANEL_POS_KEY = 'yt_filter_panel_position';
     const MINIMIZED_STATE_KEY = 'yt_filter_is_minimized';
-    const INIT_DELAY_RANGE_MS = { min: 3000, max: 5000 };
+    const INIT_DELAY_RANGE_MS = { min: 1000, max: 2000 };
     let isActive = false;
     let isAutoMinimized = false;
     let isManuallyMinimized = GM_getValue(MINIMIZED_STATE_KEY, false);
@@ -443,54 +443,61 @@ const report = () => {
         console.groupCollapsed(`[Playlist Filter Debug] processChunk (batch size: ${itemsToProcess.length}, title: "${titleLower}", channel: "${channelLower}")`);
         updateStatus('filtering', true);
 
-        itemsToProcess.forEach(item => {
-            if (!item.isConnected) {
-                console.log(`[Playlist Filter Debug] Item not connected, removing from cache`);
-                allCachedItems.delete(item);
-                return;
-            }
+        try {
+            // Ensure observer is alive before use
+            ensureRangeObserver();
 
-            // Enhanced title extraction
-            const titleEl = item.querySelector('#video-title') || 
-                            item.querySelector('a#video-title') ||
-                            item.querySelector('.ytd-playlist-video-renderer #video-title');
-            const title = titleEl ? titleEl.textContent.trim().toLowerCase() : '';
+            itemsToProcess.forEach(item => {
+                if (!item.isConnected) {
+                    console.log(`[Playlist Filter Debug] Item not connected, removing from cache`);
+                    allCachedItems.delete(item);
+                    return;
+                }
 
-            // Enhanced channel extraction
-            const channelEl = item.querySelector('.ytd-channel-name a') || 
-                              item.querySelector('#channel-name #text') ||
-                              item.querySelector('yt-formatted-string.ytd-channel-name');
-            const channel = channelEl ? channelEl.textContent.trim().toLowerCase() : '';
+                // Enhanced title extraction
+                const titleEl = item.querySelector('#video-title') || 
+                                item.querySelector('a#video-title') ||
+                                item.querySelector('.ytd-playlist-video-renderer #video-title');
+                const title = titleEl ? titleEl.textContent.trim().toLowerCase() : '';
 
-            const matchTitle = !titleLower || title.includes(titleLower);
-            const matchChannel = !channelLower || channel.includes(channelLower);
+                // Enhanced channel extraction
+                const channelEl = item.querySelector('.ytd-channel-name a') || 
+                                  item.querySelector('#channel-name #text') ||
+                                  item.querySelector('yt-formatted-string.ytd-channel-name');
+                const channel = channelEl ? channelEl.textContent.trim().toLowerCase() : '';
 
-            const isMatched = matchTitle && matchChannel;
+                const matchTitle = !titleLower || title.includes(titleLower);
+                const matchChannel = !channelLower || channel.includes(channelLower);
 
-            if (isMatched) {
-                console.log(`[Playlist Filter Debug] [MATCH] "${title}" by "${channel}"`);
-                if (item.style.display !== '') item.style.display = '';
+                const isMatched = matchTitle && matchChannel;
 
-                if (isFiltering) {
-                    renderMatchedIndicator(item, true);
+                if (isMatched) {
+                    console.log(`[Playlist Filter Debug] [MATCH] "${title}" by "${channel}"`);
+                    if (item.style.display !== '') item.style.display = '';
+
+                    if (isFiltering) {
+                        renderMatchedIndicator(item, true);
+                    } else {
+                        renderMatchedIndicator(item, false);
+                    }
+
+                    if (observerForRange) observerForRange.observe(item);
                 } else {
+                    console.log(`[Playlist Filter Debug] [HIDE] "${title}" by "${channel}"`);
+                    if (item.style.display !== 'none') {
+                        item.style.display = 'none';
+                    }
                     renderMatchedIndicator(item, false);
+                    if (observerForRange) observerForRange.unobserve(item);
                 }
-
-                observerForRange.observe(item);
-            } else {
-                console.log(`[Playlist Filter Debug] [HIDE] "${title}" by "${channel}"`);
-                if (item.style.display !== 'none') {
-                    item.style.display = 'none';
-                }
-                renderMatchedIndicator(item, false);
-                observerForRange.unobserve(item);
-            }
-        });
-        console.groupEnd();
-
-        // Schedule next chunk
-        processTimerId = setTimeout(processChunk, 0);
+            });
+        } catch (err) {
+            console.error(`[Playlist Filter Debug] Error in processChunk loop:`, err);
+        } finally {
+            console.groupEnd();
+            // Schedule next chunk
+            processTimerId = setTimeout(processChunk, 0);
+        }
     }
 
     function updateCounts() {
@@ -641,7 +648,9 @@ const report = () => {
     }
 
     function startBackgroundWork({ applyNow = true } = {}) {
+        console.log(`[Playlist Filter Debug] startBackgroundWork (applyNow: ${applyNow})`);
         setupMutationObserver();
+        ensureRangeObserver(); // Always ensure range observer is alive
         if (applyNow) {
             applyFilters();
         }

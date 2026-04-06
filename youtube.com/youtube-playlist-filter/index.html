@@ -193,6 +193,7 @@
 
 <h2>更新履歴</h2>
 <ul>
+<li><strong>v0.1.26</strong>: フィルタリング中のTypeErrorによるクラッシュを修正。IntersectionObserverの再生成を確実に行うように改善。起動時の遅延をさらに短縮（1-2秒）。</li>
 <li><strong>v0.1.25</strong>: 内部タイマー管理のバグを修正し、連続したフィルタ実行の安定性を向上。起動時の遅延を3-5秒に短縮。</li>
 <li><strong>v0.1.24</strong>: フィルタ実行時のフラグ管理(isInputActive)を改善し、マニュアル実行の確実性を向上。各アイテムの抽出ログを詳細化。</li>
 <li><strong>v0.1.23</strong>: フィルタリングの実行をマニュアル化（Apply Filterボタンのみ）し、入力時の負荷を軽減。詳細なデバッグログを追加。</li>
@@ -201,13 +202,13 @@
 <li><strong>v0.1.20</strong>: フィルタリング処理をチャンク化し、パフォーマンスを向上しました。</li>
 </ul>
         <div class="install-section">
-            <a class="install-button" id="install-btn" href="youtube-playlist-filter.user.js" data-version="0.1.25">
+            <a class="install-button" id="install-btn" href="youtube-playlist-filter.user.js" data-version="0.1.26">
                         <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                 </svg>
                         <span>Install</span>
                         <div class="version-info">
-                            <span class="version-badge latest-version">v0.1.25</span>
+                            <span class="version-badge latest-version">v0.1.26</span>
                             <span class="version-badge installed-version" style="display: none;"></span>
                         </div>
                     </a>
