@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.24
+// @version      0.1.25
 // @lastModified  2026-04-06
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -36,7 +36,7 @@ const report = () => {
     const PLAYLIST_PATH = '/playlist';
     const PANEL_POS_KEY = 'yt_filter_panel_position';
     const MINIMIZED_STATE_KEY = 'yt_filter_is_minimized';
-    const INIT_DELAY_RANGE_MS = { min: 10000, max: 15000 };
+    const INIT_DELAY_RANGE_MS = { min: 3000, max: 5000 };
     let isActive = false;
     let isAutoMinimized = false;
     let isManuallyMinimized = GM_getValue(MINIMIZED_STATE_KEY, false);
@@ -385,8 +385,14 @@ const report = () => {
     }
 
     function scheduleProcessing() {
-        if (isProcessing) return;
-        if (processTimerId) return;
+        if (isProcessing) {
+            console.log(`[Playlist Filter Debug] scheduleProcessing skipped: isProcessing is true`);
+            return;
+        }
+        if (processTimerId) {
+            console.log(`[Playlist Filter Debug] scheduleProcessing skipped: processTimerId is active (${processTimerId})`);
+            return;
+        }
 
         processTimerId = setTimeout(() => {
             processTimerId = null;
@@ -396,6 +402,13 @@ const report = () => {
     }
 
     function processChunk() {
+        // Clear timer on entry (recursive or non-recursive)
+        if (processTimerId) {
+            console.log(`[Playlist Filter Debug] processChunk: clearing current processTimerId (${processTimerId})`);
+            clearTimeout(processTimerId);
+            processTimerId = null;
+        }
+
         if (!isActive || !isPlaylistPage() || isInputActive) {
             isProcessing = false;
             updateStatus('filtering', false);
