@@ -133,7 +133,7 @@
 
         <div id="content">
             <h1>YouTube Playlist Lite</h1>
-<p>YouTube プレイリストや再生履歴の軽量化ツールです。サムネイルなどの重い要素を非表示にして、ブラウザの負荷を軽減します。</p>
+<p>YouTube プレイリストの軽量化ツールです。サムネイルなどの重い要素を非表示にして、ブラウザの負荷を軽減します。</p>
 <h2>機能</h2>
 <ul>
 <li><strong>Hide (CSS)</strong>: サムネイルをCSS (<code>display: none</code>) で隠します。最も安全な方法で、オフにすればすぐに再表示されます。</li>
@@ -153,6 +153,8 @@
 </ol>
 <h2>更新履歴</h2>
 <ul>
+<li><strong>v0.1.19</strong>: MutationObserverにデバウンス処理を導入し、無限スクロール時のCPU負荷を大幅に軽減。ミニプレーヤー除去ロジックの効率化。</li>
+<li><strong>v0.1.18</strong>: 再生履歴ページのサポートを終了し、プレイリスト表示ページのみに動作を限定。バージョン番号のダブルクリックによる手動UI最小化機能を追加。</li>
 <li><strong>v0.1.9</strong>: パネル右上に Active/Inactive インジケーターを追加。</li>
 <li><strong>v0.1.8</strong>: 初期化ディレイを1-3秒のランダムに変更し、他スクリプトと同時に起動しづらく改善。</li>
 <li><strong>v0.1.6</strong>: 手動の最小化ボタンを撤去し、対象ページ以外ではパネル内容を自動的に閉じる方式に変更。</li>
@@ -166,13 +168,13 @@
         </div>
 
         <div class="install-section">
-            <a class="install-button" id="install-btn" href="youtube-playlist-lite.user.js" data-version="0.1.13">
+            <a class="install-button" id="install-btn" href="youtube-playlist-lite.user.js" data-version="0.1.19">
                         <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                 </svg>
                         <span>Install</span>
                         <div class="version-info">
-                            <span class="version-badge latest-version">v0.1.13</span>
+                            <span class="version-badge latest-version">v0.1.19</span>
                             <span class="version-badge installed-version" style="display: none;"></span>
                         </div>
                     </a>
