@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.23
+// @version      0.1.24
 // @lastModified  2026-04-06
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -270,7 +270,8 @@ const report = () => {
             marginTop: '4px'
         });
         applyBtn.addEventListener('click', () => {
-            console.log(`[Playlist Filter Debug] Apply Filter button clicked`);
+            console.log(`[Playlist Filter Debug] Apply Filter button clicked (manual trigger)`);
+            
             // Sync current input values just in case
             const inputs = contentContainer.querySelectorAll('input');
             inputs.forEach(inp => {
@@ -279,10 +280,19 @@ const report = () => {
             });
 
             if (isInputActive) {
-                // If an input is focused, blur it first to resume background work
+                console.log(`[Playlist Filter Debug] Manual override: forcibly setting isInputActive to false`);
+                isInputActive = false;
+                // If an input is focused, blur it to clean up UI/state
                 inputs.forEach(inp => inp.blur());
             }
-            applyFilters();
+
+            // Ensure we are active
+            if (!isActive) {
+                console.log(`[Playlist Filter Debug] Manual trigger: script was inactive, starting main...`);
+                startMain();
+            } else {
+                applyFilters();
+            }
         });
         contentContainer.appendChild(applyBtn);
 
@@ -427,10 +437,16 @@ const report = () => {
                 return;
             }
 
-            const titleEl = item.querySelector('#video-title');
+            // Enhanced title extraction
+            const titleEl = item.querySelector('#video-title') || 
+                            item.querySelector('a#video-title') ||
+                            item.querySelector('.ytd-playlist-video-renderer #video-title');
             const title = titleEl ? titleEl.textContent.trim().toLowerCase() : '';
 
-            const channelEl = item.querySelector('.ytd-channel-name a') || item.querySelector('#channel-name #text');
+            // Enhanced channel extraction
+            const channelEl = item.querySelector('.ytd-channel-name a') || 
+                              item.querySelector('#channel-name #text') ||
+                              item.querySelector('yt-formatted-string.ytd-channel-name');
             const channel = channelEl ? channelEl.textContent.trim().toLowerCase() : '';
 
             const matchTitle = !titleLower || title.includes(titleLower);
@@ -439,6 +455,7 @@ const report = () => {
             const isMatched = matchTitle && matchChannel;
 
             if (isMatched) {
+                console.log(`[Playlist Filter Debug] [MATCH] "${title}" by "${channel}"`);
                 if (item.style.display !== '') item.style.display = '';
 
                 if (isFiltering) {
@@ -449,8 +466,8 @@ const report = () => {
 
                 observerForRange.observe(item);
             } else {
+                console.log(`[Playlist Filter Debug] [HIDE] "${title}" by "${channel}"`);
                 if (item.style.display !== 'none') {
-                    console.log(`[Playlist Filter Debug] Hiding non-match: "${title}" by "${channel}"`);
                     item.style.display = 'none';
                 }
                 renderMatchedIndicator(item, false);
@@ -489,7 +506,7 @@ const report = () => {
         ensureRangeObserver();
 
         isFiltering = Boolean(filterState.title || filterState.channel);
-        console.log(`[Playlist Filter Debug] applyFilters (title: "${filterState.title}", channel: "${filterState.channel}", isFiltering: ${isFiltering})`);
+        console.log(`[Playlist Filter Debug] applyFilters (title: "${filterState.title}", channel: "${filterState.channel}", isFiltering: ${isFiltering}, isInputActive: ${isInputActive})`);
         updateStatus('filtering', true);
 
         // Add existing known items to re-process
