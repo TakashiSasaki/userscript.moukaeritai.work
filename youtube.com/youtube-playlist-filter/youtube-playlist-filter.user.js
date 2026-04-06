@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.26
+// @version      0.1.27
 // @lastModified  2026-04-06
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -58,6 +58,13 @@ const report = () => {
     let pendingProcessItems = new Set();
     let isProcessing = false;
     let processTimerId = null;
+
+    // --- Helpers ---
+    function normalizeText(str) {
+        if (!str) return '';
+        // Normalize to NFKC to handle full-width/half-width Japanese characters
+        return str.normalize('NFKC').toLowerCase().trim();
+    }
 
 
     function isPlaylistPage() {
@@ -418,8 +425,8 @@ const report = () => {
         isProcessing = true;
 
         const CHUNK_SIZE = 50;
-        const titleLower = filterState.title.toLowerCase();
-        const channelLower = filterState.channel.toLowerCase();
+        const titleLower = normalizeText(filterState.title);
+        const channelLower = normalizeText(filterState.channel);
 
         const itemsToProcess = [];
         for (const item of pendingProcessItems) {
@@ -440,6 +447,7 @@ const report = () => {
             return;
         }
 
+        let batchMatches = 0;
         console.groupCollapsed(`[Playlist Filter Debug] processChunk (batch size: ${itemsToProcess.length}, title: "${titleLower}", channel: "${channelLower}")`);
         updateStatus('filtering', true);
 
@@ -454,17 +462,22 @@ const report = () => {
                     return;
                 }
 
-                // Enhanced title extraction
+                // Enhanced title extraction: prefer 'title' attribute then 'innerText'
                 const titleEl = item.querySelector('#video-title') || 
                                 item.querySelector('a#video-title') ||
-                                item.querySelector('.ytd-playlist-video-renderer #video-title');
-                const title = titleEl ? titleEl.textContent.trim().toLowerCase() : '';
+                                item.querySelector('.ytd-playlist-video-renderer #video-title') ||
+                                item.querySelector('#video-title-link');
+                
+                const titleRaw = titleEl ? (titleEl.getAttribute('title') || titleEl.innerText || titleEl.textContent) : '';
+                const title = normalizeText(titleRaw);
 
-                // Enhanced channel extraction
+                // Enhanced channel extraction: prefer 'title' attribute then 'innerText'
                 const channelEl = item.querySelector('.ytd-channel-name a') || 
                                   item.querySelector('#channel-name #text') ||
                                   item.querySelector('yt-formatted-string.ytd-channel-name');
-                const channel = channelEl ? channelEl.textContent.trim().toLowerCase() : '';
+                
+                const channelRaw = channelEl ? (channelEl.getAttribute('title') || channelEl.innerText || channelEl.textContent) : '';
+                const channel = normalizeText(channelRaw);
 
                 const matchTitle = !titleLower || title.includes(titleLower);
                 const matchChannel = !channelLower || channel.includes(channelLower);
@@ -472,6 +485,7 @@ const report = () => {
                 const isMatched = matchTitle && matchChannel;
 
                 if (isMatched) {
+                    batchMatches++;
                     console.log(`[Playlist Filter Debug] [MATCH] "${title}" by "${channel}"`);
                     if (item.style.display !== '') item.style.display = '';
 
@@ -491,6 +505,7 @@ const report = () => {
                     if (observerForRange) observerForRange.unobserve(item);
                 }
             });
+            console.log(`[Playlist Filter Debug] Batch finished: ${batchMatches} matches found.`);
         } catch (err) {
             console.error(`[Playlist Filter Debug] Error in processChunk loop:`, err);
         } finally {
