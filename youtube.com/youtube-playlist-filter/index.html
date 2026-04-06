@@ -138,12 +138,11 @@
 <h3>1. フィルタリング (Filtering)</h3>
 <p>画面右下のフローティングパネルを使用して、プレイリスト内の動画をリアルタイムに絞り込みます。</p>
 <ul>
-<li><strong>Title Filter</strong>: 動画タイトルに含まれるキーワードでフィルタします。</li>
-<li><strong>Channel Filter</strong>: チャンネル名に含まれるキーワードでフィルタします。</li>
-<li>フィルタ条件の両方（AND条件）に一致する動画のみが表示され、その他は非表示になります。</li>
+<li><strong>Title Filter</strong>: 動画タイトルに含まれるキーワードを指定します。</li>
+<li><strong>Channel Filter</strong>: チャンネル名に含まれるキーワードで指定します。</li>
+<li><strong>Manual Apply</strong>: 入力しただけでは実行されません。<strong>Apply Filter</strong> ボタンを押すことで、指定回数（50件ずつ）に分けて順次フィルタリングが実行されます。</li>
 <li>一致した動画には、メタデータ欄の先頭にオレンジ色の <code>[MATCHED]</code> バッジが表示されます。</li>
-<li><strong>リアルタイム更新</strong>: 入力ボックスにテキストを入力すると、自動的にフィルタリングが実行されます（300msのデバウンス処理付き）。</li>
-<li><strong>入力中の挙動</strong>: 入力ボックスにフォーカスがある間は、負荷を下げるため定期的な再スキャン処理などを一時停止し、入力内容の反映に集中します。</li>
+<li><strong>パフォーマンス</strong>: 自動的な再計算を極力減らし、ユーザーが意図したタイミングでのみ重い処理を実行するように設計されています。</li>
 </ul>
 <h3>2. ステータス表示 (Status Dashboard)</h3>
 <p>パネルには現在の処理状況が表示されます。</p>
@@ -194,17 +193,19 @@
 
 <h2>更新履歴</h2>
 <ul>
+<li><strong>v0.1.23</strong>: フィルタリングの実行をマニュアル化（Apply Filterボタンのみ）し、入力時の負荷を軽減。詳細なデバッグログを追加。</li>
+<li><strong>v0.1.22</strong>: 調査用の詳細なデバッグログを追加。</li>
 <li><strong>v0.1.21</strong>: 入力時のリアルタイム・フィルタリング（デバウンス付き）を導入し、MutationObserverを強化して動画の追加検知の確実性を向上。パネルの最小化状態の記憶機能を追加。</li>
 <li><strong>v0.1.20</strong>: フィルタリング処理をチャンク化し、パフォーマンスを向上しました。</li>
 </ul>
         <div class="install-section">
-            <a class="install-button" id="install-btn" href="youtube-playlist-filter.user.js" data-version="0.1.21">
+            <a class="install-button" id="install-btn" href="youtube-playlist-filter.user.js" data-version="0.1.23">
                         <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                 </svg>
                         <span>Install</span>
                         <div class="version-info">
-                            <span class="version-badge latest-version">v0.1.21</span>
+                            <span class="version-badge latest-version">v0.1.23</span>
                             <span class="version-badge installed-version" style="display: none;"></span>
                         </div>
                     </a>

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.21
+// @version      0.1.23
 // @lastModified  2026-04-06
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -61,9 +61,11 @@ const report = () => {
 
 
     function isPlaylistPage() {
-        return location.hostname === 'www.youtube.com' &&
+        const res = location.hostname === 'www.youtube.com' &&
             location.pathname === PLAYLIST_PATH &&
             location.search.length > 1;
+        console.log(`[Playlist Filter Debug] isPlaylistPage: ${res} (path: ${location.pathname}, search: ${location.search})`);
+        return res;
     }
 
     // --- UI Creation ---
@@ -217,43 +219,29 @@ const report = () => {
                 pauseFilteringForInput();
             });
 
-            // Resume and apply on blur
+            // Sync state on blur, but do NOT apply filters automatically
             input.addEventListener('blur', () => {
+                console.log(`[Playlist Filter Debug] Input blur for ${key}: "${input.value}"`);
                 filterState[key] = input.value;
-                scheduleResumeAfterInput();
+                scheduleResumeAfterInput(); // This just resumes the observer/timers, doesn't apply filter anymore
             });
 
-            // Real-time filtering
-            let inputDebounceTimer = null;
-            input.addEventListener('input', () => {
-                filterState[key] = input.value;
-                if (inputDebounceTimer) clearTimeout(inputDebounceTimer);
-                inputDebounceTimer = setTimeout(() => {
-                    if (!isInputActive) {
-                        applyFilters();
-                    } else {
-                        // If we are technically "input active" (focus paused), 
-                        // we don't apply immediately but resume will catch it.
-                    }
-                }, 300);
-            });
-
-            // Handle Enter key
+            // Handle Enter key for convenience - still manual trigger
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
+                    console.log(`[Playlist Filter Debug] Enter pressed for ${key}`);
                     filterState[key] = input.value;
-                    input.blur(); // Trigger blur to apply
+                    input.blur();
+                    // Optional: Should Enter apply? User said "Apply Filter button", 
+                    // but Enter is standard. I'll leave it to only blur for now to be strict.
                 }
             });
 
             clearBtn.addEventListener('click', () => {
+                console.log(`[Playlist Filter Debug] Clear button clicked for ${key}`);
                 filterState[key] = '';
                 input.value = '';
-                if (isInputActive) {
-                    scheduleResumeAfterInput();
-                } else {
-                    applyFilters();
-                }
+                // Do NOT auto-apply even on clear, as per "manual only" request
             });
 
             row.appendChild(lbl);
@@ -282,11 +270,19 @@ const report = () => {
             marginTop: '4px'
         });
         applyBtn.addEventListener('click', () => {
+            console.log(`[Playlist Filter Debug] Apply Filter button clicked`);
+            // Sync current input values just in case
+            const inputs = contentContainer.querySelectorAll('input');
+            inputs.forEach(inp => {
+                if (inp.placeholder.includes('title')) filterState.title = inp.value;
+                if (inp.placeholder.includes('channel')) filterState.channel = inp.value;
+            });
+
             if (isInputActive) {
-                scheduleResumeAfterInput();
-            } else {
-                applyFilters();
+                // If an input is focused, blur it first to resume background work
+                inputs.forEach(inp => inp.blur());
             }
+            applyFilters();
         });
         contentContainer.appendChild(applyBtn);
 
@@ -384,6 +380,7 @@ const report = () => {
 
         processTimerId = setTimeout(() => {
             processTimerId = null;
+            console.log(`[Playlist Filter Debug] scheduleProcessing -> processChunk start`);
             processChunk();
         }, 0);
     }
@@ -412,6 +409,7 @@ const report = () => {
 
         if (itemsToProcess.length === 0) {
             // Finished processing chunk
+            console.log(`[Playlist Filter Debug] processChunk finished (total cached: ${allCachedItems.size})`);
             isProcessing = false;
             updateCounts();
             updateStatus('filtering', false);
@@ -419,10 +417,12 @@ const report = () => {
             return;
         }
 
+        console.groupCollapsed(`[Playlist Filter Debug] processChunk (batch size: ${itemsToProcess.length}, title: "${titleLower}", channel: "${channelLower}")`);
         updateStatus('filtering', true);
 
         itemsToProcess.forEach(item => {
             if (!item.isConnected) {
+                console.log(`[Playlist Filter Debug] Item not connected, removing from cache`);
                 allCachedItems.delete(item);
                 return;
             }
@@ -449,11 +449,15 @@ const report = () => {
 
                 observerForRange.observe(item);
             } else {
-                if (item.style.display !== 'none') item.style.display = 'none';
+                if (item.style.display !== 'none') {
+                    console.log(`[Playlist Filter Debug] Hiding non-match: "${title}" by "${channel}"`);
+                    item.style.display = 'none';
+                }
                 renderMatchedIndicator(item, false);
                 observerForRange.unobserve(item);
             }
         });
+        console.groupEnd();
 
         // Schedule next chunk
         processTimerId = setTimeout(processChunk, 0);
@@ -478,10 +482,14 @@ const report = () => {
 
     function applyFilters() {
         if (!isActive || !isPlaylistPage()) return;
-        if (isInputActive) return;
+        if (isInputActive) {
+            console.log(`[Playlist Filter Debug] applyFilters skipped: input is active`);
+            return;
+        }
         ensureRangeObserver();
 
         isFiltering = Boolean(filterState.title || filterState.channel);
+        console.log(`[Playlist Filter Debug] applyFilters (title: "${filterState.title}", channel: "${filterState.channel}", isFiltering: ${isFiltering})`);
         updateStatus('filtering', true);
 
         // Add existing known items to re-process
@@ -555,6 +563,7 @@ const report = () => {
                 });
             }
             if (hasNewItems) {
+                console.log(`[Playlist Filter Debug] MutationObserver: Detected new items, scheduling processing`);
                 ensureRangeObserver();
                 scheduleProcessing();
             }
@@ -653,7 +662,8 @@ const report = () => {
 
         itemsAboveSet.clear();
         itemsVisibleSet.clear();
-        startBackgroundWork({ applyNow: true });
+        console.log(`[Playlist Filter Debug] resumeFilteringAfterInput: Resuming background work (WITHOUT auto-apply)`);
+        startBackgroundWork({ applyNow: false });
     }
 
     // --- Status Helper ---
@@ -683,6 +693,7 @@ const report = () => {
 
         startBackgroundWork({ applyNow: true });
 
+        console.log('[Playlist Filter Debug] startMain: Active and running');
         console.log('[YouTube Playlist Filter] Running...');
     }
 
@@ -724,10 +735,14 @@ const report = () => {
     }
 
     function getRandomInitDelayMs() {
-        const span = INIT_DELAY_RANGE_MS.max - INIT_DELAY_RANGE_MS.min;
-        return INIT_DELAY_RANGE_MS.min + Math.floor(Math.random() * (span + 1));
+        const res = INIT_DELAY_RANGE_MS.min + Math.floor(Math.random() * (INIT_DELAY_RANGE_MS.max - INIT_DELAY_RANGE_MS.min + 1));
+        console.log(`[Playlist Filter Debug] init scheduled in ${res}ms`);
+        return res;
     }
 
-    setTimeout(init, getRandomInitDelayMs());
+    setTimeout(() => {
+        console.log(`[Playlist Filter Debug] init timer fired`);
+        init();
+    }, getRandomInitDelayMs());
 
 })();
