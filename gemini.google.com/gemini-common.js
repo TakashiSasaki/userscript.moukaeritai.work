@@ -154,6 +154,54 @@
     window.geminiSetupDraggablePanel = function (panel, handle, storageKey, defaultPos = { right: '20px', bottom: '20px' }) {
         if (!panel || !handle || !storageKey) return;
 
+        // Function to constrain panel position within the window
+        function constrainPanelPosition() {
+            // Convert relative positioning to absolute before constraining
+            if (panel.style.right && panel.style.right !== 'auto' || panel.style.bottom && panel.style.bottom !== 'auto') {
+                const rect = panel.getBoundingClientRect();
+                panel.style.left = rect.left + 'px';
+                panel.style.top = rect.top + 'px';
+                panel.style.right = 'auto';
+                panel.style.bottom = 'auto';
+            }
+
+            const rect = panel.getBoundingClientRect();
+            let newTop = rect.top;
+            let newLeft = rect.left;
+            let constrained = false;
+
+            if (newTop < 0) {
+                newTop = 0;
+                constrained = true;
+            } else if (newTop + rect.height > window.innerHeight) {
+                newTop = window.innerHeight - rect.height;
+                constrained = true;
+            }
+
+            if (newLeft < 0) {
+                newLeft = 0;
+                constrained = true;
+            } else if (newLeft + rect.width > window.innerWidth) {
+                newLeft = window.innerWidth - rect.width;
+                constrained = true;
+            }
+
+            if (constrained) {
+                panel.style.top = newTop + "px";
+                panel.style.left = newLeft + "px";
+
+                // Save constrained position to LocalStorage
+                try {
+                    localStorage.setItem(storageKey, JSON.stringify({
+                        top: panel.style.top,
+                        left: panel.style.left
+                    }));
+                } catch (e) {
+                    console.warn('[GUS] Failed to save constrained panel position', e);
+                }
+            }
+        }
+
         // 1. Restore position from LocalStorage
         try {
             const savedPosRaw = localStorage.getItem(storageKey);
@@ -174,6 +222,12 @@
         } catch (e) {
             Object.assign(panel.style, defaultPos);
         }
+
+        // Apply constraint initially after a short delay to allow rendering
+        setTimeout(constrainPanelPosition, 100);
+
+        // Apply constraint on window resize
+        window.addEventListener('resize', constrainPanelPosition);
 
         // 2. Setup Drag Logic
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
