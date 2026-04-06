@@ -2,7 +2,7 @@
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
 // @version      0.3.19
-// @lastModified  2026-04-03
+// @lastModified  2026-04-05
 // @description  Adds a 1-click floating button with shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -316,13 +316,12 @@ const report = () => {
             }
 
             /**
-             * Handle Keyboard Shortcut (Ctrl+D or Ctrl+Shift+Backspace)
+             * Handle Keyboard Shortcut (Ctrl+Shift+Backspace)
              */
             async function handleKeyboardShortcut(e) {
-                const isCtrlD = (e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D');
                 const isCtrlShiftBackspace = (e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Backspace';
 
-                if (!isCtrlD && !isCtrlShiftBackspace) return;
+                if (!isCtrlShiftBackspace) return;
 
                 // Ignore if user is typing in an input
                 const activeTag = document.activeElement.tagName.toLowerCase();
