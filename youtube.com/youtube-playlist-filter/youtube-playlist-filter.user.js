@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.20
+// @version      0.1.21
 // @lastModified  2026-04-06
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -35,8 +35,11 @@ const report = () => {
     // --- Config & State ---
     const PLAYLIST_PATH = '/playlist';
     const PANEL_POS_KEY = 'yt_filter_panel_position';
+    const MINIMIZED_STATE_KEY = 'yt_filter_is_minimized';
     const INIT_DELAY_RANGE_MS = { min: 10000, max: 15000 };
     let isActive = false;
+    let isAutoMinimized = false;
+    let isManuallyMinimized = GM_getValue(MINIMIZED_STATE_KEY, false);
     let filterIntervalId = null;
     let observerInitTimerId = null;
     let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '70px', right: '20px' });
@@ -138,15 +141,28 @@ const report = () => {
         document.addEventListener('mouseup', () => {
             if (isDragging) {
                 isDragging = false;
-                panelPos = { top: panel.style.top, left: panel.style.left, bottom: '', right: '' };
+                const rect = panel.getBoundingClientRect();
+                // Save position as bottom/right to avoid overlapping with footer if possible
+                const bottom = window.innerHeight - rect.bottom;
+                const right = window.innerWidth - rect.right;
+                panelPos = { bottom: `${bottom}px`, right: `${right}px` };
                 GM_setValue(PANEL_POS_KEY, panelPos);
             }
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.13';
-        titleLabel.textContent = `Playlist Filter v${version}`;
-        Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
+        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.21';
+        titleLabel.textContent = `Playlist Filter v${v}`;
+        Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' });
+        titleLabel.title = 'Double-click to toggle minimization';
+
+        titleLabel.addEventListener('dblclick', (e) => {
+            if (isAutoMinimized) return;
+            isManuallyMinimized = !isManuallyMinimized;
+            GM_setValue(MINIMIZED_STATE_KEY, isManuallyMinimized);
+            updatePanelVisibility();
+            e.stopPropagation();
+        });
 
         const statusLabel = document.createElement('span');
         statusLabel.id = 'yt-filter-active-indicator';
@@ -205,6 +221,21 @@ const report = () => {
             input.addEventListener('blur', () => {
                 filterState[key] = input.value;
                 scheduleResumeAfterInput();
+            });
+
+            // Real-time filtering
+            let inputDebounceTimer = null;
+            input.addEventListener('input', () => {
+                filterState[key] = input.value;
+                if (inputDebounceTimer) clearTimeout(inputDebounceTimer);
+                inputDebounceTimer = setTimeout(() => {
+                    if (!isInputActive) {
+                        applyFilters();
+                    } else {
+                        // If we are technically "input active" (focus paused), 
+                        // we don't apply immediately but resume will catch it.
+                    }
+                }, 300);
             });
 
             // Handle Enter key
@@ -280,6 +311,17 @@ const report = () => {
         contentContainer.appendChild(rangeDiv);
 
         document.body.appendChild(panel);
+        updatePanelVisibility();
+    }
+
+    function updatePanelVisibility() {
+        const content = document.getElementById('yt-filter-panel-content');
+        const panel = document.getElementById('yt-filter-panel');
+        if (!content || !panel) return;
+
+        const minimized = isAutoMinimized || isManuallyMinimized;
+        content.style.display = (isActive && !minimized) ? 'flex' : 'none';
+        panel.style.opacity = (isActive && !minimized) ? '1' : '0.85';
     }
 
     // --- Main Logic: Filtering & Matching Indicator ---
@@ -480,7 +522,8 @@ const report = () => {
     function setupMutationObserver() {
         if (!isActive || listObserver || observerInitTimerId) return;
 
-        const container = document.querySelector('ytd-playlist-video-list-renderer #contents');
+        const container = document.querySelector('ytd-playlist-video-list-renderer #contents') || 
+                          document.querySelector('ytd-playlist-video-list-renderer');
         if (!container) {
             observerInitTimerId = window.setTimeout(() => {
                 observerInitTimerId = null;
@@ -516,21 +559,19 @@ const report = () => {
                 scheduleProcessing();
             }
         });
-        listObserver.observe(container, { childList: true });
+        listObserver.observe(container, { childList: true, subtree: true });
     }
 
     function setPanelActiveState(active) {
         const label = document.getElementById('yt-filter-active-indicator');
-        const content = document.getElementById('yt-filter-panel-content');
         const panel = document.getElementById('yt-filter-panel');
-        if (!label || !content || !panel) return;
+        if (!label || !panel) return;
 
         label.textContent = active ? 'Active' : 'Inactive';
         label.style.backgroundColor = active ? '#e6f4ea' : '#e0e0e0';
         label.style.color = active ? '#188038' : '#666';
 
-        content.style.display = active ? 'flex' : 'none';
-        panel.style.opacity = active ? '1' : '0.85';
+        updatePanelVisibility();
     }
 
     function showPanel() {

@@ -142,7 +142,8 @@
 <li><strong>Channel Filter</strong>: チャンネル名に含まれるキーワードでフィルタします。</li>
 <li>フィルタ条件の両方（AND条件）に一致する動画のみが表示され、その他は非表示になります。</li>
 <li>一致した動画には、メタデータ欄の先頭にオレンジ色の <code>[MATCHED]</code> バッジが表示されます。</li>
-<li><strong>入力中の挙動</strong>: 入力ボックスにフォーカスがある（入力中）の間は、負荷を下げるためフィルタリングの自動更新と監視/定期実行を一時停止します。フォーカスが外れても <strong>0.5秒だけ猶予</strong>し、再フォーカスがなければ再開されます。</li>
+<li><strong>リアルタイム更新</strong>: 入力ボックスにテキストを入力すると、自動的にフィルタリングが実行されます（300msのデバウンス処理付き）。</li>
+<li><strong>入力中の挙動</strong>: 入力ボックスにフォーカスがある間は、負荷を下げるため定期的な再スキャン処理などを一時停止し、入力内容の反映に集中します。</li>
 </ul>
 <h3>2. ステータス表示 (Status Dashboard)</h3>
 <p>パネルには現在の処理状況が表示されます。</p>
@@ -192,15 +193,18 @@
         </div>
 
 <h2>更新履歴</h2>
-<ul><li><strong>v0.1.20</strong>: フィルタリング処理をチャンク化し、パフォーマンスを向上しました。</li></ul>
+<ul>
+<li><strong>v0.1.21</strong>: 入力時のリアルタイム・フィルタリング（デバウンス付き）を導入し、MutationObserverを強化して動画の追加検知の確実性を向上。パネルの最小化状態の記憶機能を追加。</li>
+<li><strong>v0.1.20</strong>: フィルタリング処理をチャンク化し、パフォーマンスを向上しました。</li>
+</ul>
         <div class="install-section">
-            <a class="install-button" id="install-btn" href="youtube-playlist-filter.user.js" data-version="0.1.20">
+            <a class="install-button" id="install-btn" href="youtube-playlist-filter.user.js" data-version="0.1.21">
                         <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                 </svg>
                         <span>Install</span>
                         <div class="version-info">
-                            <span class="version-badge latest-version">v0.1.20</span>
+                            <span class="version-badge latest-version">v0.1.21</span>
                             <span class="version-badge installed-version" style="display: none;"></span>
                         </div>
                     </a>
