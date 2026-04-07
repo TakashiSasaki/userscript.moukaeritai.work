@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.31
-// @lastModified 2026-04-07
+// @version      0.1.32
+// @lastModified 2026-04-08
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -12,12 +12,20 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_info
+// @grant        GM_getResourceText
+// @grant        GM_addStyle
+// @resource     youtubeCommonCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-common.css
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-filter/youtube-playlist-filter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-filter/youtube-playlist-filter.user.js
 // ==/UserScript==
 
 (function () {
     'use strict';
+
+    const commonCss = GM_getResourceText('youtubeCommonCSS');
+    if (commonCss) {
+        GM_addStyle(commonCss);
+    }
 const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
@@ -48,6 +56,8 @@ const report = () => {
     let isFiltering = false;
     let isInputActive = false; // Flag to pause filtering during input
     let resumeTimerId = null;
+    let panel = null;
+    let contentContainer = null;
 
 
     let listObserver = null;
@@ -106,24 +116,14 @@ const report = () => {
     function createPanel() {
         if (document.getElementById('yt-filter-panel')) return;
 
-        const panel = document.createElement('div');
+        panel = document.createElement('div');
         panel.id = 'yt-filter-panel';
+        panel.className = 'yus-panel';
 
-        // Initial Styles
-        Object.assign(panel.style, {
-            position: 'fixed',
-            zIndex: 9999,
-            backgroundColor: '#fff4e5',
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            padding: '12px',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-            display: 'flex',
-            flexDirection: 'column',
-            width: '200px',
-            color: '#333',
-            fontFamily: 'Roboto, Arial, sans-serif'
-        });
+        // Override colors for Filter
+        panel.style.backgroundColor = '#fff4e5';
+        panel.style.borderColor = '#ccc';
+        panel.style.setProperty('--yus-hover-color', '#00f');
 
         // Restore Position
         if (panelPos.top) panel.style.top = panelPos.top;
@@ -133,13 +133,7 @@ const report = () => {
 
         // --- Header (Draggable) ---
         const headerRow = document.createElement('div');
-        Object.assign(headerRow.style, {
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '4px',
-            cursor: 'move'
-        });
+        headerRow.className = 'yus-header';
 
         // Drag Logic
         let isDragging = false;
@@ -179,27 +173,10 @@ const report = () => {
         });
 
         const titleLabel = document.createElement('span');
-        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.31';
+        titleLabel.className = 'yus-title';
+        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.32';
         titleLabel.textContent = `Playlist Filter v${v}`;
-        Object.assign(titleLabel.style, { 
-            fontWeight: 'bold', 
-            fontSize: '11px', 
-            cursor: 'pointer',
-            transition: 'all 0.2s ease-in-out',
-            display: 'inline-block'
-        });
         titleLabel.title = 'Double-click to toggle minimization';
-
-        titleLabel.addEventListener('mouseenter', () => {
-            titleLabel.style.fontSize = '12px';
-            titleLabel.style.transform = 'scale(1.1)';
-            titleLabel.style.color = '#00f';
-        });
-        titleLabel.addEventListener('mouseleave', () => {
-            titleLabel.style.fontSize = '11px';
-            titleLabel.style.transform = 'scale(1)';
-            titleLabel.style.color = '#333';
-        });
 
         titleLabel.addEventListener('dblclick', (e) => {
             if (isAutoMinimized) return;
@@ -211,7 +188,7 @@ const report = () => {
 
         const contentContainer = document.createElement('div');
         contentContainer.id = 'yt-filter-panel-content';
-        Object.assign(contentContainer.style, { display: 'flex', flexDirection: 'column', gap: '8px' });
+        contentContainer.className = 'yus-content';
 
         headerRow.appendChild(titleLabel);
         panel.appendChild(headerRow);
@@ -362,8 +339,14 @@ const report = () => {
         if (!content || !panel) return;
 
         const minimized = isAutoMinimized || isManuallyMinimized;
-        content.style.display = (isActive && !minimized) ? 'flex' : 'none';
-        panel.style.opacity = (isActive && !minimized) ? '1' : '0.85';
+        const isVisible = isActive && !minimized;
+        content.style.display = isVisible ? 'flex' : 'none';
+        
+        if (isVisible) {
+            panel.classList.add('yus-active');
+        } else {
+            panel.classList.remove('yus-active');
+        }
     }
 
     // --- Main Logic: Filtering & Matching Indicator ---
