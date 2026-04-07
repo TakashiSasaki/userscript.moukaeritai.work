@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.31
-// @lastModified  2026-04-03
+// @version      0.4.32
+// @lastModified  2026-04-07
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -67,25 +67,6 @@ const report = () => {
 
 
             // Helper for persistent dependency indicator
-            function checkDep(targetName, elementId) {
-                window.geminiCheckTargetUserscript(targetName).then((installed) => {
-                    const el = document.getElementById(elementId);
-                    if (el) {
-                        const verSpan = el.querySelector('.dep-version');
-                        if (installed) {
-                            el.classList.add('installed');
-                            el.title = `${targetName} - v${installed.version}`;
-                            el.style.color = '#137333'; // Dark Green for visibility on light pink
-                            if (verSpan) verSpan.textContent = `v${installed.version}`;
-                        } else {
-                            el.classList.remove('installed');
-                            el.title = `${targetName} - Not Found`;
-                            el.style.color = '#c5221f'; // Dark Red for visibility on light pink
-                            if (verSpan) verSpan.textContent = 'Not Found';
-                        }
-                    }
-                });
-            }
 
             // --- Trusted Types ---
 
@@ -635,9 +616,6 @@ const report = () => {
                 log('Artifact Exporter panel attached to document body.');
 
                 // Check dependencies for persistent UI indicators
-                checkDep('Gemini History Loader', 'gae-dep-history-loader');
-                checkDep('Gemini Artifact Exporter Worker', 'gae-dep-worker');
-                checkDep('Gemini 1-Click Delete Conversation', 'gae-dep-1click-del');
 
                 // Bind events
                 const scanBtn = panel.querySelector('#gemini-btn-scan');
@@ -703,8 +681,16 @@ const report = () => {
                     }
                 }
 
-                // Force style update to ensure visibility (handle lingering elements or style glitches)
-                panel.style.backgroundColor = 'rgba(255, 182, 193, 0.9)'; // LightPink
+                // Adjust panel styling based on minimized state
+                if (shouldActive) {
+                    panel.style.backgroundColor = 'var(--gus-panel-bg)';
+                    panel.style.border = 'var(--gus-panel-border)';
+                    panel.style.boxShadow = 'var(--gus-panel-shadow)';
+                } else {
+                    panel.style.backgroundColor = 'transparent';
+                    panel.style.border = 'none';
+                    panel.style.boxShadow = 'none';
+                }
                 panel.style.zIndex = '10000';
 
                 if (shouldActive) {
