@@ -32,6 +32,12 @@ This document provides technical details for AI agents developing or maintaining
   - Re-initializes on `yt-navigate-finish` with a slight delay (500ms).
 - **Miniplayer Removal**: Integrated into the debounced cleanup sweep instead of using polling.
 
-## 5. Metadata Sync
-- **Registration**: This script must be listed in the root `index.html` and the `youtube.com/index.html` domain index.
-- **Versioning**: Always bump the patch version on code changes and sync version labels in `index.html`.
+## 5. `index.html` のメンテナンス要件
+
+1. **バージョン情報の動的取得**:
+   - 各 `index.html` は `domain-landing.js` を読み込み、GitHub から最新の `@version` を動的に取得して表示します。このため、HTML 内にバージョン番号をハードコードしないでください。
+   - **HTML 内のバージョン番号を手動で書き換える必要はありません。** ユーザースクリプト（`.user.js`）の `@version` をインクリメントするだけで、ドキュメントページに自動反映されます。
+   - インストールボタンの構造（`<div class="version-info">` 内に `.latest-version` と `.installed-version` を含む構造、および `data-script-name` 属性）を維持することで、自動更新・比較機能が動作します。
+
+2. **ドキュメントの網羅性**:
+   - 新しいスクリプト（システムローダーなどの裏側で動くスクリプトを含む）を追加した場合は、必ず該当するドメインの `index.html` およびルートの `index.html` の一覧にも漏れなく追加してください。
