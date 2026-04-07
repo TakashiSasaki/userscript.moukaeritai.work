@@ -1,39 +1,46 @@
-<div style="margin-bottom: 8px; font-weight: bold; border-bottom:1px solid #555; padding-bottom:4px; display:flex; justify-content:flex-end; align-items:center;">
-    <div style="display:flex; align-items:center; gap:8px;">
-        <span id="gtc-minimize-btn" class="gtc-minimize-btn" title="Minimize">−</span>
+
+<div class="gus-inactive-content" title="Gemini Turn Counter">
+    <span class="gtc-icon gus-version">📋 {{scriptVersion}}</span>
+</div>
+<div class="gus-active-content">
+    <div style="margin-bottom: 8px; font-weight: bold; border-bottom:1px solid #555; padding-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
+        <span class="gtc-icon gus-version" title="Gemini Turn Counter">📋 {{scriptVersion}}</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <span id="gtc-minimize-btn" class="gtc-minimize-btn" title="Minimize">−</span>
+        </div>
     </div>
+    <div class="gtc-row"><span>User:</span> <span class="gtc-val" id="gtc-val-user">0 (0)</span></div>
+    <div class="gtc-row"><span>Model:</span> <span class="gtc-val" id="gtc-val-model">0 (0)</span></div>
+    <div class="gtc-row" style="border-top:1px solid #444; margin-top:4px; padding-top:4px;"></div>
+    <div class="gtc-row">
+        <span>Artifacts (Canvas):</span> <span class="gtc-val" id="gtc-val-artifacts">0</span>
+    </div>
+    <div class="gtc-row">
+        <span>Link Cards:</span> <span class="gtc-val" id="gtc-val-linkcards">0</span>
+    </div>
+    <div class="gtc-row">
+        <span>Code Blocks:</span> <span class="gtc-val" id="gtc-val-codeblocks">0</span>
+    </div>
+    <div class="gtc-row">
+        <span>Tables:</span> <span class="gtc-val" id="gtc-val-tables">0</span>
+    </div>
+    <div class="gtc-row" id="gtc-row-thinking">
+        <span>Thinking Process:</span> <span class="gtc-val" id="gtc-val-thinking">0</span>
+    </div>
+    <div class="gtc-row">
+        <span>Images (U:M):</span>
+        <span id="gtc-val-images">
+            <span class="gtc-val" id="gtc-val-images-ratio">0:0</span>
+            <button id="gtc-copy-user" style="margin-left: 8px; padding: 2px 6px; font-size: 11px; cursor: pointer; display: none;">📋U</button>
+            <button id="gtc-copy-model" style="margin-left: 4px; padding: 2px 6px; font-size: 11px; cursor: pointer; display: none;">📋M</button>
+            <button id="gtc-copy-all" style="margin-left: 4px; padding: 2px 6px; font-size: 11px; cursor: pointer; display: none;">📋All</button>
+            <span id="gtc-copy-status" style="margin-left: 4px; font-size: 11px;"></span>
+        </span>
+    </div>
+    <div class="gtc-setting-row" id="gtc-row-height" style="display: none;">
+        <input type="checkbox" id="gtc-height-enable" checked style="margin: 0; vertical-align: middle;">
+        <label for="gtc-height-enable" style="cursor: pointer; vertical-align: middle;">Max Height:</label>
+        <input type="number" id="gtc-height-input" value="200" class="gtc-input"> px
+    </div>
+    <div id="gtc-thumbnails-container"></div>
 </div>
-<div class="gtc-row"><span>User:</span> <span class="gtc-val" id="gtc-val-user">0 (0)</span></div>
-<div class="gtc-row"><span>Model:</span> <span class="gtc-val" id="gtc-val-model">0 (0)</span></div>
-<div class="gtc-row" style="border-top:1px solid #444; margin-top:4px; padding-top:4px;"></div>
-<div class="gtc-row">
-    <span>Artifacts (Canvas):</span> <span class="gtc-val" id="gtc-val-artifacts">0</span>
-</div>
-<div class="gtc-row">
-    <span>Link Cards:</span> <span class="gtc-val" id="gtc-val-linkcards">0</span>
-</div>
-<div class="gtc-row">
-    <span>Code Blocks:</span> <span class="gtc-val" id="gtc-val-codeblocks">0</span>
-</div>
-<div class="gtc-row">
-    <span>Tables:</span> <span class="gtc-val" id="gtc-val-tables">0</span>
-</div>
-<div class="gtc-row" id="gtc-row-thinking">
-    <span>Thinking Process:</span> <span class="gtc-val" id="gtc-val-thinking">0</span>
-</div>
-<div class="gtc-row">
-    <span>Images (U:M):</span>
-    <span id="gtc-val-images">
-        <span class="gtc-val" id="gtc-val-images-ratio">0:0</span>
-        <button id="gtc-copy-user" style="margin-left: 8px; padding: 2px 6px; font-size: 11px; cursor: pointer; display: none;">📋U</button>
-        <button id="gtc-copy-model" style="margin-left: 4px; padding: 2px 6px; font-size: 11px; cursor: pointer; display: none;">📋M</button>
-        <button id="gtc-copy-all" style="margin-left: 4px; padding: 2px 6px; font-size: 11px; cursor: pointer; display: none;">📋All</button>
-        <span id="gtc-copy-status" style="margin-left: 4px; font-size: 11px;"></span>
-    </span>
-</div>
-<div class="gtc-setting-row" id="gtc-row-height" style="display: none;">
-    <input type="checkbox" id="gtc-height-enable" checked style="margin: 0; vertical-align: middle;">
-    <label for="gtc-height-enable" style="cursor: pointer; vertical-align: middle;">Max Height:</label>
-    <input type="number" id="gtc-height-input" value="200" class="gtc-input"> px
-</div>
-<div id="gtc-thumbnails-container"></div>

@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.51
-// @lastModified 2026-04-03
+// @version      0.4.52
+// @lastModified 2026-04-07
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -655,26 +655,9 @@ const report = () => {
                     window.geminiSetupDraggablePanel(container, dragHandle, 'gtc-pos-ui', { right: '20px', top: '160px', left: 'auto' });
                 }
 
-                container.addEventListener('click', (e) => {
-                    // Prevent expanding if clicking on buttons or inputs
-                    if (['INPUT', 'BUTTON', 'TEXTAREA'].includes(e.target.tagName)) return;
-
-                    if (e.target.closest('#gtc-minimize-btn')) {
-                        container.classList.remove('expanded');
-                        localStorage.setItem('gtc-minimized', 'true');
-                        e.stopPropagation();
-                    } else if (!container.classList.contains('expanded') && !e.target.classList.contains('gtc-icon')) {
-                        // Let clicking the icon (which is the handle) also expand it if not dragging, but
-                        // setupDraggablePanel stops propagation if dragged. We'll rely on simple click.
-                        container.classList.add('expanded');
-                        localStorage.setItem('gtc-minimized', 'false');
-                    }
-                });
-
-                // Restore state (expansion)
-                if (localStorage.getItem('gtc-minimized') === 'false') {
-                    container.classList.add('expanded');
-                }
+                // Set up minimizable panel
+                const minimizeBtn = container.querySelector('#gtc-minimize-btn');
+                window.geminiSetupMinimizablePanel(container, 'gtc-minimized', minimizeBtn, true);
 
                 // Restore state (position)
                 const savedX = localStorage.getItem('gtc-pos-x');

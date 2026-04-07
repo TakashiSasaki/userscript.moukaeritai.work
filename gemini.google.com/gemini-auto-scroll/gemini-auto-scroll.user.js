@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.51
-// @lastModified  2026-04-03
+// @version      0.2.52
+// @lastModified 2026-04-07
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -228,12 +228,22 @@ const report = () => {
                 panel.className = 'gus-panel';
 
                 window.geminiSetInnerHTML(panel, `
-                    <button class="auto-scroll-btn">▶️ Start Auto-Scroll</button>
-                    <div class="panel-info">
-                        <span class="gtc-badge">0 items</span>
-                        <span class="version-badge gus-version" title="Gemini Auto-Scroll">📜 ${GM_info.script.version} ${gusEmoji}</span>
+                    <div class="gus-inactive-content" title="Gemini Auto-Scroll">
+                        <span class="version-badge-inactive gus-version">📜 ${GM_info.script.version} ${gusEmoji}</span>
                     </div>
-                `, policy);
+                    <div class="gus-active-content">
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom: 4px; border-bottom: 1px solid rgba(0,0,0,0.1); margin-bottom: 8px;">
+                            <span class="version-badge gus-version" title="Gemini Auto-Scroll">📜 ${GM_info.script.version} ${gusEmoji}</span>
+                            <button id="gas-minimize-btn" style="background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center;" title="最小化">
+                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            </button>
+                        </div>
+                        <button class="auto-scroll-btn">▶️ Start Auto-Scroll</button>
+                        <div class="panel-info">
+                            <span class="gtc-badge">0 items</span>
+                        </div>
+                    </div>
+`, policy);
 
                 document.body.appendChild(panel);
 
@@ -243,11 +253,15 @@ const report = () => {
                     toggleAutoScroll();
                 });
 
-                const handle = panel.querySelector('.version-badge');
-                if (handle) {
-                    window.geminiSetupDraggablePanel(panel, handle, CONSTANTS.PANEL_POSITION_KEY, { top: '20px', right: '20px', left: 'auto' });
-                }
 
+                const handleActive = panel.querySelector('.version-badge');
+                if (handleActive) {
+                    window.geminiSetupDraggablePanel(panel, handleActive, CONSTANTS.PANEL_POSITION_KEY, { top: '20px', right: '20px', left: 'auto' });
+                }
+                const handleInactive = panel.querySelector('.version-badge-inactive');
+                if (handleInactive) {
+                    window.geminiSetupDraggablePanel(panel, handleInactive, CONSTANTS.PANEL_POSITION_KEY, { top: '20px', right: '20px', left: 'auto' });
+                }
                 panel.classList.add('ready');
 
                 updatePanelUI();

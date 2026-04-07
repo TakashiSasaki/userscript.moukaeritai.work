@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.56
+// @version      0.4.57
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
-// @lastModified  2026-04-03
+// @lastModified 2026-04-07
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
@@ -438,11 +438,11 @@
                 let panel = document.getElementById('gemini-one-turn-panel');
                 if (!panel) {
                     panel = createOneTurnPanel();
-                    panel.classList.add('inactive'); // Default to inactive until we confirm it's 1-turn
+                    panel.classList.add('gus-minimized'); // Default to inactive until we confirm it's 1-turn
                 }
 
                 if (isOneTurn) {
-                    panel.classList.remove('inactive');
+                    panel.classList.remove('gus-minimized');
 
                     // --- Auto URL Export Logic ---
                     if (!autoExportTriggered && GM_getValue(AUTO_URL_TOGGLE_KEY, false)) {
@@ -551,7 +551,7 @@
                         }
                     }
                 } else if (panel) {
-                    panel.classList.add('inactive');
+                    panel.classList.add('gus-minimized');
                     autoExportTriggered = false; // Reset trigger state if UI is closed (e.g., user started a new topic or more turns added)
                     if (autoExportTimerId) {
                         clearInterval(autoExportTimerId);
@@ -650,7 +650,7 @@
 
                 // Bind Dragging Logic
                 const versionActive = panel.querySelector('.one-turn-version');
-                const versionInactive = panel.querySelector('.one-turn-inactive-content');
+                const versionInactive = panel.querySelector('.gus-inactive-content');
                 if (versionActive) window.geminiSetupDraggablePanel(panel, versionActive, 'gemini-export-panel-pos', { bottom: '20px', right: '20px' });
                 if (versionInactive) window.geminiSetupDraggablePanel(panel, versionInactive, 'gemini-export-panel-pos', { bottom: '20px', right: '20px' });
 
