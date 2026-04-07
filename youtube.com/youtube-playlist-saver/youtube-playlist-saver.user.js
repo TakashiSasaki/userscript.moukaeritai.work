@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.60
-// @lastModified 2026-04-07
+// @version      0.2.61
+// @lastModified 2026-04-08
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -16,12 +16,20 @@
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setClipboard
 // @grant        GM_info
+// @grant        GM_getResourceText
+// @grant        GM_addStyle
+// @resource     youtubeCommonCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-common.css
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver/youtube-playlist-saver.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver/youtube-playlist-saver.user.js
 // ==/UserScript==
 
 (function () {
     'use strict';
+
+    const commonCss = GM_getResourceText('youtubeCommonCSS');
+    if (commonCss) {
+        GM_addStyle(commonCss);
+    }
 const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
@@ -68,10 +76,12 @@ const report = () => {
     const PANEL_POS_KEY = 'yt_saver_panel_position';
     const MINIMIZED_STATE_KEY = 'yt_saver_is_minimized';
     let isManuallyMinimized = GM_getValue(MINIMIZED_STATE_KEY, false);
+    let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '260px', right: '20px' });
     let isActive = false;
     let scanIntervalId = null;
+    let panel = null;
+    let contentContainer = null;
 
-    let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '70px', right: '20px' });
     const panelElements = {
         totalSaved: null,
         savedVisible: null,
@@ -120,23 +130,14 @@ const report = () => {
     function createPanel() {
         if (document.getElementById('yt-saver-panel')) return;
 
-        const panel = document.createElement('div');
+        panel = document.createElement('div');
         panel.id = 'yt-saver-panel';
+        panel.className = 'yus-panel';
 
-        Object.assign(panel.style, {
-            position: 'fixed',
-            zIndex: 9999,
-            backgroundColor: '#f1f8e9',
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            padding: '12px',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-            display: 'flex',
-            flexDirection: 'column',
-            width: '220px',
-            color: '#333',
-            fontFamily: 'Roboto, Arial, sans-serif'
-        });
+        // Override colors for Saver
+        panel.style.backgroundColor = '#f1f8e9';
+        panel.style.width = '220px';
+        panel.style.setProperty('--yus-hover-color', '#2ba640');
 
         if (panelPos.top) panel.style.top = panelPos.top;
         if (panelPos.left) panel.style.left = panelPos.left;
@@ -144,13 +145,8 @@ const report = () => {
         if (panelPos.right) panel.style.right = panelPos.right;
 
         const headerRow = document.createElement('div');
-        Object.assign(headerRow.style, {
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '6px',
-            cursor: 'move'
-        });
+        headerRow.className = 'yus-header';
+        headerRow.style.marginBottom = '6px';
 
         let isDragging = false;
         let dragStartX, dragStartY;
@@ -190,25 +186,10 @@ const report = () => {
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.60';
-        titleLabel.textContent = `Playlist Saver v${version}`;
-        Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px' });
-
-        titleLabel.style.cursor = 'pointer';
-        titleLabel.style.transition = 'all 0.2s ease-in-out';
-        titleLabel.style.display = 'inline-block';
+        titleLabel.className = 'yus-title';
+        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.61';
+        titleLabel.textContent = `Playlist Saver v${v}`;
         titleLabel.title = 'Double-click to toggle minimization';
-
-        titleLabel.addEventListener('mouseenter', () => {
-            titleLabel.style.fontSize = '13px';
-            titleLabel.style.transform = 'scale(1.1)';
-            titleLabel.style.color = '#2ba640';
-        });
-        titleLabel.addEventListener('mouseleave', () => {
-            titleLabel.style.fontSize = '12px';
-            titleLabel.style.transform = 'scale(1)';
-            titleLabel.style.color = '#333';
-        });
 
         titleLabel.addEventListener('dblclick', (e) => {
             isManuallyMinimized = !isManuallyMinimized;
@@ -219,7 +200,8 @@ const report = () => {
 
         const contentContainer = document.createElement('div');
         contentContainer.id = 'yt-saver-panel-content';
-        Object.assign(contentContainer.style, { display: 'flex', flexDirection: 'column', gap: '6px' });
+        contentContainer.className = 'yus-content';
+        contentContainer.style.gap = '6px';
 
         headerRow.appendChild(titleLabel);
         panel.appendChild(headerRow);
@@ -295,8 +277,14 @@ const report = () => {
         const panel = document.getElementById('yt-saver-panel');
         if (!content || !panel) return;
 
-        content.style.display = (isActive && !isManuallyMinimized) ? 'flex' : 'none';
-        panel.style.opacity = (isActive && !isManuallyMinimized) ? '1' : '0.85';
+        const isVisible = isActive && !isManuallyMinimized;
+        content.style.display = isVisible ? 'flex' : 'none';
+        
+        if (isVisible) {
+            panel.classList.add('yus-active');
+        } else {
+            panel.classList.remove('yus-active');
+        }
     }
 
     function updatePanelStats({
