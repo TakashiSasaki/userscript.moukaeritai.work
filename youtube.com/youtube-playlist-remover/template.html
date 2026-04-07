@@ -1,0 +1,20 @@
+<div id="yt-remover-panel" class="yus-panel" style="background-color: #fff0f0; border-color: #d00; --yus-hover-color: #d00;">
+    <div id="yt-remover-header" class="yus-header">
+        <span id="yt-remover-title" class="yus-title" title="Double-click to toggle minimization">Remover v{{VERSION}}</span>
+    </div>
+    <div id="yt-remover-panel-content" class="yus-content">
+        <div id="yt-remover-status" style="font-size: 12px;">Status: Idle</div>
+        <div id="yt-remover-phase" style="font-size: 11px; color: #555;">Phase: Idle</div>
+        <div id="yt-remover-candidates-info" style="font-size: 12px; margin-bottom: 2px;">Removable: None</div>
+        <div id="yt-remover-stats" style="font-size: 10px; color: #333; margin-top: 4px; padding-top: 4px; border-top: 1px solid #ccc; display: none;"></div>
+        <div style="display: flex; align-items: center; gap: 4px; font-size: 11px;">
+            <input type="checkbox" id="yt-remover-wait-checkbox" style="cursor: pointer;">
+            <label for="yt-remover-wait-checkbox" style="cursor: pointer;">Wait for removal</label>
+        </div>
+        <div style="display: flex; align-items: center; gap: 4px; font-size: 11px; margin-top: 4px;">
+            <input type="checkbox" id="yt-remover-matched-checkbox" style="cursor: pointer;">
+            <label for="yt-remover-matched-checkbox" style="cursor: pointer;">Only MATCHED</label>
+        </div>
+        <button id="yt-remover-action-btn" type="button" style="padding: 4px 8px; font-size: 11px; background-color: #d00; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Remove Range</button>
+    </div>
+</div>

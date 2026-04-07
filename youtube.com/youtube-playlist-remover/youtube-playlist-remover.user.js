@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.51
+// @version      0.1.52
 // @lastModified  2026-04-08
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @antifeature  webRequestBlocking
@@ -15,6 +15,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @resource     youtubeCommonCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-common.css
+// @resource     ytRemoverTemplate https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-remover/template.html
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-remover/youtube-playlist-remover.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-remover/youtube-playlist-remover.user.js
 // ==/UserScript==
@@ -180,14 +181,18 @@
     function createPanel() {
         if (document.getElementById('yt-remover-panel')) return;
 
-        panel = document.createElement('div');
-        panel.id = 'yt-remover-panel';
-        panel.className = 'yus-panel';
+        const templateStr = GM_getResourceText('ytRemoverTemplate');
+        if (!templateStr) {
+            console.error('[YouTube Playlist Remover] Failed to load template.html');
+            return;
+        }
 
-        // Override background for distinction
-        panel.style.backgroundColor = '#fff0f0';
-        panel.style.borderColor = '#d00';
-        panel.style.setProperty('--yus-hover-color', '#d00');
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.52';
+        const html = templateStr.replace('{{VERSION}}', version);
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html;
+        panel = wrapper.firstElementChild;
 
         // Restore Position
         if (panelPos.top) panel.style.top = panelPos.top;
@@ -195,11 +200,7 @@
         if (panelPos.bottom) panel.style.bottom = panelPos.bottom;
         if (panelPos.right) panel.style.right = panelPos.right;
 
-        // --- Header (Draggable) ---
-        const headerRow = document.createElement('div');
-        headerRow.className = 'yus-header';
-
-        // Drag Logic
+        const headerRow = panel.querySelector('#yt-remover-header');
         let isDragging = false;
         let dragStartX, dragStartY;
         let initialLeft, initialTop;
@@ -237,12 +238,7 @@
             }
         });
 
-        const titleLabel = document.createElement('span');
-        titleLabel.className = 'yus-title';
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.49';
-        titleLabel.textContent = `Remover v${version}`;
-        titleLabel.title = 'Double-click to toggle minimization';
-
+        const titleLabel = panel.querySelector('#yt-remover-title');
         titleLabel.addEventListener('dblclick', (e) => {
             isManuallyMinimized = !isManuallyMinimized;
             GM_setValue(MINIMIZED_STATE_KEY, isManuallyMinimized);
@@ -250,115 +246,31 @@
             e.stopPropagation();
         });
 
-        const contentContainer = document.createElement('div');
-        contentContainer.id = 'yt-remover-panel-content';
-        contentContainer.className = 'yus-content';
+        deletionStatsElement = panel.querySelector('#yt-remover-stats');
 
-        headerRow.appendChild(titleLabel);
-        panel.appendChild(headerRow);
-        panel.appendChild(contentContainer);
-
-        // --- Status Info ---
-        const statusDiv = document.createElement('div');
-        statusDiv.id = 'yt-remover-status';
-        statusDiv.textContent = 'Status: Idle';
-        statusDiv.style.fontSize = '12px';
-        contentContainer.appendChild(statusDiv);
-
-        const phaseDiv = document.createElement('div');
-        phaseDiv.id = 'yt-remover-phase';
-        phaseDiv.textContent = 'Phase: Idle';
-        phaseDiv.style.fontSize = '11px';
-        phaseDiv.style.color = '#555';
-        contentContainer.appendChild(phaseDiv);
-
-        // --- Candidates Info ---
-        const infoDiv = document.createElement('div');
-        infoDiv.id = 'yt-remover-candidates-info';
-        infoDiv.textContent = 'Removable: None';
-        infoDiv.style.fontSize = '12px';
-        infoDiv.style.marginBottom = '2px';
-        contentContainer.appendChild(infoDiv);
-
-        // --- Statistics Display ---
-        const statsDiv = document.createElement('div');
-        statsDiv.id = 'yt-remover-stats';
-        statsDiv.style.fontSize = '10px';
-        statsDiv.style.color = '#333';
-        statsDiv.style.marginTop = '4px';
-        statsDiv.style.paddingTop = '4px';
-        statsDiv.style.borderTop = '1px solid #ccc';
-        statsDiv.style.display = 'none';
-        deletionStatsElement = statsDiv;
-        contentContainer.appendChild(statsDiv);
-
-        // --- Options ---
-        const optionsDiv = document.createElement('div');
-        Object.assign(optionsDiv.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' });
-
-        const waitCheckbox = document.createElement('input');
-        waitCheckbox.type = 'checkbox';
-        waitCheckbox.id = 'yt-remover-wait-checkbox';
+        const waitCheckbox = panel.querySelector('#yt-remover-wait-checkbox');
         waitCheckbox.checked = waitForDisappearance;
-        waitCheckbox.style.cursor = 'pointer';
         waitCheckbox.addEventListener('change', (e) => {
             waitForDisappearance = e.target.checked;
             GM_setValue(WAIT_FOR_DISAPPEARANCE_KEY, waitForDisappearance);
         });
 
-        const waitLabel = document.createElement('label');
-        waitLabel.textContent = 'Wait for removal';
-        waitLabel.htmlFor = 'yt-remover-wait-checkbox';
-        waitLabel.style.cursor = 'pointer';
-
-        optionsDiv.appendChild(waitCheckbox);
-        optionsDiv.appendChild(waitLabel);
-
-        const matchedOptionDiv = document.createElement('div');
-        Object.assign(matchedOptionDiv.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', marginTop: '4px' });
-
-        const matchedCheckbox = document.createElement('input');
-        matchedCheckbox.type = 'checkbox';
-        matchedCheckbox.id = 'yt-remover-matched-checkbox';
+        const matchedCheckbox = panel.querySelector('#yt-remover-matched-checkbox');
         matchedCheckbox.checked = onlyRemoveMatched;
-        matchedCheckbox.style.cursor = 'pointer';
         matchedCheckbox.addEventListener('change', (e) => {
             onlyRemoveMatched = e.target.checked;
             GM_setValue(ONLY_MATCHED_KEY, onlyRemoveMatched);
             updateCandidatesInfo();
         });
 
-        const matchedLabel = document.createElement('label');
-        matchedLabel.textContent = 'Only MATCHED';
-        matchedLabel.htmlFor = 'yt-remover-matched-checkbox';
-        matchedLabel.style.cursor = 'pointer';
-
-        matchedOptionDiv.appendChild(matchedCheckbox);
-        matchedOptionDiv.appendChild(matchedLabel);
-
-        contentContainer.appendChild(optionsDiv);
-        contentContainer.appendChild(matchedOptionDiv);
-
-        // --- Action Button ---
-        const removeBtn = document.createElement('button');
-        removeBtn.textContent = 'Remove Range';
-        Object.assign(removeBtn.style, {
-            padding: '4px 8px', fontSize: '11px', backgroundColor: '#d00',
-            color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer',
-            fontWeight: 'bold'
-        });
-
-        removeButton = removeBtn;
-        removeBtn.addEventListener('click', removeRangeItems);
-
-        contentContainer.appendChild(removeBtn);
+        removeButton = panel.querySelector('#yt-remover-action-btn');
+        removeButton.addEventListener('click', removeRangeItems);
 
         document.body.appendChild(panel);
         setTimeout(checkPanelPosition, 0);
         window.addEventListener('resize', () => {
             requestAnimationFrame(checkPanelPosition);
         });
-
     }
 
     // --- Updates ---
