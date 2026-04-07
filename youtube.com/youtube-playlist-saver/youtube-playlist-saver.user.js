@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.59
-// @lastModified  2026-04-07
+// @version      0.2.60
+// @lastModified 2026-04-07
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -79,6 +79,44 @@ const report = () => {
         storageStatus: null
     };
 
+    function checkPanelPosition() {
+        if (!panel) return;
+        const rect = panel.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        let newLeft = rect.left;
+        let newTop = rect.top;
+        let needsUpdate = false;
+
+        if (rect.right > vw) {
+            newLeft = Math.max(0, vw - rect.width);
+            needsUpdate = true;
+        }
+        if (rect.left < 0) {
+            newLeft = 0;
+            needsUpdate = true;
+        }
+        if (rect.bottom > vh) {
+            newTop = Math.max(0, vh - rect.height);
+            needsUpdate = true;
+        }
+        if (rect.top < 0) {
+            newTop = 0;
+            needsUpdate = true;
+        }
+
+        if (needsUpdate) {
+            panel.style.bottom = 'auto';
+            panel.style.right = 'auto';
+            panel.style.left = `${newLeft}px`;
+            panel.style.top = `${newTop}px`;
+            panelPos = { top: panel.style.top, left: panel.style.left, bottom: '', right: '' };
+            GM_setValue(PANEL_POS_KEY, panelPos);
+        }
+    }
+
+
     function createPanel() {
         if (document.getElementById('yt-saver-panel')) return;
 
@@ -152,7 +190,7 @@ const report = () => {
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.59';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.60';
         titleLabel.textContent = `Playlist Saver v${version}`;
         Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px' });
 
@@ -244,6 +282,11 @@ const report = () => {
         contentContainer.appendChild(actionsRow);
 
         document.body.appendChild(panel);
+        setTimeout(checkPanelPosition, 0);
+        window.addEventListener('resize', () => {
+            requestAnimationFrame(checkPanelPosition);
+        });
+
     }
 
 
