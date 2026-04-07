@@ -330,6 +330,9 @@
         if (policy) {
             element.innerHTML = policy.createHTML(html);
         } else {
+            if (window.trustedTypes && window.trustedTypes.createPolicy) {
+                throw new TypeError('geminiSetInnerHTML: policy is required in Trusted Types environment.');
+            }
             element.innerHTML = html;
         }
     };
