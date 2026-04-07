@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.48
-// @lastModified  2026-04-07
+// @version      0.1.49
+// @lastModified  2026-04-08
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -12,12 +12,20 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_info
+// @grant        GM_getResourceText
+// @grant        GM_addStyle
+// @resource     youtubeCommonCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-common.css
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-remover/youtube-playlist-remover.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-remover/youtube-playlist-remover.user.js
 // ==/UserScript==
 
 (function () {
     'use strict';
+
+    const commonCss = GM_getResourceText('youtubeCommonCSS');
+    if (commonCss) {
+        GM_addStyle(commonCss);
+    }
     const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
@@ -122,6 +130,7 @@
     let observer = null;
     let mutationObserver = null;
     let playlistContainer = null;
+    let panel = null;
 
     function isPlaylistPage() {
         return location.hostname === 'www.youtube.com' &&
@@ -171,24 +180,14 @@
     function createPanel() {
         if (document.getElementById('yt-remover-panel')) return;
 
-        const panel = document.createElement('div');
+        panel = document.createElement('div');
         panel.id = 'yt-remover-panel';
+        panel.className = 'yus-panel';
 
-        // Initial Styles
-        Object.assign(panel.style, {
-            position: 'fixed',
-            zIndex: 9999,
-            backgroundColor: '#fff0f0', // Slightly reddish to distinguish
-            border: '1px solid #d00',
-            borderRadius: '8px',
-            padding: '12px',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-            display: 'flex',
-            flexDirection: 'column',
-            width: '200px',
-            color: '#333',
-            fontFamily: 'Roboto, Arial, sans-serif'
-        });
+        // Override background for distinction
+        panel.style.backgroundColor = '#fff0f0';
+        panel.style.borderColor = '#d00';
+        panel.style.setProperty('--yus-hover-color', '#d00');
 
         // Restore Position
         if (panelPos.top) panel.style.top = panelPos.top;
@@ -198,13 +197,7 @@
 
         // --- Header (Draggable) ---
         const headerRow = document.createElement('div');
-        Object.assign(headerRow.style, {
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '4px',
-            cursor: 'move'
-        });
+        headerRow.className = 'yus-header';
 
         // Drag Logic
         let isDragging = false;
@@ -245,25 +238,10 @@
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.47';
+        titleLabel.className = 'yus-title';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.49';
         titleLabel.textContent = `Remover v${version}`;
-        Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px' });
-
-        titleLabel.style.cursor = 'pointer';
-        titleLabel.style.transition = 'all 0.2s ease-in-out';
-        titleLabel.style.display = 'inline-block';
         titleLabel.title = 'Double-click to toggle minimization';
-
-        titleLabel.addEventListener('mouseenter', () => {
-            titleLabel.style.fontSize = '13px';
-            titleLabel.style.transform = 'scale(1.1)';
-            titleLabel.style.color = '#d00';
-        });
-        titleLabel.addEventListener('mouseleave', () => {
-            titleLabel.style.fontSize = '12px';
-            titleLabel.style.transform = 'scale(1)';
-            titleLabel.style.color = '#333';
-        });
 
         titleLabel.addEventListener('dblclick', (e) => {
             isManuallyMinimized = !isManuallyMinimized;
@@ -274,7 +252,7 @@
 
         const contentContainer = document.createElement('div');
         contentContainer.id = 'yt-remover-panel-content';
-        Object.assign(contentContainer.style, { display: 'flex', flexDirection: 'column', gap: '8px' });
+        contentContainer.className = 'yus-content';
 
         headerRow.appendChild(titleLabel);
         panel.appendChild(headerRow);
@@ -390,8 +368,14 @@
         const panel = document.getElementById('yt-remover-panel');
         if (!content || !panel) return;
 
-        content.style.display = (isActive && !isManuallyMinimized) ? 'flex' : 'none';
-        panel.style.opacity = (isActive && !isManuallyMinimized) ? '1' : '0.85';
+        const isVisible = isActive && !isManuallyMinimized;
+        content.style.display = isVisible ? 'flex' : 'none';
+        
+        if (isVisible) {
+            panel.classList.add('yus-active');
+        } else {
+            panel.classList.remove('yus-active');
+        }
     }
 
 
