@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.47
-// @lastModified 2026-04-07
+// @version      0.1.48
+// @lastModified  2026-04-07
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -18,7 +18,7 @@
 
 (function () {
     'use strict';
-const report = () => {
+    const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
                 name: GM_info.script.name,
@@ -36,6 +36,7 @@ const report = () => {
     const PLAYLIST_PATH = '/playlist';
     const PANEL_POS_KEY = 'yt_remover_panel_position';
     const WAIT_FOR_DISAPPEARANCE_KEY = 'yt_remover_wait_for_disappearance';
+    const ONLY_MATCHED_KEY = 'yt_remover_only_matched';
     const MINIMIZED_STATE_KEY = 'yt_remover_is_minimized';
     const INIT_DELAY_RANGE_MS = { min: 10000, max: 15000 };
 
@@ -43,6 +44,7 @@ const report = () => {
     let refreshIntervalId = null;
     let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '150px', right: '20px' });
     let waitForDisappearance = GM_getValue(WAIT_FOR_DISAPPEARANCE_KEY, true);
+    let onlyRemoveMatched = GM_getValue(ONLY_MATCHED_KEY, false);
     let isManuallyMinimized = GM_getValue(MINIMIZED_STATE_KEY, false);
     let removeButton = null;
     let isRemoving = false;
@@ -315,7 +317,7 @@ const report = () => {
         // --- Options ---
         const optionsDiv = document.createElement('div');
         Object.assign(optionsDiv.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' });
-        
+
         const waitCheckbox = document.createElement('input');
         waitCheckbox.type = 'checkbox';
         waitCheckbox.id = 'yt-remover-wait-checkbox';
@@ -333,7 +335,31 @@ const report = () => {
 
         optionsDiv.appendChild(waitCheckbox);
         optionsDiv.appendChild(waitLabel);
+
+        const matchedOptionDiv = document.createElement('div');
+        Object.assign(matchedOptionDiv.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', marginTop: '4px' });
+
+        const matchedCheckbox = document.createElement('input');
+        matchedCheckbox.type = 'checkbox';
+        matchedCheckbox.id = 'yt-remover-matched-checkbox';
+        matchedCheckbox.checked = onlyRemoveMatched;
+        matchedCheckbox.style.cursor = 'pointer';
+        matchedCheckbox.addEventListener('change', (e) => {
+            onlyRemoveMatched = e.target.checked;
+            GM_setValue(ONLY_MATCHED_KEY, onlyRemoveMatched);
+            updateCandidatesInfo();
+        });
+
+        const matchedLabel = document.createElement('label');
+        matchedLabel.textContent = 'Only MATCHED';
+        matchedLabel.htmlFor = 'yt-remover-matched-checkbox';
+        matchedLabel.style.cursor = 'pointer';
+
+        matchedOptionDiv.appendChild(matchedCheckbox);
+        matchedOptionDiv.appendChild(matchedLabel);
+
         contentContainer.appendChild(optionsDiv);
+        contentContainer.appendChild(matchedOptionDiv);
 
         // --- Action Button ---
         const removeBtn = document.createElement('button');
@@ -389,8 +415,31 @@ const report = () => {
         const el = document.getElementById('yt-remover-candidates-info');
         if (!el) return;
 
-        const count = itemsAboveAndValidSet.size;
+        let count = 0;
+        if (onlyRemoveMatched) {
+            itemsAboveAndValidSet.forEach(item => {
+                if (hasMatchedBadge(item)) {
+                    count++;
+                }
+            });
+        } else {
+            count = itemsAboveAndValidSet.size;
+        }
         el.textContent = count > 0 ? `Removable: ${count} items` : 'Removable: None';
+    }
+
+    function hasMatchedBadge(item) {
+        if (!item) return false;
+        // Check for span with text [MATCHED] inside metadata line
+        const metadata = item.querySelector('#metadata-line') || item.querySelector('.ytd-video-meta-block');
+        if (!metadata) return false;
+
+        // Find by class or text content
+        const matched = metadata.querySelector('.yt-filter-matched');
+        if (matched) return true;
+
+        const span = Array.from(metadata.querySelectorAll('span')).find(s => s.textContent.trim() === '[MATCHED]');
+        return !!span;
     }
 
     function isItemHiddenByFilter(element, rect = null) {
@@ -443,7 +492,7 @@ const report = () => {
 
         // Find the container where items are added
         playlistContainer = document.querySelector('ytd-playlist-video-list-renderer #contents') ||
-                            document.querySelector('ytd-playlist-video-list-renderer');
+            document.querySelector('ytd-playlist-video-list-renderer');
 
         if (!playlistContainer) {
             // If container isn't there yet, try again soon
@@ -657,7 +706,7 @@ const report = () => {
 
         isRemoving = true;
         cancelRequested = false;
-        
+
         // Reset stats
         const deletionTimes = [];
         updateDeletionStats(null);
@@ -671,7 +720,15 @@ const report = () => {
             // This prevents UI shifting from affecting unprocessed items.
             const allItemsInDom = Array.from(document.querySelectorAll('ytd-playlist-video-renderer'));
             const finalTargets = allItemsInDom
-                .filter(el => itemsAboveAndValidSet.has(el) && el.isConnected && !isItemHiddenByFilter(el))
+                .filter(el => {
+                    const isBasicsOk = itemsAboveAndValidSet.has(el) && el.isConnected && !isItemHiddenByFilter(el);
+                    if (!isBasicsOk) return false;
+
+                    if (onlyRemoveMatched) {
+                        return hasMatchedBadge(el);
+                    }
+                    return true;
+                })
                 .reverse();
 
             const total = finalTargets.length;
@@ -697,7 +754,7 @@ const report = () => {
                 const startRemove = Date.now();
                 const success = await attemptRemoveVideo(item);
                 const endRemove = Date.now();
-                
+
                 if (success) {
                     deletionTimes.push(endRemove - startRemove);
                     // Update stats in real-time
@@ -706,7 +763,7 @@ const report = () => {
                 }
 
                 if (cancelRequested || !isActive) break;
-                
+
                 if (success) {
                     if (waitForDisappearance) {
                         updatePhase('Waiting for disappearance...', true);
@@ -728,7 +785,7 @@ const report = () => {
                 if (item.isConnected) {
                     clearOutline(item);
                 }
-                
+
                 if (cancelRequested || !isActive) break;
 
                 // Small buffer between items

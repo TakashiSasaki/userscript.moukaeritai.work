@@ -142,6 +142,7 @@
 <li><strong>安全・確実な設計</strong>:<ul>
 <li><strong>UI操作のエミュレーション</strong>: このスクリプトはDOM要素を直接削除したり隠したりするのではなく、**YouTube標準の削除メニューを自動的にクリック操作（エミュレーション）**します。これにより、YouTube側の内部データとの不整合を防ぎ、安全に削除を実行します。</li>
 <li><strong>フィルタとの連携</strong>: <strong>YouTube Playlist Filter</strong> によって非表示 (<code>display: none</code>) になっている動画は、たとえ範囲内にあっても削除操作の対象に<strong>しません</strong>。</li>
+<li><strong>Only MATCHED オプション</strong>: このチェックボックスをONにすると、<strong>YouTube Playlist Filter</strong> によって <code>[MATCHED]</code> バッジが付与された動画のみを削除対象に限定します。特定の検索条件に合致する動画だけを一括削除したい場合に便利です。</li>
 <li><strong>視覚的なフィードバック</strong>: 実行を開始すると、削除の対象となっている動画の連番（#Index）が一時的に<strong>赤太字に変更</strong>され、現在どの動画を処理中か（x/y）がパネルに表示されます。</li>
 <li><strong>⚠️ 注意</strong>: ボタンを押すと確認ダイアログなしで<strong>即座に削除</strong>されます。操作にはご注意ください。</li>
 <li><strong>v0.1.47</strong>: Playlist Liteと同様にマウスオーバーでのバージョン表示強調とダブルクリックによる縮小機能を実装。Activeインジケーターを削除。</li>
@@ -173,7 +174,8 @@
 </ol>
 <h2>更新履歴</h2>
 <ul>
-            <li><strong>v0.1.47</strong>: フローティングUIが画面外にある場合は、画面内に自動的に位置を調整して表示するようにしました。</li>
+<li><strong>v0.1.48</strong>: 「Only MATCHED」オプションを追加。YouTube Playlist Filter と連携し、一致した動画のみを削除対象に限定できる機能を提供。</li>
+    <li><strong>v0.1.47</strong>: フローティングUIが画面外にある場合は、画面内に自動的に位置を調整して表示するようにしました。</li>
     <li><strong>v0.1.47</strong>: UIタイトルバーの機能を統一し、マウスオーバーの協調表示、ダブルクリックによる最小化・全体表示の切り替えを実装。Active/Inactive表示を削除し、非アクティブ時は自動的に最小化するように変更しました。</li>
 <li><strong>v0.1.45</strong>: 削除メニューの項目をクリックする直前に赤枠でハイライトし、短い待機時間を挿入して視覚的な確認をしやすく改善。</li>
 <li><strong>v0.1.34</strong>: メニューのタイムアウトを10秒に延長。「Wait for removal」オプションを追加（OFF時は1秒ウェイト）。</li>
@@ -198,13 +200,13 @@
         </div>
 
         <div class="install-section">
-            <a class="install-button" id="install-btn" href="youtube-playlist-remover.user.js" data-version="0.1.45">
+            <a class="install-button" id="install-btn" href="youtube-playlist-remover.user.js" data-version="0.1.48">
                         <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                 </svg>
                         <span>Install</span>
                         <div class="version-info">
-                            <span class="version-badge latest-version">v0.1.45</span>
+                            <span class="version-badge latest-version">v0.1.48</span>
                             <span class="version-badge installed-version" style="display: none;"></span>
                         </div>
                     </a>
