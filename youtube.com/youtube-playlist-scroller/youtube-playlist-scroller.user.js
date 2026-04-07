@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.15
+// @version      0.1.16
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -10,12 +10,20 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_info
+// @grant        GM_getResourceText
+// @grant        GM_addStyle
+// @resource     youtubeCommonCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-common.css
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-scroller/youtube-playlist-scroller.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-scroller/youtube-playlist-scroller.user.js
 // ==/UserScript==
 
 (function () {
     'use strict';
+
+    const commonCss = GM_getResourceText('youtubeCommonCSS');
+    if (commonCss) {
+        GM_addStyle(commonCss);
+    }
 const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
@@ -49,6 +57,8 @@ const report = () => {
     let loadingObserver = null;
     let loadingObserverTimerId = null;
     let loadingCheckIntervalId = null;
+    let panel = null;
+    let contentContainer = null;
     const cachedSpinners = new Set();
 
     function saveSettings() {
@@ -158,24 +168,14 @@ const report = () => {
     function createPanel() {
         if (document.getElementById('yt-scroller-panel')) return;
 
-        const panel = document.createElement('div');
+        panel = document.createElement('div');
         panel.id = 'yt-scroller-panel';
+        panel.className = 'yus-panel';
 
-        // Initial Styles
-        Object.assign(panel.style, {
-            position: 'fixed',
-            zIndex: 9999,
-            backgroundColor: '#fffde7',
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            padding: '12px',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-            display: 'flex',
-            flexDirection: 'column',
-            width: '200px',
-            color: '#333',
-            fontFamily: 'Roboto, Arial, sans-serif'
-        });
+        // Override colors for Scroller
+        panel.style.backgroundColor = '#fffde7';
+        panel.style.borderColor = '#ccc';
+        panel.style.setProperty('--yus-hover-color', '#00f');
 
         // Apply saved position
         if (panelPos.top) panel.style.top = panelPos.top;
@@ -185,12 +185,7 @@ const report = () => {
 
         // --- Header (Title & Minimize Button) ---
         const headerRow = document.createElement('div');
-        Object.assign(headerRow.style, {
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '4px'
-        });
+        headerRow.className = 'yus-header';
 
         // Make header draggable
         headerRow.style.cursor = 'move';
@@ -244,24 +239,10 @@ const report = () => {
 
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.8';
-        titleLabel.textContent = `Auto Scroller v${version}`;
-        Object.assign(titleLabel.style, {
-            fontWeight: 'bold',
-            fontSize: '11px',
-            cursor: 'pointer',
-            transition: 'transform 0.2s, color 0.2s'
-        });
-        titleLabel.addEventListener('mouseenter', () => {
-            titleLabel.style.fontSize = '12px';
-            titleLabel.style.transform = 'scale(1.1)';
-            titleLabel.style.color = '#00f';
-        });
-        titleLabel.addEventListener('mouseleave', () => {
-            titleLabel.style.fontSize = '11px';
-            titleLabel.style.transform = 'scale(1)';
-            titleLabel.style.color = '#333';
-        });
+        titleLabel.className = 'yus-title';
+        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.16';
+        titleLabel.textContent = `Auto Scroller v${v}`;
+        titleLabel.title = 'Double-click to toggle minimization';
 
         titleLabel.addEventListener('dblclick', (e) => {
             isManuallyMinimized = !isManuallyMinimized;
@@ -270,18 +251,11 @@ const report = () => {
             e.stopPropagation();
         });
 
-
-
         const contentContainer = document.createElement('div');
         contentContainer.id = 'yt-scroller-panel-content';
-        Object.assign(contentContainer.style, {
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px'
-        });
+        contentContainer.className = 'yus-content';
 
         headerRow.appendChild(titleLabel);
-
         panel.appendChild(headerRow);
         panel.appendChild(contentContainer);
 
@@ -406,9 +380,14 @@ const report = () => {
         const panel = document.getElementById('yt-scroller-panel');
         if (!content || !panel) return;
 
-        const minimized = isManuallyMinimized;
-        content.style.display = (isActive && !minimized) ? 'flex' : 'none';
-        panel.style.opacity = (isActive && !minimized) ? '1' : '0.85';
+        const isVisible = isActive && !isManuallyMinimized;
+        content.style.display = isVisible ? 'flex' : 'none';
+        
+        if (isVisible) {
+            panel.classList.add('yus-active');
+        } else {
+            panel.classList.remove('yus-active');
+        }
     }
 
 
