@@ -134,28 +134,30 @@ function injectVersionStyles() {
 }
 
 async function initVersionCheck() {
-    const projectItems = document.querySelectorAll('.project-item');
-
     // 0. Inject CSS for version badges
     injectVersionStyles();
 
-    // 1. Inject version badge UI and footer structure
+    // 1. Identify all targets: cards (.project-item) AND standalone buttons
+    const projectItems = document.querySelectorAll('.project-item');
+    const standaloneButtons = Array.from(document.querySelectorAll('.install-button'))
+        .filter(btn => !btn.closest('.project-item'));
+
+    // 2. Inject version badge UI for project items (dashboard mode)
     projectItems.forEach(item => {
         const installBtn = item.querySelector('.install-button');
         if (!installBtn) return;
 
+        // Skip if already has footer (prevent double injection if called twice)
+        if (item.querySelector('.project-footer')) return;
+
         // Strip hardcoded version from original content if present
         let cleanHTML = installBtn.innerHTML.replace(/\s*\(v[\d.]+\)/g, '');
         installBtn.innerHTML = cleanHTML;
-
-        // Save original button content
         installBtn.dataset.originalContent = cleanHTML;
 
-        // Create footer container
         const footer = document.createElement('div');
         footer.className = 'project-footer';
 
-        // Create version info
         const versionInfo = document.createElement('div');
         versionInfo.className = 'version-info';
         versionInfo.innerHTML = `
@@ -169,81 +171,145 @@ async function initVersionCheck() {
             </div>
         `;
 
-        // Assemble: versionInfo + button => footer => item
         footer.appendChild(versionInfo);
         item.appendChild(footer);
         footer.appendChild(installBtn);
     });
 
-    // 2. Fetch latest versions from GitHub in parallel
-    const promises = Array.from(projectItems).map(async item => {
-        const btn = item.querySelector('.install-button');
-        if (!btn || !btn.href) return;
-
-        const version = await fetchVersion(btn.href);
-        const badge = item.querySelector('.version-badge.latest');
-
-        if (version) {
-            item.dataset.serverVersion = version;
-            if (badge) {
-                badge.textContent = `v${version}`;
-            }
-        } else {
-            if (badge) {
-                badge.textContent = 'Error';
-                badge.classList.add('outdated');
-            }
+    // 3. Setup standalone buttons (individual page mode)
+    standaloneButtons.forEach(btn => {
+        if (!btn.dataset.originalContent) {
+            let cleanHTML = btn.innerHTML.replace(/\s*\(v[\d.]+\)/g, '');
+            btn.innerHTML = cleanHTML;
+            btn.dataset.originalContent = cleanHTML;
         }
 
-        updateButtonState(item);
+        // Try to find existing version badges in the same container
+        const container = btn.closest('.install-section') || btn.parentElement;
+        const latestBadge = container.querySelector('.latest, .latest-version');
+        const installedBadge = container.querySelector('.installed, .installed-version');
+        
+        // Add classes for styling if missing
+        if (latestBadge && !latestBadge.classList.contains('latest')) latestBadge.classList.add('latest');
+        if (installedBadge && !installedBadge.classList.contains('installed-badge')) {
+            // Use installed-badge to avoid conflict with 'installed' state class on button
+            installedBadge.classList.add('installed-badge'); 
+        }
     });
-    await Promise.all(promises);
 
-    // 3. Listen for installed userscript reports
-    document.addEventListener('userscript-check-installed', (event) => {
-        const { name, version } = event.detail;
-        projectItems.forEach(item => {
-            const btn = item.querySelector('.install-button');
-            if (btn && btn.getAttribute('data-script-name') === name) {
-                item.dataset.installedVersion = version;
+    // 4. Fetch latest versions and listen for updates
+    const allTargets = [...projectItems, ...standaloneButtons];
+    
+    allTargets.forEach(target => {
+        const btn = target.classList.contains('install-button') ? target : target.querySelector('.install-button');
+        if (!btn || !btn.href) return;
 
-                // Update installed badge
-                const badge = item.querySelector('.version-badge.installed');
+        (async () => {
+            const version = await fetchVersion(btn.href);
+            const badge = target.classList.contains('install-button') 
+                ? (target.closest('.install-section') || target.parentElement).querySelector('.latest, .latest-version')
+                : target.querySelector('.latest, .latest-version');
+
+            if (version) {
+                // If it's a card, we use dataset on the card. If button, use dataset on button.
+                target.dataset.serverVersion = version;
                 if (badge) {
                     badge.textContent = `v${version}`;
-                    badge.classList.remove('outdated');
                 }
+            } else {
+                if (badge) {
+                    badge.textContent = 'Error';
+                    badge.classList.add('outdated');
+                }
+            }
+            updateButtonStateForTarget(target);
+        })();
 
-                updateButtonState(item);
+        // Click polling
+        btn.addEventListener('click', () => {
+            let attempts = 0;
+            const pollInterval = setInterval(() => {
+                attempts++;
+                document.dispatchEvent(new CustomEvent('userscript-ping'));
+                if (attempts >= 5) clearInterval(pollInterval);
+            }, 2000);
+        });
+    });
+
+    // 5. Listen for installed reports
+    document.addEventListener('userscript-check-installed', (event) => {
+        const { name, version } = event.detail;
+        allTargets.forEach(target => {
+            const btn = target.classList.contains('install-button') ? target : target.querySelector('.install-button');
+            if (btn && btn.getAttribute('data-script-name') === name) {
+                target.dataset.installedVersion = version;
+                
+                const badge = target.classList.contains('install-button') 
+                    ? (target.closest('.install-section') || target.parentElement).querySelector('.installed, .installed-badge, .installed-version')
+                    : target.querySelector('.installed, .installed-version');
+
+                if (badge) {
+                    badge.textContent = `v${version}`;
+                    badge.style.display = '';
+                }
+                updateButtonStateForTarget(target);
             }
         });
     });
 
-    // 4. Ping installed userscripts after a short delay
+    // 6. Initial Ping
     setTimeout(() => {
         document.dispatchEvent(new CustomEvent('userscript-ping'));
     }, 1000);
+}
 
-    // 5. Poll for installation status after clicking an install button
-    projectItems.forEach(item => {
-        const installBtn = item.querySelector('.install-button');
-        if (installBtn) {
-            installBtn.addEventListener('click', () => {
-                let attempts = 0;
-                const maxAttempts = 5;
-                const intervalMs = 2000;
-                
-                const pollInterval = setInterval(() => {
-                    attempts++;
-                    document.dispatchEvent(new CustomEvent('userscript-ping'));
-                    
-                    if (attempts >= maxAttempts) {
-                        clearInterval(pollInterval);
-                    }
-                }, intervalMs);
-            });
+/**
+ * Helper to update button state regardless of target type
+ */
+function updateButtonStateForTarget(target) {
+    const btn = target.classList.contains('install-button') ? target : target.querySelector('.install-button');
+    if (!btn) return;
+
+    const serverVersion = target.dataset.serverVersion;
+    const installedVersion = target.dataset.installedVersion;
+    
+    // Check if we have a dedicated badge to avoid redundant (vX.Y.Z) in button text
+    const container = target.classList.contains('install-button') 
+        ? (target.closest('.install-section') || target.parentElement)
+        : target;
+    const hasBadge = !!container.querySelector('.latest, .latest-version');
+
+    if (!installedVersion) {
+        let label = (btn.dataset.originalContent || '').replace(/Install/i, 'Install');
+        // Only append version if no dedicated badge is visible
+        if (serverVersion && !hasBadge) {
+            label = label.replace(/Install/i, `Install (v${serverVersion})`);
         }
-    });
+        btn.innerHTML = label;
+        btn.classList.remove('installed');
+        btn.style.pointerEvents = '';
+        btn.style.background = '';
+        btn.style.boxShadow = '';
+        return;
+    }
+
+    if (serverVersion && compareVersions(serverVersion, installedVersion) > 0) {
+        let label = (btn.dataset.originalContent || '').replace(/Install/i, 'Update');
+        if (!hasBadge) {
+            label = label.replace(/Update/i, `Update (v${serverVersion})`);
+        }
+        btn.innerHTML = label;
+        btn.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.6)';
+        btn.style.background = '#f39c12';
+        btn.classList.remove('installed');
+        btn.style.pointerEvents = 'auto';
+    } else {
+        btn.textContent = 'Installed';
+        btn.classList.add('installed');
+        btn.style.pointerEvents = 'none';
+        btn.style.background = '';
+        btn.style.boxShadow = '';
+    }
 }
 
 // Run
