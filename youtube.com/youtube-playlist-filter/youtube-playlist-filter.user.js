@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.30
+// @version      0.1.31
 // @lastModified 2026-04-07
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -42,7 +42,7 @@ const report = () => {
     let isManuallyMinimized = GM_getValue(MINIMIZED_STATE_KEY, false);
     let filterIntervalId = null;
     let observerInitTimerId = null;
-    let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '70px', right: '20px' });
+    let panelPos = GM_getValue(PANEL_POS_KEY, { top: '20px', left: '20px' });
 
     let filterState = { title: '', channel: '' };
     let isFiltering = false;
@@ -80,38 +80,24 @@ const report = () => {
     // --- UI Creation ---
 
     function checkPanelPosition() {
+        const panel = document.getElementById('yt-filter-panel');
         if (!panel) return;
+
         const rect = panel.getBoundingClientRect();
         const vw = window.innerWidth;
         const vh = window.innerHeight;
 
-        let newLeft = rect.left;
-        let newTop = rect.top;
-        let needsUpdate = false;
+        // Force position to be bounded within the viewport
+        const newLeft = Math.max(0, Math.min(rect.left, vw - rect.width));
+        const newTop = Math.max(0, Math.min(rect.top, vh - rect.height));
 
-        if (rect.right > vw) {
-            newLeft = Math.max(0, vw - rect.width);
-            needsUpdate = true;
-        }
-        if (rect.left < 0) {
-            newLeft = 0;
-            needsUpdate = true;
-        }
-        if (rect.bottom > vh) {
-            newTop = Math.max(0, vh - rect.height);
-            needsUpdate = true;
-        }
-        if (rect.top < 0) {
-            newTop = 0;
-            needsUpdate = true;
-        }
-
-        if (needsUpdate) {
+        if (rect.left !== newLeft || rect.top !== newTop || panel.style.bottom !== 'auto' || panel.style.right !== 'auto') {
             panel.style.bottom = 'auto';
             panel.style.right = 'auto';
             panel.style.left = `${newLeft}px`;
             panel.style.top = `${newTop}px`;
-            panelPos = { top: panel.style.top, left: panel.style.left, bottom: '', right: '' };
+
+            panelPos = { top: panel.style.top, left: panel.style.left };
             GM_setValue(PANEL_POS_KEY, panelPos);
         }
     }
@@ -188,17 +174,12 @@ const report = () => {
         document.addEventListener('mouseup', () => {
             if (isDragging) {
                 isDragging = false;
-                const rect = panel.getBoundingClientRect();
-                // Save position as bottom/right to avoid overlapping with footer if possible
-                const bottom = window.innerHeight - rect.bottom;
-                const right = window.innerWidth - rect.right;
-                panelPos = { bottom: `${bottom}px`, right: `${right}px` };
-                GM_setValue(PANEL_POS_KEY, panelPos);
+                checkPanelPosition(); // Ensure it's in bounds and saves as top/left
             }
         });
 
         const titleLabel = document.createElement('span');
-        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.30';
+        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.31';
         titleLabel.textContent = `Playlist Filter v${v}`;
         Object.assign(titleLabel.style, { 
             fontWeight: 'bold', 
@@ -367,7 +348,8 @@ const report = () => {
 
         document.body.appendChild(panel);
         updatePanelVisibility();
-        setTimeout(checkPanelPosition, 0);
+        checkPanelPosition(); // Synchronous call on initial display
+        setTimeout(checkPanelPosition, 0); // And a deferred call just in case
         window.addEventListener('resize', () => {
             requestAnimationFrame(checkPanelPosition);
         });
