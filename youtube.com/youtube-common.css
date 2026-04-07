@@ -1,0 +1,62 @@
+/* youtube-common.css */
+:root {
+    --yus-panel-bg: #ffffff;
+    --yus-panel-border: #cccccc;
+    --yus-text-color: #333333;
+    --yus-version-hover: #0000ff;
+    --yus-font-family: Roboto, Arial, sans-serif;
+}
+
+/* Base Panel */
+.yus-panel {
+    position: fixed;
+    z-index: 9999;
+    background-color: var(--yus-panel-bg);
+    border: 1px solid var(--yus-panel-border);
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    color: var(--yus-text-color);
+    font-family: var(--yus-font-family);
+    transition: opacity 0.3s ease;
+    opacity: 0.85;
+}
+
+.yus-panel.yus-active {
+    opacity: 1;
+}
+
+/* Header & Drag Area */
+.yus-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    cursor: move;
+}
+
+/* Title & Version Styling */
+.yus-title {
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    display: inline-block;
+}
+
+.yus-title:hover {
+    font-size: 13px;
+    transform: scale(1.05);
+    transform-origin: left center;
+    color: var(--yus-hover-color, #00f);
+}
+
+/* Content Container */
+.yus-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
