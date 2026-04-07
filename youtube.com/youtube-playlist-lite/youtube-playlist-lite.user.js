@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.23
+// @version      0.1.24
 // @description  YouTubeプレイリスト表示でサムネイルを非表示にして軽量化するためのツールです。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -11,12 +11,20 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_info
+// @grant        GM_getResourceText
+// @grant        GM_addStyle
+// @resource     youtubeCommonCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-common.css
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-lite/youtube-playlist-lite.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-lite/youtube-playlist-lite.user.js
 // ==/UserScript==
 
 (function () {
     'use strict';
+
+    const commonCss = GM_getResourceText('youtubeCommonCSS');
+    if (commonCss) {
+        GM_addStyle(commonCss);
+    }
 const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
@@ -76,11 +84,17 @@ const report = () => {
     let contentContainer = null;
 
     function updatePanelVisibility() {
-        const isActive = !isAutoMinimized;
+        const isActiveState = !isAutoMinimized;
 
         if (contentContainer) {
-            const shouldShowContent = isActive && !isManuallyMinimized;
+            const shouldShowContent = isActiveState && !isManuallyMinimized;
             contentContainer.style.display = shouldShowContent ? 'flex' : 'none';
+            
+            if (shouldShowContent) {
+                panel.classList.add('yus-active');
+            } else {
+                panel.classList.remove('yus-active');
+            }
         }
     }
 
@@ -224,22 +238,13 @@ const report = () => {
 
         panel = document.createElement('div');
         panel.id = 'yt-lite-panel';
+        panel.className = 'yus-panel';
 
-        // Styles
-        Object.assign(panel.style, {
-            position: 'fixed',
-            zIndex: 9999,
-            backgroundColor: '#f0f8ff',
-            border: '1px solid #00f',
-            borderRadius: '8px',
-            padding: '12px',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-            display: 'flex',
-            flexDirection: 'column',
-            width: '180px',
-            color: '#333',
-            fontFamily: 'Roboto, Arial, sans-serif'
-        });
+        // Override colors for Lite
+        panel.style.backgroundColor = '#f0f8ff';
+        panel.style.borderColor = '#00f';
+        panel.style.width = '180px';
+        panel.style.setProperty('--yus-hover-color', '#00f');
 
         if (panelPos.top) panel.style.top = panelPos.top;
         if (panelPos.left) panel.style.left = panelPos.left;
@@ -247,7 +252,7 @@ const report = () => {
         if (panelPos.right) panel.style.right = panelPos.right;
 
         const headerRow = document.createElement('div');
-        Object.assign(headerRow.style, { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', cursor: 'move' });
+        headerRow.className = 'yus-header';
 
         let isDragging = false, dragStartX, dragStartY, initialLeft, initialTop;
         headerRow.addEventListener('mousedown', (e) => {
@@ -276,27 +281,10 @@ const report = () => {
         });
 
         const titleLabel = document.createElement('span');
-        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.21';
+        titleLabel.className = 'yus-title';
+        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.24';
         titleLabel.textContent = `Lite v${v}`;
-        Object.assign(titleLabel.style, { 
-            fontWeight: 'bold', 
-            fontSize: '11px', 
-            cursor: 'pointer',
-            transition: 'all 0.2s ease-in-out',
-            display: 'inline-block'
-        });
         titleLabel.title = 'Double-click to toggle minimization';
-
-        titleLabel.addEventListener('mouseenter', () => {
-            titleLabel.style.fontSize = '12px';
-            titleLabel.style.transform = 'scale(1.1)';
-            titleLabel.style.color = '#00f';
-        });
-        titleLabel.addEventListener('mouseleave', () => {
-            titleLabel.style.fontSize = '11px';
-            titleLabel.style.transform = 'scale(1)';
-            titleLabel.style.color = '#333';
-        });
 
         titleLabel.addEventListener('dblclick', (e) => {
             if (isAutoMinimized) return; // Prevent expansion on inactive pages
@@ -308,7 +296,7 @@ const report = () => {
 
         contentContainer = document.createElement('div');
         contentContainer.id = 'yt-lite-panel-content';
-        Object.assign(contentContainer.style, { display: 'flex', flexDirection: 'column', gap: '8px' });
+        contentContainer.className = 'yus-content';
 
         headerRow.appendChild(titleLabel);
         panel.appendChild(headerRow);
