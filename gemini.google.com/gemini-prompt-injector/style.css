@@ -18,10 +18,7 @@
     overflow: hidden;
 }
 
-#gpi-test-ui.minimized {
-    width: 50px;
-    height: 30px;
-}
+
 
 .gpi-header {
     padding: 4px 8px;

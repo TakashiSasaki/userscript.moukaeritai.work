@@ -333,4 +333,71 @@
             element.innerHTML = html;
         }
     };
+
+    /**
+     * Sets up a panel to be minimizable, toggling the 'gus-minimized' class and persisting state.
+     * Requires the panel to have '.gus-active-content' and '.gus-inactive-content' child elements.
+     *
+     * @param {HTMLElement} panel - The main panel element.
+     * @param {string} storageKey - A unique string key for localStorage (e.g., 'gus-minimized-scriptname').
+     * @param {HTMLElement} [minimizeBtn=null] - Optional button inside the active content to trigger minimization.
+     * @param {boolean} [defaultMinimized=false] - Default state if no saved state exists.
+     */
+    window.geminiSetupMinimizablePanel = function (panel, storageKey, minimizeBtn = null, defaultMinimized = false) {
+        if (!panel || !storageKey) return;
+
+        // 1. Restore state from LocalStorage
+        let isMinimized = defaultMinimized;
+        try {
+            const savedState = localStorage.getItem(storageKey);
+            if (savedState !== null) {
+                isMinimized = savedState === 'true';
+            }
+        } catch (e) {
+            console.warn('[GUS] Failed to read minimized state from localStorage', e);
+        }
+
+        const applyState = (minimized) => {
+            if (minimized) {
+                panel.classList.add('gus-minimized');
+            } else {
+                panel.classList.remove('gus-minimized');
+            }
+            try {
+                localStorage.setItem(storageKey, minimized.toString());
+            } catch (e) {
+                console.warn('[GUS] Failed to save minimized state to localStorage', e);
+            }
+        };
+
+        // Apply initial state
+        applyState(isMinimized);
+
+        // 2. Setup Toggle Logic
+        // Allow clicking the inactive content area to expand
+        const inactiveContent = panel.querySelector('.gus-inactive-content');
+        if (inactiveContent) {
+            inactiveContent.addEventListener('click', (e) => {
+                // Prevent toggling if dragging or clicking a specific child (like a close button if added later)
+                if (inactiveContent.style.cursor === 'grabbing') return;
+                applyState(false);
+                e.stopPropagation(); // Prevent drag mousedown from firing if it's the same area
+            });
+        }
+
+        // Allow clicking a specific minimize button to collapse
+        if (minimizeBtn) {
+            minimizeBtn.addEventListener('click', (e) => {
+                applyState(true);
+                e.stopPropagation();
+            });
+        }
+
+        // Return a function to programmatically set the state if needed
+        return {
+            setMinimized: (state) => applyState(state),
+            isMinimized: () => panel.classList.contains('gus-minimized')
+        };
+    };
+
 })();

@@ -53,3 +53,27 @@ span.gus-version:hover {
 span.gus-version:active {
     cursor: grabbing !important;
 }
+
+/* === Minimizable Panel Styles === */
+.gus-panel.gus-minimized {
+    opacity: 0.9 !important;
+    padding: 4px 12px !important;
+}
+
+.gus-panel.gus-minimized .gus-active-content {
+    display: none !important;
+}
+
+.gus-inactive-content {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    white-space: nowrap;
+    color: var(--gus-panel-color) !important;
+}
+
+.gus-panel.gus-minimized .gus-inactive-content {
+    display: flex !important;
+}

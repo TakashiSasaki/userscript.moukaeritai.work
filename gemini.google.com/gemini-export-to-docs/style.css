@@ -100,28 +100,13 @@
     transition: opacity 0.3s ease;
 }
 
-#gemini-one-turn-panel.inactive {
-    opacity: 0.9;
-    padding: 4px 12px;
-}
 
-#gemini-one-turn-panel.inactive .one-turn-active-content {
-    display: none !important;
-}
 
-.one-turn-inactive-content {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    opacity: 1;
-    white-space: nowrap;
-    color: #333;
-}
 
-#gemini-one-turn-panel.inactive .one-turn-inactive-content {
-    display: flex;
-}
+
+
+
+#gemini-one-turn-panel.inactive
 
 .one-turn-inactive-version {
     font-size: 11px;
@@ -132,9 +117,7 @@
     line-height: 1;
 }
 
-#gemini-one-turn-panel.inactive .one-turn-version {
-    color: inherit;
-}
+
 /* cursor handled by .gus-version if applied, but this is a container */
 .one-turn-controls-col {
     display: flex;
