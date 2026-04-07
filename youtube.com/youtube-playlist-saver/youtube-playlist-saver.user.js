@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.61
+// @version      0.2.62
 // @lastModified 2026-04-08
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @antifeature  webRequestBlocking
@@ -19,6 +19,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @resource     youtubeCommonCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-common.css
+// @resource     ytSaverTemplate https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver/template.html
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver/youtube-playlist-saver.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver/youtube-playlist-saver.user.js
 // ==/UserScript==
@@ -80,7 +81,6 @@ const report = () => {
     let isActive = false;
     let scanIntervalId = null;
     let panel = null;
-    let contentContainer = null;
 
     const panelElements = {
         totalSaved: null,
@@ -130,24 +130,25 @@ const report = () => {
     function createPanel() {
         if (document.getElementById('yt-saver-panel')) return;
 
-        panel = document.createElement('div');
-        panel.id = 'yt-saver-panel';
-        panel.className = 'yus-panel';
+        const templateStr = GM_getResourceText('ytSaverTemplate');
+        if (!templateStr) {
+            console.error('[YouTube Playlist Saver] Failed to load template.html');
+            return;
+        }
 
-        // Override colors for Saver
-        panel.style.backgroundColor = '#f1f8e9';
-        panel.style.width = '220px';
-        panel.style.setProperty('--yus-hover-color', '#2ba640');
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.62';
+        const html = templateStr.replace('{{VERSION}}', version);
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html;
+        panel = wrapper.firstElementChild;
 
         if (panelPos.top) panel.style.top = panelPos.top;
         if (panelPos.left) panel.style.left = panelPos.left;
         if (panelPos.bottom) panel.style.bottom = panelPos.bottom;
         if (panelPos.right) panel.style.right = panelPos.right;
 
-        const headerRow = document.createElement('div');
-        headerRow.className = 'yus-header';
-        headerRow.style.marginBottom = '6px';
-
+        const headerRow = panel.querySelector('#yt-saver-header');
         let isDragging = false;
         let dragStartX, dragStartY;
         let initialLeft, initialTop;
@@ -185,12 +186,7 @@ const report = () => {
             }
         });
 
-        const titleLabel = document.createElement('span');
-        titleLabel.className = 'yus-title';
-        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.2.61';
-        titleLabel.textContent = `Playlist Saver v${v}`;
-        titleLabel.title = 'Double-click to toggle minimization';
-
+        const titleLabel = panel.querySelector('#yt-saver-title');
         titleLabel.addEventListener('dblclick', (e) => {
             isManuallyMinimized = !isManuallyMinimized;
             GM_setValue(MINIMIZED_STATE_KEY, isManuallyMinimized);
@@ -198,77 +194,19 @@ const report = () => {
             e.stopPropagation();
         });
 
-        const contentContainer = document.createElement('div');
-        contentContainer.id = 'yt-saver-panel-content';
-        contentContainer.className = 'yus-content';
-        contentContainer.style.gap = '6px';
+        panelElements.totalSaved = panel.querySelector('#yt-saver-stats-total');
+        panelElements.savedVisible = panel.querySelector('#yt-saver-stats-saved');
+        panelElements.newVisible = panel.querySelector('#yt-saver-stats-new');
+        panelElements.storageStatus = panel.querySelector('#yt-saver-stats-storage');
 
-        headerRow.appendChild(titleLabel);
-        panel.appendChild(headerRow);
-        panel.appendChild(contentContainer);
-
-        const createStatRow = (labelText) => {
-            const row = document.createElement('div');
-            Object.assign(row.style, {
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                fontSize: '12px'
-            });
-
-            const label = document.createElement('span');
-            label.textContent = labelText;
-            label.style.color = '#555';
-
-            const value = document.createElement('span');
-            value.textContent = '-';
-            value.style.fontWeight = 'bold';
-
-            row.appendChild(label);
-            row.appendChild(value);
-            contentContainer.appendChild(row);
-            return value;
-        };
-
-        panelElements.totalSaved = createStatRow('Saved IDs (Total)');
-        panelElements.savedVisible = createStatRow('SAVED in List');
-        panelElements.newVisible = createStatRow('NEW in List');
-        panelElements.storageStatus = createStatRow('Storage');
-
-        const actionsRow = document.createElement('div');
-        Object.assign(actionsRow.style, {
-            display: 'flex',
-            gap: '6px',
-            marginTop: '4px'
-        });
-
-        const createActionButton = (label, onClick) => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.textContent = label;
-            Object.assign(button.style, {
-                flex: '1 1 0',
-                padding: '4px 6px',
-                fontSize: '11px',
-                border: '1px solid #a6c8a6',
-                borderRadius: '4px',
-                backgroundColor: '#f5fff5',
-                cursor: 'pointer'
-            });
-            button.addEventListener('click', onClick);
-            return button;
-        };
-
-        actionsRow.appendChild(createActionButton('Export JSON', exportDataToFile));
-        actionsRow.appendChild(createActionButton('Copy JSON', onExportToClipboardClick));
-        contentContainer.appendChild(actionsRow);
+        panel.querySelector('#yt-saver-export-btn').addEventListener('click', exportDataToFile);
+        panel.querySelector('#yt-saver-copy-btn').addEventListener('click', onExportToClipboardClick);
 
         document.body.appendChild(panel);
         setTimeout(checkPanelPosition, 0);
         window.addEventListener('resize', () => {
             requestAnimationFrame(checkPanelPosition);
         });
-
     }
 
 
