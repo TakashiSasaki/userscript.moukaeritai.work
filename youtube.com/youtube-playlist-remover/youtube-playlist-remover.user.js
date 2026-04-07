@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.45
+// @version      0.1.46
+// @lastModified  2026-04-07
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -35,12 +36,14 @@ const report = () => {
     const PLAYLIST_PATH = '/playlist';
     const PANEL_POS_KEY = 'yt_remover_panel_position';
     const WAIT_FOR_DISAPPEARANCE_KEY = 'yt_remover_wait_for_disappearance';
+    const MINIMIZED_STATE_KEY = 'yt_remover_is_minimized';
     const INIT_DELAY_RANGE_MS = { min: 10000, max: 15000 };
 
     let isActive = false;
     let refreshIntervalId = null;
     let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '150px', right: '20px' });
     let waitForDisappearance = GM_getValue(WAIT_FOR_DISAPPEARANCE_KEY, true);
+    let isManuallyMinimized = GM_getValue(MINIMIZED_STATE_KEY, false);
     let removeButton = null;
     let isRemoving = false;
     let cancelRequested = false;
@@ -202,20 +205,31 @@ const report = () => {
         });
 
         const titleLabel = document.createElement('span');
-        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.36';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.46';
         titleLabel.textContent = `Remover v${version}`;
-        Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
+        Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px' });
 
-        const statusLabel = document.createElement('span');
-        statusLabel.id = 'yt-remover-active-indicator';
-        statusLabel.textContent = 'Inactive';
-        Object.assign(statusLabel.style, {
-            fontSize: '11px',
-            fontWeight: 'bold',
-            padding: '2px 6px',
-            borderRadius: '10px',
-            backgroundColor: '#e0e0e0',
-            color: '#666'
+        titleLabel.style.cursor = 'pointer';
+        titleLabel.style.transition = 'all 0.2s ease-in-out';
+        titleLabel.style.display = 'inline-block';
+        titleLabel.title = 'Double-click to toggle minimization';
+
+        titleLabel.addEventListener('mouseenter', () => {
+            titleLabel.style.fontSize = '13px';
+            titleLabel.style.transform = 'scale(1.1)';
+            titleLabel.style.color = '#d00';
+        });
+        titleLabel.addEventListener('mouseleave', () => {
+            titleLabel.style.fontSize = '12px';
+            titleLabel.style.transform = 'scale(1)';
+            titleLabel.style.color = '#333';
+        });
+
+        titleLabel.addEventListener('dblclick', (e) => {
+            isManuallyMinimized = !isManuallyMinimized;
+            GM_setValue(MINIMIZED_STATE_KEY, isManuallyMinimized);
+            updatePanelVisibility();
+            e.stopPropagation();
         });
 
         const contentContainer = document.createElement('div');
@@ -223,7 +237,6 @@ const report = () => {
         Object.assign(contentContainer.style, { display: 'flex', flexDirection: 'column', gap: '8px' });
 
         headerRow.appendChild(titleLabel);
-        headerRow.appendChild(statusLabel);
         panel.appendChild(headerRow);
         panel.appendChild(contentContainer);
 
@@ -302,6 +315,16 @@ const report = () => {
     }
 
     // --- Updates ---
+
+    function updatePanelVisibility() {
+        const content = document.getElementById('yt-remover-panel-content');
+        const panel = document.getElementById('yt-remover-panel');
+        if (!content || !panel) return;
+
+        content.style.display = (isActive && !isManuallyMinimized) ? 'flex' : 'none';
+        panel.style.opacity = (isActive && !isManuallyMinimized) ? '1' : '0.85';
+    }
+
 
     function updateStatus(text, isActive = false) {
         const el = document.getElementById('yt-remover-status');
@@ -699,20 +722,6 @@ const report = () => {
     }
 
 
-    function setPanelActiveState(active) {
-        const label = document.getElementById('yt-remover-active-indicator');
-        const content = document.getElementById('yt-remover-panel-content');
-        const panel = document.getElementById('yt-remover-panel');
-        if (!label || !content || !panel) return;
-
-        label.textContent = active ? 'Active' : 'Inactive';
-        label.style.backgroundColor = active ? '#e6f4ea' : '#e0e0e0';
-        label.style.color = active ? '#188038' : '#666';
-
-        content.style.display = active ? 'flex' : 'none';
-        panel.style.opacity = active ? '1' : '0.85';
-    }
-
     function showPanel() {
         const panel = document.getElementById('yt-remover-panel');
         if (panel) panel.style.display = 'flex';
@@ -725,7 +734,7 @@ const report = () => {
 
         createPanel();
         showPanel();
-        setPanelActiveState(true);
+        updatePanelVisibility();
         itemsAboveAndValidSet.clear();
 
         ensureObserver();
@@ -771,8 +780,8 @@ const report = () => {
         updateRemoveButtonLabel('Remove Range', { force: true });
         updateStatus('Idle');
         updatePhase('Idle');
+        updatePanelVisibility();
         showPanel();
-        setPanelActiveState(false);
     }
 
     function init() {
