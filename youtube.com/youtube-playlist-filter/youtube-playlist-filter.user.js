@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.28
-// @lastModified  2026-04-06
+// @version      0.1.29
+// @lastModified  2026-04-07
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -160,7 +160,7 @@ const report = () => {
         });
 
         const titleLabel = document.createElement('span');
-        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.21';
+        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.29';
         titleLabel.textContent = `Playlist Filter v${v}`;
         Object.assign(titleLabel.style, { 
             fontWeight: 'bold', 
@@ -190,24 +190,11 @@ const report = () => {
             e.stopPropagation();
         });
 
-        const statusLabel = document.createElement('span');
-        statusLabel.id = 'yt-filter-active-indicator';
-        statusLabel.textContent = 'Inactive';
-        Object.assign(statusLabel.style, {
-            fontSize: '11px',
-            fontWeight: 'bold',
-            padding: '2px 6px',
-            borderRadius: '10px',
-            backgroundColor: '#e0e0e0',
-            color: '#666'
-        });
-
         const contentContainer = document.createElement('div');
         contentContainer.id = 'yt-filter-panel-content';
         Object.assign(contentContainer.style, { display: 'flex', flexDirection: 'column', gap: '8px' });
 
         headerRow.appendChild(titleLabel);
-        headerRow.appendChild(statusLabel);
         panel.appendChild(headerRow);
         panel.appendChild(contentContainer);
 
@@ -640,18 +627,6 @@ const report = () => {
         listObserver.observe(container, { childList: true, subtree: true });
     }
 
-    function setPanelActiveState(active) {
-        const label = document.getElementById('yt-filter-active-indicator');
-        const panel = document.getElementById('yt-filter-panel');
-        if (!label || !panel) return;
-
-        label.textContent = active ? 'Active' : 'Inactive';
-        label.style.backgroundColor = active ? '#e6f4ea' : '#e0e0e0';
-        label.style.color = active ? '#188038' : '#666';
-
-        updatePanelVisibility();
-    }
-
     function showPanel() {
         const panel = document.getElementById('yt-filter-panel');
         if (panel) panel.style.display = 'flex';
@@ -755,7 +730,7 @@ const report = () => {
         createPanel();
         showPanel();
 
-        setPanelActiveState(true);
+        updatePanelVisibility();
         itemsAboveSet.clear();
         itemsVisibleSet.clear();
         allCachedItems.clear();
@@ -786,7 +761,7 @@ const report = () => {
         pendingProcessItems.clear();
 
         showPanel();
-        setPanelActiveState(false);
+        updatePanelVisibility();
     }
 
     function init() {
