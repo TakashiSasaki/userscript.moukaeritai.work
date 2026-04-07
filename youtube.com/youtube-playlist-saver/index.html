@@ -240,8 +240,8 @@
 <li>形式: <code>major.minor.patch</code> (Semantic Versioning)</li>
 <li>更新ルール: スクリプトファイルが少しでも変更された場合は、<code>patch</code> レベルを更新します。</li>
 </ul>
-<h3>5.2 現在バージョン</h3>
-<p><code>0.2.51</code></p>
+<h3>5.2 バージョン管理の自動化</h3>
+<p>ドキュメント内の最新バージョン表記は GitHub メタデータから動的に取得されるため、手動での書き換えは不要です。バンプアップはユーザースクリプト本体のメタデータに対してのみ行ってください。</p>
 <h3>5.3 メタデータ定義</h3>
 <ul>
 <li><strong>作者</strong>: Takashi Sasaki (x.com/TakashiSasaki)</li>
@@ -299,18 +299,20 @@
         </div>
 
         <div class="install-section">
-            <a class="install-button" id="install-btn" href="youtube-playlist-saver.user.js" data-version="0.2.61">
-                        <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
+            <div class="version-info">
+                <span class="version-badge latest-version">...</span>
+                <span class="version-badge installed-version" style="display: none;"></span>
+            </div>
+            <a class="install-button" id="install-btn" data-script-name="YouTube Playlist Saver"
+                href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver/youtube-playlist-saver.user.js">
+                <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                 </svg>
-                        <span>Install</span>
-                        <div class="version-info">
-                            <span class="version-badge latest-version">v0.2.61</span>
-                            <span class="version-badge installed-version" style="display: none;"></span>
-                        </div>
-                    </a>
+                <span>Install</span>
+            </a>
         </div>
     </div>
+    <script src="../../domain-landing.js"></script>
 </body>
 
 </html>
