@@ -133,29 +133,34 @@
 
         <div id="content">
             <h1>NotebookLM Artifact Delete Button</h1>
-<h2>概要</h2>
-<p>NotebookLM の各アーティファクト（メモ、ソースなど）に削除ボタンを追加し、1クリックで削除プロセスを開始できるようにするユーザースクリプトです。</p>
-<h2>機能</h2>
-<ul>
-<li>各アーティファクトのアイテムに「×」ボタンを追加します。</li>
-<li>ボタンをクリックすると、ネイティブの削除メニューを自動的に呼び出し、削除確認ダイアログまで自動化または補助します。</li>
-</ul>
-<h2>インストール</h2>
-<p><a href="notebooklm-artifact-delete-button.user.js">こちら</a> からインストールしてください。</p>
+            <h2>概要</h2>
+            <p>NotebookLM の各アーティファクト（メモ、ソースなど）に削除ボタンを追加し、1クリックで削除プロセスを開始できるようにするユーザースクリプトです。</p>
+            <h2>機能</h2>
+            <ul>
+                <li>各アーティファクトのアイテムに「×」ボタンを追加します。</li>
+                <li>ボタンをクリックすると、ネイティブの削除メニューを自動的に呼び出し、削除確認ダイアログまで自動化または補助します。</li>
+            </ul>
+            <h2>更新履歴</h2>
+            <ul>
+                <li><strong>v0.1.6</strong>: triggerNativeDelete 内のポーリング処理を MutationObserver ベースの waitForElement に最適化し、DOMクエリ回数を削減。また、SCRIPT_ID 未定義によるエラーを修正。</li>
+            </ul>
+            <h2>インストール</h2>
+            <p><a href="notebooklm-artifact-delete-button.user.js">こちら</a> からインストールしてください。</p>
 
         </div>
 
         <div class="install-section">
-            <a class="install-button" id="install-btn" href="notebooklm-artifact-delete-button.user.js" data-version="0.1.2">
-                        <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
+            <a class="install-button" id="install-btn" href="notebooklm-artifact-delete-button.user.js"
+                data-version="0.1.6">
+                <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                 </svg>
-                        <span>Install</span>
-                        <div class="version-info">
-                            <span class="version-badge latest-version">v0.1.2</span>
-                            <span class="version-badge installed-version" style="display: none;"></span>
-                        </div>
-                    </a>
+                <span>Install</span>
+                <div class="version-info">
+                    <span class="version-badge latest-version">v0.1.6</span>
+                    <span class="version-badge installed-version" style="display: none;"></span>
+                </div>
+            </a>
         </div>
     </div>
 </body>

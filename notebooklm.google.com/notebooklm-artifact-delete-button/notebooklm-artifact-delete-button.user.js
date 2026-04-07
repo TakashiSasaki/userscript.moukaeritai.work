@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name         NotebookLM Artifact Delete Button
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.5
+// @version      0.1.6
+// @lastModified  2025-02-13
 // @description  Add delete buttons to NotebookLM artifacts (notes, audio, etc.)
 // @author       Takashi Sasaki
 // @match        https://notebooklm.google.com/*
@@ -14,7 +15,10 @@
 
 (function() {
     'use strict';
-const report = () => {
+
+    const SCRIPT_ID = 'notebooklm-artifact-delete-button';
+
+    const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
                 name: GM_info.script.name,
@@ -93,6 +97,44 @@ const report = () => {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    /**
+     * Waits for an element to appear in the DOM.
+     * @param {string|((scope: ParentNode) => Element|null)} selectorOrPredicate
+     * @param {ParentNode} [context=document]
+     * @param {number} [timeout=5000]
+     * @returns {Promise<Element>}
+     */
+    function waitForElement(selectorOrPredicate, context = document, timeout = 5000) {
+        return new Promise((resolve, reject) => {
+            const getElement = () => typeof selectorOrPredicate === 'function'
+                ? selectorOrPredicate(context)
+                : context.querySelector(selectorOrPredicate);
+
+            const el = getElement();
+            if (el) return resolve(el);
+
+            let timeoutId = null;
+            const observer = new MutationObserver(() => {
+                const el = getElement();
+                if (el) {
+                    if (timeoutId) clearTimeout(timeoutId);
+                    observer.disconnect();
+                    resolve(el);
+                }
+            });
+
+            observer.observe(context === document ? document.body : context, {
+                childList: true,
+                subtree: true
+            });
+
+            timeoutId = setTimeout(() => {
+                observer.disconnect();
+                reject(new Error(`Timeout waiting for ${selectorOrPredicate}`));
+            }, timeout);
+        });
+    }
+
     // Helper functions for event emulation
     const dispatchMouseEvents = (el, types) => {
         types.forEach(type => {
@@ -125,15 +167,10 @@ const report = () => {
 
         // Wait for More button to appear
         let moreBtn = null;
-        for (let i = 0; i < 20; i++) { // 2 seconds
-            // The more button is likely inside the action container or the item button
-            moreBtn = container.querySelector(SELECTORS.MORE_BUTTON);
-            if (moreBtn) break;
-            await sleep(100);
-        }
-
-        if (!moreBtn) {
-            log('More button not found.');
+        try {
+            moreBtn = await waitForElement(SELECTORS.MORE_BUTTON, container, 2000);
+        } catch (e) {
+            log('More button not found:', e.message);
             return;
         }
 
@@ -143,18 +180,23 @@ const report = () => {
 
         // 3. Poll for the menu item and click it
         let deleteMenuItem = null;
-        for (let i = 0; i < 50; i++) { // 5 seconds
-            const menuScope = getMenuScope();
-            const menuItems = menuScope.querySelectorAll('button[role="menuitem"]');
-            for (const item of menuItems) {
-                const text = item.textContent.trim();
-                if (SELECTORS.MENU_DELETE_BTN_TEXT.some(t => text.includes(t))) {
-                    deleteMenuItem = item;
-                    break;
+        try {
+            deleteMenuItem = await waitForElement((scope) => {
+                const menuScope = getMenuScope();
+                const menuItems = menuScope.querySelectorAll('button[role="menuitem"]');
+                for (const item of menuItems) {
+                    const text = item.textContent.trim();
+                    if (SELECTORS.MENU_DELETE_BTN_TEXT.some(t => text.includes(t))) {
+                        return item;
+                    }
                 }
-            }
-            if (deleteMenuItem) break;
-            await sleep(100);
+                return null;
+            }, document, 5000);
+        } catch (e) {
+            log('Delete menu item not found:', e.message);
+            // Close menu if open
+            document.body.click();
+            return;
         }
 
         if (deleteMenuItem) {
@@ -164,22 +206,17 @@ const report = () => {
             // 4. Wait for the confirmation dialog and click "Delete"
             log('Waiting for confirmation dialog...');
             let confirmBtn = null;
-            for (let i = 0; i < 50; i++) {
-                confirmBtn = document.querySelector(SELECTORS.CONFIRM_DELETE_BTN);
-                if (confirmBtn) break;
-                await sleep(100);
+            try {
+                confirmBtn = await waitForElement(SELECTORS.CONFIRM_DELETE_BTN, document, 5000);
+            } catch (e) {
+                log('Confirmation dialog timed out (or not needed):', e.message);
+                return;
             }
 
             if (confirmBtn) {
                 log('Confirmation button found. Clicking...', confirmBtn);
                 emulateClick(confirmBtn);
-            } else {
-                log('Confirmation dialog timed out (or not needed).');
             }
-        } else {
-            log('Delete menu item not found.');
-            // Close menu if open
-            document.body.click(); 
         }
     }
 
