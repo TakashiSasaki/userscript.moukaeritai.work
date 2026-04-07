@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.22
+// @version      0.1.23
 // @description  YouTubeプレイリスト表示でサムネイルを非表示にして軽量化するためのツールです。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -181,6 +181,44 @@ const report = () => {
     }
 
     // --- UI Creation ---
+
+    function checkPanelPosition() {
+        if (!panel) return;
+        const rect = panel.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        let newLeft = rect.left;
+        let newTop = rect.top;
+        let needsUpdate = false;
+
+        if (rect.right > vw) {
+            newLeft = Math.max(0, vw - rect.width);
+            needsUpdate = true;
+        }
+        if (rect.left < 0) {
+            newLeft = 0;
+            needsUpdate = true;
+        }
+        if (rect.bottom > vh) {
+            newTop = Math.max(0, vh - rect.height);
+            needsUpdate = true;
+        }
+        if (rect.top < 0) {
+            newTop = 0;
+            needsUpdate = true;
+        }
+
+        if (needsUpdate) {
+            panel.style.bottom = 'auto';
+            panel.style.right = 'auto';
+            panel.style.left = `${newLeft}px`;
+            panel.style.top = `${newTop}px`;
+            panelPos = { top: panel.style.top, left: panel.style.left, bottom: '', right: '' };
+            GM_setValue(PANEL_POS_KEY, panelPos);
+        }
+    }
+
     function createPanel() {
         if (document.getElementById('yt-lite-panel')) return;
 
@@ -328,6 +366,11 @@ const report = () => {
 
         document.body.appendChild(panel);
         updatePanelVisibility();
+        setTimeout(checkPanelPosition, 0);
+        window.addEventListener('resize', () => {
+            requestAnimationFrame(checkPanelPosition);
+        });
+
     }
 
     // --- Init & Navigation ---

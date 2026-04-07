@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.13
+// @version      0.1.14
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -114,6 +114,44 @@ const report = () => {
         if (!isAutoScrollEnabled || !isActive || !isPlaylistPage()) return;
         startAutoScroll();
     }
+
+    function checkPanelPosition() {
+        if (!panel) return;
+        const rect = panel.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        let newLeft = rect.left;
+        let newTop = rect.top;
+        let needsUpdate = false;
+
+        if (rect.right > vw) {
+            newLeft = Math.max(0, vw - rect.width);
+            needsUpdate = true;
+        }
+        if (rect.left < 0) {
+            newLeft = 0;
+            needsUpdate = true;
+        }
+        if (rect.bottom > vh) {
+            newTop = Math.max(0, vh - rect.height);
+            needsUpdate = true;
+        }
+        if (rect.top < 0) {
+            newTop = 0;
+            needsUpdate = true;
+        }
+
+        if (needsUpdate) {
+            panel.style.bottom = 'auto';
+            panel.style.right = 'auto';
+            panel.style.left = `${newLeft}px`;
+            panel.style.top = `${newTop}px`;
+            panelPos = { top: panel.style.top, left: panel.style.left, bottom: '', right: '' };
+            GM_setValue(PANEL_POS_KEY, panelPos);
+        }
+    }
+
 
     function createPanel() {
         if (document.getElementById('yt-scroller-panel')) return;
@@ -339,6 +377,11 @@ const report = () => {
         contentContainer.appendChild(intervalInputObj.container);
 
         document.body.appendChild(panel);
+        setTimeout(checkPanelPosition, 0);
+        window.addEventListener('resize', () => {
+            requestAnimationFrame(checkPanelPosition);
+        });
+
     }
 
     function setPanelActiveState(active) {

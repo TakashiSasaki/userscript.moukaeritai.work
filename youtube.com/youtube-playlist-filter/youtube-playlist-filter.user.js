@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.29
-// @lastModified  2026-04-07
+// @version      0.1.30
+// @lastModified 2026-04-07
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -78,6 +78,44 @@ const report = () => {
     // --- UI Creation ---
 
     // --- UI Creation ---
+
+    function checkPanelPosition() {
+        if (!panel) return;
+        const rect = panel.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        let newLeft = rect.left;
+        let newTop = rect.top;
+        let needsUpdate = false;
+
+        if (rect.right > vw) {
+            newLeft = Math.max(0, vw - rect.width);
+            needsUpdate = true;
+        }
+        if (rect.left < 0) {
+            newLeft = 0;
+            needsUpdate = true;
+        }
+        if (rect.bottom > vh) {
+            newTop = Math.max(0, vh - rect.height);
+            needsUpdate = true;
+        }
+        if (rect.top < 0) {
+            newTop = 0;
+            needsUpdate = true;
+        }
+
+        if (needsUpdate) {
+            panel.style.bottom = 'auto';
+            panel.style.right = 'auto';
+            panel.style.left = `${newLeft}px`;
+            panel.style.top = `${newTop}px`;
+            panelPos = { top: panel.style.top, left: panel.style.left, bottom: '', right: '' };
+            GM_setValue(PANEL_POS_KEY, panelPos);
+        }
+    }
+
 
     function createPanel() {
         if (document.getElementById('yt-filter-panel')) return;
@@ -160,7 +198,7 @@ const report = () => {
         });
 
         const titleLabel = document.createElement('span');
-        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.29';
+        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.30';
         titleLabel.textContent = `Playlist Filter v${v}`;
         Object.assign(titleLabel.style, { 
             fontWeight: 'bold', 
@@ -329,6 +367,11 @@ const report = () => {
 
         document.body.appendChild(panel);
         updatePanelVisibility();
+        setTimeout(checkPanelPosition, 0);
+        window.addEventListener('resize', () => {
+            requestAnimationFrame(checkPanelPosition);
+        });
+
     }
 
     function updatePanelVisibility() {
