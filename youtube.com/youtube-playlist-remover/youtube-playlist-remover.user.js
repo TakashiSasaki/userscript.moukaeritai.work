@@ -1,47 +1,910 @@
+// ==UserScript==
+// @name         YouTube Playlist Remover
+// @namespace    userscript.moukaeritai.work
+// @version      0.1.48
+// @lastModified  2026-04-07
+// @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
+// @antifeature  webRequestBlocking
+// @author       Takashi Sasaki
+// @match        *://www.youtube.com/*
+// @match        https://userscript.moukaeritai.work/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=youtube.com
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_info
+// @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-remover/youtube-playlist-remover.user.js
+// @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-remover/youtube-playlist-remover.user.js
+// ==/UserScript==
+
+(function () {
+    'use strict';
+    const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        return;
+    }
+
+    // --- Configuration ---
+    const PLAYLIST_PATH = '/playlist';
+    const PANEL_POS_KEY = 'yt_remover_panel_position';
+    const WAIT_FOR_DISAPPEARANCE_KEY = 'yt_remover_wait_for_disappearance';
+    const ONLY_MATCHED_KEY = 'yt_remover_only_matched';
+    const MINIMIZED_STATE_KEY = 'yt_remover_is_minimized';
+    const INIT_DELAY_RANGE_MS = { min: 10000, max: 15000 };
+
+    let isActive = false;
+    let refreshIntervalId = null;
+    let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '150px', right: '20px' });
+    let waitForDisappearance = GM_getValue(WAIT_FOR_DISAPPEARANCE_KEY, true);
+    let onlyRemoveMatched = GM_getValue(ONLY_MATCHED_KEY, false);
+    let isManuallyMinimized = GM_getValue(MINIMIZED_STATE_KEY, false);
+    let removeButton = null;
+    let isRemoving = false;
+    let cancelRequested = false;
+    let filterListenerBound = false;
+    const filterInputValues = new WeakMap();
+
+    // --- Statistics ---
+    let deletionStatsElement = null;
+
+    function calculateStatistics(times) {
+        if (!times || times.length === 0) return null;
+        const min = times.reduce((a, b) => Math.min(a, b), Infinity);
+        const max = times.reduce((a, b) => Math.max(a, b), -Infinity);
+        const sum = times.reduce((a, b) => a + b, 0);
+        const avg = sum / times.length;
+
+        const sorted = [...times].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+
+        return { min, max, avg, median, count: times.length };
+    }
+
+    function updateDeletionStats(stats) {
+        if (!deletionStatsElement) return;
+        if (!stats) {
+            deletionStatsElement.textContent = '';
+            deletionStatsElement.style.display = 'none';
+            return;
+        }
+        const { min, max, avg, median, count } = stats;
+        deletionStatsElement.style.display = 'block';
+        deletionStatsElement.textContent = '';
+
+        const title = document.createElement('div');
+        title.textContent = `Stats (${count} items):`;
+        title.style.fontWeight = 'bold';
+        title.style.marginBottom = '2px';
+
+        const grid = document.createElement('div');
+        grid.style.display = 'grid';
+        grid.style.gridTemplateColumns = '1fr 1fr';
+        grid.style.gap = '2px';
+
+        const minEl = document.createElement('span');
+        minEl.textContent = `Min: ${min}ms`;
+        const maxEl = document.createElement('span');
+        maxEl.textContent = `Max: ${max}ms`;
+        const avgEl = document.createElement('span');
+        avgEl.textContent = `Avg: ${Math.round(avg)}ms`;
+        const medEl = document.createElement('span');
+        medEl.textContent = `Med: ${Math.round(median)}ms`;
+
+        grid.appendChild(minEl);
+        grid.appendChild(maxEl);
+        grid.appendChild(avgEl);
+        grid.appendChild(medEl);
+
+        deletionStatsElement.appendChild(title);
+        deletionStatsElement.appendChild(grid);
+    }
+
+    // --- Constants ---
+    const TRASH_ICON_PATHS = [
+        "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
+        "M11 17H9V8h2v9zm4-9h-2v9h2V8zm4-4v1h-1v16H6V5H5V4h4V3h6v1h4zm-2 1H8v15h10V5z",
+        "M19 3h-4V2a1 1 0 00-1-1h-4a1 1 0 00-1 1v1H5a2 2 0 00-2 2h18a2 2 0 00-2-2ZM6 19V7H4v12a4 4 0 004 4h8a4 4 0 004-4V7h-2v12a2 2 0 01-2 2H8a2 2 0 01-2-2Zm4-11a1 1 0 00-1 1v8a1 1 0 102 0V9a1 1 0 00-1-1Zm4 0a1 1 0 00-1 1v8a1 1 0 002 0V9a1 1 0 00-1-1Z"
+    ];
+
+    // --- State ---
+    // Items that are "Above" the viewport (scanned) AND currently Visible (not filtered out).
+    // These are the targets for the "Remove Above" action.
+    const itemsAboveAndValidSet = new Set();
+    let observer = null;
+    let mutationObserver = null;
+    let playlistContainer = null;
+
+    function isPlaylistPage() {
+        return location.hostname === 'www.youtube.com' &&
+            location.pathname === PLAYLIST_PATH &&
+            location.search.length > 1;
+    }
+
+    // --- UI Creation ---
+
+    function checkPanelPosition() {
+        if (!panel) return;
+        const rect = panel.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        let newLeft = rect.left;
+        let newTop = rect.top;
+        let needsUpdate = false;
+
+        if (rect.right > vw) {
+            newLeft = Math.max(0, vw - rect.width);
+            needsUpdate = true;
+        }
+        if (rect.left < 0) {
+            newLeft = 0;
+            needsUpdate = true;
+        }
+        if (rect.bottom > vh) {
+            newTop = Math.max(0, vh - rect.height);
+            needsUpdate = true;
+        }
+        if (rect.top < 0) {
+            newTop = 0;
+            needsUpdate = true;
+        }
+
+        if (needsUpdate) {
+            panel.style.bottom = 'auto';
+            panel.style.right = 'auto';
+            panel.style.left = `${newLeft}px`;
+            panel.style.top = `${newTop}px`;
+            panelPos = { top: panel.style.top, left: panel.style.left, bottom: '', right: '' };
+            GM_setValue(PANEL_POS_KEY, panelPos);
+        }
+    }
+
     function createPanel() {
-        if (document.getElementById('youtube-playlist-remover-panel')) return;
+        if (document.getElementById('yt-remover-panel')) return;
 
         const panel = document.createElement('div');
-        panel.id = 'youtube-playlist-remover-panel';
-        panel.className = 'yus-panel';
+        panel.id = 'yt-remover-panel';
 
+        // Initial Styles
+        Object.assign(panel.style, {
+            position: 'fixed',
+            zIndex: 9999,
+            backgroundColor: '#fff0f0', // Slightly reddish to distinguish
+            border: '1px solid #d00',
+            borderRadius: '8px',
+            padding: '12px',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+            display: 'flex',
+            flexDirection: 'column',
+            width: '200px',
+            color: '#333',
+            fontFamily: 'Roboto, Arial, sans-serif'
+        });
+
+        // Restore Position
+        if (panelPos.top) panel.style.top = panelPos.top;
+        if (panelPos.left) panel.style.left = panelPos.left;
+        if (panelPos.bottom) panel.style.bottom = panelPos.bottom;
+        if (panelPos.right) panel.style.right = panelPos.right;
+
+        // --- Header (Draggable) ---
         const headerRow = document.createElement('div');
-        headerRow.className = 'yus-header';
+        Object.assign(headerRow.style, {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '4px',
+            cursor: 'move'
+        });
+
+        // Drag Logic
+        let isDragging = false;
+        let dragStartX, dragStartY;
+        let initialLeft, initialTop;
+
+        headerRow.addEventListener('mousedown', (e) => {
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+            isDragging = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+
+            const rect = panel.getBoundingClientRect();
+            initialLeft = rect.left;
+            initialTop = rect.top;
+
+            panel.style.bottom = 'auto';
+            panel.style.right = 'auto';
+            panel.style.left = `${initialLeft}px`;
+            panel.style.top = `${initialTop}px`;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - dragStartX;
+            const dy = e.clientY - dragStartY;
+            panel.style.left = `${initialLeft + dx}px`;
+            panel.style.top = `${initialTop + dy}px`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                panelPos = { top: panel.style.top, left: panel.style.left, bottom: '', right: '' };
+                GM_setValue(PANEL_POS_KEY, panelPos);
+            }
+        });
 
         const titleLabel = document.createElement('span');
-        titleLabel.className = 'yus-title';
-        titleLabel.textContent = 'Youtube Playlist Remover';
+        const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.47';
+        titleLabel.textContent = `Remover v${version}`;
+        Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px' });
 
-        const versionLabel = document.createElement('span');
-        versionLabel.className = 'yus-version';
-        const v = typeof GM_info !== 'undefined' ? GM_info.script.version : '0.1.0';
-        versionLabel.textContent = yusEmoji + ' ' + v;
-        versionLabel.title = 'Double-click to minimize / drag to move';
+        titleLabel.style.cursor = 'pointer';
+        titleLabel.style.transition = 'all 0.2s ease-in-out';
+        titleLabel.style.display = 'inline-block';
+        titleLabel.title = 'Double-click to toggle minimization';
+
+        titleLabel.addEventListener('mouseenter', () => {
+            titleLabel.style.fontSize = '13px';
+            titleLabel.style.transform = 'scale(1.1)';
+            titleLabel.style.color = '#d00';
+        });
+        titleLabel.addEventListener('mouseleave', () => {
+            titleLabel.style.fontSize = '12px';
+            titleLabel.style.transform = 'scale(1)';
+            titleLabel.style.color = '#333';
+        });
+
+        titleLabel.addEventListener('dblclick', (e) => {
+            isManuallyMinimized = !isManuallyMinimized;
+            GM_setValue(MINIMIZED_STATE_KEY, isManuallyMinimized);
+            updatePanelVisibility();
+            e.stopPropagation();
+        });
+
+        const contentContainer = document.createElement('div');
+        contentContainer.id = 'yt-remover-panel-content';
+        Object.assign(contentContainer.style, { display: 'flex', flexDirection: 'column', gap: '8px' });
 
         headerRow.appendChild(titleLabel);
-        headerRow.appendChild(versionLabel);
         panel.appendChild(headerRow);
+        panel.appendChild(contentContainer);
 
-        const inactiveContent = document.createElement('div');
-        inactiveContent.className = 'yus-inactive-content';
-        panel.appendChild(inactiveContent);
+        // --- Status Info ---
+        const statusDiv = document.createElement('div');
+        statusDiv.id = 'yt-remover-status';
+        statusDiv.textContent = 'Status: Idle';
+        statusDiv.style.fontSize = '12px';
+        contentContainer.appendChild(statusDiv);
 
-        const contentDiv = document.createElement('div');
-        contentDiv.id = 'youtube-playlist-remover-panel-content';
-        contentDiv.className = 'yus-active-content';
-        panel.appendChild(contentDiv);
+        const phaseDiv = document.createElement('div');
+        phaseDiv.id = 'yt-remover-phase';
+        phaseDiv.textContent = 'Phase: Idle';
+        phaseDiv.style.fontSize = '11px';
+        phaseDiv.style.color = '#555';
+        contentContainer.appendChild(phaseDiv);
 
+        // --- Candidates Info ---
+        const infoDiv = document.createElement('div');
+        infoDiv.id = 'yt-remover-candidates-info';
+        infoDiv.textContent = 'Removable: None';
+        infoDiv.style.fontSize = '12px';
+        infoDiv.style.marginBottom = '2px';
+        contentContainer.appendChild(infoDiv);
 
+        // --- Statistics Display ---
+        const statsDiv = document.createElement('div');
+        statsDiv.id = 'yt-remover-stats';
+        statsDiv.style.fontSize = '10px';
+        statsDiv.style.color = '#333';
+        statsDiv.style.marginTop = '4px';
+        statsDiv.style.paddingTop = '4px';
+        statsDiv.style.borderTop = '1px solid #ccc';
+        statsDiv.style.display = 'none';
+        deletionStatsElement = statsDiv;
+        contentContainer.appendChild(statsDiv);
+
+        // --- Options ---
+        const optionsDiv = document.createElement('div');
+        Object.assign(optionsDiv.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' });
+
+        const waitCheckbox = document.createElement('input');
+        waitCheckbox.type = 'checkbox';
+        waitCheckbox.id = 'yt-remover-wait-checkbox';
+        waitCheckbox.checked = waitForDisappearance;
+        waitCheckbox.style.cursor = 'pointer';
+        waitCheckbox.addEventListener('change', (e) => {
+            waitForDisappearance = e.target.checked;
+            GM_setValue(WAIT_FOR_DISAPPEARANCE_KEY, waitForDisappearance);
+        });
+
+        const waitLabel = document.createElement('label');
+        waitLabel.textContent = 'Wait for removal';
+        waitLabel.htmlFor = 'yt-remover-wait-checkbox';
+        waitLabel.style.cursor = 'pointer';
+
+        optionsDiv.appendChild(waitCheckbox);
+        optionsDiv.appendChild(waitLabel);
+
+        const matchedOptionDiv = document.createElement('div');
+        Object.assign(matchedOptionDiv.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', marginTop: '4px' });
+
+        const matchedCheckbox = document.createElement('input');
+        matchedCheckbox.type = 'checkbox';
+        matchedCheckbox.id = 'yt-remover-matched-checkbox';
+        matchedCheckbox.checked = onlyRemoveMatched;
+        matchedCheckbox.style.cursor = 'pointer';
+        matchedCheckbox.addEventListener('change', (e) => {
+            onlyRemoveMatched = e.target.checked;
+            GM_setValue(ONLY_MATCHED_KEY, onlyRemoveMatched);
+            updateCandidatesInfo();
+        });
+
+        const matchedLabel = document.createElement('label');
+        matchedLabel.textContent = 'Only MATCHED';
+        matchedLabel.htmlFor = 'yt-remover-matched-checkbox';
+        matchedLabel.style.cursor = 'pointer';
+
+        matchedOptionDiv.appendChild(matchedCheckbox);
+        matchedOptionDiv.appendChild(matchedLabel);
+
+        contentContainer.appendChild(optionsDiv);
+        contentContainer.appendChild(matchedOptionDiv);
+
+        // --- Action Button ---
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = 'Remove Range';
+        Object.assign(removeBtn.style, {
+            padding: '4px 8px', fontSize: '11px', backgroundColor: '#d00',
+            color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer',
+            fontWeight: 'bold'
+        });
+
+        removeButton = removeBtn;
+        removeBtn.addEventListener('click', removeRangeItems);
+
+        contentContainer.appendChild(removeBtn);
 
         document.body.appendChild(panel);
+        setTimeout(checkPanelPosition, 0);
+        window.addEventListener('resize', () => {
+            requestAnimationFrame(checkPanelPosition);
+        });
 
-        window.youtubeSetupDraggablePanel(panel, headerRow, 'youtube-playlist-remover_panel_position');
-        window.youtubeSetupMinimizablePanel(panel, 'youtube-playlist-remover_is_minimized', false);
     }
+
+    // --- Updates ---
 
     function updatePanelVisibility() {
-        const panel = document.getElementById('youtube-playlist-remover-panel');
-        if (!panel) return;
-        panel.style.display = isActive ? 'flex' : 'none';
+        const content = document.getElementById('yt-remover-panel-content');
+        const panel = document.getElementById('yt-remover-panel');
+        if (!content || !panel) return;
+
+        content.style.display = (isActive && !isManuallyMinimized) ? 'flex' : 'none';
+        panel.style.opacity = (isActive && !isManuallyMinimized) ? '1' : '0.85';
     }
 
+
+    function updateStatus(text, isActive = false) {
+        const el = document.getElementById('yt-remover-status');
+        if (el) {
+            el.textContent = `Status: ${text}`;
+            el.style.color = isActive ? '#d00' : '#333';
+        }
+    }
+
+    function updatePhase(text, isActive = false) {
+        const el = document.getElementById('yt-remover-phase');
+        if (el) {
+            el.textContent = `Phase: ${text}`;
+            el.style.color = isActive ? '#d00' : '#555';
+        }
+    }
+
+    function updateCandidatesInfo() {
+        const el = document.getElementById('yt-remover-candidates-info');
+        if (!el) return;
+
+        let count = 0;
+        if (onlyRemoveMatched) {
+            itemsAboveAndValidSet.forEach(item => {
+                if (hasMatchedBadge(item)) {
+                    count++;
+                }
+            });
+        } else {
+            count = itemsAboveAndValidSet.size;
+        }
+        el.textContent = count > 0 ? `Removable: ${count} items` : 'Removable: None';
+    }
+
+    function hasMatchedBadge(item) {
+        if (!item) return false;
+        // Check for span with text [MATCHED] inside metadata line
+        const metadata = item.querySelector('#metadata-line') || item.querySelector('.ytd-video-meta-block');
+        if (!metadata) return false;
+
+        // Find by class or text content
+        const matched = metadata.querySelector('.yt-filter-matched');
+        if (matched) return true;
+
+        const span = Array.from(metadata.querySelectorAll('span')).find(s => s.textContent.trim() === '[MATCHED]');
+        return !!span;
+    }
+
+    function isItemHiddenByFilter(element, rect = null) {
+        if (!element || !element.isConnected) return true;
+        if (element.hidden || element.getAttribute('aria-hidden') === 'true') return true;
+        if (rect) {
+            return rect.width === 0 && rect.height === 0;
+        }
+        return element.offsetParent === null;
+    }
+
+    function isPlaylistFilterInput(target) {
+        if (!(target instanceof HTMLInputElement)) return false;
+        if (target.closest('ytd-masthead')) return false;
+        const container = target.closest('ytd-playlist-video-list-renderer, ytd-playlist-header-renderer, ytd-playlist-sidebar-primary-info-renderer, ytd-playlist-search-box-renderer');
+        if (!container) return false;
+        const type = (target.getAttribute('type') || '').toLowerCase();
+        if (type === 'search') return true;
+        const label = (target.getAttribute('aria-label') || target.getAttribute('placeholder') || '').toLowerCase();
+        const name = (target.getAttribute('name') || target.getAttribute('id') || '').toLowerCase();
+        return label.includes('search') || label.includes('filter') || label.includes('検索') || name.includes('search') || name.includes('filter');
+    }
+
+    function handleFilterInputEvent(event) {
+        if (!isActive || !isPlaylistPage() || isRemoving) return;
+        const target = event.target;
+        if (!isPlaylistFilterInput(target)) return;
+        const value = target.value || '';
+        const lastValue = filterInputValues.get(target);
+        if (lastValue === value) return;
+        filterInputValues.set(target, value);
+        itemsAboveAndValidSet.clear();
+        updateCandidatesInfo();
+    }
+
+    function ensureFilterListeners() {
+        if (filterListenerBound) return;
+        document.addEventListener('input', handleFilterInputEvent, true);
+        document.addEventListener('change', handleFilterInputEvent, true);
+        filterListenerBound = true;
+    }
+
+    // --- Observer Logic ---
+    // We only want to delete items that are:
+    // 1. Above the viewport.
+    // 2. Visible (display != none). If Filter script hides them, we must NOT delete them.
+
+    function setupMutationObserver() {
+        if (mutationObserver) return;
+
+        // Find the container where items are added
+        playlistContainer = document.querySelector('ytd-playlist-video-list-renderer #contents') ||
+            document.querySelector('ytd-playlist-video-list-renderer');
+
+        if (!playlistContainer) {
+            // If container isn't there yet, try again soon
+            setTimeout(setupMutationObserver, 1000);
+            return;
+        }
+
+        mutationObserver = new MutationObserver((mutations) => {
+            if (!isActive) return;
+            mutations.forEach(mutation => {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === 1) { // Element node
+                        if (node.tagName && node.tagName.toLowerCase() === 'ytd-playlist-video-renderer') {
+                            ensureObserver();
+                            observer.observe(node);
+                        } else {
+                            // Check if the item is nested inside the added node
+                            const items = node.querySelectorAll('ytd-playlist-video-renderer');
+                            if (items.length > 0) {
+                                ensureObserver();
+                                items.forEach(item => observer.observe(item));
+                            }
+                        }
+                    }
+                });
+            });
+        });
+
+        mutationObserver.observe(playlistContainer, { childList: true, subtree: true });
+    }
+
+    function ensureObserver() {
+        if (observer) return;
+        observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const rect = entry.boundingClientRect;
+                const el = entry.target;
+
+                if (isItemHiddenByFilter(el, rect)) {
+                    // If hidden, remove from set immediately to be safe
+                    itemsAboveAndValidSet.delete(el);
+                    return;
+                }
+
+                if (rect.bottom < 180 || entry.isIntersecting) {
+                    // "Range" = Above viewport OR Currently Visible in viewport
+                    itemsAboveAndValidSet.add(el);
+                } else {
+                    // Strictly below viewport (not yet seen/scanned potentially)
+                    // Note: This logic assumes we scroll down. 
+                    itemsAboveAndValidSet.delete(el);
+                }
+            });
+            updateCandidatesInfo();
+        }, { root: null, threshold: 0 });
+    }
+
+
+
+    function lightweightCleanup() {
+        if (!isActive || !isPlaylistPage()) return;
+
+        // Only clean up set if items were removed from DOM or became hidden
+        itemsAboveAndValidSet.forEach(item => {
+            if (isItemHiddenByFilter(item)) {
+                itemsAboveAndValidSet.delete(item);
+            }
+        });
+        updateCandidatesInfo();
+    }
+
+
+    // --- Removal Logic ---
+
+    function highlightOutline(element) {
+        if (!element) return;
+        element.style.outline = '2px solid #d00';
+        element.style.outlineOffset = '2px';
+    }
+
+    function clearOutline(element) {
+        if (!element) return;
+        element.style.outline = '';
+        element.style.outlineOffset = '';
+    }
+
+    function updateRemoveButtonLabel(text, { force = false } = {}) {
+        if (!removeButton) return;
+        if (cancelRequested && !force) return;
+        removeButton.textContent = text;
+    }
+
+    function isElementVisible(element) {
+        if (!element || !element.isConnected) return false;
+        if (element.getAttribute('aria-hidden') === 'true') return false;
+        const style = window.getComputedStyle(element);
+        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+            return false;
+        }
+        const rect = element.getBoundingClientRect();
+        return rect.width > 0 || rect.height > 0;
+    }
+
+    async function attemptRemoveVideo(videoContainer) {
+        updatePhase('Opening menu...', true);
+        // Shift focus to the container itself first
+        videoContainer.focus();
+
+        // 1. Identify the menu button (prefer aria-label for stability)
+        const menuBtn = videoContainer.querySelector('#menu button[aria-label="操作メニュー"]') ||
+            videoContainer.querySelector('#menu button') ||
+            videoContainer.querySelector('button.dropdown-trigger');
+
+        if (!menuBtn) return false;
+
+        if (!videoContainer.isConnected || videoContainer.hidden || videoContainer.style.display === 'none') {
+            return false;
+        }
+
+        menuBtn.focus(); // Shift focus before clicking
+        menuBtn.click();
+
+        const START = Date.now();
+        let waitedForMenu = false;
+        while (Date.now() - START < 10000) {
+            const popup = document.querySelector('ytd-menu-popup-renderer');
+            if (popup && isElementVisible(popup)) {
+                updatePhase('Menu open', true);
+                highlightOutline(popup);
+                if (!waitedForMenu) {
+                    await new Promise(r => setTimeout(r, 500));
+                    waitedForMenu = true;
+                }
+                // 2. Select all menu items using role="menuitem" for better coverage
+                const items = Array.from(popup.querySelectorAll('[role="menuitem"]'));
+                for (const item of items) {
+                    const text = item.textContent || "";
+                    // Check text in multiple languages
+                    const isRemove = text.includes('から削除') || text.includes('Remove from');
+
+                    // 3. Or check icon path (trash can)
+                    const path = item.querySelector('path');
+                    const isTrash = path && TRASH_ICON_PATHS.includes(path.getAttribute('d'));
+
+                    if (isRemove || isTrash) {
+                        updatePhase('Selecting remove', true);
+                        // 4. Click tp-yt-paper-item inside for better emulation if it exists
+                        const target = item.querySelector('tp-yt-paper-item') || item;
+                        target.focus(); // Shift focus before clicking
+
+                        highlightOutline(target);
+                        await new Promise(r => setTimeout(r, 400)); // wait a bit before clicking
+
+                        target.click();
+                        if (!cancelRequested) {
+                            const indexVal = videoContainer.querySelector('#index')?.textContent?.trim();
+                            if (indexVal) {
+                                updateRemoveButtonLabel(`Removing #${indexVal}`);
+                            } else {
+                                updateRemoveButtonLabel('Removing...');
+                            }
+                        }
+
+                        document.body.click(); // Close menu
+                        return true;
+                    }
+                }
+            }
+            if (!waitedForMenu) {
+                updatePhase('Waiting menu...', true);
+            }
+            await new Promise(r => setTimeout(r, 500));
+        }
+        document.body.click();
+        return false;
+    }
+
+    async function waitForItemDisappearance(item, timeout = 5000) {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            const style = window.getComputedStyle(item);
+            // Check if removed from DOM or hidden
+            if (!item.isConnected || item.style.display === 'none' || item.hidden || style.display === 'none' || style.visibility === 'hidden') {
+                await new Promise(r => setTimeout(r, 500));
+                return true;
+            }
+            const rect = item.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) {
+                await new Promise(r => setTimeout(r, 500));
+                return true;
+            }
+            await new Promise(r => setTimeout(r, 500));
+        }
+        return false;
+    }
+
+    async function removeRangeItems() {
+        if (!isActive || !isPlaylistPage()) return;
+        if (isRemoving) {
+            cancelRequested = true;
+            updateStatus('Stopping...', true);
+            updateRemoveButtonLabel('Stopping...', { force: true });
+            return;
+        }
+
+        const count = itemsAboveAndValidSet.size;
+        if (count === 0) {
+            updateRemoveButtonLabel('Remove Range', { force: true });
+            return;
+        }
+
+        isRemoving = true;
+        cancelRequested = false;
+
+        // Reset stats
+        const deletionTimes = [];
+        updateDeletionStats(null);
+
+        try {
+            updateStatus('Removing...', true);
+            updatePhase('Preparing...', true);
+            updateRemoveButtonLabel('Removing...', { force: true });
+
+            // Sort targets based on current DOM order and reverse to delete from bottom to top
+            // This prevents UI shifting from affecting unprocessed items.
+            const allItemsInDom = Array.from(document.querySelectorAll('ytd-playlist-video-renderer'));
+            const finalTargets = allItemsInDom
+                .filter(el => {
+                    const isBasicsOk = itemsAboveAndValidSet.has(el) && el.isConnected && !isItemHiddenByFilter(el);
+                    if (!isBasicsOk) return false;
+
+                    if (onlyRemoveMatched) {
+                        return hasMatchedBadge(el);
+                    }
+                    return true;
+                })
+                .reverse();
+
+            const total = finalTargets.length;
+
+            // Visual Feedback: Highlight target indexes
+            finalTargets.forEach(item => {
+                const indexEl = item.querySelector('#index');
+                if (indexEl) {
+                    indexEl.style.color = '#d00';
+                    indexEl.style.fontWeight = 'bold';
+                }
+            });
+
+            for (let i = 0; i < total; i++) {
+                if (cancelRequested || !isActive) break;
+                const item = finalTargets[i];
+                const indexVal = item.querySelector('#index')?.textContent?.trim() || '?';
+                updateStatus(`Removing #${indexVal} (${i + 1}/${total})...`, true);
+                updatePhase('Scrolling...', true);
+                item.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+                highlightOutline(item);
+
+                const startRemove = Date.now();
+                const success = await attemptRemoveVideo(item);
+                const endRemove = Date.now();
+
+                if (success) {
+                    deletionTimes.push(endRemove - startRemove);
+                    // Update stats in real-time
+                    const stats = calculateStatistics(deletionTimes);
+                    updateDeletionStats(stats);
+                }
+
+                if (cancelRequested || !isActive) break;
+
+                if (success) {
+                    if (waitForDisappearance) {
+                        updatePhase('Waiting for disappearance...', true);
+                        // Wait for the item to actually disappear from the list (removed by YouTube)
+                        const disappeared = await waitForItemDisappearance(item, 8000); // Wait up to 8s
+                        if (disappeared) {
+                            itemsAboveAndValidSet.delete(item);
+                        } else {
+                            console.warn('[YouTube Playlist Remover] Item removal timed out:', item);
+                        }
+                    } else {
+                        // Do not wait for disappear, but wait 1s specifically
+                        updatePhase('Cooldown...', true);
+                        await new Promise(r => setTimeout(r, 1000));
+                        itemsAboveAndValidSet.delete(item);
+                    }
+                }
+
+                if (item.isConnected) {
+                    clearOutline(item);
+                }
+
+                if (cancelRequested || !isActive) break;
+
+                // Small buffer between items
+                updatePhase('Cooldown...', true);
+                await new Promise(r => setTimeout(r, 500));
+            }
+
+            if (deletionTimes.length > 0) {
+                const stats = calculateStatistics(deletionTimes);
+                updateDeletionStats(stats);
+            }
+
+            if (cancelRequested) {
+                updateStatus('Canceled');
+                updatePhase('Canceled');
+            } else if (!isActive) {
+                updateStatus('Aborted');
+                updatePhase('Navigated away');
+            } else {
+                updateStatus('Idle');
+                updatePhase('Idle');
+            }
+
+        } catch (e) {
+            console.error('[YouTube Playlist Remover] Error during removal:', e);
+            updateStatus('Error');
+            updatePhase('Check console');
+        } finally {
+            updateRemoveButtonLabel('Remove Range', { force: true });
+            cancelRequested = false;
+            isRemoving = false;
+            updateCandidatesInfo();
+        }
+    }
+
+
+    function showPanel() {
+        const panel = document.getElementById('yt-remover-panel');
+        if (panel) panel.style.display = 'flex';
+    }
+
+    // --- Init ---
+    function startMain() {
+        if (isActive || !isPlaylistPage()) return;
+        isActive = true;
+
+        createPanel();
+        showPanel();
+        updatePanelVisibility();
+        itemsAboveAndValidSet.clear();
+
+        ensureObserver();
+        const existingItems = document.querySelectorAll('ytd-playlist-video-renderer');
+        existingItems.forEach(item => {
+            observer.observe(item);
+        });
+        setupMutationObserver();
+
+        updateStatus('Idle');
+        updatePhase('Idle');
+
+        if (!refreshIntervalId) {
+            refreshIntervalId = window.setInterval(lightweightCleanup, 5000);
+        }
+
+        console.log('[YouTube Playlist Remover] Running...');
+    }
+
+    function stopMain() {
+        if (!isActive) return;
+        isActive = false;
+
+        if (refreshIntervalId) {
+            clearInterval(refreshIntervalId);
+            refreshIntervalId = null;
+        }
+
+        if (observer) {
+            observer.disconnect();
+            observer = null;
+        }
+
+        if (mutationObserver) {
+            mutationObserver.disconnect();
+            mutationObserver = null;
+        }
+        playlistContainer = null;
+
+        itemsAboveAndValidSet.clear();
+        isRemoving = false;
+        cancelRequested = false;
+        updateRemoveButtonLabel('Remove Range', { force: true });
+        updateStatus('Idle');
+        updatePhase('Idle');
+        updatePanelVisibility();
+        showPanel();
+    }
+
+    function init() {
+        ensureFilterListeners();
+        window.addEventListener('yt-navigate-start', stopMain);
+        window.addEventListener('yt-navigate-finish', () => {
+            if (isPlaylistPage()) {
+                startMain();
+            } else {
+                stopMain();
+            }
+        });
+
+        if (isPlaylistPage()) {
+            startMain();
+        }
+    }
+
+    function getRandomInitDelayMs() {
+        const span = INIT_DELAY_RANGE_MS.max - INIT_DELAY_RANGE_MS.min;
+        return INIT_DELAY_RANGE_MS.min + Math.floor(Math.random() * (span + 1));
+    }
+
+    setTimeout(init, getRandomInitDelayMs());
+
+})();
