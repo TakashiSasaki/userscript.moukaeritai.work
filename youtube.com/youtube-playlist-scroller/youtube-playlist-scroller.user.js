@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.14
+// @version      0.1.15
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -33,6 +33,7 @@ const report = () => {
     const PLAYLIST_PATH = '/playlist';
     const SETTINGS_KEY = 'yt_scroller_settings';
     const PANEL_POS_KEY = 'yt_scroller_panel_position';
+    const MINIMIZED_STATE_KEY = 'yt_scroller_is_minimized';
     const INIT_DELAY_RANGE_MS = { min: 1000, max: 3000 };
 
     let settings = GM_getValue(SETTINGS_KEY, {
@@ -41,6 +42,7 @@ const report = () => {
         interval: 20.0
     });
     let panelPos = GM_getValue(PANEL_POS_KEY, { top: '', left: '', bottom: '300px', right: '20px' });
+    let isManuallyMinimized = GM_getValue(MINIMIZED_STATE_KEY, false);
     let scrollInterval = null;
     let isAutoScrollEnabled = false;
     let isActive = false;
@@ -240,22 +242,35 @@ const report = () => {
             }
         });
 
+
         const titleLabel = document.createElement('span');
         const version = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.8';
         titleLabel.textContent = `Auto Scroller v${version}`;
-        Object.assign(titleLabel.style, { fontWeight: 'bold', fontSize: '12px', pointerEvents: 'none' });
-
-        const activeLabel = document.createElement('span');
-        activeLabel.id = 'yt-scroller-active-indicator';
-        activeLabel.textContent = 'Inactive';
-        Object.assign(activeLabel.style, {
-            fontSize: '11px',
+        Object.assign(titleLabel.style, {
             fontWeight: 'bold',
-            padding: '2px 6px',
-            borderRadius: '10px',
-            backgroundColor: '#e0e0e0',
-            color: '#666'
+            fontSize: '11px',
+            cursor: 'pointer',
+            transition: 'transform 0.2s, color 0.2s'
         });
+        titleLabel.addEventListener('mouseenter', () => {
+            titleLabel.style.fontSize = '12px';
+            titleLabel.style.transform = 'scale(1.1)';
+            titleLabel.style.color = '#00f';
+        });
+        titleLabel.addEventListener('mouseleave', () => {
+            titleLabel.style.fontSize = '11px';
+            titleLabel.style.transform = 'scale(1)';
+            titleLabel.style.color = '#333';
+        });
+
+        titleLabel.addEventListener('dblclick', (e) => {
+            isManuallyMinimized = !isManuallyMinimized;
+            GM_setValue(MINIMIZED_STATE_KEY, isManuallyMinimized);
+            updatePanelVisibility();
+            e.stopPropagation();
+        });
+
+
 
         const contentContainer = document.createElement('div');
         contentContainer.id = 'yt-scroller-panel-content';
@@ -266,7 +281,7 @@ const report = () => {
         });
 
         headerRow.appendChild(titleLabel);
-        headerRow.appendChild(activeLabel);
+
         panel.appendChild(headerRow);
         panel.appendChild(contentContainer);
 
@@ -377,6 +392,7 @@ const report = () => {
         contentContainer.appendChild(intervalInputObj.container);
 
         document.body.appendChild(panel);
+        updatePanelVisibility();
         setTimeout(checkPanelPosition, 0);
         window.addEventListener('resize', () => {
             requestAnimationFrame(checkPanelPosition);
@@ -384,19 +400,17 @@ const report = () => {
 
     }
 
-    function setPanelActiveState(active) {
-        const label = document.getElementById('yt-scroller-active-indicator');
+
+    function updatePanelVisibility() {
         const content = document.getElementById('yt-scroller-panel-content');
         const panel = document.getElementById('yt-scroller-panel');
-        if (!label || !content || !panel) return;
+        if (!content || !panel) return;
 
-        label.textContent = active ? 'Active' : 'Inactive';
-        label.style.backgroundColor = active ? '#e6f4ea' : '#e0e0e0';
-        label.style.color = active ? '#188038' : '#666';
-
-        content.style.display = active ? 'flex' : 'none';
-        panel.style.opacity = active ? '1' : '0.85';
+        const minimized = isManuallyMinimized;
+        content.style.display = (isActive && !minimized) ? 'flex' : 'none';
+        panel.style.opacity = (isActive && !minimized) ? '1' : '0.85';
     }
+
 
     function showPanel() {
         const panel = document.getElementById('yt-scroller-panel');
@@ -409,7 +423,7 @@ const report = () => {
 
         createPanel();
         showPanel();
-        setPanelActiveState(true);
+        updatePanelVisibility();
         applyAutoScrollState();
         ensureLoadingObserver();
     }
@@ -437,7 +451,7 @@ const report = () => {
         cachedSpinners.clear();
 
         showPanel();
-        setPanelActiveState(false);
+        updatePanelVisibility();
     }
 
     // --- Loading Indicator Logic ---
