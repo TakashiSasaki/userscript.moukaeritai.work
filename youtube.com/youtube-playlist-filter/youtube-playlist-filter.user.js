@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.32
+// @version      0.1.33
 // @lastModified 2026-04-08
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -15,6 +15,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @resource     youtubeCommonCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-common.css
+// @resource     ytFilterTemplate https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-filter/template.html
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-filter/youtube-playlist-filter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-filter/youtube-playlist-filter.user.js
 // ==/UserScript==
@@ -57,7 +58,6 @@ const report = () => {
     let isInputActive = false; // Flag to pause filtering during input
     let resumeTimerId = null;
     let panel = null;
-    let contentContainer = null;
 
 
     let listObserver = null;
@@ -116,14 +116,18 @@ const report = () => {
     function createPanel() {
         if (document.getElementById('yt-filter-panel')) return;
 
-        panel = document.createElement('div');
-        panel.id = 'yt-filter-panel';
-        panel.className = 'yus-panel';
+        const templateStr = GM_getResourceText('ytFilterTemplate');
+        if (!templateStr) {
+            console.error('[YouTube Playlist Filter] Failed to load template.html');
+            return;
+        }
 
-        // Override colors for Filter
-        panel.style.backgroundColor = '#fff4e5';
-        panel.style.borderColor = '#ccc';
-        panel.style.setProperty('--yus-hover-color', '#00f');
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.33';
+        const html = templateStr.replace('{{VERSION}}', version);
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html;
+        panel = wrapper.firstElementChild;
 
         // Restore Position
         if (panelPos.top) panel.style.top = panelPos.top;
@@ -131,11 +135,7 @@ const report = () => {
         if (panelPos.bottom) panel.style.bottom = panelPos.bottom;
         if (panelPos.right) panel.style.right = panelPos.right;
 
-        // --- Header (Draggable) ---
-        const headerRow = document.createElement('div');
-        headerRow.className = 'yus-header';
-
-        // Drag Logic
+        const headerRow = panel.querySelector('#yt-filter-header');
         let isDragging = false;
         let dragStartX, dragStartY;
         let initialLeft, initialTop;
@@ -168,16 +168,11 @@ const report = () => {
         document.addEventListener('mouseup', () => {
             if (isDragging) {
                 isDragging = false;
-                checkPanelPosition(); // Ensure it's in bounds and saves as top/left
+                checkPanelPosition();
             }
         });
 
-        const titleLabel = document.createElement('span');
-        titleLabel.className = 'yus-title';
-        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.32';
-        titleLabel.textContent = `Playlist Filter v${v}`;
-        titleLabel.title = 'Double-click to toggle minimization';
-
+        const titleLabel = panel.querySelector('#yt-filter-title');
         titleLabel.addEventListener('dblclick', (e) => {
             if (isAutoMinimized) return;
             isManuallyMinimized = !isManuallyMinimized;
@@ -186,151 +181,55 @@ const report = () => {
             e.stopPropagation();
         });
 
-        const contentContainer = document.createElement('div');
-        contentContainer.id = 'yt-filter-panel-content';
-        contentContainer.className = 'yus-content';
-
-        headerRow.appendChild(titleLabel);
-        panel.appendChild(headerRow);
-        panel.appendChild(contentContainer);
-
-        // --- Filter Inputs ---
-        const createInputGroup = (label, placeholder, key) => {
-            const div = document.createElement('div');
-            Object.assign(div.style, { display: 'flex', flexDirection: 'column', gap: '2px' });
-
-            const row = document.createElement('div');
-            Object.assign(row.style, { display: 'flex', justifyContent: 'space-between', alignItems: 'center' });
-
-            const lbl = document.createElement('span');
-            lbl.textContent = label;
-            lbl.style.fontSize = '12px';
-            lbl.style.fontWeight = 'bold';
-
-            const clearBtn = document.createElement('button');
-            clearBtn.textContent = '×';
-            Object.assign(clearBtn.style, {
-                fontSize: '14px', cursor: 'pointer', border: 'none', background: 'none', padding: '0 4px', color: '#999'
-            });
-
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.placeholder = placeholder;
-            Object.assign(input.style, {
-                width: '100%', padding: '4px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box'
-            });
+        const setupInputGroup = (key) => {
+            const input = panel.querySelector(`#yt-filter-${key}-input`);
+            const clearBtn = panel.querySelector(`#yt-filter-${key}-clear`);
+            
             input.value = filterState[key];
-
-            // Pause filtering on focus
-            input.addEventListener('focus', () => {
-                pauseFilteringForInput();
-            });
-
-            // Sync state on blur, but do NOT apply filters automatically
+            input.addEventListener('focus', pauseFilteringForInput);
             input.addEventListener('blur', () => {
-                console.log(`[Playlist Filter Debug] Input blur for ${key}: "${input.value}"`);
                 filterState[key] = input.value;
-                scheduleResumeAfterInput(); // This just resumes the observer/timers, doesn't apply filter anymore
+                scheduleResumeAfterInput();
             });
-
-            // Handle Enter key for convenience - still manual trigger
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
-                    console.log(`[Playlist Filter Debug] Enter pressed for ${key}`);
                     filterState[key] = input.value;
                     input.blur();
-                    // Optional: Should Enter apply? User said "Apply Filter button", 
-                    // but Enter is standard. I'll leave it to only blur for now to be strict.
                 }
             });
-
             clearBtn.addEventListener('click', () => {
-                console.log(`[Playlist Filter Debug] Clear button clicked for ${key}`);
                 filterState[key] = '';
                 input.value = '';
-                // Do NOT auto-apply even on clear, as per "manual only" request
             });
-
-            row.appendChild(lbl);
-            row.appendChild(clearBtn);
-            div.appendChild(row);
-            div.appendChild(input);
-            return div;
         };
 
-        contentContainer.appendChild(createInputGroup('Title Filter', 'Filter by title...', 'title'));
-        contentContainer.appendChild(createInputGroup('Channel Filter', 'Filter by channel...', 'channel'));
+        setupInputGroup('title');
+        setupInputGroup('channel');
 
-        // --- Status Counts ---
-        const countDiv = document.createElement('div');
-        countDiv.id = 'yt-filter-count';
-        countDiv.textContent = 'Results: - / -';
-        countDiv.style.fontSize = '12px';
-        contentContainer.appendChild(countDiv);
-
-        // Apply Button
-        const applyBtn = document.createElement('button');
-        applyBtn.textContent = 'Apply Filter';
-        Object.assign(applyBtn.style, {
-            width: '100%', padding: '6px', fontSize: '12px', cursor: 'pointer',
-            backgroundColor: '#065fd4', color: 'white', border: 'none', borderRadius: '4px',
-            marginTop: '4px'
-        });
+        const applyBtn = panel.querySelector('#yt-filter-apply-btn');
         applyBtn.addEventListener('click', () => {
-            console.log(`[Playlist Filter Debug] Apply Filter button clicked (manual trigger)`);
-            
-            // Sync current input values just in case
-            const inputs = contentContainer.querySelectorAll('input');
-            inputs.forEach(inp => {
-                if (inp.placeholder.includes('title')) filterState.title = inp.value;
-                if (inp.placeholder.includes('channel')) filterState.channel = inp.value;
-            });
+            filterState.title = panel.querySelector('#yt-filter-title-input').value;
+            filterState.channel = panel.querySelector('#yt-filter-channel-input').value;
 
             if (isInputActive) {
-                console.log(`[Playlist Filter Debug] Manual override: forcibly setting isInputActive to false`);
                 isInputActive = false;
-                // If an input is focused, blur it to clean up UI/state
-                inputs.forEach(inp => inp.blur());
+                panel.querySelectorAll('input').forEach(inp => inp.blur());
             }
 
-            // Ensure we are active
             if (!isActive) {
-                console.log(`[Playlist Filter Debug] Manual trigger: script was inactive, starting main...`);
                 startMain();
             } else {
                 applyFilters();
             }
         });
-        contentContainer.appendChild(applyBtn);
-
-        const statusContainer = document.createElement('div');
-        Object.assign(statusContainer.style, { fontSize: '11px', color: '#666', display: 'flex', flexDirection: 'column' });
-
-        ['Filtering'].forEach(key => {
-            const d = document.createElement('div');
-            d.id = `yt-filter-status-${key.toLowerCase()}`;
-            d.textContent = `${key}: Idle`;
-            statusContainer.appendChild(d);
-        });
-        contentContainer.appendChild(statusContainer);
-
-        const rangeDiv = document.createElement('div');
-        rangeDiv.id = 'yt-filter-range-info';
-        rangeDiv.textContent = 'Range: None';
-        rangeDiv.style.fontSize = '11px';
-        rangeDiv.style.marginBottom = '2px';
-
-        contentContainer.appendChild(document.createElement('hr'));
-        contentContainer.appendChild(rangeDiv);
 
         document.body.appendChild(panel);
         updatePanelVisibility();
-        checkPanelPosition(); // Synchronous call on initial display
-        setTimeout(checkPanelPosition, 0); // And a deferred call just in case
+        checkPanelPosition();
+        setTimeout(checkPanelPosition, 0);
         window.addEventListener('resize', () => {
             requestAnimationFrame(checkPanelPosition);
         });
-
     }
 
     function updatePanelVisibility() {
