@@ -1,0 +1,92 @@
+/* === YouTube Userscript Common CSS === */
+
+.yus-panel {
+    position: fixed;
+    z-index: 9999;
+    background-color: #fff4e5; /* Match existing scripts theme */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    color: #333;
+    font-family: Roboto, Arial, sans-serif;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: width 0.1s ease-in-out, height 0.1s ease-in-out;
+}
+
+.yus-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    user-select: none;
+}
+
+.yus-version {
+    font-size: 12px;
+    color: #555;
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.yus-title {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* Active/Inactive content wrappers */
+.yus-active-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.yus-inactive-content {
+    display: none;
+}
+
+/* Minimized state */
+.yus-panel.yus-minimized {
+    width: auto;
+    padding: 6px;
+    background-color: rgba(255, 244, 229, 0.85); /* Slightly transparent */
+    box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+}
+
+.yus-panel.yus-minimized .yus-active-content {
+    display: none !important;
+}
+
+.yus-panel.yus-minimized .yus-inactive-content {
+    display: block;
+}
+
+.yus-panel.yus-minimized .yus-header {
+    margin-bottom: 0;
+}
+
+.yus-panel.yus-minimized .yus-title {
+    display: none;
+}
+
+/* Base button styles to reset YouTube defaults if necessary */
+.yus-panel button {
+    padding: 6px 12px;
+    font-size: 14px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    color: #333;
+    transition: background-color 0.2s;
+}
+
+.yus-panel button:hover {
+    background-color: #e0e0e0;
+}
