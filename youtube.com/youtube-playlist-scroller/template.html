@@ -1,0 +1,25 @@
+<div id="yt-scroller-panel" class="yus-panel" style="background-color: #fffde7; border-color: #ccc; --yus-hover-color: #00f;">
+    <div id="yt-scroller-header" class="yus-header" style="cursor: move;">
+        <span id="yt-scroller-title" class="yus-title" title="Double-click to toggle minimization">Auto Scroller v{{VERSION}}</span>
+    </div>
+    <div id="yt-scroller-panel-content" class="yus-content">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 12px;">
+                Status: <span id="yt-scroller-loading-status" style="color: #888; margin-left: 4px;">Idle</span>
+            </div>
+            <button id="yt-scroller-toggle-btn" style="padding: 2px 8px; font-size: 11px; background-color: #ccc; color: #000; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">OFF</button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 4px; font-size: 12px;">
+            <input type="checkbox" id="yt-scroller-bottom-check">
+            <label for="yt-scroller-bottom-check">Scroll to Bottom</label>
+        </div>
+        <div id="yt-scroller-step-container" style="display: flex; align-items: center; gap: 4px; font-size: 12px; margin-top: 2px;">
+            <div style="flex: 1;">Step (px):</div>
+            <input type="number" id="yt-scroller-step-input" placeholder="300" style="width: 50px; padding: 2px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+        <div id="yt-scroller-interval-container" style="display: flex; align-items: center; gap: 4px; font-size: 12px; margin-top: 2px;">
+            <div style="flex: 1;">Interval (sec):</div>
+            <input type="number" id="yt-scroller-interval-input" placeholder="20" style="width: 50px; padding: 2px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+    </div>
+</div>

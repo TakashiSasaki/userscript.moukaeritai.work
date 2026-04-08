@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.16
+// @version      0.1.17
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -13,6 +13,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @resource     youtubeCommonCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-common.css
+// @resource     ytScrollerTemplate https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-scroller/template.html
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-scroller/youtube-playlist-scroller.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-scroller/youtube-playlist-scroller.user.js
 // ==/UserScript==
@@ -58,7 +59,6 @@ const report = () => {
     let loadingObserverTimerId = null;
     let loadingCheckIntervalId = null;
     let panel = null;
-    let contentContainer = null;
     const cachedSpinners = new Set();
 
     function saveSettings() {
@@ -168,14 +168,18 @@ const report = () => {
     function createPanel() {
         if (document.getElementById('yt-scroller-panel')) return;
 
-        panel = document.createElement('div');
-        panel.id = 'yt-scroller-panel';
-        panel.className = 'yus-panel';
+        const templateStr = GM_getResourceText('ytScrollerTemplate');
+        if (!templateStr) {
+            console.error('[YouTube Playlist Scroller] Failed to load template.html');
+            return;
+        }
 
-        // Override colors for Scroller
-        panel.style.backgroundColor = '#fffde7';
-        panel.style.borderColor = '#ccc';
-        panel.style.setProperty('--yus-hover-color', '#00f');
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.17';
+        const html = templateStr.replace('{{VERSION}}', version);
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html;
+        panel = wrapper.firstElementChild;
 
         // Apply saved position
         if (panelPos.top) panel.style.top = panelPos.top;
@@ -184,18 +188,14 @@ const report = () => {
         if (panelPos.right) panel.style.right = panelPos.right;
 
         // --- Header (Title & Minimize Button) ---
-        const headerRow = document.createElement('div');
-        headerRow.className = 'yus-header';
-
-        // Make header draggable
-        headerRow.style.cursor = 'move';
+        const headerRow = panel.querySelector('#yt-scroller-header');
 
         let isDragging = false;
         let dragStartX, dragStartY;
         let initialLeft, initialTop;
 
         headerRow.addEventListener('mousedown', (e) => {
-            if (e.target.tagName === 'BUTTON') return;
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
             isDragging = true;
             dragStartX = e.clientX;
             dragStartY = e.clientY;
@@ -215,10 +215,8 @@ const report = () => {
 
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
-
             const dx = e.clientX - dragStartX;
             const dy = e.clientY - dragStartY;
-
             panel.style.left = `${initialLeft + dx}px`;
             panel.style.top = `${initialTop + dy}px`;
         });
@@ -226,24 +224,12 @@ const report = () => {
         document.addEventListener('mouseup', () => {
             if (isDragging) {
                 isDragging = false;
-                // Save new position
-                panelPos = {
-                    top: panel.style.top,
-                    left: panel.style.left,
-                    bottom: '',
-                    right: ''
-                };
+                panelPos = { top: panel.style.top, left: panel.style.left, bottom: '', right: '' };
                 GM_setValue(PANEL_POS_KEY, panelPos);
             }
         });
 
-
-        const titleLabel = document.createElement('span');
-        titleLabel.className = 'yus-title';
-        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.16';
-        titleLabel.textContent = `Auto Scroller v${v}`;
-        titleLabel.title = 'Double-click to toggle minimization';
-
+        const titleLabel = panel.querySelector('#yt-scroller-title');
         titleLabel.addEventListener('dblclick', (e) => {
             isManuallyMinimized = !isManuallyMinimized;
             GM_setValue(MINIMIZED_STATE_KEY, isManuallyMinimized);
@@ -251,96 +237,39 @@ const report = () => {
             e.stopPropagation();
         });
 
-        const contentContainer = document.createElement('div');
-        contentContainer.id = 'yt-scroller-panel-content';
-        contentContainer.className = 'yus-content';
-
-        headerRow.appendChild(titleLabel);
-        panel.appendChild(headerRow);
-        panel.appendChild(contentContainer);
-
-        // --- Controls ---
-
-        const controlsHeader = document.createElement('div');
-        Object.assign(controlsHeader.style, {
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-        });
-
-        const statusLabel = document.createElement('div');
-        statusLabel.textContent = 'Status: ';
-        statusLabel.style.fontSize = '12px';
-
-        const loadingStatus = document.createElement('span');
-        loadingStatus.id = 'yt-scroller-loading-status';
-        loadingStatus.textContent = 'Idle';
-        loadingStatus.style.color = '#888';
-        loadingStatus.style.marginLeft = '4px';
-        statusLabel.appendChild(loadingStatus);
-
-        const toggleBtn = document.createElement('button');
-        toggleBtn.id = 'yt-scroller-toggle-btn';
-        toggleBtn.textContent = 'OFF';
-        Object.assign(toggleBtn.style, {
-            padding: '2px 8px',
-            fontSize: '11px',
-            backgroundColor: '#ccc',
-            color: '#000',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontWeight: 'bold'
-        });
+        const toggleBtn = panel.querySelector('#yt-scroller-toggle-btn');
         toggleBtn.addEventListener('click', toggleAutoScroll);
 
-        controlsHeader.appendChild(statusLabel);
-        controlsHeader.appendChild(toggleBtn);
-        contentContainer.appendChild(controlsHeader);
-
-        // Checkbox: Scroll to Bottom
-        const asCheckboxContainer = document.createElement('div');
-        Object.assign(asCheckboxContainer.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' });
-
-        const asCheckbox = document.createElement('input');
-        asCheckbox.type = 'checkbox';
+        const asCheckbox = panel.querySelector('#yt-scroller-bottom-check');
         asCheckbox.checked = settings.scrollToBottom;
-        asCheckbox.id = 'yt-scroller-bottom-check';
 
-        const asCheckboxLabel = document.createElement('label');
-        asCheckboxLabel.textContent = 'Scroll to Bottom';
-        asCheckboxLabel.htmlFor = 'yt-scroller-bottom-check';
+        const stepInputContainer = panel.querySelector('#yt-scroller-step-container');
+        const stepInput = panel.querySelector('#yt-scroller-step-input');
+        const intervalInput = panel.querySelector('#yt-scroller-interval-input');
 
-        // Settings Helpers
-        const createScrollInput = (label, key, placeholder) => {
-            const container = document.createElement('div');
-            Object.assign(container.style, { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', marginTop: '2px' });
+        stepInput.value = settings.step;
+        intervalInput.value = settings.interval;
 
-            const lbl = document.createElement('div');
-            lbl.textContent = label;
-            lbl.style.flex = '1';
+        const updateStepVisibility = () => {
+            if (settings.scrollToBottom) {
+                stepInputContainer.style.display = 'none';
+            } else {
+                stepInputContainer.style.display = 'flex';
+            }
+        };
 
-            const input = document.createElement('input');
-            input.type = 'number';
-            input.value = settings[key];
-            input.placeholder = placeholder;
-            Object.assign(input.style, { width: '50px', padding: '2px', border: '1px solid #ccc', borderRadius: '4px' });
-
-            input.addEventListener('change', () => {
-                let val = parseFloat(input.value);
+        const attachInputLogic = (inputEl, key) => {
+            inputEl.addEventListener('change', () => {
+                let val = parseFloat(inputEl.value);
                 if (isNaN(val) || val < 0) val = key === 'interval' ? 1 : 0;
                 settings[key] = val;
                 saveSettings();
                 restartAutoScrollIfActive();
             });
-
-            container.appendChild(lbl);
-            container.appendChild(input);
-            return { container, input };
         };
 
-        const stepInputObj = createScrollInput('Step (px):', 'step', '300');
-        const intervalInputObj = createScrollInput('Interval (sec):', 'interval', '20');
+        attachInputLogic(stepInput, 'step');
+        attachInputLogic(intervalInput, 'interval');
 
         asCheckbox.addEventListener('change', () => {
             settings.scrollToBottom = asCheckbox.checked;
@@ -349,21 +278,7 @@ const report = () => {
             restartAutoScrollIfActive();
         });
 
-        function updateStepVisibility() {
-            if (settings.scrollToBottom) {
-                stepInputObj.container.style.display = 'none';
-            } else {
-                stepInputObj.container.style.display = 'flex';
-            }
-        }
         updateStepVisibility();
-
-        asCheckboxContainer.appendChild(asCheckbox);
-        asCheckboxContainer.appendChild(asCheckboxLabel);
-        contentContainer.appendChild(asCheckboxContainer);
-
-        contentContainer.appendChild(stepInputObj.container);
-        contentContainer.appendChild(intervalInputObj.container);
 
         document.body.appendChild(panel);
         updatePanelVisibility();
@@ -371,7 +286,6 @@ const report = () => {
         window.addEventListener('resize', () => {
             requestAnimationFrame(checkPanelPosition);
         });
-
     }
 
 
