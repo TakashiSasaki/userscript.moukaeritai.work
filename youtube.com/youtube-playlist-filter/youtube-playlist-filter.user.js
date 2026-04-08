@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.46
-// @lastModified 2026-04-08
+// @version      0.1.47
+// @lastModified 2026-04-09
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -63,6 +63,7 @@ const report = () => {
     // --- Performance Optimization Globals ---
     let allCachedItems = new Set();
     let pendingProcessItems = new Set();
+    const itemMetadataCache = new WeakMap();
     let isProcessing = false;
     let processTimerId = null;
 
@@ -71,6 +72,34 @@ const report = () => {
         if (!str) return '';
         // Normalize to NFKC to handle full-width/half-width Japanese characters
         return str.normalize('NFKC').toLowerCase().trim();
+    }
+
+    function getNodeText(element) {
+        if (!element) return '';
+        return element.getAttribute('title') || element.innerText || element.textContent || '';
+    }
+
+    function getOrCreateItemMetadata(item) {
+        const cached = itemMetadataCache.get(item);
+        if (cached) {
+            return cached;
+        }
+
+        const titleEl = item.querySelector('#video-title') ||
+            item.querySelector('a#video-title') ||
+            item.querySelector('.ytd-playlist-video-renderer #video-title') ||
+            item.querySelector('#video-title-link');
+        const channelEl = item.querySelector('.ytd-channel-name a') ||
+            item.querySelector('#channel-name #text') ||
+            item.querySelector('yt-formatted-string.ytd-channel-name');
+
+        const metadata = {
+            normalizedTitle: normalizeText(getNodeText(titleEl)),
+            normalizedChannel: normalizeText(getNodeText(channelEl))
+        };
+
+        itemMetadataCache.set(item, metadata);
+        return metadata;
     }
 
 
@@ -280,22 +309,9 @@ const report = () => {
                     return;
                 }
 
-                // Enhanced title extraction: prefer 'title' attribute then 'innerText'
-                const titleEl = item.querySelector('#video-title') || 
-                                item.querySelector('a#video-title') ||
-                                item.querySelector('.ytd-playlist-video-renderer #video-title') ||
-                                item.querySelector('#video-title-link');
-                
-                const titleRaw = titleEl ? (titleEl.getAttribute('title') || titleEl.innerText || titleEl.textContent) : '';
-                const title = normalizeText(titleRaw);
-
-                // Enhanced channel extraction: prefer 'title' attribute then 'innerText'
-                const channelEl = item.querySelector('.ytd-channel-name a') || 
-                                  item.querySelector('#channel-name #text') ||
-                                  item.querySelector('yt-formatted-string.ytd-channel-name');
-                
-                const channelRaw = channelEl ? (channelEl.getAttribute('title') || channelEl.innerText || channelEl.textContent) : '';
-                const channel = normalizeText(channelRaw);
+                const metadata = getOrCreateItemMetadata(item);
+                const title = metadata.normalizedTitle;
+                const channel = metadata.normalizedChannel;
 
                 const matchTitle = !titleLower || title.includes(titleLower);
                 const matchChannel = !channelLower || channel.includes(channelLower);
