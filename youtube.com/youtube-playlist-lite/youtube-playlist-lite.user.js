@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.38
+// @version      0.1.39
 // @description  YouTubeプレイリスト表示でサムネイルを非表示にして軽量化するためのツールです。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -81,6 +81,30 @@ const report = () => {
             observerRootSelector: 'body'
         }
     };
+    const FALLBACK_PANEL_TEMPLATE = `
+<div id="yt-lite-panel" class="yus-panel" style="--yus-panel-bg-rgb: 240, 248, 255; border-color: #00f; --yus-hover-color: #00f;">
+    <div id="yt-lite-header" class="yus-header">
+        <span id="yt-lite-title" class="yus-title" title="Double-click to toggle minimization">Lite v{{VERSION}}</span>
+    </div>
+    <div id="yt-lite-panel-content" class="yus-content">
+        <div style="display: flex; align-items: center; gap: 4px; font-size: 10px;">
+            <input type="checkbox" id="yt-lite-target-thumbnails">
+            <label for="yt-lite-target-thumbnails" style="cursor: pointer;">Thumbnails</label>
+        </div>
+        <div style="display: flex; align-items: center; gap: 4px; font-size: 10px;">
+            <input type="checkbox" id="yt-lite-target-header">
+            <label for="yt-lite-target-header" style="cursor: pointer;">Playlist Header</label>
+        </div>
+        <div style="display: flex; align-items: center; gap: 4px; font-size: 10px;">
+            <input type="checkbox" id="yt-lite-target-miniplayer">
+            <label for="yt-lite-target-miniplayer" style="cursor: pointer;">Miniplayer</label>
+        </div>
+        <div style="display: flex; gap: 6px; width: 100%; margin-top: 4px;">
+            <button id="yt-lite-hide-btn" type="button" style="flex: 1; padding: 4px; font-size: 10px; background-color: #eef; border: 1px solid #99f; border-radius: 4px; cursor: pointer;">Hide</button>
+            <button id="yt-lite-remove-btn" type="button" style="flex: 1; padding: 4px; font-size: 10px; background-color: #fff; border: 1px solid #99f; border-radius: 4px; cursor: pointer;">Remove</button>
+        </div>
+    </div>
+</div>`;
 
     function getPageConfig() {
         if (location.pathname.startsWith('/playlist')) return PAGE_CONFIG.playlist;
@@ -130,6 +154,17 @@ const report = () => {
             miniplayer: getMigratedTargetSelection(TARGET_MINIPLAYER_KEY, [LEGACY_HIDE_MINIPLAYER_KEY, LEGACY_REMOVE_MINIPLAYER_KEY], false)
         };
         actionMode = getMigratedActionMode();
+    }
+
+    function hasExpectedPanelControls(panelElement) {
+        if (!panelElement) return false;
+        return Boolean(
+            panelElement.querySelector('#yt-lite-target-thumbnails') &&
+            panelElement.querySelector('#yt-lite-target-header') &&
+            panelElement.querySelector('#yt-lite-target-miniplayer') &&
+            panelElement.querySelector('#yt-lite-hide-btn') &&
+            panelElement.querySelector('#yt-lite-remove-btn')
+        );
     }
 
     // --- Core Logic ---
@@ -255,16 +290,14 @@ const report = () => {
     function createPanel() {
         if (document.getElementById('yt-lite-panel')) return;
 
-        const templateStr = GM_getResourceText('ytLiteTemplate');
-        if (!templateStr) {
-            console.error('[YouTube Playlist Lite] Failed to load template.html');
-            return;
-        }
-
         const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.31';
-        const html = templateStr.replace('{{VERSION}}', version);
-
-        panel = yusParseHTML(html);
+        const templateStr = GM_getResourceText('ytLiteTemplate');
+        const resourceHtml = templateStr ? templateStr.replace('{{VERSION}}', version) : '';
+        panel = resourceHtml ? yusParseHTML(resourceHtml) : null;
+        if (!hasExpectedPanelControls(panel)) {
+            console.warn('[YouTube Playlist Lite] Template mismatch detected. Falling back to inline panel template.');
+            panel = yusParseHTML(FALLBACK_PANEL_TEMPLATE.replace('{{VERSION}}', version));
+        }
 
         yusRestorePosition(panel, PANEL_POS_KEY, { bottom: '260px', right: '20px' });
         const headerRow = panel.querySelector('#yt-lite-header');
