@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.35
+// @version      0.1.36
 // @description  YouTubeプレイリスト表示でサムネイルを非表示にして軽量化するためのツールです。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -49,21 +49,27 @@ const report = () => {
 
     // --- Configuration ---
     const PANEL_POS_KEY = 'yt_lite_panel_position';
-    const HIDE_THUMB_KEY = 'yt_lite_hide_thumbnails';
-    const FORCE_REMOVE_KEY = 'yt_lite_force_remove';
-    const HIDE_MINIPLAYER_KEY = 'yt_lite_hide_miniplayer';
-    const REMOVE_MINIPLAYER_KEY = 'yt_lite_remove_miniplayer';
+    const LEGACY_HIDE_THUMB_KEY = 'yt_lite_hide_thumbnails';
+    const LEGACY_REMOVE_THUMB_KEY = 'yt_lite_force_remove';
+    const LEGACY_HIDE_MINIPLAYER_KEY = 'yt_lite_hide_miniplayer';
+    const LEGACY_REMOVE_MINIPLAYER_KEY = 'yt_lite_remove_miniplayer';
+    const TARGET_THUMB_KEY = 'yt_lite_target_thumbnails';
+    const TARGET_HEADER_KEY = 'yt_lite_target_header';
+    const TARGET_MINIPLAYER_KEY = 'yt_lite_target_miniplayer';
+    const ACTION_MODE_KEY = 'yt_lite_action_mode';
     const MINIMIZED_STATE_KEY = 'yt_lite_is_minimized';
-    let isHideThumbnails = GM_getValue(HIDE_THUMB_KEY, false);
-    let isForceRemove = GM_getValue(FORCE_REMOVE_KEY, false);
-    let isHideMiniplayer = GM_getValue(HIDE_MINIPLAYER_KEY, false);
-    let isRemoveMiniplayer = GM_getValue(REMOVE_MINIPLAYER_KEY, false);
+    const STORAGE_UNSET = '__unset__';
+    let selectedTargets = {
+        thumbnails: false,
+        header: false,
+        miniplayer: false
+    };
+    let actionMode = 'hide';
     const PAGE_CONFIG = {
         playlist: {
-            thumbSelector: 'ytd-playlist-video-renderer ytd-thumbnail, ytd-playlist-header-renderer ytd-hero-playlist-thumbnail-renderer',
-            matchSelector: 'ytd-thumbnail, ytd-hero-playlist-thumbnail-renderer',
-            ancestorSelector: 'ytd-playlist-video-renderer, ytd-playlist-header-renderer',
-            observerRootSelector: 'ytd-playlist-video-list-renderer #contents'
+            thumbSelector: 'ytd-playlist-video-renderer ytd-thumbnail',
+            headerSelector: '#page-manager > ytd-browse > ytd-playlist-header-renderer',
+            observerRootSelector: 'body'
         }
     };
 
@@ -81,27 +87,63 @@ const report = () => {
         };
     }
 
+    function getStoredBoolean(key, defaultValue = false) {
+        const stored = GM_getValue(key, STORAGE_UNSET);
+        return stored === STORAGE_UNSET ? defaultValue : Boolean(stored);
+    }
+
+    function getMigratedTargetSelection(key, legacyKeys = [], defaultValue = false) {
+        const stored = GM_getValue(key, STORAGE_UNSET);
+        if (stored !== STORAGE_UNSET) {
+            return Boolean(stored);
+        }
+        return legacyKeys.some((legacyKey) => GM_getValue(legacyKey, false)) || defaultValue;
+    }
+
+    function getMigratedActionMode() {
+        const stored = GM_getValue(ACTION_MODE_KEY, STORAGE_UNSET);
+        if (stored === 'hide' || stored === 'remove') {
+            return stored;
+        }
+        if (GM_getValue(LEGACY_REMOVE_THUMB_KEY, false) || GM_getValue(LEGACY_REMOVE_MINIPLAYER_KEY, false)) {
+            return 'remove';
+        }
+        if (GM_getValue(LEGACY_HIDE_THUMB_KEY, false) || GM_getValue(LEGACY_HIDE_MINIPLAYER_KEY, false)) {
+            return 'hide';
+        }
+        return 'hide';
+    }
+
+    function loadState() {
+        selectedTargets = {
+            thumbnails: getMigratedTargetSelection(TARGET_THUMB_KEY, [LEGACY_HIDE_THUMB_KEY, LEGACY_REMOVE_THUMB_KEY], false),
+            header: getStoredBoolean(TARGET_HEADER_KEY, false),
+            miniplayer: getMigratedTargetSelection(TARGET_MINIPLAYER_KEY, [LEGACY_HIDE_MINIPLAYER_KEY, LEGACY_REMOVE_MINIPLAYER_KEY], false)
+        };
+        actionMode = getMigratedActionMode();
+    }
+
     // --- Core Logic ---
     let styleElement = null;
     let panel = null;
+
+    loadState();
 
     function applySettings() {
         const pageConfig = getPageConfig();
         if (!pageConfig) return;
 
-        // Read latest values from storage to be sure
-        isHideThumbnails = GM_getValue(HIDE_THUMB_KEY, false);
-        isForceRemove = GM_getValue(FORCE_REMOVE_KEY, false);
-        isHideMiniplayer = GM_getValue(HIDE_MINIPLAYER_KEY, false);
-        isRemoveMiniplayer = GM_getValue(REMOVE_MINIPLAYER_KEY, false);
-
-        // CSS Hide Mode
         let css = '';
-        if (isHideThumbnails) {
-            css += `${pageConfig.thumbSelector} { display: none !important; } `;
-        }
-        if (isHideMiniplayer) {
-            css += `ytd-miniplayer { display: none !important; } `;
+        if (actionMode === 'hide') {
+            if (selectedTargets.thumbnails) {
+                css += `${pageConfig.thumbSelector} { display: none !important; } `;
+            }
+            if (selectedTargets.header) {
+                css += `${pageConfig.headerSelector} { display: none !important; } `;
+            }
+            if (selectedTargets.miniplayer) {
+                css += `ytd-miniplayer { display: none !important; } `;
+            }
         }
 
         if (css) {
@@ -116,8 +158,13 @@ const report = () => {
             styleElement = null;
         }
 
-        // DOM Removal Mode
-        if (isForceRemove) {
+        const hasRemovalTargets = actionMode === 'remove' && (
+            selectedTargets.thumbnails ||
+            selectedTargets.header ||
+            selectedTargets.miniplayer
+        );
+
+        if (hasRemovalTargets) {
             stopObserver();
             startObserver();
             performDebouncedCleanup();
@@ -125,10 +172,7 @@ const report = () => {
             stopObserver();
         }
 
-        // Miniplayer Removal (One-time check on settings apply)
-        if (isRemoveMiniplayer) {
-            removeMiniplayerIfPresent();
-        }
+        updateActionButtons();
     }
 
     function removeMiniplayerIfPresent() {
@@ -148,12 +192,26 @@ const report = () => {
         }
     }
 
+    function clearExistingHeader(pageConfig) {
+        if (!pageConfig) return;
+        const headers = document.querySelectorAll(pageConfig.headerSelector);
+        headers.forEach(el => el.remove());
+        if (headers.length > 0) {
+            console.log(`[YouTube Playlist Lite] Removed ${headers.length} playlist header(s).`);
+        }
+    }
+
     const performDebouncedCleanup = debounce(() => {
         const pageConfig = getPageConfig();
-        if (pageConfig && isForceRemove) {
-            clearExistingThumbnails(pageConfig);
+        if (pageConfig && actionMode === 'remove') {
+            if (selectedTargets.thumbnails) {
+                clearExistingThumbnails(pageConfig);
+            }
+            if (selectedTargets.header) {
+                clearExistingHeader(pageConfig);
+            }
         }
-        if (isRemoveMiniplayer) {
+        if (actionMode === 'remove' && selectedTargets.miniplayer) {
             removeMiniplayerIfPresent();
         }
     }, 150);
@@ -161,7 +219,8 @@ const report = () => {
     let observer = null;
     function startObserver() {
         if (observer) return;
-        if (!GM_getValue(FORCE_REMOVE_KEY, false)) return;
+        if (actionMode !== 'remove') return;
+        if (!selectedTargets.thumbnails && !selectedTargets.header && !selectedTargets.miniplayer) return;
         const pageConfig = getPageConfig();
         if (!pageConfig) return;
         const root = document.querySelector(pageConfig.observerRootSelector);
@@ -205,35 +264,59 @@ const report = () => {
         const titleLabel = panel.querySelector('#yt-lite-title');
         yusMakeMinimizable(panel, titleLabel, MINIMIZED_STATE_KEY);
 
-        const bindCheckbox = (id, key) => {
+        const bindCheckbox = (id, key, targetKey) => {
             const cb = panel.querySelector(`#${id}`);
-            cb.checked = GM_getValue(key, false);
+            cb.checked = selectedTargets[targetKey];
             cb.addEventListener('change', (e) => {
-                GM_setValue(key, e.target.checked);
+                selectedTargets[targetKey] = e.target.checked;
+                GM_setValue(key, selectedTargets[targetKey]);
                 applySettings();
             });
         };
 
-        bindCheckbox('yt-lite-hide-thumb', HIDE_THUMB_KEY);
-        bindCheckbox('yt-lite-force-remove', FORCE_REMOVE_KEY);
-        bindCheckbox('yt-lite-hide-miniplayer', HIDE_MINIPLAYER_KEY);
-        bindCheckbox('yt-lite-remove-miniplayer', REMOVE_MINIPLAYER_KEY);
+        bindCheckbox('yt-lite-target-thumbnails', TARGET_THUMB_KEY, 'thumbnails');
+        bindCheckbox('yt-lite-target-header', TARGET_HEADER_KEY, 'header');
+        bindCheckbox('yt-lite-target-miniplayer', TARGET_MINIPLAYER_KEY, 'miniplayer');
 
-        const clearBtn = panel.querySelector('#yt-lite-clear-btn');
-        clearBtn.addEventListener('click', () => {
-             clearExistingThumbnails(getPageConfig());
-             if (isRemoveMiniplayer) {
-                 const mini = document.querySelector('ytd-miniplayer');
-                 if (mini) mini.remove();
-             }
+        const hideBtn = panel.querySelector('#yt-lite-hide-btn');
+        const removeBtn = panel.querySelector('#yt-lite-remove-btn');
+        hideBtn.addEventListener('click', () => {
+            actionMode = 'hide';
+            GM_setValue(ACTION_MODE_KEY, actionMode);
+            applySettings();
+        });
+        removeBtn.addEventListener('click', () => {
+            actionMode = 'remove';
+            GM_setValue(ACTION_MODE_KEY, actionMode);
+            applySettings();
         });
 
         document.body.appendChild(panel);
         yusUpdatePanelVisibility(panel);
+        updateActionButtons();
         setTimeout(() => yusCheckPanelPosition(panel, PANEL_POS_KEY), 0);
         window.addEventListener('resize', () => {
             requestAnimationFrame(() => yusCheckPanelPosition(panel, PANEL_POS_KEY));
         });
+    }
+
+    function updateActionButtons() {
+        if (!panel) return;
+        const hideBtn = panel.querySelector('#yt-lite-hide-btn');
+        const removeBtn = panel.querySelector('#yt-lite-remove-btn');
+        if (!hideBtn || !removeBtn) return;
+
+        const activeStyle = {
+            backgroundColor: '#dce8ff',
+            color: '#003c99'
+        };
+        const inactiveStyle = {
+            backgroundColor: '#fff',
+            color: '#333'
+        };
+
+        Object.assign(hideBtn.style, actionMode === 'hide' ? activeStyle : inactiveStyle);
+        Object.assign(removeBtn.style, actionMode === 'remove' ? activeStyle : inactiveStyle);
     }
 
     // --- Init & Navigation ---

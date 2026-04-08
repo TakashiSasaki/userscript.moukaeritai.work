@@ -4,22 +4,20 @@
     </div>
     <div id="yt-lite-panel-content" class="yus-content">
         <div style="display: flex; align-items: center; gap: 4px; font-size: 10px;">
-            <input type="checkbox" id="yt-lite-hide-thumb">
-            <label for="yt-lite-hide-thumb" style="cursor: pointer;">Hide Thumbs (CSS)</label>
+            <input type="checkbox" id="yt-lite-target-thumbnails">
+            <label for="yt-lite-target-thumbnails" style="cursor: pointer;">Thumbnails</label>
         </div>
         <div style="display: flex; align-items: center; gap: 4px; font-size: 10px;">
-            <input type="checkbox" id="yt-lite-force-remove">
-            <label for="yt-lite-force-remove" style="cursor: pointer;">Remove Thumbs (DOM)</label>
-        </div>
-        <hr style="margin: 2px 0; border: 0; border-top: 1px solid #ccc; width: 100%;">
-        <div style="display: flex; align-items: center; gap: 4px; font-size: 10px;">
-            <input type="checkbox" id="yt-lite-hide-miniplayer">
-            <label for="yt-lite-hide-miniplayer" style="cursor: pointer;">Hide Miniplayer (CSS)</label>
+            <input type="checkbox" id="yt-lite-target-header">
+            <label for="yt-lite-target-header" style="cursor: pointer;">Playlist Header</label>
         </div>
         <div style="display: flex; align-items: center; gap: 4px; font-size: 10px;">
-            <input type="checkbox" id="yt-lite-remove-miniplayer">
-            <label for="yt-lite-remove-miniplayer" style="cursor: pointer;">Remove Miniplayer (DOM)</label>
+            <input type="checkbox" id="yt-lite-target-miniplayer">
+            <label for="yt-lite-target-miniplayer" style="cursor: pointer;">Miniplayer</label>
         </div>
-        <button id="yt-lite-clear-btn" type="button" style="padding: 4px; font-size: 10px; background-color: #eef; border: 1px solid #99f; border-radius: 4px; cursor: pointer;">Clear Now</button>
+        <div style="display: flex; gap: 6px; width: 100%; margin-top: 4px;">
+            <button id="yt-lite-hide-btn" type="button" style="flex: 1; padding: 4px; font-size: 10px; background-color: #eef; border: 1px solid #99f; border-radius: 4px; cursor: pointer;">Hide</button>
+            <button id="yt-lite-remove-btn" type="button" style="flex: 1; padding: 4px; font-size: 10px; background-color: #fff; border: 1px solid #99f; border-radius: 4px; cursor: pointer;">Remove</button>
+        </div>
     </div>
 </div>
