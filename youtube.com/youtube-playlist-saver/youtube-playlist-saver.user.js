@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.68
+// @version      0.2.69
 // @lastModified 2026-04-08
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @antifeature  webRequestBlocking
@@ -25,7 +25,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver/youtube-playlist-saver.user.js
 // ==/UserScript==
 
-/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusParseHTML */
+/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusParseHTML, yusInitApp, yusIsPlaylistPage */
 (function () {
     'use strict';
 
@@ -47,10 +47,8 @@ const report = () => {
         return;
     }
 
-    const PLAYLIST_PATH = '/playlist';
     const DATA_KEY = 'yt_playlist_data';
     const DATA_VERSION = 2;
-    const INIT_DELAY_RANGE_MS = { min: 10000, max: 15000 };
     // Helper to create trash icon
     const TRASH_ICON_PATHS = [
         "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
@@ -70,11 +68,6 @@ const report = () => {
         return svg;
     }
 
-    function isPlaylistPage() {
-        return location.hostname === 'www.youtube.com' &&
-            location.pathname === PLAYLIST_PATH &&
-            location.search.length > 1;
-    }
 
     const PANEL_POS_KEY = 'yt_saver_panel_position';
     const MINIMIZED_STATE_KEY = 'yt_saver_is_minimized';
@@ -100,7 +93,7 @@ const report = () => {
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.68';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.69';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -340,7 +333,7 @@ const report = () => {
     let isSessionInitialized = false;
 
     function scanAndRender() {
-        if (!isActive || !isPlaylistPage()) return;
+        if (!isActive || !yusIsPlaylistPage()) return;
         const playlistId = getPlaylistId();
         if (!playlistId) {
             updatePanelStats({ playlistId: null, totalSaved: NaN, savedVisible: NaN, newVisible: NaN });
@@ -408,7 +401,7 @@ const report = () => {
     }
 
     function startMain() {
-        if (isActive || !isPlaylistPage()) return;
+        if (isActive || !yusIsPlaylistPage()) return;
         isActive = true;
 
         createPanel();
@@ -436,27 +429,6 @@ const report = () => {
         yusSetPanelActive(panel, false);
     }
 
-    // Navigation Handling
-    function init() {
-        window.addEventListener('yt-navigate-start', stopMain);
-        window.addEventListener('yt-navigate-finish', () => {
-            if (isPlaylistPage()) {
-                startMain();
-            } else {
-                stopMain();
-            }
-        });
-
-        // Start Logic
-        if (isPlaylistPage()) {
-            startMain();
-        }
-    }
-
-    function getRandomInitDelayMs() {
-        const span = INIT_DELAY_RANGE_MS.max - INIT_DELAY_RANGE_MS.min;
-        return INIT_DELAY_RANGE_MS.min + Math.floor(Math.random() * (span + 1));
-    }
 
     // --- Public API Integration ---
     const SaverAPI = {
@@ -628,6 +600,10 @@ const report = () => {
         });
     }
 
-    setTimeout(init, getRandomInitDelayMs());
+    yusInitApp({
+        appName: 'YouTube Playlist Saver',
+        startMain: startMain,
+        stopMain: stopMain
+    });
 
 })();
