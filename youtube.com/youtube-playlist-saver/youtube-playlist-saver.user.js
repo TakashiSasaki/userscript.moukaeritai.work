@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.72
+// @version      0.2.73
 // @lastModified 2026-04-08
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @antifeature  webRequestBlocking
@@ -9,11 +9,8 @@
 // @match        https://www.youtube.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=youtube.com
-// @connect      gist.githubusercontent.com
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @grant        GM_registerMenuCommand
-// @grant        GM_xmlhttpRequest
 // @grant        GM_setClipboard
 // @grant        GM_info
 // @grant        GM_getResourceText
@@ -469,64 +466,6 @@ const report = () => {
     // --- Import / Export Logic (Kept here) ---
     // (Existing Import/Export functions retained same as before...)
 
-    function mergeImportedData(importedData) {
-        if (!importedData) { alert('Import failed: No data.'); return; }
-        // ... (Same Logic)
-        let sourcePlaylists = {};
-        if (importedData.playlists) sourcePlaylists = importedData.playlists;
-        else if (Object.keys(importedData).length > 0) sourcePlaylists = importedData;
-
-        const localPlaylists = loadStorage();
-        let addedCount = 0;
-        let updatedCount = 0;
-
-        for (const [plId, content] of Object.entries(sourcePlaylists)) {
-            if (!localPlaylists[plId]) localPlaylists[plId] = {};
-            let entries = [];
-            if (Array.isArray(content)) entries = content.map(vid => [vid, null]);
-            else entries = Object.entries(content);
-
-            for (const [vid, remoteMeta] of entries) {
-                const existing = localPlaylists[plId][vid];
-                if (!existing) {
-                    localPlaylists[plId][vid] = remoteMeta || { title: null, channel: null, addedAt: null };
-                    addedCount++;
-                } else if (remoteMeta) {
-                    // Update meta logic...
-                    let changed = false;
-                    if (existing.title === null && remoteMeta.title) { existing.title = remoteMeta.title; changed = true; }
-                    /* ... */
-                    if (changed) updatedCount++;
-                }
-            }
-        }
-        if (addedCount > 0 || updatedCount > 0) {
-            requestSave();
-            alert(`Import successful!\nAdded: ${addedCount}\nUpdated: ${updatedCount}`);
-            window.dispatchEvent(new CustomEvent('YouTubePlaylistSaverDataChanged'));
-        } else {
-            alert('No new data.');
-        }
-    }
-
-    function importDataFromUrl(url) {
-        GM_xmlhttpRequest({
-            method: "GET",
-            url: url,
-            onload: function (response) {
-                if (response.status === 200) {
-                    try { mergeImportedData(JSON.parse(response.responseText)); }
-                    catch (e) { alert('JSON Parse Error: ' + e.message); }
-                } else alert(`Download failed: ${response.status}`);
-            }
-        });
-    }
-
-    function normalizeGistUrl(url) {
-        const r = /^(https:\/\/gist\.githubusercontent\.com\/[^\/]+\/[^\/]+\/raw\/)[0-9a-f]{40}\/(.+)$/i;
-        return url.replace(r, '$1$2');
-    }
-
     function exportDataToFile() {
         loadStorage();
         if (!cachedStorage) { alert('No data.'); return; }
@@ -551,40 +490,11 @@ const report = () => {
         return `${year}${month}${day}-${hours}${minutes}${seconds}`;
     }
 
-    function importDataFromFile() {
-        const i = document.createElement('input');
-        i.type = 'file'; i.accept = '.json'; i.style.display = 'none';
-        i.onchange = (e) => {
-            const f = e.target.files[0];
-            if (!f) return;
-            const r = new FileReader();
-            r.onload = (ev) => { try { mergeImportedData(JSON.parse(ev.target.result)); } catch (E) { alert(E); } };
-            r.readAsText(f);
-        };
-        document.body.appendChild(i); i.click();
-    }
-
-    function onImportMenuClick() {
-        const u = prompt("Import URL:", GM_getValue('yt_last_import_url', ''));
-        if (u && u.startsWith('http')) {
-            const c = normalizeGistUrl(u.trim());
-            GM_setValue('yt_last_import_url', c);
-            importDataFromUrl(c);
-        }
-    }
-
     function onExportToClipboardClick() {
         loadStorage();
         if (!cachedStorage) { alert('No data.'); return; }
         GM_setClipboard(JSON.stringify(cachedStorage, null, 2), 'text');
         alert('Copied!');
-    }
-
-    if (typeof GM_registerMenuCommand !== 'undefined') {
-        GM_registerMenuCommand("Import Data from URL", onImportMenuClick);
-        GM_registerMenuCommand("Import Data from File", importDataFromFile);
-        GM_registerMenuCommand("Copy Data to Clipboard", onExportToClipboardClick);
-        GM_registerMenuCommand("Export Data to File", exportDataToFile);
     }
 
     // --- Cross-tab Synchronization ---
