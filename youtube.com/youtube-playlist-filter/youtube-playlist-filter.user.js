@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.38
+// @version      0.1.39
 // @lastModified 2026-04-08
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -21,7 +21,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-filter/youtube-playlist-filter.user.js
 // ==/UserScript==
 
-/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility, yusParseHTML */
+/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility, yusParseHTML, yusInitApp, yusIsPlaylistPage */
 (function () {
     'use strict';
 
@@ -44,10 +44,8 @@ const report = () => {
     }
 
     // --- Config & State ---
-    const PLAYLIST_PATH = '/playlist';
     const PANEL_POS_KEY = 'yt_filter_panel_position';
     const MINIMIZED_STATE_KEY = 'yt_filter_is_minimized';
-    const INIT_DELAY_RANGE_MS = { min: 1000, max: 2000 };
     let isActive = false;
     let filterIntervalId = null;
     let observerInitTimerId = null;
@@ -76,13 +74,6 @@ const report = () => {
     }
 
 
-    function isPlaylistPage() {
-        const res = location.hostname === 'www.youtube.com' &&
-            location.pathname === PLAYLIST_PATH &&
-            location.search.length > 1;
-        console.log(`[Playlist Filter Debug] isPlaylistPage: ${res} (path: ${location.pathname}, search: ${location.search})`);
-        return res;
-    }
 
 
 
@@ -95,7 +86,7 @@ const report = () => {
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.38';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.39';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -235,7 +226,7 @@ const report = () => {
             processTimerId = null;
         }
 
-        if (!isActive || !isPlaylistPage() || isInputActive) {
+        if (!isActive || !yusIsPlaylistPage() || isInputActive) {
             isProcessing = false;
             updateStatus('filtering', false);
             return;
@@ -352,7 +343,7 @@ const report = () => {
     }
 
     function applyFilters() {
-        if (!isActive || !isPlaylistPage()) return;
+        if (!isActive || !yusIsPlaylistPage()) return;
         if (isInputActive) {
             console.log(`[Playlist Filter Debug] applyFilters skipped: input is active`);
             return;
@@ -480,7 +471,7 @@ const report = () => {
 
 
     function recheckCachedItems() {
-        if (!isActive || !isPlaylistPage() || isInputActive) return;
+        if (!isActive || !yusIsPlaylistPage() || isInputActive) return;
         allCachedItems.forEach(item => pendingProcessItems.add(item));
         scheduleProcessing();
     }
@@ -514,7 +505,7 @@ const report = () => {
             resumeTimerId = null;
         }
         isInputActive = false;
-        if (!isActive || !isPlaylistPage()) return;
+        if (!isActive || !yusIsPlaylistPage()) return;
 
         itemsAboveSet.clear();
         itemsVisibleSet.clear();
@@ -534,7 +525,7 @@ const report = () => {
     // --- Initialization ---
 
     function startMain() {
-        if (isActive || !isPlaylistPage()) return;
+        if (isActive || !yusIsPlaylistPage()) return;
         isActive = true;
 
         createPanel();
@@ -572,31 +563,11 @@ const report = () => {
         yusSetPanelActive(panel, false);
     }
 
-    function init() {
-        // Navigation Handling
-        window.addEventListener('yt-navigate-start', stopMain);
-        window.addEventListener('yt-navigate-finish', () => {
-            if (isPlaylistPage()) {
-                startMain();
-            } else {
-                stopMain();
-            }
-        });
 
-        if (isPlaylistPage()) {
-            startMain();
-        }
-    }
-
-    function getRandomInitDelayMs() {
-        const res = INIT_DELAY_RANGE_MS.min + Math.floor(Math.random() * (INIT_DELAY_RANGE_MS.max - INIT_DELAY_RANGE_MS.min + 1));
-        console.log(`[Playlist Filter Debug] init scheduled in ${res}ms`);
-        return res;
-    }
-
-    setTimeout(() => {
-        console.log(`[Playlist Filter Debug] init timer fired`);
-        init();
-    }, getRandomInitDelayMs());
+    yusInitApp({
+        appName: 'YouTube Playlist Filter',
+        startMain: startMain,
+        stopMain: stopMain
+    });
 
 })();
