@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.34
+// @version      0.1.35
 // @description  YouTubeプレイリスト表示でサムネイルを非表示にして軽量化するためのツールです。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -28,6 +28,11 @@
     if (commonCss) {
         GM_addStyle(commonCss);
     }
+    GM_addStyle(`
+        #page-manager > ytd-browse > ytd-playlist-header-renderer {
+            display: none !important;
+        }
+    `);
 const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
