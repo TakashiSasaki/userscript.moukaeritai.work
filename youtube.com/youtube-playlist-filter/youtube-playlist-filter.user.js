@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.34
+// @version      0.1.35
 // @lastModified 2026-04-08
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -21,7 +21,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-filter/youtube-playlist-filter.user.js
 // ==/UserScript==
 
-/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition */
+/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility */
 (function () {
     'use strict';
 
@@ -49,8 +49,6 @@ const report = () => {
     const MINIMIZED_STATE_KEY = 'yt_filter_is_minimized';
     const INIT_DELAY_RANGE_MS = { min: 1000, max: 2000 };
     let isActive = false;
-    let isAutoMinimized = false;
-    let isManuallyMinimized = GM_getValue(MINIMIZED_STATE_KEY, false);
     let filterIntervalId = null;
     let observerInitTimerId = null;
 
@@ -97,7 +95,7 @@ const report = () => {
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.34';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.35';
         const html = templateStr.replace('{{VERSION}}', version);
 
         const wrapper = document.createElement('div');
@@ -109,13 +107,7 @@ const report = () => {
         yusMakeDraggable(panel, headerRow, PANEL_POS_KEY);
 
         const titleLabel = panel.querySelector('#yt-filter-title');
-        titleLabel.addEventListener('dblclick', (e) => {
-            if (isAutoMinimized) return;
-            isManuallyMinimized = !isManuallyMinimized;
-            GM_setValue(MINIMIZED_STATE_KEY, isManuallyMinimized);
-            updatePanelVisibility();
-            e.stopPropagation();
-        });
+        yusMakeMinimizable(panel, titleLabel, MINIMIZED_STATE_KEY);
 
         const setupInputGroup = (key) => {
             const input = panel.querySelector(`#yt-filter-${key}-input`);
@@ -160,27 +152,11 @@ const report = () => {
         });
 
         document.body.appendChild(panel);
-        updatePanelVisibility();
+        yusUpdatePanelVisibility(panel);
         setTimeout(() => yusCheckPanelPosition(panel, PANEL_POS_KEY), 0);
         window.addEventListener('resize', () => {
             requestAnimationFrame(() => yusCheckPanelPosition(panel, PANEL_POS_KEY));
         });
-    }
-
-    function updatePanelVisibility() {
-        const content = document.getElementById('yt-filter-panel-content');
-        const panel = document.getElementById('yt-filter-panel');
-        if (!content || !panel) return;
-
-        const minimized = isAutoMinimized || isManuallyMinimized;
-        const isVisible = isActive && !minimized;
-        content.style.display = isVisible ? 'flex' : 'none';
-        
-        if (isVisible) {
-            panel.classList.add('yus-active');
-        } else {
-            panel.classList.remove('yus-active');
-        }
     }
 
     // --- Main Logic: Filtering & Matching Indicator ---
@@ -469,11 +445,6 @@ const report = () => {
         listObserver.observe(container, { childList: true, subtree: true });
     }
 
-    function showPanel() {
-        const panel = document.getElementById('yt-filter-panel');
-        if (panel) panel.style.display = 'flex';
-    }
-
     function stopBackgroundWork() {
         if (observerInitTimerId) {
             clearTimeout(observerInitTimerId);
@@ -570,9 +541,8 @@ const report = () => {
         isActive = true;
 
         createPanel();
-        showPanel();
+        yusSetPanelActive(panel, true);
 
-        updatePanelVisibility();
         itemsAboveSet.clear();
         itemsVisibleSet.clear();
         allCachedItems.clear();
@@ -602,8 +572,7 @@ const report = () => {
         allCachedItems.clear();
         pendingProcessItems.clear();
 
-        showPanel();
-        updatePanelVisibility();
+        yusSetPanelActive(panel, false);
     }
 
     function init() {

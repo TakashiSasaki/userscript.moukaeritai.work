@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.18
+// @version      0.1.19
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -19,7 +19,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-scroller/youtube-playlist-scroller.user.js
 // ==/UserScript==
 
-/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition */
+/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility */
 (function () {
     'use strict';
 
@@ -52,7 +52,6 @@ const report = () => {
         step: 300,
         interval: 20.0
     });
-    let isManuallyMinimized = GM_getValue(MINIMIZED_STATE_KEY, false);
     let scrollInterval = null;
     let isAutoScrollEnabled = false;
     let isActive = false;
@@ -139,7 +138,7 @@ const report = () => {
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.18';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.19';
         const html = templateStr.replace('{{VERSION}}', version);
 
         const wrapper = document.createElement('div');
@@ -151,12 +150,7 @@ const report = () => {
         yusMakeDraggable(panel, headerRow, PANEL_POS_KEY);
 
         const titleLabel = panel.querySelector('#yt-scroller-title');
-        titleLabel.addEventListener('dblclick', (e) => {
-            isManuallyMinimized = !isManuallyMinimized;
-            GM_setValue(MINIMIZED_STATE_KEY, isManuallyMinimized);
-            updatePanelVisibility();
-            e.stopPropagation();
-        });
+        yusMakeMinimizable(panel, titleLabel, MINIMIZED_STATE_KEY);
 
         const toggleBtn = panel.querySelector('#yt-scroller-toggle-btn');
         toggleBtn.addEventListener('click', toggleAutoScroll);
@@ -202,7 +196,7 @@ const report = () => {
         updateStepVisibility();
 
         document.body.appendChild(panel);
-        updatePanelVisibility();
+        yusUpdatePanelVisibility(panel);
         setTimeout(() => yusCheckPanelPosition(panel, PANEL_POS_KEY), 0);
         window.addEventListener('resize', () => {
             requestAnimationFrame(() => yusCheckPanelPosition(panel, PANEL_POS_KEY));
@@ -210,34 +204,12 @@ const report = () => {
     }
 
 
-    function updatePanelVisibility() {
-        const content = document.getElementById('yt-scroller-panel-content');
-        const panel = document.getElementById('yt-scroller-panel');
-        if (!content || !panel) return;
-
-        const isVisible = isActive && !isManuallyMinimized;
-        content.style.display = isVisible ? 'flex' : 'none';
-        
-        if (isVisible) {
-            panel.classList.add('yus-active');
-        } else {
-            panel.classList.remove('yus-active');
-        }
-    }
-
-
-    function showPanel() {
-        const panel = document.getElementById('yt-scroller-panel');
-        if (panel) panel.style.display = 'flex';
-    }
-
     function startMain() {
         if (isActive || !isPlaylistPage()) return;
         isActive = true;
 
         createPanel();
-        showPanel();
-        updatePanelVisibility();
+        yusSetPanelActive(panel, true);
         applyAutoScrollState();
         ensureLoadingObserver();
     }
@@ -264,8 +236,7 @@ const report = () => {
         }
         cachedSpinners.clear();
 
-        showPanel();
-        updatePanelVisibility();
+        yusSetPanelActive(panel, false);
     }
 
     // --- Loading Indicator Logic ---

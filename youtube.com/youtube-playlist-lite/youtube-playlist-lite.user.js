@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.26
+// @version      0.1.27
 // @description  YouTubeプレイリスト表示でサムネイルを非表示にして軽量化するためのツールです。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -20,7 +20,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-lite/youtube-playlist-lite.user.js
 // ==/UserScript==
 
-/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition */
+/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility */
 (function () {
     'use strict';
 
@@ -50,9 +50,6 @@ const report = () => {
     const REMOVE_MINIPLAYER_KEY = 'yt_lite_remove_miniplayer';
     const INIT_DELAY_RANGE_MS = { min: 1000, max: 3000 };
     const MINIMIZED_STATE_KEY = 'yt_lite_is_minimized';
-
-    let isAutoMinimized = false;
-    let isManuallyMinimized = GM_getValue(MINIMIZED_STATE_KEY, false);
 
     let isHideThumbnails = GM_getValue(HIDE_THUMB_KEY, false);
     let isForceRemove = GM_getValue(FORCE_REMOVE_KEY, false);
@@ -84,22 +81,6 @@ const report = () => {
     // --- Core Logic ---
     let styleElement = null;
     let panel = null;
-    let contentContainer = null;
-
-    function updatePanelVisibility() {
-        const isActiveState = !isAutoMinimized;
-
-        if (contentContainer) {
-            const shouldShowContent = isActiveState && !isManuallyMinimized;
-            contentContainer.style.display = shouldShowContent ? 'flex' : 'none';
-            
-            if (shouldShowContent) {
-                panel.classList.add('yus-active');
-            } else {
-                panel.classList.remove('yus-active');
-            }
-        }
-    }
 
     function applySettings() {
         const pageConfig = getPageConfig();
@@ -209,7 +190,7 @@ const report = () => {
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.26';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.27';
         const html = templateStr.replace('{{VERSION}}', version);
 
         const wrapper = document.createElement('div');
@@ -221,15 +202,7 @@ const report = () => {
         yusMakeDraggable(panel, headerRow, PANEL_POS_KEY);
 
         const titleLabel = panel.querySelector('#yt-lite-title');
-        titleLabel.addEventListener('dblclick', (e) => {
-            if (isAutoMinimized) return; // Prevent expansion on inactive pages
-            isManuallyMinimized = !isManuallyMinimized;
-            GM_setValue(MINIMIZED_STATE_KEY, isManuallyMinimized);
-            updatePanelVisibility();
-            e.stopPropagation();
-        });
-
-        contentContainer = panel.querySelector('#yt-lite-panel-content');
+        yusMakeMinimizable(panel, titleLabel, MINIMIZED_STATE_KEY);
 
         const bindCheckbox = (id, key) => {
             const cb = panel.querySelector(`#${id}`);
@@ -255,7 +228,7 @@ const report = () => {
         });
 
         document.body.appendChild(panel);
-        updatePanelVisibility();
+        yusUpdatePanelVisibility(panel);
         setTimeout(() => yusCheckPanelPosition(panel, PANEL_POS_KEY), 0);
         window.addEventListener('resize', () => {
             requestAnimationFrame(() => yusCheckPanelPosition(panel, PANEL_POS_KEY));
@@ -274,16 +247,13 @@ const report = () => {
     function refreshForLocation() {
         const pageConfig = getPageConfig();
         createPanel();
+        yusSetPanelActive(panel, !!pageConfig);
 
         if (!pageConfig) {
-            isAutoMinimized = true;
-            updatePanelVisibility();
             cleanupFeatures();
             return;
         }
 
-        isAutoMinimized = false;
-        updatePanelVisibility();
         applySettings();
     }
 

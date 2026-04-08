@@ -1,9 +1,10 @@
 // youtube-common.js
 // Shared floating panel utilities for YouTube playlist userscripts.
 // Loaded via @require in each userscript.
-// Position is persisted in localStorage (shared across all scripts on www.youtube.com).
+// Position and minimize state are persisted in localStorage.
 
-/* global yusRestorePosition, yusSavePosition, yusMakeDraggable, yusCheckPanelPosition */
+/* global yusRestorePosition, yusSavePosition, yusMakeDraggable, yusCheckPanelPosition,
+          yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility */
 
 /**
  * Restore a floating panel's position from localStorage.
@@ -127,4 +128,77 @@ function yusCheckPanelPosition(panelEl, storageKey) {
         panelEl.style.top    = `${newTop}px`;
         yusSavePosition(panelEl, storageKey);
     }
+}
+
+// ---------------------------------------------------------------------------
+// Minimize / Active-state utilities
+// State is stored directly on the panel element as custom properties:
+//   panelEl._yusAutoMinimized     – true when NOT on the target page
+//   panelEl._yusManuallyMinimized – true when the user has manually minimized
+//   panelEl._yusMinimizeKey       – localStorage key (informational)
+// ---------------------------------------------------------------------------
+
+/**
+ * Update panel content visibility from the two stored minimize flags.
+ * Content must have the class `.yus-content`.
+ * Sets `yus-active` CSS class on the panel when content is visible.
+ *
+ * @param {HTMLElement} panelEl - The panel root element.
+ */
+function yusUpdatePanelVisibility(panelEl) {
+    if (!panelEl) return;
+    const content = panelEl.querySelector('.yus-content');
+    if (!content) return;
+    const visible = !panelEl._yusAutoMinimized && !panelEl._yusManuallyMinimized;
+    content.style.display = visible ? 'flex' : 'none';
+    panelEl.classList.toggle('yus-active', visible);
+}
+
+/**
+ * Set the active (on-page) state of the panel.
+ * Call with active=true in startMain() and active=false in stopMain().
+ * Auto-minimizes when inactive; restores when active (unless manually minimized).
+ *
+ * @param {HTMLElement} panelEl - The panel root element (no-op if null).
+ * @param {boolean}     active  - Whether the userscript is on its target page.
+ */
+function yusSetPanelActive(panelEl, active) {
+    if (!panelEl) return;
+    panelEl._yusAutoMinimized = !active;
+    yusUpdatePanelVisibility(panelEl);
+}
+
+/**
+ * Attach double-click minimize toggle to a panel's title element.
+ * Loads initial manual-minimize state from localStorage.
+ * While auto-minimized (off target page), double-click has no effect.
+ * Saves toggled state back to localStorage immediately.
+ *
+ * @param {HTMLElement} panelEl     - The panel root element.
+ * @param {HTMLElement} titleEl     - The title element to attach dblclick to.
+ * @param {string}      minimizeKey - localStorage key for the manual minimize flag.
+ */
+function yusMakeMinimizable(panelEl, titleEl, minimizeKey) {
+    // Load saved state from localStorage (default: not minimized)
+    let savedMinimized = false;
+    try {
+        const raw = localStorage.getItem(minimizeKey);
+        if (raw !== null) savedMinimized = JSON.parse(raw);
+    } catch (_) {}
+
+    // Initialise panel state properties
+    panelEl._yusAutoMinimized     = false; // managed by yusSetPanelActive
+    panelEl._yusManuallyMinimized = savedMinimized;
+    panelEl._yusMinimizeKey       = minimizeKey;
+
+    titleEl.addEventListener('dblclick', (e) => {
+        // Ignore double-click while auto-minimized (not on target page)
+        if (panelEl._yusAutoMinimized) return;
+        panelEl._yusManuallyMinimized = !panelEl._yusManuallyMinimized;
+        try {
+            localStorage.setItem(minimizeKey, JSON.stringify(panelEl._yusManuallyMinimized));
+        } catch (_) {}
+        yusUpdatePanelVisibility(panelEl);
+        e.stopPropagation();
+    });
 }

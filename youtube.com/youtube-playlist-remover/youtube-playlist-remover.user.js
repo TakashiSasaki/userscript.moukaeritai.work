@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.53
+// @version      0.1.54
 // @lastModified  2026-04-08
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @antifeature  webRequestBlocking
@@ -21,7 +21,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-remover/youtube-playlist-remover.user.js
 // ==/UserScript==
 
-/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition */
+/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive */
 (function () {
     'use strict';
 
@@ -55,7 +55,6 @@
     let refreshIntervalId = null;
     let waitForDisappearance = GM_getValue(WAIT_FOR_DISAPPEARANCE_KEY, true);
     let onlyRemoveMatched = GM_getValue(ONLY_MATCHED_KEY, false);
-    let isManuallyMinimized = GM_getValue(MINIMIZED_STATE_KEY, false);
     let removeButton = null;
     let isRemoving = false;
     let cancelRequested = false;
@@ -150,7 +149,7 @@
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.53';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.54';
         const html = templateStr.replace('{{VERSION}}', version);
 
         const wrapper = document.createElement('div');
@@ -162,12 +161,7 @@
         yusMakeDraggable(panel, headerRow, PANEL_POS_KEY);
 
         const titleLabel = panel.querySelector('#yt-remover-title');
-        titleLabel.addEventListener('dblclick', (e) => {
-            isManuallyMinimized = !isManuallyMinimized;
-            GM_setValue(MINIMIZED_STATE_KEY, isManuallyMinimized);
-            updatePanelVisibility();
-            e.stopPropagation();
-        });
+        yusMakeMinimizable(panel, titleLabel, MINIMIZED_STATE_KEY);
 
         deletionStatsElement = panel.querySelector('#yt-remover-stats');
 
@@ -197,22 +191,6 @@
     }
 
     // --- Updates ---
-
-    function updatePanelVisibility() {
-        const content = document.getElementById('yt-remover-panel-content');
-        const panel = document.getElementById('yt-remover-panel');
-        if (!content || !panel) return;
-
-        const isVisible = isActive && !isManuallyMinimized;
-        content.style.display = isVisible ? 'flex' : 'none';
-        
-        if (isVisible) {
-            panel.classList.add('yus-active');
-        } else {
-            panel.classList.remove('yus-active');
-        }
-    }
-
 
     function updateStatus(text, isActive = false) {
         const el = document.getElementById('yt-remover-status');
@@ -634,19 +612,13 @@
     }
 
 
-    function showPanel() {
-        const panel = document.getElementById('yt-remover-panel');
-        if (panel) panel.style.display = 'flex';
-    }
-
     // --- Init ---
     function startMain() {
         if (isActive || !isPlaylistPage()) return;
         isActive = true;
 
         createPanel();
-        showPanel();
-        updatePanelVisibility();
+        yusSetPanelActive(panel, true);
         itemsAboveAndValidSet.clear();
 
         ensureObserver();
@@ -692,8 +664,7 @@
         updateRemoveButtonLabel('Remove Range', { force: true });
         updateStatus('Idle');
         updatePhase('Idle');
-        updatePanelVisibility();
-        showPanel();
+        yusSetPanelActive(panel, false);
     }
 
     function init() {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.63
+// @version      0.2.64
 // @lastModified 2026-04-08
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @antifeature  webRequestBlocking
@@ -25,7 +25,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver/youtube-playlist-saver.user.js
 // ==/UserScript==
 
-/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition */
+/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive */
 (function () {
     'use strict';
 
@@ -78,7 +78,6 @@ const report = () => {
 
     const PANEL_POS_KEY = 'yt_saver_panel_position';
     const MINIMIZED_STATE_KEY = 'yt_saver_is_minimized';
-    let isManuallyMinimized = GM_getValue(MINIMIZED_STATE_KEY, false);
     let isActive = false;
     let scanIntervalId = null;
     let panel = null;
@@ -101,7 +100,7 @@ const report = () => {
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.63';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.64';
         const html = templateStr.replace('{{VERSION}}', version);
 
         const wrapper = document.createElement('div');
@@ -113,12 +112,7 @@ const report = () => {
         yusMakeDraggable(panel, headerRow, PANEL_POS_KEY);
 
         const titleLabel = panel.querySelector('#yt-saver-title');
-        titleLabel.addEventListener('dblclick', (e) => {
-            isManuallyMinimized = !isManuallyMinimized;
-            GM_setValue(MINIMIZED_STATE_KEY, isManuallyMinimized);
-            updatePanelVisibility();
-            e.stopPropagation();
-        });
+        yusMakeMinimizable(panel, titleLabel, MINIMIZED_STATE_KEY);
 
         panelElements.totalSaved = panel.querySelector('#yt-saver-stats-total');
         panelElements.savedVisible = panel.querySelector('#yt-saver-stats-saved');
@@ -136,20 +130,6 @@ const report = () => {
     }
 
 
-    function updatePanelVisibility() {
-        const content = document.getElementById('yt-saver-panel-content');
-        const panel = document.getElementById('yt-saver-panel');
-        if (!content || !panel) return;
-
-        const isVisible = isActive && !isManuallyMinimized;
-        content.style.display = isVisible ? 'flex' : 'none';
-        
-        if (isVisible) {
-            panel.classList.add('yus-active');
-        } else {
-            panel.classList.remove('yus-active');
-        }
-    }
 
     function updatePanelStats({
         playlistId,
@@ -185,11 +165,6 @@ const report = () => {
 
         panelElements.storageStatus.textContent = storageText;
         panelElements.storageStatus.style.color = storageColor;
-    }
-
-    function showPanel() {
-        const panel = document.getElementById('yt-saver-panel');
-        if (panel) panel.style.display = 'flex';
     }
 
     // --- Core Data Storage ---
@@ -418,8 +393,7 @@ const report = () => {
         isActive = true;
 
         createPanel();
-        showPanel();
-        updatePanelVisibility();
+        yusSetPanelActive(panel, true);
         resetSessionState();
         scanAndRender();
 
@@ -440,8 +414,7 @@ const report = () => {
         }
 
         resetSessionState();
-        updatePanelVisibility();
-        showPanel();
+        yusSetPanelActive(panel, false);
     }
 
     // Navigation Handling
