@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.47
+// @version      0.1.48
 // @lastModified 2026-04-09
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -66,6 +66,7 @@ const report = () => {
     const itemMetadataCache = new WeakMap();
     let isProcessing = false;
     let processTimerId = null;
+    let hasAppliedCurrentPage = false;
 
     // --- Helpers ---
     function normalizeText(str) {
@@ -255,6 +256,14 @@ const report = () => {
         queueEl.textContent = `Queue: ${pendingProcessItems.size} items`;
     }
 
+    function resetFilterDisplayInfo() {
+        const countEl = document.getElementById('yt-filter-count');
+        if (countEl) countEl.textContent = 'Results: - / -';
+
+        const rangeEl = document.getElementById('yt-filter-range-info');
+        if (rangeEl) rangeEl.textContent = 'Range: None';
+    }
+
     function processChunk() {
         // Clear timer on entry (recursive or non-recursive)
         if (processTimerId) {
@@ -306,6 +315,8 @@ const report = () => {
             itemsToProcess.forEach(item => {
                 if (!item.isConnected) {
                     allCachedItems.delete(item);
+                    itemsAboveSet.delete(item);
+                    itemsVisibleSet.delete(item);
                     return;
                 }
 
@@ -334,6 +345,8 @@ const report = () => {
                         item.style.display = 'none';
                     }
                     renderMatchedIndicator(item, false);
+                    itemsAboveSet.delete(item);
+                    itemsVisibleSet.delete(item);
                     if (observerForRange) observerForRange.unobserve(item);
                 }
             });
@@ -373,13 +386,12 @@ const report = () => {
         ensureRangeObserver();
 
         isFiltering = Boolean(filterState.title || filterState.channel);
+        hasAppliedCurrentPage = true;
         console.log(`[Playlist Filter Debug] applyFilters (title: "${filterState.title}", channel: "${filterState.channel}", isFiltering: ${isFiltering}, isInputActive: ${isInputActive})`);
         updateStatus('scanner', true);
 
-        // Add existing known items to re-process
-        allCachedItems.forEach(item => pendingProcessItems.add(item));
-
-        // Scan DOM for any items missed before MutationObserver or initial load
+        allCachedItems.clear();
+        pendingProcessItems.clear();
         const items = document.querySelectorAll('ytd-playlist-video-renderer');
         items.forEach(item => {
             allCachedItems.add(item);
@@ -427,6 +439,9 @@ const report = () => {
         }
 
         listObserver = new MutationObserver((mutations) => {
+            if (!hasAppliedCurrentPage) {
+                return;
+            }
             let hasNewItems = false;
             for (const m of mutations) {
                 m.addedNodes.forEach(node => {
@@ -493,7 +508,7 @@ const report = () => {
         }
 
         if (!filterIntervalId) {
-            // Use lightweight recheck instead of full DOM scan
+            // Use lightweight cleanup instead of full re-processing
             filterIntervalId = window.setInterval(recheckCachedItems, 5000);
         }
     }
@@ -502,9 +517,35 @@ const report = () => {
     function recheckCachedItems() {
         if (!isActive || !yusIsPlaylistPage() || isInputActive) return;
         updateStatus('scanner', true);
-        allCachedItems.forEach(item => pendingProcessItems.add(item));
+
+        allCachedItems.forEach(item => {
+            if (!item.isConnected) {
+                allCachedItems.delete(item);
+            }
+        });
+        pendingProcessItems.forEach(item => {
+            if (!item.isConnected) {
+                pendingProcessItems.delete(item);
+            }
+        });
+        itemsAboveSet.forEach(item => {
+            if (!item.isConnected) {
+                itemsAboveSet.delete(item);
+            }
+        });
+        itemsVisibleSet.forEach(item => {
+            if (!item.isConnected) {
+                itemsVisibleSet.delete(item);
+            }
+        });
+
         updateQueueInfo();
-        scheduleProcessing();
+        if (hasAppliedCurrentPage) {
+            updateCounts();
+            updateRangeInfo();
+        } else {
+            resetFilterDisplayInfo();
+        }
         updateStatus('scanner', false);
     }
 
@@ -563,14 +604,16 @@ const report = () => {
         createPanel();
         yusSetPanelActive(panel, true);
 
+        hasAppliedCurrentPage = false;
         itemsAboveSet.clear();
         itemsVisibleSet.clear();
         allCachedItems.clear();
         pendingProcessItems.clear();
         updateQueueInfo();
+        resetFilterDisplayInfo();
 
 
-        startBackgroundWork({ applyNow: true });
+        startBackgroundWork({ applyNow: false });
 
         console.log('[Playlist Filter Debug] startMain: Active and running');
         console.log('[YouTube Playlist Filter] Running...');
@@ -588,11 +631,13 @@ const report = () => {
 
         stopBackgroundWork();
 
+        hasAppliedCurrentPage = false;
         itemsAboveSet.clear();
         itemsVisibleSet.clear();
         allCachedItems.clear();
         pendingProcessItems.clear();
         updateQueueInfo();
+        resetFilterDisplayInfo();
 
         yusSetPanelActive(panel, false);
     }
