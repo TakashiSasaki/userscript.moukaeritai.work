@@ -4,7 +4,8 @@
 // Position and minimize state are persisted in localStorage.
 
 /* exported yusRestorePosition, yusSavePosition, yusMakeDraggable, yusCheckPanelPosition,
-          yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility, yusParseHTML */
+          yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility, yusParseHTML,
+          yusIsPlaylistPage, yusInitApp */
 
 /**
  * Restore a floating panel's position from localStorage.
@@ -233,4 +234,43 @@ function yusParseHTML(html) {
     const trustedHtml = policy ? policy.createHTML(html) : html;
     const doc = new DOMParser().parseFromString(trustedHtml, 'text/html');
     return doc.body.firstElementChild;
+}
+
+/**
+ * Check if the current page is a YouTube playlist page.
+ * Standard check for /playlist URL with a 'list' parameter.
+ *
+ * @returns {boolean}
+ */
+function yusIsPlaylistPage() {
+    return location.pathname === '/playlist' && location.search.length > 1;
+}
+
+/**
+ * Standard initialization logic for YouTube userscripts.
+ * Handles randomized initial delay and SPA navigation events.
+ *
+ * @param {Object}   config
+ * @param {string}   config.appName     - Name of the app for logging.
+ * @param {Function} config.startMain   - Function to call when on target page.
+ * @param {Function} config.stopMain    - Function to call when leaving target page.
+ * @param {Function} [config.isTargetPage] - Optional custom page check (defaults to yusIsPlaylistPage).
+ */
+function yusInitApp({ appName, startMain, stopMain, isTargetPage = yusIsPlaylistPage }) {
+    const minDelay = 1000;
+    const maxDelay = 2000;
+    const delay = minDelay + Math.floor(Math.random() * (maxDelay - minDelay + 1));
+
+    const init = () => {
+        window.addEventListener('yt-navigate-start', stopMain);
+        window.addEventListener('yt-navigate-finish', () => {
+            if (isTargetPage()) startMain();
+            else stopMain();
+        });
+
+        if (isTargetPage()) startMain();
+        console.log(`[${appName}] Initialised.`);
+    };
+
+    setTimeout(init, delay);
 }
