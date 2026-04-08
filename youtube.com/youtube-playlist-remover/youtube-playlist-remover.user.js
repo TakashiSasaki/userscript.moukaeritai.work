@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.62
+// @version      0.1.63
 // @lastModified  2026-04-08
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @antifeature  webRequestBlocking
@@ -57,6 +57,7 @@
     let isRemoving = false;
     let cancelRequested = false;
     let filterListenerBound = false;
+    let candidatesInfoRefreshId = null;
     const filterInputValues = new WeakMap();
 
     // --- Statistics ---
@@ -165,7 +166,7 @@
         matchedCheckbox.addEventListener('change', (e) => {
             onlyRemoveMatched = e.target.checked;
             GM_setValue(ONLY_MATCHED_KEY, onlyRemoveMatched);
-            updateCandidatesInfo();
+            scheduleCandidatesInfoRefresh();
         });
 
         removeButton = panel.querySelector('#yt-remover-action-btn');
@@ -202,6 +203,15 @@
 
         const count = candidateStore.getCount({ matchedOnly: onlyRemoveMatched });
         el.textContent = count > 0 ? `Removable: ${count} items` : 'Removable: None';
+    }
+
+    function scheduleCandidatesInfoRefresh() {
+        if (candidatesInfoRefreshId !== null) return;
+
+        candidatesInfoRefreshId = requestAnimationFrame(() => {
+            candidatesInfoRefreshId = null;
+            updateCandidatesInfo();
+        });
     }
 
     function hasMatchedBadge(item) {
@@ -323,7 +333,7 @@
         if (lastValue === value) return;
         filterInputValues.set(target, value);
         candidateStore.clear();
-        updateCandidatesInfo();
+        scheduleCandidatesInfoRefresh();
     }
 
     function ensureFilterListeners() {
@@ -399,7 +409,7 @@
                     candidateStore.remove(el);
                 }
             });
-            updateCandidatesInfo();
+            scheduleCandidatesInfoRefresh();
         }, { root: null, threshold: 0 });
     }
 
@@ -416,7 +426,7 @@
                 candidateStore.sync(item);
             }
         });
-        updateCandidatesInfo();
+        scheduleCandidatesInfoRefresh();
     }
 
 
@@ -672,7 +682,7 @@
             updateRemoveButtonLabel('Remove Range', { force: true });
             cancelRequested = false;
             isRemoving = false;
-            updateCandidatesInfo();
+            scheduleCandidatesInfoRefresh();
         }
     }
 
@@ -696,6 +706,7 @@
 
         updateStatus('Idle');
         updatePhase('Idle');
+        scheduleCandidatesInfoRefresh();
 
         if (!refreshIntervalId) {
             refreshIntervalId = window.setInterval(lightweightCleanup, 5000);
@@ -727,10 +738,15 @@
         candidateStore.clear();
         isRemoving = false;
         cancelRequested = false;
+        if (candidatesInfoRefreshId !== null) {
+            cancelAnimationFrame(candidatesInfoRefreshId);
+            candidatesInfoRefreshId = null;
+        }
         updateRemoveButtonLabel('Remove Range', { force: true });
         updateStatus('Idle');
         updatePhase('Idle');
         yusSetPanelActive(panel, false);
+        updateCandidatesInfo();
     }
 
 
