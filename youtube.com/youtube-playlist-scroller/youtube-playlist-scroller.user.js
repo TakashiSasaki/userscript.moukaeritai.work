@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.22
+// @version      0.1.23
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        https://www.youtube.com/*
@@ -19,7 +19,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-scroller/youtube-playlist-scroller.user.js
 // ==/UserScript==
 
-/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility, yusParseHTML */
+/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility, yusParseHTML, yusInitApp, yusIsPlaylistPage */
 (function () {
     'use strict';
 
@@ -41,11 +41,9 @@ const report = () => {
         return;
     }
 
-    const PLAYLIST_PATH = '/playlist';
     const SETTINGS_KEY = 'yt_scroller_settings';
     const PANEL_POS_KEY = 'yt_scroller_panel_position';
     const MINIMIZED_STATE_KEY = 'yt_scroller_is_minimized';
-    const INIT_DELAY_RANGE_MS = { min: 1000, max: 3000 };
 
     let settings = GM_getValue(SETTINGS_KEY, {
         scrollToBottom: true,
@@ -65,11 +63,6 @@ const report = () => {
         GM_setValue(SETTINGS_KEY, settings);
     }
 
-    function isPlaylistPage() {
-        return location.hostname === 'www.youtube.com' &&
-            location.pathname === PLAYLIST_PATH &&
-            location.search.length > 1;
-    }
 
     function updateToggleButtonState(btn, enabled) {
         if (!btn) return;
@@ -105,7 +98,7 @@ const report = () => {
         const btn = document.getElementById('yt-scroller-toggle-btn');
         updateToggleButtonState(btn, isAutoScrollEnabled);
 
-        if (!isActive || !isPlaylistPage()) {
+        if (!isActive || !yusIsPlaylistPage()) {
             stopAutoScroll();
             return;
         }
@@ -123,7 +116,7 @@ const report = () => {
     }
 
     function restartAutoScrollIfActive() {
-        if (!isAutoScrollEnabled || !isActive || !isPlaylistPage()) return;
+        if (!isAutoScrollEnabled || !isActive || !yusIsPlaylistPage()) return;
         startAutoScroll();
     }
 
@@ -138,7 +131,7 @@ const report = () => {
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.22';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.23';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -203,7 +196,7 @@ const report = () => {
 
 
     function startMain() {
-        if (isActive || !isPlaylistPage()) return;
+        if (isActive || !yusIsPlaylistPage()) return;
         isActive = true;
 
         createPanel();
@@ -311,7 +304,7 @@ const report = () => {
     }
 
     function checkLoadingState() {
-        if (!isActive || !isPlaylistPage()) return;
+        if (!isActive || !yusIsPlaylistPage()) return;
 
         let isLoading = false;
 
@@ -343,27 +336,11 @@ const report = () => {
         }
     }
 
-    // Navigation handling
-    function init() {
-        window.addEventListener('yt-navigate-start', stopMain);
-        window.addEventListener('yt-navigate-finish', () => {
-            if (isPlaylistPage()) {
-                startMain();
-            } else {
-                stopMain();
-            }
-        });
 
-        if (isPlaylistPage()) {
-            startMain();
-        }
-    }
-
-    function getRandomInitDelayMs() {
-        const span = INIT_DELAY_RANGE_MS.max - INIT_DELAY_RANGE_MS.min;
-        return INIT_DELAY_RANGE_MS.min + Math.floor(Math.random() * (span + 1));
-    }
-
-    setTimeout(init, getRandomInitDelayMs());
+    yusInitApp({
+        appName: 'YouTube Playlist Scroller',
+        startMain: startMain,
+        stopMain: stopMain
+    });
 
 })();
