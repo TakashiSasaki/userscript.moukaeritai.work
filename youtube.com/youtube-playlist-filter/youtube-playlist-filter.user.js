@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.48
+// @version      0.1.49
 // @lastModified 2026-04-09
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -29,6 +29,11 @@
     if (commonCss) {
         GM_addStyle(commonCss);
     }
+    GM_addStyle(`
+        #page-manager > ytd-browse > ytd-playlist-header-renderer {
+            display: none !important;
+        }
+    `);
 const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
