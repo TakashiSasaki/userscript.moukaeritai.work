@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.57
+// @version      0.1.58
 // @lastModified  2026-04-08
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @antifeature  webRequestBlocking
@@ -21,7 +21,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-remover/youtube-playlist-remover.user.js
 // ==/UserScript==
 
-/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusParseHTML */
+/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusParseHTML, yusInitApp, yusIsPlaylistPage */
 (function () {
     'use strict';
 
@@ -44,12 +44,10 @@
     }
 
     // --- Configuration ---
-    const PLAYLIST_PATH = '/playlist';
     const PANEL_POS_KEY = 'yt_remover_panel_position';
     const WAIT_FOR_DISAPPEARANCE_KEY = 'yt_remover_wait_for_disappearance';
     const ONLY_MATCHED_KEY = 'yt_remover_only_matched';
     const MINIMIZED_STATE_KEY = 'yt_remover_is_minimized';
-    const INIT_DELAY_RANGE_MS = { min: 10000, max: 15000 };
 
     let isActive = false;
     let refreshIntervalId = null;
@@ -133,11 +131,6 @@
     let playlistContainer = null;
     let panel = null;
 
-    function isPlaylistPage() {
-        return location.hostname === 'www.youtube.com' &&
-            location.pathname === PLAYLIST_PATH &&
-            location.search.length > 1;
-    }
 
 
     function createPanel() {
@@ -149,7 +142,7 @@
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.57';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.58';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -252,7 +245,7 @@
     }
 
     function handleFilterInputEvent(event) {
-        if (!isActive || !isPlaylistPage() || isRemoving) return;
+        if (!isActive || !yusIsPlaylistPage() || isRemoving) return;
         const target = event.target;
         if (!isPlaylistFilterInput(target)) return;
         const value = target.value || '';
@@ -341,7 +334,7 @@
 
 
     function lightweightCleanup() {
-        if (!isActive || !isPlaylistPage()) return;
+        if (!isActive || !yusIsPlaylistPage()) return;
 
         // Only clean up set if items were removed from DOM or became hidden
         itemsAboveAndValidSet.forEach(item => {
@@ -478,7 +471,7 @@
     }
 
     async function removeRangeItems() {
-        if (!isActive || !isPlaylistPage()) return;
+        if (!isActive || !yusIsPlaylistPage()) return;
         if (isRemoving) {
             cancelRequested = true;
             updateStatus('Stopping...', true);
@@ -612,7 +605,8 @@
 
     // --- Init ---
     function startMain() {
-        if (isActive || !isPlaylistPage()) return;
+        if (isActive || !yusIsPlaylistPage()) return;
+        ensureFilterListeners();
         isActive = true;
 
         createPanel();
@@ -665,27 +659,11 @@
         yusSetPanelActive(panel, false);
     }
 
-    function init() {
-        ensureFilterListeners();
-        window.addEventListener('yt-navigate-start', stopMain);
-        window.addEventListener('yt-navigate-finish', () => {
-            if (isPlaylistPage()) {
-                startMain();
-            } else {
-                stopMain();
-            }
-        });
 
-        if (isPlaylistPage()) {
-            startMain();
-        }
-    }
-
-    function getRandomInitDelayMs() {
-        const span = INIT_DELAY_RANGE_MS.max - INIT_DELAY_RANGE_MS.min;
-        return INIT_DELAY_RANGE_MS.min + Math.floor(Math.random() * (span + 1));
-    }
-
-    setTimeout(init, getRandomInitDelayMs());
+    yusInitApp({
+        appName: 'YouTube Playlist Remover',
+        startMain: startMain,
+        stopMain: stopMain
+    });
 
 })();
