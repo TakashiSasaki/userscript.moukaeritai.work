@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.24
+// @version      0.1.25
 // @description  YouTubeプレイリスト表示でサムネイルを非表示にして軽量化するためのツールです。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -14,6 +14,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @resource     youtubeCommonCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-common.css
+// @resource     ytLiteTemplate https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-lite/template.html
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-lite/youtube-playlist-lite.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-lite/youtube-playlist-lite.user.js
 // ==/UserScript==
@@ -236,24 +237,25 @@ const report = () => {
     function createPanel() {
         if (document.getElementById('yt-lite-panel')) return;
 
-        panel = document.createElement('div');
-        panel.id = 'yt-lite-panel';
-        panel.className = 'yus-panel';
+        const templateStr = GM_getResourceText('ytLiteTemplate');
+        if (!templateStr) {
+            console.error('[YouTube Playlist Lite] Failed to load template.html');
+            return;
+        }
 
-        // Override colors for Lite
-        panel.style.backgroundColor = '#f0f8ff';
-        panel.style.borderColor = '#00f';
-        panel.style.width = '180px';
-        panel.style.setProperty('--yus-hover-color', '#00f');
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.25';
+        const html = templateStr.replace('{{VERSION}}', version);
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html;
+        panel = wrapper.firstElementChild;
 
         if (panelPos.top) panel.style.top = panelPos.top;
         if (panelPos.left) panel.style.left = panelPos.left;
         if (panelPos.bottom) panel.style.bottom = panelPos.bottom;
         if (panelPos.right) panel.style.right = panelPos.right;
 
-        const headerRow = document.createElement('div');
-        headerRow.className = 'yus-header';
-
+        const headerRow = panel.querySelector('#yt-lite-header');
         let isDragging = false, dragStartX, dragStartY, initialLeft, initialTop;
         headerRow.addEventListener('mousedown', (e) => {
             if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL') return;
@@ -280,12 +282,7 @@ const report = () => {
             }
         });
 
-        const titleLabel = document.createElement('span');
-        titleLabel.className = 'yus-title';
-        const v = (typeof GM_info !== 'undefined') ? GM_info.script.version : '0.1.24';
-        titleLabel.textContent = `Lite v${v}`;
-        titleLabel.title = 'Double-click to toggle minimization';
-
+        const titleLabel = panel.querySelector('#yt-lite-title');
         titleLabel.addEventListener('dblclick', (e) => {
             if (isAutoMinimized) return; // Prevent expansion on inactive pages
             isManuallyMinimized = !isManuallyMinimized;
@@ -294,55 +291,23 @@ const report = () => {
             e.stopPropagation();
         });
 
-        contentContainer = document.createElement('div');
-        contentContainer.id = 'yt-lite-panel-content';
-        contentContainer.className = 'yus-content';
+        contentContainer = panel.querySelector('#yt-lite-panel-content');
 
-        headerRow.appendChild(titleLabel);
-        panel.appendChild(headerRow);
-        panel.appendChild(contentContainer);
-
-        // Options
-        const createCheckbox = (id, text, checked, onChange) => {
-            const container = document.createElement('div');
-            Object.assign(container.style, { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' });
-            const cb = document.createElement('input');
-            cb.type = 'checkbox'; cb.id = id; cb.checked = checked;
-            cb.addEventListener('change', onChange);
-            const lbl = document.createElement('label');
-            lbl.htmlFor = id; lbl.textContent = text; lbl.style.cursor = 'pointer';
-            container.appendChild(cb);
-            container.appendChild(lbl);
-            return container;
+        const bindCheckbox = (id, key) => {
+            const cb = panel.querySelector(`#${id}`);
+            cb.checked = GM_getValue(key, false);
+            cb.addEventListener('change', (e) => {
+                GM_setValue(key, e.target.checked);
+                applySettings();
+            });
         };
 
-        contentContainer.appendChild(createCheckbox('yt-lite-hide-thumb', 'Hide Thumbs (CSS)', isHideThumbnails, (e) => {
-            GM_setValue(HIDE_THUMB_KEY, e.target.checked);
-            applySettings();
-        }));
+        bindCheckbox('yt-lite-hide-thumb', HIDE_THUMB_KEY);
+        bindCheckbox('yt-lite-force-remove', FORCE_REMOVE_KEY);
+        bindCheckbox('yt-lite-hide-miniplayer', HIDE_MINIPLAYER_KEY);
+        bindCheckbox('yt-lite-remove-miniplayer', REMOVE_MINIPLAYER_KEY);
 
-        contentContainer.appendChild(createCheckbox('yt-lite-force-remove', 'Remove Thumbs (DOM)', isForceRemove, (e) => {
-            GM_setValue(FORCE_REMOVE_KEY, e.target.checked);
-            applySettings();
-        }));
-
-        contentContainer.appendChild(document.createElement('hr')).style.margin = '2px 0';
-
-        contentContainer.appendChild(createCheckbox('yt-lite-hide-miniplayer', 'Hide Miniplayer (CSS)', isHideMiniplayer, (e) => {
-            GM_setValue(HIDE_MINIPLAYER_KEY, e.target.checked);
-            applySettings();
-        }));
-
-        contentContainer.appendChild(createCheckbox('yt-lite-remove-miniplayer', 'Remove Miniplayer (DOM)', isRemoveMiniplayer, (e) => {
-            GM_setValue(REMOVE_MINIPLAYER_KEY, e.target.checked);
-            applySettings();
-        }));
-
-        const clearBtn = document.createElement('button');
-        clearBtn.textContent = 'Clear Thumbs Now';
-        Object.assign(clearBtn.style, {
-            padding: '4px', fontSize: '10px', backgroundColor: '#eef', border: '1px solid #99f', borderRadius: '4px', cursor: 'pointer'
-        });
+        const clearBtn = panel.querySelector('#yt-lite-clear-btn');
         clearBtn.addEventListener('click', () => {
              clearExistingThumbnails(getPageConfig());
              if (isRemoveMiniplayer) {
@@ -350,7 +315,6 @@ const report = () => {
                  if (mini) mini.remove();
              }
         });
-        contentContainer.appendChild(clearBtn);
 
         document.body.appendChild(panel);
         updatePanelVisibility();
@@ -358,7 +322,6 @@ const report = () => {
         window.addEventListener('resize', () => {
             requestAnimationFrame(checkPanelPosition);
         });
-
     }
 
     // --- Init & Navigation ---
