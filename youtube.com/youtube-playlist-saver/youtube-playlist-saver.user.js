@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.73
-// @lastModified 2026-04-08
+// @version      0.2.74
+// @lastModified 2026-04-09
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -30,6 +30,15 @@
     if (commonCss) {
         GM_addStyle(commonCss);
     }
+    GM_addStyle(`
+        .yus-panel,
+        .yus-panel.yus-active {
+            --yus-panel-opacity: 1 !important;
+            background-color: rgb(var(--yus-panel-bg-rgb)) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+    `);
 const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
