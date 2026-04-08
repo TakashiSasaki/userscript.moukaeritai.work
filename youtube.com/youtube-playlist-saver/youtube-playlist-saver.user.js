@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.62
+// @version      0.2.63
 // @lastModified 2026-04-08
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @antifeature  webRequestBlocking
@@ -20,10 +20,12 @@
 // @grant        GM_addStyle
 // @resource     youtubeCommonCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-common.css
 // @resource     ytSaverTemplate https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver/template.html
+// @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-common.js
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver/youtube-playlist-saver.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver/youtube-playlist-saver.user.js
 // ==/UserScript==
 
+/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition */
 (function () {
     'use strict';
 
@@ -77,7 +79,6 @@ const report = () => {
     const PANEL_POS_KEY = 'yt_saver_panel_position';
     const MINIMIZED_STATE_KEY = 'yt_saver_is_minimized';
     let isManuallyMinimized = GM_getValue(MINIMIZED_STATE_KEY, false);
-    let panelPos = GM_getValue(PANEL_POS_KEY, { bottom: '260px', right: '20px' });
     let isActive = false;
     let scanIntervalId = null;
     let panel = null;
@@ -89,42 +90,6 @@ const report = () => {
         storageStatus: null
     };
 
-    function checkPanelPosition() {
-        if (!panel) return;
-        const rect = panel.getBoundingClientRect();
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-
-        let newLeft = rect.left;
-        let newTop = rect.top;
-        let needsUpdate = false;
-
-        if (rect.right > vw) {
-            newLeft = Math.max(0, vw - rect.width);
-            needsUpdate = true;
-        }
-        if (rect.left < 0) {
-            newLeft = 0;
-            needsUpdate = true;
-        }
-        if (rect.bottom > vh) {
-            newTop = Math.max(0, vh - rect.height);
-            needsUpdate = true;
-        }
-        if (rect.top < 0) {
-            newTop = 0;
-            needsUpdate = true;
-        }
-
-        if (needsUpdate) {
-            panel.style.bottom = 'auto';
-            panel.style.right = 'auto';
-            panel.style.left = `${newLeft}px`;
-            panel.style.top = `${newTop}px`;
-            panelPos = { top: panel.style.top, left: panel.style.left, bottom: '', right: '' };
-            GM_setValue(PANEL_POS_KEY, panelPos);
-        }
-    }
 
 
     function createPanel() {
@@ -136,55 +101,16 @@ const report = () => {
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.62';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.63';
         const html = templateStr.replace('{{VERSION}}', version);
 
         const wrapper = document.createElement('div');
         wrapper.innerHTML = html;
         panel = wrapper.firstElementChild;
 
-        if (panelPos.top) panel.style.top = panelPos.top;
-        if (panelPos.left) panel.style.left = panelPos.left;
-        if (panelPos.bottom) panel.style.bottom = panelPos.bottom;
-        if (panelPos.right) panel.style.right = panelPos.right;
-
+        yusRestorePosition(panel, PANEL_POS_KEY, { bottom: '260px', right: '20px' });
         const headerRow = panel.querySelector('#yt-saver-header');
-        let isDragging = false;
-        let dragStartX, dragStartY;
-        let initialLeft, initialTop;
-
-        headerRow.addEventListener('mousedown', (e) => {
-            if (e.target.tagName === 'BUTTON') return;
-            isDragging = true;
-            dragStartX = e.clientX;
-            dragStartY = e.clientY;
-
-            const rect = panel.getBoundingClientRect();
-            initialLeft = rect.left;
-            initialTop = rect.top;
-
-            panel.style.bottom = 'auto';
-            panel.style.right = 'auto';
-            panel.style.left = `${initialLeft}px`;
-            panel.style.top = `${initialTop}px`;
-            e.preventDefault();
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            const dx = e.clientX - dragStartX;
-            const dy = e.clientY - dragStartY;
-            panel.style.left = `${initialLeft + dx}px`;
-            panel.style.top = `${initialTop + dy}px`;
-        });
-
-        document.addEventListener('mouseup', () => {
-            if (isDragging) {
-                isDragging = false;
-                panelPos = { top: panel.style.top, left: panel.style.left, bottom: '', right: '' };
-                GM_setValue(PANEL_POS_KEY, panelPos);
-            }
-        });
+        yusMakeDraggable(panel, headerRow, PANEL_POS_KEY);
 
         const titleLabel = panel.querySelector('#yt-saver-title');
         titleLabel.addEventListener('dblclick', (e) => {
@@ -203,9 +129,9 @@ const report = () => {
         panel.querySelector('#yt-saver-copy-btn').addEventListener('click', onExportToClipboardClick);
 
         document.body.appendChild(panel);
-        setTimeout(checkPanelPosition, 0);
+        setTimeout(() => yusCheckPanelPosition(panel, PANEL_POS_KEY), 0);
         window.addEventListener('resize', () => {
-            requestAnimationFrame(checkPanelPosition);
+            requestAnimationFrame(() => yusCheckPanelPosition(panel, PANEL_POS_KEY));
         });
     }
 

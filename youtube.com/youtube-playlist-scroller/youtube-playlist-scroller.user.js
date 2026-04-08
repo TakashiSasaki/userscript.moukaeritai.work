@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.17
+// @version      0.1.18
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -14,10 +14,12 @@
 // @grant        GM_addStyle
 // @resource     youtubeCommonCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-common.css
 // @resource     ytScrollerTemplate https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-scroller/template.html
+// @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-common.js
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-scroller/youtube-playlist-scroller.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-scroller/youtube-playlist-scroller.user.js
 // ==/UserScript==
 
+/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition */
 (function () {
     'use strict';
 
@@ -50,7 +52,6 @@ const report = () => {
         step: 300,
         interval: 20.0
     });
-    let panelPos = GM_getValue(PANEL_POS_KEY, { top: '', left: '', bottom: '300px', right: '20px' });
     let isManuallyMinimized = GM_getValue(MINIMIZED_STATE_KEY, false);
     let scrollInterval = null;
     let isAutoScrollEnabled = false;
@@ -127,42 +128,6 @@ const report = () => {
         startAutoScroll();
     }
 
-    function checkPanelPosition() {
-        if (!panel) return;
-        const rect = panel.getBoundingClientRect();
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-
-        let newLeft = rect.left;
-        let newTop = rect.top;
-        let needsUpdate = false;
-
-        if (rect.right > vw) {
-            newLeft = Math.max(0, vw - rect.width);
-            needsUpdate = true;
-        }
-        if (rect.left < 0) {
-            newLeft = 0;
-            needsUpdate = true;
-        }
-        if (rect.bottom > vh) {
-            newTop = Math.max(0, vh - rect.height);
-            needsUpdate = true;
-        }
-        if (rect.top < 0) {
-            newTop = 0;
-            needsUpdate = true;
-        }
-
-        if (needsUpdate) {
-            panel.style.bottom = 'auto';
-            panel.style.right = 'auto';
-            panel.style.left = `${newLeft}px`;
-            panel.style.top = `${newTop}px`;
-            panelPos = { top: panel.style.top, left: panel.style.left, bottom: '', right: '' };
-            GM_setValue(PANEL_POS_KEY, panelPos);
-        }
-    }
 
 
     function createPanel() {
@@ -174,60 +139,16 @@ const report = () => {
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.17';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.18';
         const html = templateStr.replace('{{VERSION}}', version);
 
         const wrapper = document.createElement('div');
         wrapper.innerHTML = html;
         panel = wrapper.firstElementChild;
 
-        // Apply saved position
-        if (panelPos.top) panel.style.top = panelPos.top;
-        if (panelPos.left) panel.style.left = panelPos.left;
-        if (panelPos.bottom) panel.style.bottom = panelPos.bottom;
-        if (panelPos.right) panel.style.right = panelPos.right;
-
-        // --- Header (Title & Minimize Button) ---
+        yusRestorePosition(panel, PANEL_POS_KEY, { bottom: '300px', right: '20px' });
         const headerRow = panel.querySelector('#yt-scroller-header');
-
-        let isDragging = false;
-        let dragStartX, dragStartY;
-        let initialLeft, initialTop;
-
-        headerRow.addEventListener('mousedown', (e) => {
-            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
-            isDragging = true;
-            dragStartX = e.clientX;
-            dragStartY = e.clientY;
-
-            const rect = panel.getBoundingClientRect();
-            initialLeft = rect.left;
-            initialTop = rect.top;
-
-            // Switch to absolute positioning if not already
-            panel.style.bottom = 'auto';
-            panel.style.right = 'auto';
-            panel.style.left = `${initialLeft}px`;
-            panel.style.top = `${initialTop}px`;
-
-            e.preventDefault(); // Prevent text selection
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            const dx = e.clientX - dragStartX;
-            const dy = e.clientY - dragStartY;
-            panel.style.left = `${initialLeft + dx}px`;
-            panel.style.top = `${initialTop + dy}px`;
-        });
-
-        document.addEventListener('mouseup', () => {
-            if (isDragging) {
-                isDragging = false;
-                panelPos = { top: panel.style.top, left: panel.style.left, bottom: '', right: '' };
-                GM_setValue(PANEL_POS_KEY, panelPos);
-            }
-        });
+        yusMakeDraggable(panel, headerRow, PANEL_POS_KEY);
 
         const titleLabel = panel.querySelector('#yt-scroller-title');
         titleLabel.addEventListener('dblclick', (e) => {
@@ -282,9 +203,9 @@ const report = () => {
 
         document.body.appendChild(panel);
         updatePanelVisibility();
-        setTimeout(checkPanelPosition, 0);
+        setTimeout(() => yusCheckPanelPosition(panel, PANEL_POS_KEY), 0);
         window.addEventListener('resize', () => {
-            requestAnimationFrame(checkPanelPosition);
+            requestAnimationFrame(() => yusCheckPanelPosition(panel, PANEL_POS_KEY));
         });
     }
 
