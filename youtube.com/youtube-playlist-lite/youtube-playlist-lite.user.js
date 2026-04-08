@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.30
+// @version      0.1.31
 // @description  YouTubeプレイリスト表示でサムネイルを非表示にして軽量化するためのツールです。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -20,7 +20,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-lite/youtube-playlist-lite.user.js
 // ==/UserScript==
 
-/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility, yusParseHTML */
+/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility, yusParseHTML, yusInitApp, yusIsPlaylistPage */
 (function () {
     'use strict';
 
@@ -48,9 +48,7 @@ const report = () => {
     const FORCE_REMOVE_KEY = 'yt_lite_force_remove';
     const HIDE_MINIPLAYER_KEY = 'yt_lite_hide_miniplayer';
     const REMOVE_MINIPLAYER_KEY = 'yt_lite_remove_miniplayer';
-    const INIT_DELAY_RANGE_MS = { min: 1000, max: 3000 };
     const MINIMIZED_STATE_KEY = 'yt_lite_is_minimized';
-
     let isHideThumbnails = GM_getValue(HIDE_THUMB_KEY, false);
     let isForceRemove = GM_getValue(FORCE_REMOVE_KEY, false);
     let isHideMiniplayer = GM_getValue(HIDE_MINIPLAYER_KEY, false);
@@ -190,7 +188,7 @@ const report = () => {
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.30';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.31';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -242,34 +240,21 @@ const report = () => {
         }
     }
 
-    function refreshForLocation() {
-        const pageConfig = getPageConfig();
+    function startMain() {
         createPanel();
-        yusSetPanelActive(panel, !!pageConfig);
-
-        if (!pageConfig) {
-            cleanupFeatures();
-            return;
-        }
-
+        yusSetPanelActive(panel, true);
         applySettings();
     }
 
-    function init() {
-        window.addEventListener('yt-navigate-start', cleanupFeatures);
-        window.addEventListener('yt-navigate-finish', () => {
-            setTimeout(refreshForLocation, 500);
-        });
-
-        refreshForLocation();
-        console.log('[YouTube Playlist Lite] Running...');
+    function stopMain() {
+        yusSetPanelActive(panel, false);
+        cleanupFeatures();
     }
 
-    function getRandomInitDelayMs() {
-        const span = INIT_DELAY_RANGE_MS.max - INIT_DELAY_RANGE_MS.min;
-        return INIT_DELAY_RANGE_MS.min + Math.floor(Math.random() * (span + 1));
-    }
-
-    setTimeout(init, getRandomInitDelayMs());
+    yusInitApp({
+        appName: 'YouTube Playlist Lite',
+        startMain: startMain,
+        stopMain: stopMain
+    });
 
 })();
