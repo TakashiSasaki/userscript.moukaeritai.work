@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.61
+// @version      0.1.62
 // @lastModified  2026-04-08
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @antifeature  webRequestBlocking
@@ -123,9 +123,6 @@
     ];
 
     // --- State ---
-    // Items that are "Above" the viewport (scanned) AND currently Visible (not filtered out).
-    // These are the targets for the "Remove Above" action.
-    const itemsAboveAndValidSet = new Set();
     let observer = null;
     let mutationObserver = null;
     let playlistContainer = null;
@@ -203,16 +200,7 @@
         const el = document.getElementById('yt-remover-candidates-info');
         if (!el) return;
 
-        let count = 0;
-        if (onlyRemoveMatched) {
-            itemsAboveAndValidSet.forEach(item => {
-                if (hasMatchedBadge(item)) {
-                    count++;
-                }
-            });
-        } else {
-            count = itemsAboveAndValidSet.size;
-        }
+        const count = candidateStore.getCount({ matchedOnly: onlyRemoveMatched });
         el.textContent = count > 0 ? `Removable: ${count} items` : 'Removable: None';
     }
 
@@ -222,6 +210,88 @@
         // Find by class across the whole item (fastest native check)
         return !!item.querySelector('.yt-filter-matched');
     }
+
+    function createCandidateStore() {
+        const items = new Set();
+        let matchedStates = new WeakMap();
+        let matchedCount = 0;
+
+        function readMatchedState(item) {
+            return hasMatchedBadge(item);
+        }
+
+        function syncMatchedState(item) {
+            if (!items.has(item)) return false;
+            const previous = matchedStates.get(item) === true;
+            const next = readMatchedState(item);
+            if (previous !== next) {
+                matchedCount += next ? 1 : -1;
+                matchedStates.set(item, next);
+            }
+            return next;
+        }
+
+        return {
+            add(item) {
+                if (!item || items.has(item)) {
+                    return false;
+                }
+
+                const isMatched = readMatchedState(item);
+                items.add(item);
+                matchedStates.set(item, isMatched);
+                if (isMatched) {
+                    matchedCount++;
+                }
+                return true;
+            },
+            remove(item) {
+                if (!items.has(item)) {
+                    return false;
+                }
+
+                if (matchedStates.get(item) === true) {
+                    matchedCount--;
+                }
+                matchedStates.delete(item);
+                items.delete(item);
+                return true;
+            },
+            clear() {
+                items.clear();
+                matchedStates = new WeakMap();
+                matchedCount = 0;
+            },
+            has(item) {
+                return items.has(item);
+            },
+            sync(item) {
+                return syncMatchedState(item);
+            },
+            isMatched(item, { refresh = false } = {}) {
+                if (!items.has(item)) {
+                    return false;
+                }
+                if (refresh) {
+                    return syncMatchedState(item);
+                }
+                return matchedStates.get(item) === true;
+            },
+            getCount({ matchedOnly = false } = {}) {
+                return matchedOnly ? matchedCount : items.size;
+            },
+            get size() {
+                return items.size;
+            },
+            toArray() {
+                return Array.from(items);
+            }
+        };
+    }
+
+    // Items that are "Above" the viewport (scanned) AND currently Visible (not filtered out).
+    // These are the targets for the "Remove Above" action.
+    const candidateStore = createCandidateStore();
 
     function isItemHiddenByFilter(element, rect = null) {
         if (!element || !element.isConnected) return true;
@@ -252,7 +322,7 @@
         const lastValue = filterInputValues.get(target);
         if (lastValue === value) return;
         filterInputValues.set(target, value);
-        itemsAboveAndValidSet.clear();
+        candidateStore.clear();
         updateCandidatesInfo();
     }
 
@@ -314,17 +384,19 @@
 
                 if (isItemHiddenByFilter(el, rect)) {
                     // If hidden, remove from set immediately to be safe
-                    itemsAboveAndValidSet.delete(el);
+                    candidateStore.remove(el);
                     return;
                 }
 
                 if (rect.bottom < 180 || entry.isIntersecting) {
                     // "Range" = Above viewport OR Currently Visible in viewport
-                    itemsAboveAndValidSet.add(el);
+                    if (!candidateStore.add(el)) {
+                        candidateStore.sync(el);
+                    }
                 } else {
                     // Strictly below viewport (not yet seen/scanned potentially)
                     // Note: This logic assumes we scroll down. 
-                    itemsAboveAndValidSet.delete(el);
+                    candidateStore.remove(el);
                 }
             });
             updateCandidatesInfo();
@@ -337,9 +409,11 @@
         if (!isActive || !yusIsPlaylistPage()) return;
 
         // Only clean up set if items were removed from DOM or became hidden
-        itemsAboveAndValidSet.forEach(item => {
+        candidateStore.toArray().forEach(item => {
             if (isItemHiddenByFilter(item)) {
-                itemsAboveAndValidSet.delete(item);
+                candidateStore.remove(item);
+            } else {
+                candidateStore.sync(item);
             }
         });
         updateCandidatesInfo();
@@ -479,7 +553,7 @@
             return;
         }
 
-        const count = itemsAboveAndValidSet.size;
+        const count = candidateStore.getCount({ matchedOnly: onlyRemoveMatched });
         if (count === 0) {
             updateRemoveButtonLabel('Remove Range', { force: true });
             return;
@@ -502,11 +576,11 @@
             const allItemsInDom = Array.from(document.querySelectorAll('ytd-playlist-video-renderer'));
             const finalTargets = allItemsInDom
                 .filter(el => {
-                    const isBasicsOk = itemsAboveAndValidSet.has(el) && el.isConnected && !isItemHiddenByFilter(el);
+                    const isBasicsOk = candidateStore.has(el) && el.isConnected && !isItemHiddenByFilter(el);
                     if (!isBasicsOk) return false;
 
                     if (onlyRemoveMatched) {
-                        return hasMatchedBadge(el);
+                        return candidateStore.isMatched(el, { refresh: true });
                     }
                     return true;
                 })
@@ -551,7 +625,7 @@
                         // Wait for the item to actually disappear from the list (removed by YouTube)
                         const disappeared = await waitForItemDisappearance(item, 8000); // Wait up to 8s
                         if (disappeared) {
-                            itemsAboveAndValidSet.delete(item);
+                            candidateStore.remove(item);
                         } else {
                             console.warn('[YouTube Playlist Remover] Item removal timed out:', item);
                         }
@@ -559,7 +633,7 @@
                         // Do not wait for disappear, but wait 1s specifically
                         updatePhase('Cooldown...', true);
                         await new Promise(r => setTimeout(r, 1000));
-                        itemsAboveAndValidSet.delete(item);
+                        candidateStore.remove(item);
                     }
                 }
 
@@ -611,7 +685,7 @@
 
         createPanel();
         yusSetPanelActive(panel, true);
-        itemsAboveAndValidSet.clear();
+        candidateStore.clear();
 
         ensureObserver();
         const existingItems = document.querySelectorAll('ytd-playlist-video-renderer');
@@ -650,7 +724,7 @@
         }
         playlistContainer = null;
 
-        itemsAboveAndValidSet.clear();
+        candidateStore.clear();
         isRemoving = false;
         cancelRequested = false;
         updateRemoveButtonLabel('Remove Range', { force: true });
