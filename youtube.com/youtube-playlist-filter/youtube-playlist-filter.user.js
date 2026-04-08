@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.42
+// @version      0.1.43
 // @lastModified 2026-04-08
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -228,11 +228,12 @@ const report = () => {
 
         if (!isActive || !yusIsPlaylistPage() || isInputActive) {
             isProcessing = false;
-            updateStatus('filtering', false);
+            updateStatus('processor', false);
             return;
         }
 
         isProcessing = true;
+        updateStatus('processor', true);
 
         const CHUNK_SIZE = 50;
         const titleLower = normalizeText(filterState.title);
@@ -252,14 +253,13 @@ const report = () => {
             console.log(`[Playlist Filter Debug] processChunk finished (total cached: ${allCachedItems.size})`);
             isProcessing = false;
             updateCounts();
-            updateStatus('filtering', false);
+            updateStatus('processor', false);
             setTimeout(updateRangeInfo, 100);
             return;
         }
 
         let batchMatches = 0;
         console.groupCollapsed(`[Playlist Filter Debug] processChunk (batch size: ${itemsToProcess.length}, title: "${titleLower}", channel: "${channelLower}")`);
-        updateStatus('filtering', true);
 
         try {
             // Ensure observer is alive before use
@@ -352,7 +352,7 @@ const report = () => {
 
         isFiltering = Boolean(filterState.title || filterState.channel);
         console.log(`[Playlist Filter Debug] applyFilters (title: "${filterState.title}", channel: "${filterState.channel}", isFiltering: ${isFiltering}, isInputActive: ${isInputActive})`);
-        updateStatus('filtering', true);
+        updateStatus('scanner', true);
 
         // Add existing known items to re-process
         allCachedItems.forEach(item => pendingProcessItems.add(item));
@@ -365,6 +365,7 @@ const report = () => {
         });
 
         scheduleProcessing();
+        updateStatus('scanner', false);
     }
 
     // --- Range Logic ---
@@ -431,6 +432,7 @@ const report = () => {
             }
         });
         listObserver.observe(container, { childList: true, subtree: true });
+        updateStatus('monitor', true);
     }
 
     function stopBackgroundWork() {
@@ -453,6 +455,9 @@ const report = () => {
             clearInterval(filterIntervalId);
             filterIntervalId = null;
         }
+        updateStatus('monitor', false);
+        updateStatus('scanner', false);
+        updateStatus('processor', false);
     }
 
     function startBackgroundWork({ applyNow = true } = {}) {
@@ -472,8 +477,10 @@ const report = () => {
 
     function recheckCachedItems() {
         if (!isActive || !yusIsPlaylistPage() || isInputActive) return;
+        updateStatus('scanner', true);
         allCachedItems.forEach(item => pendingProcessItems.add(item));
         scheduleProcessing();
+        updateStatus('scanner', false);
     }
 
     function pauseFilteringForInput() {
