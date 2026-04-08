@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.43
+// @version      0.1.46
 // @lastModified 2026-04-08
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -141,6 +141,7 @@ const report = () => {
 
         document.body.appendChild(panel);
         yusUpdatePanelVisibility(panel);
+        updateQueueInfo();
         setTimeout(() => yusCheckPanelPosition(panel, PANEL_POS_KEY), 0);
         window.addEventListener('resize', () => {
             requestAnimationFrame(() => yusCheckPanelPosition(panel, PANEL_POS_KEY));
@@ -218,6 +219,13 @@ const report = () => {
         }, 0);
     }
 
+    function updateQueueInfo() {
+        const queueEl = document.getElementById('yt-filter-queue-info');
+        if (!queueEl) return;
+
+        queueEl.textContent = `Queue: ${pendingProcessItems.size} items`;
+    }
+
     function processChunk() {
         // Clear timer on entry (recursive or non-recursive)
         if (processTimerId) {
@@ -235,7 +243,7 @@ const report = () => {
         isProcessing = true;
         updateStatus('processor', true);
 
-        const CHUNK_SIZE = 50;
+        const CHUNK_SIZE = 30;
         const titleLower = normalizeText(filterState.title);
         const channelLower = normalizeText(filterState.channel);
 
@@ -247,6 +255,7 @@ const report = () => {
                 break;
             }
         }
+        updateQueueInfo();
 
         if (itemsToProcess.length === 0) {
             // Finished processing chunk
@@ -267,7 +276,6 @@ const report = () => {
 
             itemsToProcess.forEach(item => {
                 if (!item.isConnected) {
-                    console.log(`[Playlist Filter Debug] Item not connected, removing from cache`);
                     allCachedItems.delete(item);
                     return;
                 }
@@ -296,7 +304,6 @@ const report = () => {
 
                 if (isMatched) {
                     batchMatches++;
-                    console.log(`[Playlist Filter Debug] [MATCH] "${title}" by "${channel}"`);
                     if (item.style.display !== '') item.style.display = '';
 
                     if (isFiltering) {
@@ -307,7 +314,6 @@ const report = () => {
 
                     if (observerForRange) observerForRange.observe(item);
                 } else {
-                    console.log(`[Playlist Filter Debug] [HIDE] "${title}" by "${channel}"`);
                     if (item.style.display !== 'none') {
                         item.style.display = 'none';
                     }
@@ -364,6 +370,7 @@ const report = () => {
             pendingProcessItems.add(item);
         });
 
+        updateQueueInfo();
         scheduleProcessing();
         updateStatus('scanner', false);
     }
@@ -428,6 +435,7 @@ const report = () => {
             if (hasNewItems) {
                 console.log(`[Playlist Filter Debug] MutationObserver: Detected new items, scheduling processing`);
                 ensureRangeObserver();
+                updateQueueInfo();
                 scheduleProcessing();
             }
         });
@@ -479,6 +487,7 @@ const report = () => {
         if (!isActive || !yusIsPlaylistPage() || isInputActive) return;
         updateStatus('scanner', true);
         allCachedItems.forEach(item => pendingProcessItems.add(item));
+        updateQueueInfo();
         scheduleProcessing();
         updateStatus('scanner', false);
     }
@@ -542,6 +551,7 @@ const report = () => {
         itemsVisibleSet.clear();
         allCachedItems.clear();
         pendingProcessItems.clear();
+        updateQueueInfo();
 
 
         startBackgroundWork({ applyNow: true });
@@ -566,6 +576,7 @@ const report = () => {
         itemsVisibleSet.clear();
         allCachedItems.clear();
         pendingProcessItems.clear();
+        updateQueueInfo();
 
         yusSetPanelActive(panel, false);
     }
