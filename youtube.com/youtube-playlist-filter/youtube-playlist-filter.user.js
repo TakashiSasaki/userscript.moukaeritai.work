@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.35
+// @version      0.1.36
 // @lastModified 2026-04-08
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -21,7 +21,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-filter/youtube-playlist-filter.user.js
 // ==/UserScript==
 
-/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility */
+/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility, yusParseHTML */
 (function () {
     'use strict';
 
@@ -95,13 +95,10 @@ const report = () => {
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.35';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.36';
         const html = templateStr.replace('{{VERSION}}', version);
 
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = html;
-        panel = wrapper.firstElementChild;
-
+        panel = yusParseHTML(html);
         yusRestorePosition(panel, PANEL_POS_KEY, { top: '20px', left: '20px' });
         const headerRow = panel.querySelector('#yt-filter-header');
         yusMakeDraggable(panel, headerRow, PANEL_POS_KEY);

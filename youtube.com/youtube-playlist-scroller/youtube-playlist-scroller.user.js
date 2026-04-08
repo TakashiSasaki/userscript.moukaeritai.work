@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.19
+// @version      0.1.20
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        *://www.youtube.com/*
@@ -19,7 +19,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-scroller/youtube-playlist-scroller.user.js
 // ==/UserScript==
 
-/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility */
+/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility, yusParseHTML */
 (function () {
     'use strict';
 
@@ -138,12 +138,10 @@ const report = () => {
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.19';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.20';
         const html = templateStr.replace('{{VERSION}}', version);
 
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = html;
-        panel = wrapper.firstElementChild;
+        panel = yusParseHTML(html);
 
         yusRestorePosition(panel, PANEL_POS_KEY, { bottom: '300px', right: '20px' });
         const headerRow = panel.querySelector('#yt-scroller-header');

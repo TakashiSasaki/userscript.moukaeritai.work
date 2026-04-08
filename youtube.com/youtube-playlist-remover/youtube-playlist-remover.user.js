@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.54
+// @version      0.1.55
 // @lastModified  2026-04-08
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @antifeature  webRequestBlocking
@@ -21,7 +21,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-remover/youtube-playlist-remover.user.js
 // ==/UserScript==
 
-/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive */
+/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusParseHTML */
 (function () {
     'use strict';
 
@@ -149,12 +149,10 @@
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.54';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.55';
         const html = templateStr.replace('{{VERSION}}', version);
 
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = html;
-        panel = wrapper.firstElementChild;
+        panel = yusParseHTML(html);
 
         yusRestorePosition(panel, PANEL_POS_KEY, { bottom: '150px', right: '20px' });
         const headerRow = panel.querySelector('#yt-remover-header');

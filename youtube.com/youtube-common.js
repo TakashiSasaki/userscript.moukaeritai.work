@@ -4,7 +4,7 @@
 // Position and minimize state are persisted in localStorage.
 
 /* global yusRestorePosition, yusSavePosition, yusMakeDraggable, yusCheckPanelPosition,
-          yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility */
+          yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility, yusParseHTML */
 
 /**
  * Restore a floating panel's position from localStorage.
@@ -201,4 +201,17 @@ function yusMakeMinimizable(panelEl, titleEl, minimizeKey) {
         yusUpdatePanelVisibility(panelEl);
         e.stopPropagation();
     });
+}
+
+/**
+ * Parse an HTML string into a DOM element using DOMParser.
+ * Unlike setting innerHTML directly, DOMParser creates an isolated document
+ * context and is therefore safe under Trusted Types CSP (e.g. on YouTube).
+ *
+ * @param {string} html - Full HTML markup string whose first child is the panel.
+ * @returns {Element} The first element of the parsed body (the panel element).
+ */
+function yusParseHTML(html) {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.firstElementChild;
 }

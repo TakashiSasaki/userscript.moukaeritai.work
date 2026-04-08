@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.64
+// @version      0.2.65
 // @lastModified 2026-04-08
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @antifeature  webRequestBlocking
@@ -25,7 +25,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/youtube.com/youtube-playlist-saver/youtube-playlist-saver.user.js
 // ==/UserScript==
 
-/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive */
+/* global yusRestorePosition, yusMakeDraggable, yusCheckPanelPosition, yusMakeMinimizable, yusSetPanelActive, yusParseHTML */
 (function () {
     'use strict';
 
@@ -100,12 +100,10 @@ const report = () => {
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.64';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.65';
         const html = templateStr.replace('{{VERSION}}', version);
 
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = html;
-        panel = wrapper.firstElementChild;
+        panel = yusParseHTML(html);
 
         yusRestorePosition(panel, PANEL_POS_KEY, { bottom: '260px', right: '20px' });
         const headerRow = panel.querySelector('#yt-saver-header');
