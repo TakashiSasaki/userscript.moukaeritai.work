@@ -3,7 +3,7 @@
 // Loaded via @require in each userscript.
 // Position and minimize state are persisted in localStorage.
 
-/* global yusRestorePosition, yusSavePosition, yusMakeDraggable, yusCheckPanelPosition,
+/* exported yusRestorePosition, yusSavePosition, yusMakeDraggable, yusCheckPanelPosition,
           yusMakeMinimizable, yusSetPanelActive, yusUpdatePanelVisibility, yusParseHTML */
 
 /**
@@ -203,15 +203,34 @@ function yusMakeMinimizable(panelEl, titleEl, minimizeKey) {
     });
 }
 
+let yusPolicy;
+/**
+ * Lazy-initializes and returns a Trusted Types policy for HTML parsing.
+ * This is required on YouTube to bypass CSP blocks on DOM-parsing sinks.
+ */
+function getYusPolicy() {
+    if (!yusPolicy && window.trustedTypes && window.trustedTypes.createPolicy) {
+        try {
+            yusPolicy = window.trustedTypes.createPolicy('yus-policy', {
+                createHTML: (s) => s
+            });
+        } catch (e) {
+            console.warn('[YUS] Failed to create Trusted Types policy:', e);
+        }
+    }
+    return yusPolicy;
+}
+
 /**
  * Parse an HTML string into a DOM element using DOMParser.
- * Unlike setting innerHTML directly, DOMParser creates an isolated document
- * context and is therefore safe under Trusted Types CSP (e.g. on YouTube).
+ * Complies with YouTube's Trusted Types CSP by converting strings to TrustedHTML.
  *
  * @param {string} html - Full HTML markup string whose first child is the panel.
  * @returns {Element} The first element of the parsed body (the panel element).
  */
 function yusParseHTML(html) {
-    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const policy = getYusPolicy();
+    const trustedHtml = policy ? policy.createHTML(html) : html;
+    const doc = new DOMParser().parseFromString(trustedHtml, 'text/html');
     return doc.body.firstElementChild;
 }
