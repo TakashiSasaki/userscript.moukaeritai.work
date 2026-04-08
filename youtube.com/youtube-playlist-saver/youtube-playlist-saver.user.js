@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.66
+// @version      0.2.67
 // @lastModified 2026-04-08
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @antifeature  webRequestBlocking
@@ -100,7 +100,7 @@ const report = () => {
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.66';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.67';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -167,10 +167,11 @@ const report = () => {
 
     // --- Core Data Storage ---
     let cachedStorage = null;
+    let pendingQueue = {}; // { playlistId: { videoId: meta, ... } }
     let pendingSaveTimeout = null;
 
-    function loadStorage() {
-        if (cachedStorage) return cachedStorage.playlists;
+    function loadStorage(forceRefresh = false) {
+        if (cachedStorage && !forceRefresh) return cachedStorage.playlists;
 
         let rawData = GM_getValue(DATA_KEY, {});
 
@@ -204,11 +205,31 @@ const report = () => {
     function requestSave() {
         if (pendingSaveTimeout) clearTimeout(pendingSaveTimeout);
         pendingSaveTimeout = setTimeout(() => {
-            if (cachedStorage) {
-                GM_setValue(DATA_KEY, cachedStorage);
-                console.log('[YouTube Playlist Saver] Batch save completed (v' + cachedStorage.version + ').');
-            }
+            const currentQueue = pendingQueue;
+            pendingQueue = {};
             pendingSaveTimeout = null;
+
+            // JIT (Just-In-Time) Merge to prevent Lost Update between tabs
+            const latest = GM_getValue(DATA_KEY, { version: DATA_VERSION, playlists: {} });
+            if (!latest.playlists) latest.playlists = {};
+
+            let changed = false;
+            for (const [plId, videos] of Object.entries(currentQueue)) {
+                if (!latest.playlists[plId]) latest.playlists[plId] = {};
+                for (const [vid, meta] of Object.entries(videos)) {
+                    if (!latest.playlists[plId][vid]) {
+                        latest.playlists[plId][vid] = meta;
+                        changed = true;
+                    }
+                }
+            }
+
+            if (changed) {
+                GM_setValue(DATA_KEY, latest);
+                cachedStorage = latest; // Sync local cache
+                console.log('[YouTube Playlist Saver] Concurrency-safe batch save completed.');
+                window.dispatchEvent(new CustomEvent('YouTubePlaylistSaverDataChanged'));
+            }
         }, 2000);
     }
 
@@ -441,18 +462,18 @@ const report = () => {
     const SaverAPI = {
         save: function (playlistId, videoId, title, channel) {
             const data = loadStorage();
-            if (!data[playlistId]) data[playlistId] = {};
-            const playlistMap = data[playlistId];
+            const playlistMap = data[playlistId] || {};
             const existing = playlistMap[videoId];
 
-            if (!existing || (title && existing.title === null)) {
-                playlistMap[videoId] = {
-                    title: title || (existing ? existing.title : null),
-                    channel: channel || (existing ? existing.channel : null),
-                    addedAt: existing ? existing.addedAt : Date.now()
+            if (!existing) {
+                if (!pendingQueue[playlistId]) pendingQueue[playlistId] = {};
+                pendingQueue[playlistId][videoId] = {
+                    title: title || null,
+                    channel: channel || null,
+                    addedAt: Date.now()
                 };
                 requestSave();
-                return !existing;
+                return true;
             }
             return false;
         },
@@ -592,6 +613,19 @@ const report = () => {
         GM_registerMenuCommand("Import Data from File", importDataFromFile);
         GM_registerMenuCommand("Copy Data to Clipboard", onExportToClipboardClick);
         GM_registerMenuCommand("Export Data to File", exportDataToFile);
+    }
+
+    // --- Cross-tab Synchronization ---
+    if (typeof GM_addValueChangeListener !== 'undefined') {
+        GM_addValueChangeListener(DATA_KEY, (key, oldValue, newValue, remote) => {
+            if (remote) {
+                console.log('[YouTube Playlist Saver] External data change detected. Syncing...');
+                cachedStorage = newValue;
+                // Clear UI cache to force re-render with new data
+                processedSet.clear();
+                scanAndRender();
+            }
+        });
     }
 
     setTimeout(init, getRandomInitDelayMs());
