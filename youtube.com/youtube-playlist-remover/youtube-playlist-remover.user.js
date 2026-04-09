@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.64
+// @version      0.1.65
 // @lastModified  2026-04-09
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @antifeature  webRequestBlocking
@@ -183,9 +183,21 @@
 
         document.body.appendChild(panel);
         setTimeout(() => yusCheckPanelPosition(panel, PANEL_POS_KEY), 0);
-        window.addEventListener('resize', () => {
+    }
+
+    let panelResizeHandler = null;
+    function attachPanelResizeHandler() {
+        if (panelResizeHandler || !panel) return;
+        panelResizeHandler = () => {
             requestAnimationFrame(() => yusCheckPanelPosition(panel, PANEL_POS_KEY));
-        });
+        };
+        window.addEventListener('resize', panelResizeHandler);
+    }
+
+    function detachPanelResizeHandler() {
+        if (!panelResizeHandler) return;
+        window.removeEventListener('resize', panelResizeHandler);
+        panelResizeHandler = null;
     }
 
     // --- Updates ---
@@ -350,6 +362,13 @@
         document.addEventListener('input', handleFilterInputEvent, true);
         document.addEventListener('change', handleFilterInputEvent, true);
         filterListenerBound = true;
+    }
+
+    function removeFilterListeners() {
+        if (!filterListenerBound) return;
+        document.removeEventListener('input', handleFilterInputEvent, true);
+        document.removeEventListener('change', handleFilterInputEvent, true);
+        filterListenerBound = false;
     }
 
     // --- Observer Logic ---
@@ -703,6 +722,7 @@
         isActive = true;
 
         createPanel();
+        attachPanelResizeHandler();
         yusSetPanelActive(panel, true);
         candidateStore.clear();
 
@@ -751,6 +771,8 @@
             cancelAnimationFrame(candidatesInfoRefreshId);
             candidatesInfoRefreshId = null;
         }
+        removeFilterListeners();
+        detachPanelResizeHandler();
         updateRemoveButtonLabel('Remove Range', { force: true });
         updateStatus('Idle');
         updatePhase('Idle');

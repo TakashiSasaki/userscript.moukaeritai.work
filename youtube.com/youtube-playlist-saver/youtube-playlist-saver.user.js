@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.74
+// @version      0.2.75
 // @lastModified 2026-04-09
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @antifeature  webRequestBlocking
@@ -121,9 +121,21 @@ const report = () => {
 
         document.body.appendChild(panel);
         setTimeout(() => yusCheckPanelPosition(panel, PANEL_POS_KEY), 0);
-        window.addEventListener('resize', () => {
+    }
+
+    let panelResizeHandler = null;
+    function attachPanelResizeHandler() {
+        if (panelResizeHandler || !panel) return;
+        panelResizeHandler = () => {
             requestAnimationFrame(() => yusCheckPanelPosition(panel, PANEL_POS_KEY));
-        });
+        };
+        window.addEventListener('resize', panelResizeHandler);
+    }
+
+    function detachPanelResizeHandler() {
+        if (!panelResizeHandler) return;
+        window.removeEventListener('resize', panelResizeHandler);
+        panelResizeHandler = null;
     }
 
 
@@ -333,7 +345,7 @@ const report = () => {
     }
 
     // Set of IDs fully processed by UI (indicator added)
-    const processedSet = new Set();
+    let processedSet = new WeakSet();
     // Cache current session "known" IDs to determine [NEW] vs [SAVED]
     let currentSessionKnownIds = new Set();
     let isSessionInitialized = false;
@@ -401,7 +413,7 @@ const report = () => {
     // --- Main Logic ---
 
     function resetSessionState() {
-        processedSet.clear();
+        processedSet = new WeakSet();
         isSessionInitialized = false; // Reset session knowledge on nav
         currentSessionKnownIds.clear();
     }
@@ -411,6 +423,7 @@ const report = () => {
         isActive = true;
 
         createPanel();
+        attachPanelResizeHandler();
         yusSetPanelActive(panel, true);
         resetSessionState();
         scanAndRender();
@@ -432,6 +445,7 @@ const report = () => {
         }
 
         resetSessionState();
+        detachPanelResizeHandler();
         yusSetPanelActive(panel, false);
     }
 
@@ -513,7 +527,7 @@ const report = () => {
                 console.log('[YouTube Playlist Saver] External data change detected. Syncing...');
                 cachedStorage = newValue;
                 // Clear UI cache to force re-render with new data
-                processedSet.clear();
+                processedSet = new WeakSet();
                 scanAndRender();
             }
         });

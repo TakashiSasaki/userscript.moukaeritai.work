@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.53
+// @version      0.1.54
 // @lastModified 2026-04-09
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -256,9 +256,21 @@
         yusUpdatePanelVisibility(panel);
         updateQueueInfo();
         setTimeout(() => yusCheckPanelPosition(panel, PANEL_POS_KEY), 0);
-        window.addEventListener('resize', () => {
+    }
+
+    let panelResizeHandler = null;
+    function attachPanelResizeHandler() {
+        if (panelResizeHandler || !panel) return;
+        panelResizeHandler = () => {
             requestAnimationFrame(() => yusCheckPanelPosition(panel, PANEL_POS_KEY));
-        });
+        };
+        window.addEventListener('resize', panelResizeHandler);
+    }
+
+    function detachPanelResizeHandler() {
+        if (!panelResizeHandler) return;
+        window.removeEventListener('resize', panelResizeHandler);
+        panelResizeHandler = null;
     }
 
     // --- Main Logic: Filtering & Matching Indicator ---
@@ -660,6 +672,7 @@
         isActive = true;
 
         createPanel();
+        attachPanelResizeHandler();
         yusSetPanelActive(panel, true);
 
         hasAppliedCurrentPage = false;
@@ -690,6 +703,7 @@
         updateQueueInfo();
         resetFilterDisplayInfo();
 
+        detachPanelResizeHandler();
         yusSetPanelActive(panel, false);
     }
 
