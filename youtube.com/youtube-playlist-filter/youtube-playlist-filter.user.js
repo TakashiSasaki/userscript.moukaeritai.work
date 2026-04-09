@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.52
+// @version      0.1.53
 // @lastModified 2026-04-09
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -53,6 +53,18 @@
     // --- Config & State ---
     const PANEL_POS_KEY = 'yt_filter_panel_position';
     const MINIMIZED_STATE_KEY = 'yt_filter_is_minimized';
+    const FILTER_INPUT_EDITABLE_STYLE = {
+        backgroundColor: '#fff7e8',
+        borderColor: '#d69e5b',
+        color: '#5c3b00',
+        caretColor: '#5c3b00'
+    };
+    const FILTER_INPUT_LOCKED_STYLE = {
+        backgroundColor: '#dce8ff',
+        borderColor: '#6699ff',
+        color: '#003c99',
+        caretColor: 'transparent'
+    };
     let isActive = false;
     let filterIntervalId = null;
     let observerInitTimerId = null;
@@ -128,15 +140,18 @@
         filterState.channel = panel.querySelector('#yt-filter-channel-input')?.value || '';
     }
 
-    function clearAllFilters() {
-        filterState.title = '';
-        filterState.channel = '';
+    function setFilterInputsLocked(locked) {
+        const style = locked ? FILTER_INPUT_LOCKED_STYLE : FILTER_INPUT_EDITABLE_STYLE;
+        getFilterInputs().forEach((input) => {
+            input.readOnly = locked;
+            Object.assign(input.style, style);
+        });
+    }
+
+    function resetAppliedFilteringState() {
+        syncFilterStateFromInputs();
         isFiltering = false;
         hasAppliedCurrentPage = false;
-
-        getFilterInputs().forEach((input) => {
-            input.value = '';
-        });
 
         const items = new Set([
             ...allCachedItems,
@@ -163,6 +178,37 @@
         resetFilterDisplayInfo();
     }
 
+    function beginFilterEditing(input) {
+        if (isActive) {
+            stopBackgroundWork();
+        }
+
+        isInputActive = true;
+        setFilterInputsLocked(false);
+        resetAppliedFilteringState();
+
+        if (input) {
+            input.focus();
+            const cursorPos = input.value.length;
+            if (typeof input.setSelectionRange === 'function') {
+                input.setSelectionRange(cursorPos, cursorPos);
+            }
+        }
+    }
+
+    function commitFilterInputs() {
+        syncFilterStateFromInputs();
+        setFilterInputsLocked(true);
+        isInputActive = false;
+
+        if (!isActive || !yusIsPlaylistPage()) return;
+
+        itemsAboveSet.clear();
+        itemsVisibleSet.clear();
+        console.log('[Playlist Filter Debug] commitFilterInputs: Starting background work with locked inputs');
+        startBackgroundWork({ applyNow: true });
+    }
+
 
 
 
@@ -176,7 +222,7 @@
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.52';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.53';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -191,23 +237,20 @@
             const input = panel.querySelector(`#yt-filter-${key}-input`);
 
             input.value = filterState[key];
-            input.addEventListener('mouseenter', pauseFilteringForInput);
             input.addEventListener('click', () => {
-                pauseFilteringForInput();
-                clearAllFilters();
-                input.focus();
+                beginFilterEditing(input);
             });
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    syncFilterStateFromInputs();
-                    resumeFilteringAfterInput();
+                    commitFilterInputs();
                 }
             });
         };
 
         setupInputGroup('title');
         setupInputGroup('channel');
+        setFilterInputsLocked(false);
 
         document.body.appendChild(panel);
         yusUpdatePanelVisibility(panel);
@@ -601,24 +644,6 @@
         updateStatus('scanner', false);
     }
 
-    function pauseFilteringForInput() {
-        if (isInputActive) return;
-        isInputActive = true;
-        if (!isActive) return;
-        stopBackgroundWork();
-    }
-
-    function resumeFilteringAfterInput() {
-        if (!isInputActive) return;
-        isInputActive = false;
-        if (!isActive || !yusIsPlaylistPage()) return;
-
-        itemsAboveSet.clear();
-        itemsVisibleSet.clear();
-        console.log('[Playlist Filter Debug] resumeFilteringAfterInput: Resuming background work (WITH apply)');
-        startBackgroundWork({ applyNow: true });
-    }
-
     // --- Status Helper ---
     function updateStatus(type, isActive) {
         const el = document.getElementById(`yt-filter-status-${type}`);
@@ -645,8 +670,6 @@
         updateQueueInfo();
         resetFilterDisplayInfo();
 
-
-        startBackgroundWork({ applyNow: false });
 
         console.log('[Playlist Filter Debug] startMain: Active and running');
         console.log('[YouTube Playlist Filter] Running...');

@@ -140,9 +140,9 @@
 <ul>
 <li><strong>Title Filter</strong>: 動画タイトルに含まれるキーワードを指定します。</li>
 <li><strong>Channel Filter</strong>: チャンネル名に含まれるキーワードで指定します。</li>
-<li><strong>Pause / Clear / Resume</strong>: 入力欄にマウスオーバーするとフィルタ処理を停止し、入力欄をクリックすると2つの条件と適用済みフィルタを全解除し、Enter キーで現在の入力内容を再適用します。</li>
+<li><strong>Lock / Edit Workflow</strong>: 文字を入力して Enter キーを押すと入力欄の色が変わって確定状態になり、入力欄はリードオンリーになってフィルタリングが始まります。入力欄をクリックするとフィルタリングを終了して表示を解除し、入力欄は編集可能な色に戻って再入力できます。</li>
 <li>一致した動画には、メタデータ欄の先頭にオレンジ色の <code>[MATCHED]</code> バッジが表示されます。</li>
-<li><strong>パフォーマンス</strong>: 入力中は重い処理を止め、Enter を押したタイミングでまとめて再開するように設計されています。</li>
+<li><strong>パフォーマンス</strong>: フィルタリングは Enter で確定したタイミングだけ開始し、編集に戻したいときはクリックで停止できるように設計されています。</li>
 <li><strong>v0.1.29</strong>: Playlist Liteと同様にダブルクリックによる縮小機能を実装。Activeインジケーターを削除。</li>
         </ul>
 <h3>2. ステータス表示 (Status Dashboard)</h3>
@@ -177,9 +177,9 @@
 </ul>
 </li>
 <li><strong>自動更新</strong>:<ul>
-<li><strong>MutationObserver</strong>: プレイリストの <code>#contents</code> に追加された動画を検知し、即座にフィルタを適用します。</li>
+<li><strong>MutationObserver</strong>: Enter でフィルタリングを開始した後は、プレイリストの <code>#contents</code> に追加された動画を検知して同じ条件を適用します。</li>
 <li><strong>定期実行</strong>: 接続切れの整理や表示状態の更新のため、軽量な再チェックを定期的に行います。</li>
-<li><strong>入力欄との連動</strong>: 入力欄へのマウスオーバーで監視・定期処理・キュー処理を停止し、Enter キーで現在の条件を再適用して再開します。</li>
+<li><strong>入力欄との連動</strong>: マウスオーバーだけでは何も起こらず、Enter で入力を確定したときに監視とフィルタ処理が始まります。入力欄をクリックすると監視・定期処理・フィルタ表示を解除して編集モードに戻ります。</li>
 </ul>
 </li>
 <li><strong>SPAのページ遷移対応</strong>:<ul>
@@ -193,6 +193,7 @@
 
 <h2>更新履歴</h2>
 <ul>
+            <li><strong>v0.1.53</strong>: Enter で入力欄を確定色 + リードオンリーにしてフィルタ開始、クリックで編集色に戻してフィルタ終了する操作に変更。マウスオーバー停止を廃止。</li>
             <li><strong>v0.1.52</strong>: 入力欄へのマウスオーバーで停止、クリックで全解除、Enterで再開する操作に変更し、Apply Filter とクリアボタンを削除。</li>
             <li><strong>v0.1.30</strong>: フローティングUIが画面外にある場合は、画面内に自動的に位置を調整して表示するようにしました。</li>
     <li><strong>v0.1.29</strong>: UIタイトルバーの機能を統一し、マウスオーバーの協調表示、ダブルクリックによる最小化・全体表示の切り替えを実装。Active/Inactive表示を削除し、非アクティブ時は自動的に最小化するように変更しました。</li>
