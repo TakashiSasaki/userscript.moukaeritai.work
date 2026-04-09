@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.39
-// @description  YouTubeプレイリスト表示でサムネイルを非表示にして軽量化するためのツールです。
+// @version      0.1.43
+// @description  YouTubeプレイリストでサムネイル、ヘッダー、ミニプレイヤーを継続的に削除して表示を軽量化するツールです。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
 // @match        https://www.youtube.com/*
@@ -37,11 +37,6 @@
             -webkit-backdrop-filter: none !important;
         }
     `);
-    GM_addStyle(`
-        #page-manager > ytd-browse > ytd-playlist-header-renderer {
-            display: none !important;
-        }
-    `);
 const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
@@ -65,7 +60,6 @@ const report = () => {
     const TARGET_THUMB_KEY = 'yt_lite_target_thumbnails';
     const TARGET_HEADER_KEY = 'yt_lite_target_header';
     const TARGET_MINIPLAYER_KEY = 'yt_lite_target_miniplayer';
-    const ACTION_MODE_KEY = 'yt_lite_action_mode';
     const MINIMIZED_STATE_KEY = 'yt_lite_is_minimized';
     const STORAGE_UNSET = '__unset__';
     let selectedTargets = {
@@ -73,12 +67,13 @@ const report = () => {
         header: false,
         miniplayer: false
     };
-    let actionMode = 'hide';
     const PAGE_CONFIG = {
         playlist: {
             thumbSelector: 'ytd-playlist-video-renderer ytd-thumbnail',
             headerSelector: '#page-manager > ytd-browse > ytd-playlist-header-renderer',
-            observerRootSelector: 'body'
+            contentObserverRootSelector: '#page-manager > ytd-browse',
+            thumbnailObserverRootSelector: 'ytd-playlist-video-list-renderer',
+            miniplayerObserverRootSelector: 'ytd-app'
         }
     };
     const FALLBACK_PANEL_TEMPLATE = `
@@ -98,10 +93,6 @@ const report = () => {
         <div style="display: flex; align-items: center; gap: 4px; font-size: 10px;">
             <input type="checkbox" id="yt-lite-target-miniplayer">
             <label for="yt-lite-target-miniplayer" style="cursor: pointer;">Miniplayer</label>
-        </div>
-        <div style="display: flex; gap: 6px; width: 100%; margin-top: 4px;">
-            <button id="yt-lite-hide-btn" type="button" style="flex: 1; padding: 4px; font-size: 10px; background-color: #eef; border: 1px solid #99f; border-radius: 4px; cursor: pointer;">Hide</button>
-            <button id="yt-lite-remove-btn" type="button" style="flex: 1; padding: 4px; font-size: 10px; background-color: #fff; border: 1px solid #99f; border-radius: 4px; cursor: pointer;">Remove</button>
         </div>
     </div>
 </div>`;
@@ -133,27 +124,12 @@ const report = () => {
         return legacyKeys.some((legacyKey) => GM_getValue(legacyKey, false)) || defaultValue;
     }
 
-    function getMigratedActionMode() {
-        const stored = GM_getValue(ACTION_MODE_KEY, STORAGE_UNSET);
-        if (stored === 'hide' || stored === 'remove') {
-            return stored;
-        }
-        if (GM_getValue(LEGACY_REMOVE_THUMB_KEY, false) || GM_getValue(LEGACY_REMOVE_MINIPLAYER_KEY, false)) {
-            return 'remove';
-        }
-        if (GM_getValue(LEGACY_HIDE_THUMB_KEY, false) || GM_getValue(LEGACY_HIDE_MINIPLAYER_KEY, false)) {
-            return 'hide';
-        }
-        return 'hide';
-    }
-
     function loadState() {
         selectedTargets = {
             thumbnails: getMigratedTargetSelection(TARGET_THUMB_KEY, [LEGACY_HIDE_THUMB_KEY, LEGACY_REMOVE_THUMB_KEY], false),
             header: getStoredBoolean(TARGET_HEADER_KEY, false),
             miniplayer: getMigratedTargetSelection(TARGET_MINIPLAYER_KEY, [LEGACY_HIDE_MINIPLAYER_KEY, LEGACY_REMOVE_MINIPLAYER_KEY], false)
         };
-        actionMode = getMigratedActionMode();
     }
 
     function hasExpectedPanelControls(panelElement) {
@@ -161,14 +137,11 @@ const report = () => {
         return Boolean(
             panelElement.querySelector('#yt-lite-target-thumbnails') &&
             panelElement.querySelector('#yt-lite-target-header') &&
-            panelElement.querySelector('#yt-lite-target-miniplayer') &&
-            panelElement.querySelector('#yt-lite-hide-btn') &&
-            panelElement.querySelector('#yt-lite-remove-btn')
+            panelElement.querySelector('#yt-lite-target-miniplayer')
         );
     }
 
     // --- Core Logic ---
-    let styleElement = null;
     let panel = null;
 
     loadState();
@@ -177,32 +150,7 @@ const report = () => {
         const pageConfig = getPageConfig();
         if (!pageConfig) return;
 
-        let css = '';
-        if (actionMode === 'hide') {
-            if (selectedTargets.thumbnails) {
-                css += `${pageConfig.thumbSelector} { display: none !important; } `;
-            }
-            if (selectedTargets.header) {
-                css += `${pageConfig.headerSelector} { display: none !important; } `;
-            }
-            if (selectedTargets.miniplayer) {
-                css += `ytd-miniplayer { display: none !important; } `;
-            }
-        }
-
-        if (css) {
-            if (!styleElement || !styleElement.isConnected) {
-                styleElement = document.createElement('style');
-                styleElement.id = 'yt-lite-styles';
-                document.head.appendChild(styleElement);
-            }
-            styleElement.textContent = css;
-        } else if (styleElement) {
-            styleElement.remove();
-            styleElement = null;
-        }
-
-        const hasRemovalTargets = actionMode === 'remove' && (
+        const hasRemovalTargets = (
             selectedTargets.thumbnails ||
             selectedTargets.header ||
             selectedTargets.miniplayer
@@ -215,8 +163,6 @@ const report = () => {
         } else {
             stopObserver();
         }
-
-        updateActionButtons();
     }
 
     function removeMiniplayerIfPresent() {
@@ -247,7 +193,7 @@ const report = () => {
 
     const performDebouncedCleanup = debounce(() => {
         const pageConfig = getPageConfig();
-        if (pageConfig && actionMode === 'remove') {
+        if (pageConfig) {
             if (selectedTargets.thumbnails) {
                 clearExistingThumbnails(pageConfig);
             }
@@ -255,32 +201,120 @@ const report = () => {
                 clearExistingHeader(pageConfig);
             }
         }
-        if (actionMode === 'remove' && selectedTargets.miniplayer) {
+        if (selectedTargets.miniplayer) {
             removeMiniplayerIfPresent();
         }
     }, 150);
 
-    let observer = null;
-    function startObserver() {
-        if (observer) return;
-        if (actionMode !== 'remove') return;
-        if (!selectedTargets.thumbnails && !selectedTargets.header && !selectedTargets.miniplayer) return;
-        const pageConfig = getPageConfig();
-        if (!pageConfig) return;
-        const root = document.querySelector(pageConfig.observerRootSelector);
+    function nodeMatchesSelector(node, selector) {
+        if (!node || node.nodeType !== Node.ELEMENT_NODE) return false;
+        if (node.matches && node.matches(selector)) return true;
+        return Boolean(node.querySelector && node.querySelector(selector));
+    }
+
+    function hasPlaylistRelevantMutation(mutations, pageConfig) {
+        const shouldCheckThumbnails = selectedTargets.thumbnails;
+        const shouldCheckHeader = selectedTargets.header;
+
+        return mutations.some((mutation) => {
+            const nodes = [...mutation.addedNodes, ...mutation.removedNodes];
+            return nodes.some((node) => (
+                (shouldCheckThumbnails && nodeMatchesSelector(node, pageConfig.thumbSelector)) ||
+                (shouldCheckHeader && nodeMatchesSelector(node, pageConfig.headerSelector))
+            ));
+        });
+    }
+
+    function hasMiniplayerRelevantMutation(mutations) {
+        return mutations.some((mutation) => {
+            const nodes = [...mutation.addedNodes, ...mutation.removedNodes];
+            return nodes.some((node) => nodeMatchesSelector(node, 'ytd-miniplayer'));
+        });
+    }
+
+    let playlistObserver = null;
+    let miniplayerObserver = null;
+    let playlistObserverRetryTimerId = null;
+    let miniplayerObserverRetryTimerId = null;
+
+    function startPlaylistObserver(pageConfig) {
+        if (playlistObserver) return;
+        if (!selectedTargets.thumbnails && !selectedTargets.header) return;
+
+        const rootSelector = selectedTargets.thumbnails
+            ? pageConfig.thumbnailObserverRootSelector
+            : pageConfig.contentObserverRootSelector;
+        const root = document.querySelector(rootSelector);
         if (!root) {
-            setTimeout(startObserver, 1000);
+            if (!playlistObserverRetryTimerId) {
+                playlistObserverRetryTimerId = setTimeout(() => {
+                    playlistObserverRetryTimerId = null;
+                    const nextPageConfig = getPageConfig();
+                    if (nextPageConfig) {
+                        startPlaylistObserver(nextPageConfig);
+                    }
+                }, 1000);
+            }
             return;
         }
 
-        observer = new MutationObserver(performDebouncedCleanup);
-        observer.observe(root, { childList: true, subtree: true });
+        playlistObserver = new MutationObserver((mutations) => {
+            if (hasPlaylistRelevantMutation(mutations, pageConfig)) {
+                performDebouncedCleanup();
+            }
+        });
+        playlistObserver.observe(root, { childList: true, subtree: true });
+    }
+
+    function startMiniplayerObserver(pageConfig) {
+        if (miniplayerObserver) return;
+        if (!selectedTargets.miniplayer) return;
+
+        const root = document.querySelector(pageConfig.miniplayerObserverRootSelector);
+        if (!root) {
+            if (!miniplayerObserverRetryTimerId) {
+                miniplayerObserverRetryTimerId = setTimeout(() => {
+                    miniplayerObserverRetryTimerId = null;
+                    const nextPageConfig = getPageConfig();
+                    if (nextPageConfig) {
+                        startMiniplayerObserver(nextPageConfig);
+                    }
+                }, 1000);
+            }
+            return;
+        }
+
+        miniplayerObserver = new MutationObserver((mutations) => {
+            if (hasMiniplayerRelevantMutation(mutations)) {
+                performDebouncedCleanup();
+            }
+        });
+        miniplayerObserver.observe(root, { childList: true, subtree: true });
+    }
+
+    function startObserver() {
+        const pageConfig = getPageConfig();
+        if (!pageConfig) return;
+        startPlaylistObserver(pageConfig);
+        startMiniplayerObserver(pageConfig);
     }
 
     function stopObserver() {
-        if (observer) {
-            observer.disconnect();
-            observer = null;
+        if (playlistObserver) {
+            playlistObserver.disconnect();
+            playlistObserver = null;
+        }
+        if (miniplayerObserver) {
+            miniplayerObserver.disconnect();
+            miniplayerObserver = null;
+        }
+        if (playlistObserverRetryTimerId) {
+            clearTimeout(playlistObserverRetryTimerId);
+            playlistObserverRetryTimerId = null;
+        }
+        if (miniplayerObserverRetryTimerId) {
+            clearTimeout(miniplayerObserverRetryTimerId);
+            miniplayerObserverRetryTimerId = null;
         }
     }
 
@@ -320,54 +354,17 @@ const report = () => {
         bindCheckbox('yt-lite-target-header', TARGET_HEADER_KEY, 'header');
         bindCheckbox('yt-lite-target-miniplayer', TARGET_MINIPLAYER_KEY, 'miniplayer');
 
-        const hideBtn = panel.querySelector('#yt-lite-hide-btn');
-        const removeBtn = panel.querySelector('#yt-lite-remove-btn');
-        hideBtn.addEventListener('click', () => {
-            actionMode = 'hide';
-            GM_setValue(ACTION_MODE_KEY, actionMode);
-            applySettings();
-        });
-        removeBtn.addEventListener('click', () => {
-            actionMode = 'remove';
-            GM_setValue(ACTION_MODE_KEY, actionMode);
-            applySettings();
-        });
-
         document.body.appendChild(panel);
         yusUpdatePanelVisibility(panel);
-        updateActionButtons();
         setTimeout(() => yusCheckPanelPosition(panel, PANEL_POS_KEY), 0);
         window.addEventListener('resize', () => {
             requestAnimationFrame(() => yusCheckPanelPosition(panel, PANEL_POS_KEY));
         });
     }
 
-    function updateActionButtons() {
-        if (!panel) return;
-        const hideBtn = panel.querySelector('#yt-lite-hide-btn');
-        const removeBtn = panel.querySelector('#yt-lite-remove-btn');
-        if (!hideBtn || !removeBtn) return;
-
-        const activeStyle = {
-            backgroundColor: '#dce8ff',
-            color: '#003c99'
-        };
-        const inactiveStyle = {
-            backgroundColor: '#fff',
-            color: '#333'
-        };
-
-        Object.assign(hideBtn.style, actionMode === 'hide' ? activeStyle : inactiveStyle);
-        Object.assign(removeBtn.style, actionMode === 'remove' ? activeStyle : inactiveStyle);
-    }
-
     // --- Init & Navigation ---
     function cleanupFeatures() {
         stopObserver();
-        if (styleElement) {
-            styleElement.remove();
-            styleElement = null;
-        }
     }
 
     function startMain() {
