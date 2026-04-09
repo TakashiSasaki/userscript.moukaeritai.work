@@ -3,11 +3,15 @@
         <span id="yt-scroller-title" class="yus-title" title="Double-click to toggle minimization">Auto Scroller v{{VERSION}}</span>
     </div>
     <div id="yt-scroller-panel-content" class="yus-content">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="font-size: 12px;">
-                Status: <span id="yt-scroller-loading-status" style="color: #888; margin-left: 4px;">Idle</span>
-            </div>
-            <button id="yt-scroller-toggle-btn" style="padding: 2px 8px; font-size: 11px; background-color: #ccc; color: #000; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">OFF</button>
+        <div style="font-size: 12px; display: flex; justify-content: space-between; gap: 8px;">
+            <span>Status: <span id="yt-scroller-loading-status" style="color: #888; margin-left: 4px;">Idle</span></span>
+            <span>Remaining: <span id="yt-scroller-remaining-time" style="color: #888; margin-left: 4px;">Stopped</span></span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
+            <button id="yt-scroller-run-10s-btn" data-duration-seconds="10" style="padding: 3px 8px; font-size: 11px; background-color: #fff; color: #333; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-weight: bold;">10s</button>
+            <button id="yt-scroller-run-1m-btn" data-duration-seconds="60" style="padding: 3px 8px; font-size: 11px; background-color: #fff; color: #333; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-weight: bold;">1m</button>
+            <button id="yt-scroller-run-5m-btn" data-duration-seconds="300" style="padding: 3px 8px; font-size: 11px; background-color: #fff; color: #333; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-weight: bold;">5m</button>
+            <button id="yt-scroller-run-10m-btn" data-duration-seconds="600" style="padding: 3px 8px; font-size: 11px; background-color: #fff; color: #333; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-weight: bold;">10m</button>
         </div>
         <div style="display: flex; align-items: center; gap: 4px; font-size: 12px;">
             <input type="checkbox" id="yt-scroller-bottom-check">

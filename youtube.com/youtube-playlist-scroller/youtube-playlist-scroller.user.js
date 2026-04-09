@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.29
+// @version      0.1.30
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        https://www.youtube.com/*
@@ -65,6 +65,10 @@ const report = () => {
 
     let scrollTimerId = null;
     let isAutoScrollEnabled = false;
+    let autoScrollEndAt = null;
+    let autoScrollStopTimerId = null;
+    let remainingTimeTimerId = null;
+    let activeDurationSeconds = null;
     let isActive = false;
     let loadingObserver = null;
     let loadingObserverTimerId = null;
@@ -84,11 +88,62 @@ const report = () => {
     }
 
 
-    function updateToggleButtonState(btn, enabled) {
-        if (!btn) return;
-        btn.textContent = enabled ? 'ON' : 'OFF';
-        btn.style.backgroundColor = enabled ? '#2ba640' : '#ccc';
-        btn.style.color = enabled ? '#fff' : '#000';
+    function formatRemainingTime(ms) {
+        const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+
+        if (minutes > 0) {
+            return `${minutes}:${String(seconds).padStart(2, '0')}`;
+        }
+        return `${seconds}s`;
+    }
+
+    function updateRemainingTimeDisplay() {
+        const remainingEl = document.getElementById('yt-scroller-remaining-time');
+        if (!remainingEl) return;
+
+        if (!isAutoScrollEnabled || !autoScrollEndAt) {
+            remainingEl.textContent = 'Stopped';
+            remainingEl.style.color = '#888';
+            remainingEl.style.fontWeight = 'normal';
+            return;
+        }
+
+        const remainingMs = Math.max(0, autoScrollEndAt - Date.now());
+        remainingEl.textContent = formatRemainingTime(remainingMs);
+        remainingEl.style.color = '#003c99';
+        remainingEl.style.fontWeight = 'bold';
+    }
+
+    function scheduleRemainingTimeUpdate() {
+        if (remainingTimeTimerId) {
+            clearTimeout(remainingTimeTimerId);
+            remainingTimeTimerId = null;
+        }
+
+        if (!isAutoScrollEnabled || !autoScrollEndAt || !isActive || !yusIsPlaylistPage()) {
+            updateRemainingTimeDisplay();
+            return;
+        }
+
+        updateRemainingTimeDisplay();
+        remainingTimeTimerId = window.setTimeout(() => {
+            remainingTimeTimerId = null;
+            scheduleRemainingTimeUpdate();
+        }, 1000);
+    }
+
+    function updateDurationButtonsState() {
+        if (!panel) return;
+
+        panel.querySelectorAll('[data-duration-seconds]').forEach((button) => {
+            const buttonSeconds = Number(button.getAttribute('data-duration-seconds'));
+            const isActiveDuration = isAutoScrollEnabled && activeDurationSeconds === buttonSeconds;
+            button.style.backgroundColor = isActiveDuration ? '#dce8ff' : '#fff';
+            button.style.borderColor = isActiveDuration ? '#6699ff' : '#ccc';
+            button.style.color = isActiveDuration ? '#003c99' : '#333';
+        });
     }
 
     function getAutoScrollDelayMs() {
@@ -142,7 +197,10 @@ const report = () => {
     }
 
     function startAutoScroll() {
-        stopAutoScroll();
+        if (scrollTimerId) {
+            clearTimeout(scrollTimerId);
+            scrollTimerId = null;
+        }
         lastKnownScrollHeight = 0;
         scheduleNextAutoScroll(0, true);
     }
@@ -152,32 +210,46 @@ const report = () => {
             clearTimeout(scrollTimerId);
             scrollTimerId = null;
         }
+        if (autoScrollStopTimerId) {
+            clearTimeout(autoScrollStopTimerId);
+            autoScrollStopTimerId = null;
+        }
+        if (remainingTimeTimerId) {
+            clearTimeout(remainingTimeTimerId);
+            remainingTimeTimerId = null;
+        }
+        isAutoScrollEnabled = false;
+        autoScrollEndAt = null;
+        activeDurationSeconds = null;
         lastKnownScrollHeight = 0;
+        updateDurationButtonsState();
+        updateRemainingTimeDisplay();
     }
 
-    function applyAutoScrollState() {
-        const btn = document.getElementById('yt-scroller-toggle-btn');
-        updateToggleButtonState(btn, isAutoScrollEnabled);
+    function startTimedAutoScroll(durationSeconds) {
+        if (!isActive || !yusIsPlaylistPage()) return;
 
-        if (!isActive || !yusIsPlaylistPage()) {
-            stopAutoScroll();
-            return;
+        if (autoScrollStopTimerId) {
+            clearTimeout(autoScrollStopTimerId);
         }
 
-        if (isAutoScrollEnabled) {
-            startAutoScroll();
-        } else {
+        isAutoScrollEnabled = true;
+        activeDurationSeconds = durationSeconds;
+        autoScrollEndAt = Date.now() + (durationSeconds * 1000);
+        autoScrollStopTimerId = window.setTimeout(() => {
+            autoScrollStopTimerId = null;
             stopAutoScroll();
-        }
-    }
+        }, durationSeconds * 1000);
 
-    function toggleAutoScroll() {
-        isAutoScrollEnabled = !isAutoScrollEnabled;
-        applyAutoScrollState();
+        updateDurationButtonsState();
+        scheduleRemainingTimeUpdate();
+        startAutoScroll();
     }
 
     function restartAutoScrollIfActive() {
         if (!isAutoScrollEnabled || !isActive || !yusIsPlaylistPage()) return;
+        updateDurationButtonsState();
+        scheduleRemainingTimeUpdate();
         startAutoScroll();
     }
 
@@ -260,8 +332,14 @@ const report = () => {
         const titleLabel = panel.querySelector('#yt-scroller-title');
         yusMakeMinimizable(panel, titleLabel, MINIMIZED_STATE_KEY);
 
-        const toggleBtn = panel.querySelector('#yt-scroller-toggle-btn');
-        toggleBtn.addEventListener('click', toggleAutoScroll);
+        panel.querySelectorAll('[data-duration-seconds]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const durationSeconds = Number(button.getAttribute('data-duration-seconds'));
+                if (durationSeconds > 0) {
+                    startTimedAutoScroll(durationSeconds);
+                }
+            });
+        });
 
         const asCheckbox = panel.querySelector('#yt-scroller-bottom-check');
         asCheckbox.checked = settings.scrollToBottom;
@@ -302,6 +380,8 @@ const report = () => {
         });
 
         updateStepVisibility();
+        updateDurationButtonsState();
+        updateRemainingTimeDisplay();
 
         document.body.appendChild(panel);
         yusUpdatePanelVisibility(panel);
@@ -316,7 +396,8 @@ const report = () => {
         createPanel();
         attachPanelResizeHandler();
         yusSetPanelActive(panel, true);
-        applyAutoScrollState();
+        updateDurationButtonsState();
+        updateRemainingTimeDisplay();
         ensureLoadingObserver();
     }
 
