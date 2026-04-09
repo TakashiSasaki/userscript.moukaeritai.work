@@ -146,6 +146,7 @@
 <li><strong>視覚的なフィードバック</strong>: 実行を開始すると、削除の対象となっている動画の連番（#Index）が一時的に<strong>赤太字に変更</strong>され、現在どの動画を処理中か（x/y）がパネルに表示されます。</li>
 <li><strong>⚠️ 注意</strong>: ボタンを押すと確認ダイアログなしで<strong>即座に削除</strong>されます。操作にはご注意ください。</li>
 <li><strong>v0.1.47</strong>: Playlist Liteと同様にマウスオーバーでのバージョン表示強調とダブルクリックによる縮小機能を実装。Activeインジケーターを削除。</li>
+        <li><strong>v0.1.65</strong>: メモリリーク対策として、不要になったイベントリスナー（input, change, resize）を適切に解除するように変更</li>
         </ul>
 </li>
 <li><strong>確実な削除同期</strong>:<ul>
