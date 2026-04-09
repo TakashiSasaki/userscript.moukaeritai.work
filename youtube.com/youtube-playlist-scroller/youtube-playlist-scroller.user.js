@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.27
+// @version      0.1.28
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        https://www.youtube.com/*
@@ -64,9 +64,10 @@ const report = () => {
     let isActive = false;
     let loadingObserver = null;
     let loadingObserverTimerId = null;
-    let loadingCheckIntervalId = null;
+    let loadingStateCheckTimerId = null;
     let panel = null;
     const cachedSpinners = new Set();
+    let lastLoadingState = null;
 
     function saveSettings() {
         GM_setValue(SETTINGS_KEY, settings);
@@ -230,11 +231,12 @@ const report = () => {
             loadingObserver = null;
         }
 
-        if (loadingCheckIntervalId) {
-            clearInterval(loadingCheckIntervalId);
-            loadingCheckIntervalId = null;
+        if (loadingStateCheckTimerId) {
+            clearTimeout(loadingStateCheckTimerId);
+            loadingStateCheckTimerId = null;
         }
         cachedSpinners.clear();
+        lastLoadingState = null;
 
         yusSetPanelActive(panel, false);
     }
@@ -290,26 +292,39 @@ const report = () => {
                         }
                     }
                 }
+                if (
+                    mutation.type === 'attributes' &&
+                    mutation.target &&
+                    mutation.target.nodeType === Node.ELEMENT_NODE &&
+                    (mutation.target.tagName === 'TP-YT-PAPER-SPINNER' || mutation.target.tagName === 'TP-YT-PAPER-SPINNER-LITE')
+                ) {
+                    cachedSpinners.add(mutation.target);
+                    shouldCheck = true;
+                }
             }
             if (shouldCheck) {
-                checkLoadingState();
+                scheduleLoadingStateCheck();
             }
         });
 
         loadingObserver.observe(container, {
             childList: true,
-            subtree: true
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['active', 'aria-hidden', 'hidden', 'style', 'class']
         });
-
-        if (loadingCheckIntervalId) {
-            clearInterval(loadingCheckIntervalId);
-        }
-        loadingCheckIntervalId = setInterval(() => {
-            checkLoadingState();
-        }, 500);
 
         // Initial check
         checkLoadingState();
+    }
+
+    function scheduleLoadingStateCheck() {
+        if (!isActive || loadingStateCheckTimerId) return;
+
+        loadingStateCheckTimerId = window.setTimeout(() => {
+            loadingStateCheckTimerId = null;
+            checkLoadingState();
+        }, 50);
     }
 
     function checkLoadingState() {
@@ -327,6 +342,10 @@ const report = () => {
             }
         }
 
+        if (lastLoadingState === isLoading) {
+            return;
+        }
+        lastLoadingState = isLoading;
         updatePanelLoadingState(isLoading);
     }
 
