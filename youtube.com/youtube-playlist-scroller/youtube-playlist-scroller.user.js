@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.28
+// @version      0.1.29
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        https://www.youtube.com/*
@@ -59,15 +59,25 @@ const report = () => {
         step: 300,
         interval: 20.0
     });
-    let scrollInterval = null;
+    const SPINNER_SELECTOR = 'tp-yt-paper-spinner, tp-yt-paper-spinner-lite';
+    const BASE_OBSERVER_RETRY_DELAY_MS = 250;
+    const MAX_OBSERVER_RETRY_DELAY_MS = 2000;
+
+    let scrollTimerId = null;
     let isAutoScrollEnabled = false;
     let isActive = false;
     let loadingObserver = null;
     let loadingObserverTimerId = null;
     let loadingStateCheckTimerId = null;
+    let loadingMutationProcessTimerId = null;
+    let loadingObserverRetryDelayMs = BASE_OBSERVER_RETRY_DELAY_MS;
     let panel = null;
     const cachedSpinners = new Set();
+    const pendingSpinnerAdds = new Set();
+    const pendingSpinnerRemovals = new Set();
     let lastLoadingState = null;
+    let lastKnownScrollHeight = 0;
+    let panelResizeHandler = null;
 
     function saveSettings() {
         GM_setValue(SETTINGS_KEY, settings);
@@ -81,27 +91,68 @@ const report = () => {
         btn.style.color = enabled ? '#fff' : '#000';
     }
 
+    function getAutoScrollDelayMs() {
+        return Math.max(250, (settings.interval || 5) * 1000);
+    }
+
+    function scheduleNextAutoScroll(delayMs = getAutoScrollDelayMs(), force = false) {
+        if (!isAutoScrollEnabled || !isActive || !yusIsPlaylistPage()) return;
+
+        if (scrollTimerId) {
+            if (!force) return;
+            clearTimeout(scrollTimerId);
+        }
+
+        scrollTimerId = window.setTimeout(() => {
+            scrollTimerId = null;
+            runAutoScrollCycle();
+        }, Math.max(0, delayMs));
+    }
+
+    function runAutoScrollCycle() {
+        if (!isAutoScrollEnabled || !isActive || !yusIsPlaylistPage()) return;
+
+        if (lastLoadingState === true) {
+            scheduleNextAutoScroll(getAutoScrollDelayMs(), true);
+            return;
+        }
+
+        const scrollingElement = document.scrollingElement || document.documentElement;
+        const scrollHeight = scrollingElement.scrollHeight;
+        const viewportBottom = window.scrollY + window.innerHeight;
+        const threshold = settings.scrollToBottom
+            ? 80
+            : Math.max(80, Math.min(settings.step || 300, 300));
+        const isNearBottom = viewportBottom >= scrollHeight - threshold;
+        let didScroll = false;
+
+        if (settings.scrollToBottom) {
+            const hasNewContent = scrollHeight > lastKnownScrollHeight;
+            if (!isNearBottom || hasNewContent) {
+                window.scrollTo(0, scrollHeight);
+                didScroll = true;
+            }
+        } else {
+            window.scrollBy(0, settings.step || 300);
+            didScroll = true;
+        }
+
+        lastKnownScrollHeight = scrollHeight;
+        scheduleNextAutoScroll(didScroll ? getAutoScrollDelayMs() : Math.max(500, getAutoScrollDelayMs()), true);
+    }
+
     function startAutoScroll() {
         stopAutoScroll();
-
-        const intervalMs = Math.max(100, (settings.interval || 5) * 1000);
-        const runScroll = () => {
-            if (settings.scrollToBottom) {
-                window.scrollTo(0, document.documentElement.scrollHeight);
-            } else {
-                window.scrollBy(0, settings.step || 300);
-            }
-        };
-
-        runScroll();
-        scrollInterval = setInterval(runScroll, intervalMs);
+        lastKnownScrollHeight = 0;
+        scheduleNextAutoScroll(0, true);
     }
 
     function stopAutoScroll() {
-        if (scrollInterval) {
-            clearInterval(scrollInterval);
-            scrollInterval = null;
+        if (scrollTimerId) {
+            clearTimeout(scrollTimerId);
+            scrollTimerId = null;
         }
+        lastKnownScrollHeight = 0;
     }
 
     function applyAutoScrollState() {
@@ -130,6 +181,62 @@ const report = () => {
         startAutoScroll();
     }
 
+    function attachPanelResizeHandler() {
+        if (panelResizeHandler || !panel) return;
+        panelResizeHandler = () => {
+            requestAnimationFrame(() => yusCheckPanelPosition(panel, PANEL_POS_KEY));
+        };
+        window.addEventListener('resize', panelResizeHandler);
+    }
+
+    function detachPanelResizeHandler() {
+        if (!panelResizeHandler) return;
+        window.removeEventListener('resize', panelResizeHandler);
+        panelResizeHandler = null;
+    }
+
+    function collectSpinnerElements(node, targetSet) {
+        if (!node || node.nodeType !== Node.ELEMENT_NODE) return;
+
+        if (node.matches && node.matches(SPINNER_SELECTOR)) {
+            targetSet.add(node);
+        }
+
+        if (node.childElementCount > 0 && node.querySelectorAll) {
+            node.querySelectorAll(SPINNER_SELECTOR).forEach((spinner) => targetSet.add(spinner));
+        }
+    }
+
+    function scheduleLoadingMutationProcessing() {
+        if (!isActive || loadingMutationProcessTimerId) return;
+
+        loadingMutationProcessTimerId = window.setTimeout(() => {
+            loadingMutationProcessTimerId = null;
+            processPendingLoadingMutations();
+        }, 50);
+    }
+
+    function processPendingLoadingMutations() {
+        if (!isActive) return;
+
+        let shouldCheck = false;
+
+        if (pendingSpinnerRemovals.size > 0) {
+            pendingSpinnerRemovals.forEach((spinner) => cachedSpinners.delete(spinner));
+            pendingSpinnerRemovals.clear();
+            shouldCheck = true;
+        }
+
+        if (pendingSpinnerAdds.size > 0) {
+            pendingSpinnerAdds.forEach((spinner) => cachedSpinners.add(spinner));
+            pendingSpinnerAdds.clear();
+            shouldCheck = true;
+        }
+
+        if (shouldCheck) {
+            scheduleLoadingStateCheck();
+        }
+    }
 
 
     function createPanel() {
@@ -199,9 +306,6 @@ const report = () => {
         document.body.appendChild(panel);
         yusUpdatePanelVisibility(panel);
         setTimeout(() => yusCheckPanelPosition(panel, PANEL_POS_KEY), 0);
-        window.addEventListener('resize', () => {
-            requestAnimationFrame(() => yusCheckPanelPosition(panel, PANEL_POS_KEY));
-        });
     }
 
 
@@ -210,6 +314,7 @@ const report = () => {
         isActive = true;
 
         createPanel();
+        attachPanelResizeHandler();
         yusSetPanelActive(panel, true);
         applyAutoScrollState();
         ensureLoadingObserver();
@@ -235,8 +340,16 @@ const report = () => {
             clearTimeout(loadingStateCheckTimerId);
             loadingStateCheckTimerId = null;
         }
+        if (loadingMutationProcessTimerId) {
+            clearTimeout(loadingMutationProcessTimerId);
+            loadingMutationProcessTimerId = null;
+        }
         cachedSpinners.clear();
+        pendingSpinnerAdds.clear();
+        pendingSpinnerRemovals.clear();
         lastLoadingState = null;
+        loadingObserverRetryDelayMs = BASE_OBSERVER_RETRY_DELAY_MS;
+        detachPanelResizeHandler();
 
         yusSetPanelActive(panel, false);
     }
@@ -248,70 +361,48 @@ const report = () => {
 
         const container = document.querySelector('ytd-playlist-video-list-renderer');
         if (!container) {
+            const retryDelay = loadingObserverRetryDelayMs;
+            loadingObserverRetryDelayMs = Math.min(loadingObserverRetryDelayMs * 2, MAX_OBSERVER_RETRY_DELAY_MS);
             loadingObserverTimerId = window.setTimeout(() => {
                 loadingObserverTimerId = null;
                 ensureLoadingObserver();
-            }, 1000);
+            }, retryDelay);
             return;
         }
 
+        loadingObserverRetryDelayMs = BASE_OBSERVER_RETRY_DELAY_MS;
         cachedSpinners.clear();
-        const initialSpinners = container.querySelectorAll('tp-yt-paper-spinner, tp-yt-paper-spinner-lite');
+        const initialSpinners = container.querySelectorAll(SPINNER_SELECTOR);
         initialSpinners.forEach(spinner => cachedSpinners.add(spinner));
 
         loadingObserver = new MutationObserver((mutations) => {
-            let shouldCheck = false;
             for (const mutation of mutations) {
                 if (mutation.type === 'childList') {
                     for (const node of mutation.addedNodes) {
-                        if (node.nodeType === Node.ELEMENT_NODE) {
-                            if (node.tagName === 'TP-YT-PAPER-SPINNER' || node.tagName === 'TP-YT-PAPER-SPINNER-LITE') {
-                                cachedSpinners.add(node);
-                                shouldCheck = true;
-                            } else if (node.querySelectorAll) {
-                                const newSpinners = node.querySelectorAll('tp-yt-paper-spinner, tp-yt-paper-spinner-lite');
-                                if (newSpinners.length > 0) {
-                                    newSpinners.forEach(spinner => cachedSpinners.add(spinner));
-                                    shouldCheck = true;
-                                }
-                            }
-                        }
+                        collectSpinnerElements(node, pendingSpinnerAdds);
                     }
                     for (const node of mutation.removedNodes) {
-                         if (node.nodeType === Node.ELEMENT_NODE) {
-                            if (node.tagName === 'TP-YT-PAPER-SPINNER' || node.tagName === 'TP-YT-PAPER-SPINNER-LITE') {
-                                cachedSpinners.delete(node);
-                                shouldCheck = true;
-                            } else if (node.querySelectorAll) {
-                                const removedSpinners = node.querySelectorAll('tp-yt-paper-spinner, tp-yt-paper-spinner-lite');
-                                if (removedSpinners.length > 0) {
-                                    removedSpinners.forEach(spinner => cachedSpinners.delete(spinner));
-                                    shouldCheck = true;
-                                }
-                            }
-                        }
+                        collectSpinnerElements(node, pendingSpinnerRemovals);
                     }
                 }
                 if (
                     mutation.type === 'attributes' &&
                     mutation.target &&
                     mutation.target.nodeType === Node.ELEMENT_NODE &&
-                    (mutation.target.tagName === 'TP-YT-PAPER-SPINNER' || mutation.target.tagName === 'TP-YT-PAPER-SPINNER-LITE')
+                    mutation.target.matches &&
+                    mutation.target.matches(SPINNER_SELECTOR)
                 ) {
-                    cachedSpinners.add(mutation.target);
-                    shouldCheck = true;
+                    pendingSpinnerAdds.add(mutation.target);
                 }
             }
-            if (shouldCheck) {
-                scheduleLoadingStateCheck();
-            }
+            scheduleLoadingMutationProcessing();
         });
 
         loadingObserver.observe(container, {
             childList: true,
             subtree: true,
             attributes: true,
-            attributeFilter: ['active', 'aria-hidden', 'hidden', 'style', 'class']
+            attributeFilter: ['active', 'aria-hidden', 'hidden', 'style']
         });
 
         // Initial check
@@ -332,9 +423,27 @@ const report = () => {
 
         let isLoading = false;
 
-        for (const spinner of cachedSpinners) {
+        for (const spinner of Array.from(cachedSpinners)) {
+            if (!spinner.isConnected) {
+                cachedSpinners.delete(spinner);
+                continue;
+            }
+
+            if (spinner.hidden) {
+                continue;
+            }
+
             // Check if active (attribute) or not hidden (aria) AND visible in layout
             const isActiveState = spinner.hasAttribute('active') || spinner.getAttribute('aria-hidden') !== 'true';
+            if (!isActiveState) {
+                continue;
+            }
+
+            const inlineStyle = spinner.getAttribute('style');
+            if (inlineStyle && /display\s*:\s*none/i.test(inlineStyle)) {
+                continue;
+            }
+
             const isVisible = window.getComputedStyle(spinner).display !== 'none';
             if (isActiveState && isVisible) {
                 isLoading = true;
@@ -347,6 +456,10 @@ const report = () => {
         }
         lastLoadingState = isLoading;
         updatePanelLoadingState(isLoading);
+
+        if (!isLoading) {
+            scheduleNextAutoScroll(0, true);
+        }
     }
 
     function updatePanelLoadingState(isLoading) {
