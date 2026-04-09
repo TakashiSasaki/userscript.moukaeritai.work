@@ -1,14 +1,12 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.31
+// @version      0.1.32
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        https://www.youtube.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=youtube.com
-// @grant        GM_setValue
-// @grant        GM_getValue
 // @grant        GM_info
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
@@ -36,7 +34,7 @@
             -webkit-backdrop-filter: none !important;
         }
     `);
-const report = () => {
+    const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
                 name: GM_info.script.name,
@@ -50,18 +48,13 @@ const report = () => {
         return;
     }
 
-    const SETTINGS_KEY = 'yt_scroller_settings';
     const PANEL_POS_KEY = 'yt_scroller_panel_position';
     const MINIMIZED_STATE_KEY = 'yt_scroller_is_minimized';
-
-    let settings = GM_getValue(SETTINGS_KEY, {
-        scrollToBottom: true,
-        step: 300,
-        interval: 10.0
-    });
     const SPINNER_SELECTOR = 'tp-yt-paper-spinner, tp-yt-paper-spinner-lite';
     const BASE_OBSERVER_RETRY_DELAY_MS = 250;
     const MAX_OBSERVER_RETRY_DELAY_MS = 2000;
+    const AUTO_SCROLL_INTERVAL_MS = 10 * 1000;
+    const AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 80;
 
     let scrollTimerId = null;
     let isAutoScrollEnabled = false;
@@ -82,11 +75,6 @@ const report = () => {
     let lastLoadingState = null;
     let lastKnownScrollHeight = 0;
     let panelResizeHandler = null;
-
-    function saveSettings() {
-        GM_setValue(SETTINGS_KEY, settings);
-    }
-
 
     function formatRemainingTime(ms) {
         const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
@@ -147,7 +135,7 @@ const report = () => {
     }
 
     function getAutoScrollDelayMs() {
-        return Math.max(250, (settings.interval || 5) * 1000);
+        return AUTO_SCROLL_INTERVAL_MS;
     }
 
     function scheduleNextAutoScroll(delayMs = getAutoScrollDelayMs(), force = false) {
@@ -175,20 +163,12 @@ const report = () => {
         const scrollingElement = document.scrollingElement || document.documentElement;
         const scrollHeight = scrollingElement.scrollHeight;
         const viewportBottom = window.scrollY + window.innerHeight;
-        const threshold = settings.scrollToBottom
-            ? 80
-            : Math.max(80, Math.min(settings.step || 300, 300));
-        const isNearBottom = viewportBottom >= scrollHeight - threshold;
+        const isNearBottom = viewportBottom >= scrollHeight - AUTO_SCROLL_BOTTOM_THRESHOLD_PX;
         let didScroll = false;
 
-        if (settings.scrollToBottom) {
-            const hasNewContent = scrollHeight > lastKnownScrollHeight;
-            if (!isNearBottom || hasNewContent) {
-                window.scrollTo(0, scrollHeight);
-                didScroll = true;
-            }
-        } else {
-            window.scrollBy(0, settings.step || 300);
+        const hasNewContent = scrollHeight > lastKnownScrollHeight;
+        if (!isNearBottom || hasNewContent) {
+            window.scrollTo(0, scrollHeight);
             didScroll = true;
         }
 
@@ -241,13 +221,6 @@ const report = () => {
             stopAutoScroll();
         }, durationSeconds * 1000);
 
-        updateDurationButtonsState();
-        scheduleRemainingTimeUpdate();
-        startAutoScroll();
-    }
-
-    function restartAutoScrollIfActive() {
-        if (!isAutoScrollEnabled || !isActive || !yusIsPlaylistPage()) return;
         updateDurationButtonsState();
         scheduleRemainingTimeUpdate();
         startAutoScroll();
@@ -320,7 +293,7 @@ const report = () => {
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.23';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.32';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -340,46 +313,6 @@ const report = () => {
                 }
             });
         });
-
-        const asCheckbox = panel.querySelector('#yt-scroller-bottom-check');
-        asCheckbox.checked = settings.scrollToBottom;
-
-        const stepInputContainer = panel.querySelector('#yt-scroller-step-container');
-        const stepInput = panel.querySelector('#yt-scroller-step-input');
-        const intervalInput = panel.querySelector('#yt-scroller-interval-input');
-
-        stepInput.value = settings.step;
-        intervalInput.value = settings.interval;
-
-        const updateStepVisibility = () => {
-            if (settings.scrollToBottom) {
-                stepInputContainer.style.display = 'none';
-            } else {
-                stepInputContainer.style.display = 'flex';
-            }
-        };
-
-        const attachInputLogic = (inputEl, key) => {
-            inputEl.addEventListener('change', () => {
-                let val = parseFloat(inputEl.value);
-                if (isNaN(val) || val < 0) val = key === 'interval' ? 1 : 0;
-                settings[key] = val;
-                saveSettings();
-                restartAutoScrollIfActive();
-            });
-        };
-
-        attachInputLogic(stepInput, 'step');
-        attachInputLogic(intervalInput, 'interval');
-
-        asCheckbox.addEventListener('change', () => {
-            settings.scrollToBottom = asCheckbox.checked;
-            saveSettings();
-            updateStepVisibility();
-            restartAutoScrollIfActive();
-        });
-
-        updateStepVisibility();
         updateDurationButtonsState();
         updateRemainingTimeDisplay();
 
