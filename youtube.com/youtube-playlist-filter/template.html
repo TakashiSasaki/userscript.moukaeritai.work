@@ -6,20 +6,18 @@
         <div style="display: flex; flex-direction: column; gap: 2px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-size: 12px; font-weight: bold;">Title Filter</span>
-                <button id="yt-filter-title-clear" type="button" style="font-size: 14px; cursor: pointer; border: none; background: none; padding: 0 4px; color: #999;">×</button>
             </div>
-            <input id="yt-filter-title-input" type="text" placeholder="Filter by title..." style="width: 100%; padding: 4px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+            <input id="yt-filter-title-input" type="text" placeholder="Hover to pause, Enter to apply" style="width: 100%; padding: 4px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
         </div>
         <div style="display: flex; flex-direction: column; gap: 2px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-size: 12px; font-weight: bold;">Channel Filter</span>
-                <button id="yt-filter-channel-clear" type="button" style="font-size: 14px; cursor: pointer; border: none; background: none; padding: 0 4px; color: #999;">×</button>
             </div>
-            <input id="yt-filter-channel-input" type="text" placeholder="Filter by channel..." style="width: 100%; padding: 4px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+            <input id="yt-filter-channel-input" type="text" placeholder="Click to clear both filters" style="width: 100%; padding: 4px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
         </div>
         <div id="yt-filter-count" style="font-size: 12px;">Results: - / -</div>
         <div id="yt-filter-queue-info" style="font-size: 11px; color: #666;">Queue: 0 items</div>
-        <button id="yt-filter-apply-btn" type="button" style="width: 100%; padding: 6px; font-size: 12px; cursor: pointer; background-color: #065fd4; color: white; border: none; border-radius: 4px; margin-top: 4px;">Apply Filter</button>
+        <div style="font-size: 10px; color: #666; margin-top: 2px;">Hover an input to pause. Click an input to clear both filters. Press Enter to resume filtering.</div>
         <div style="font-size: 10px; color: #666; display: flex; flex-direction: column; gap: 1px;">
             <div id="yt-filter-status-monitor">Monitor: Idle</div>
             <div id="yt-filter-status-scanner">Scanner: Idle</div>

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.51
+// @version      0.1.52
 // @lastModified 2026-04-09
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -9,8 +9,6 @@
 // @match        https://www.youtube.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=youtube.com
-// @grant        GM_setValue
-// @grant        GM_getValue
 // @grant        GM_info
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
@@ -38,7 +36,7 @@
             -webkit-backdrop-filter: none !important;
         }
     `);
-const report = () => {
+    const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
                 name: GM_info.script.name,
@@ -61,8 +59,7 @@ const report = () => {
 
     let filterState = { title: '', channel: '' };
     let isFiltering = false;
-    let isInputActive = false; // Flag to pause filtering during input
-    let resumeTimerId = null;
+    let isInputActive = false;
     let panel = null;
 
 
@@ -112,6 +109,60 @@ const report = () => {
         return metadata;
     }
 
+    function getFilterInputs() {
+        if (!panel) {
+            return [];
+        }
+
+        return ['title', 'channel']
+            .map((key) => panel.querySelector(`#yt-filter-${key}-input`))
+            .filter(Boolean);
+    }
+
+    function syncFilterStateFromInputs() {
+        if (!panel) {
+            return;
+        }
+
+        filterState.title = panel.querySelector('#yt-filter-title-input')?.value || '';
+        filterState.channel = panel.querySelector('#yt-filter-channel-input')?.value || '';
+    }
+
+    function clearAllFilters() {
+        filterState.title = '';
+        filterState.channel = '';
+        isFiltering = false;
+        hasAppliedCurrentPage = false;
+
+        getFilterInputs().forEach((input) => {
+            input.value = '';
+        });
+
+        const items = new Set([
+            ...allCachedItems,
+            ...document.querySelectorAll('ytd-playlist-video-renderer')
+        ]);
+
+        items.forEach((item) => {
+            if (!item || !item.isConnected) {
+                return;
+            }
+
+            item.style.display = '';
+            renderMatchedIndicator(item, false);
+            if (observerForRange) {
+                observerForRange.unobserve(item);
+            }
+        });
+
+        allCachedItems.clear();
+        pendingProcessItems.clear();
+        itemsAboveSet.clear();
+        itemsVisibleSet.clear();
+        updateQueueInfo();
+        resetFilterDisplayInfo();
+    }
+
 
 
 
@@ -125,7 +176,7 @@ const report = () => {
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.39';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.52';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -138,45 +189,25 @@ const report = () => {
 
         const setupInputGroup = (key) => {
             const input = panel.querySelector(`#yt-filter-${key}-input`);
-            const clearBtn = panel.querySelector(`#yt-filter-${key}-clear`);
-            
+
             input.value = filterState[key];
-            input.addEventListener('focus', pauseFilteringForInput);
-            input.addEventListener('blur', () => {
-                filterState[key] = input.value;
-                scheduleResumeAfterInput();
+            input.addEventListener('mouseenter', pauseFilteringForInput);
+            input.addEventListener('click', () => {
+                pauseFilteringForInput();
+                clearAllFilters();
+                input.focus();
             });
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
-                    filterState[key] = input.value;
-                    input.blur();
+                    e.preventDefault();
+                    syncFilterStateFromInputs();
+                    resumeFilteringAfterInput();
                 }
-            });
-            clearBtn.addEventListener('click', () => {
-                filterState[key] = '';
-                input.value = '';
             });
         };
 
         setupInputGroup('title');
         setupInputGroup('channel');
-
-        const applyBtn = panel.querySelector('#yt-filter-apply-btn');
-        applyBtn.addEventListener('click', () => {
-            filterState.title = panel.querySelector('#yt-filter-title-input').value;
-            filterState.channel = panel.querySelector('#yt-filter-channel-input').value;
-
-            if (isInputActive) {
-                isInputActive = false;
-                panel.querySelectorAll('input').forEach(inp => inp.blur());
-            }
-
-            if (!isActive) {
-                startMain();
-            } else {
-                applyFilters();
-            }
-        });
 
         document.body.appendChild(panel);
         yusUpdatePanelVisibility(panel);
@@ -364,7 +395,12 @@ const report = () => {
             console.error(`[Playlist Filter Debug] Error in processChunk loop:`, err);
         } finally {
             console.groupEnd();
-            // Schedule next chunk
+            if (!isActive || !yusIsPlaylistPage() || isInputActive) {
+                isProcessing = false;
+                updateStatus('processor', false);
+                return;
+            }
+
             processTimerId = setTimeout(processChunk, 0);
         }
     }
@@ -484,6 +520,11 @@ const report = () => {
     }
 
     function stopBackgroundWork() {
+        if (processTimerId) {
+            clearTimeout(processTimerId);
+            processTimerId = null;
+        }
+
         if (observerInitTimerId) {
             clearTimeout(observerInitTimerId);
             observerInitTimerId = null;
@@ -503,6 +544,8 @@ const report = () => {
             clearInterval(filterIntervalId);
             filterIntervalId = null;
         }
+
+        isProcessing = false;
         updateStatus('monitor', false);
         updateStatus('scanner', false);
         updateStatus('processor', false);
@@ -561,38 +604,19 @@ const report = () => {
     function pauseFilteringForInput() {
         if (isInputActive) return;
         isInputActive = true;
-        if (resumeTimerId) {
-            clearTimeout(resumeTimerId);
-            resumeTimerId = null;
-        }
         if (!isActive) return;
         stopBackgroundWork();
     }
 
-    function scheduleResumeAfterInput() {
-        if (!isInputActive) return;
-        if (resumeTimerId) {
-            clearTimeout(resumeTimerId);
-        }
-        resumeTimerId = window.setTimeout(() => {
-            resumeTimerId = null;
-            resumeFilteringAfterInput();
-        }, 500);
-    }
-
     function resumeFilteringAfterInput() {
         if (!isInputActive) return;
-        if (resumeTimerId) {
-            clearTimeout(resumeTimerId);
-            resumeTimerId = null;
-        }
         isInputActive = false;
         if (!isActive || !yusIsPlaylistPage()) return;
 
         itemsAboveSet.clear();
         itemsVisibleSet.clear();
-        console.log(`[Playlist Filter Debug] resumeFilteringAfterInput: Resuming background work (WITHOUT auto-apply)`);
-        startBackgroundWork({ applyNow: false });
+        console.log('[Playlist Filter Debug] resumeFilteringAfterInput: Resuming background work (WITH apply)');
+        startBackgroundWork({ applyNow: true });
     }
 
     // --- Status Helper ---
@@ -632,11 +656,6 @@ const report = () => {
         if (!isActive) return;
         isActive = false;
         isInputActive = false;
-        if (resumeTimerId) {
-            clearTimeout(resumeTimerId);
-            resumeTimerId = null;
-        }
-
 
         stopBackgroundWork();
 
