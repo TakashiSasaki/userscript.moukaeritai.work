@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.76
+// @version      0.2.77
 // @lastModified 2026-04-10
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @antifeature  webRequestBlocking
@@ -12,6 +12,7 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_setClipboard
+// @grant        GM_download
 // @grant        GM_info
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
@@ -65,8 +66,11 @@
         totalSaved: null,
         savedVisible: null,
         newVisible: null,
-        storageStatus: null
+        storageStatus: null,
+        exportStatus: null
     };
+    let exportInProgress = false;
+    let exportStatusResetTimeout = null;
 
 
 
@@ -79,7 +83,7 @@
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.76';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.77';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -95,6 +99,7 @@
         panelElements.savedVisible = panel.querySelector('#yt-saver-stats-saved');
         panelElements.newVisible = panel.querySelector('#yt-saver-stats-new');
         panelElements.storageStatus = panel.querySelector('#yt-saver-stats-storage');
+        panelElements.exportStatus = panel.querySelector('#yt-saver-export-status');
 
         panel.querySelector('#yt-saver-export-btn').addEventListener('click', exportDataToFile);
         panel.querySelector('#yt-saver-copy-btn').addEventListener('click', onExportToClipboardClick);
@@ -154,6 +159,35 @@
 
         panelElements.storageStatus.textContent = storageText;
         panelElements.storageStatus.style.color = storageColor;
+    }
+
+    function clearExportStatus() {
+        if (!panelElements.exportStatus) return;
+        panelElements.exportStatus.textContent = '';
+        panelElements.exportStatus.style.display = 'none';
+    }
+
+    function scheduleExportStatusReset(delay = 2500) {
+        if (exportStatusResetTimeout) {
+            clearTimeout(exportStatusResetTimeout);
+        }
+        exportStatusResetTimeout = setTimeout(() => {
+            exportStatusResetTimeout = null;
+            clearExportStatus();
+        }, delay);
+    }
+
+    function setExportStatus(text, color, { autoClear = false, delay = 2500 } = {}) {
+        if (!panelElements.exportStatus) return;
+        panelElements.exportStatus.textContent = text;
+        panelElements.exportStatus.style.color = color;
+        panelElements.exportStatus.style.display = 'block';
+        if (autoClear) {
+            scheduleExportStatusReset(delay);
+        } else if (exportStatusResetTimeout) {
+            clearTimeout(exportStatusResetTimeout);
+            exportStatusResetTimeout = null;
+        }
     }
 
     // --- Core Data Storage ---
@@ -413,14 +447,43 @@
     function exportDataToFile() {
         loadStorage();
         if (!cachedStorage) { alert('No data.'); return; }
+        if (exportInProgress) return;
+        if (typeof GM_download !== 'function') {
+            setExportStatus('Export failed', '#d93025', { autoClear: true, delay: 4000 });
+            console.error('[YouTube Playlist Saver] GM_download is unavailable in this environment.');
+            return;
+        }
+
+        exportInProgress = true;
+        setExportStatus('Exporting...', '#d9822b');
+
         const timestamp = getExportTimestamp(new Date());
-        const b = new Blob([JSON.stringify(cachedStorage, null, 2)], { type: "application/json" });
+        const filename = `youtube_playlist_saver_data_${timestamp}.json`;
+        const b = new Blob([JSON.stringify(cachedStorage, null, 2)], { type: 'application/json;charset=utf-8' });
         const u = URL.createObjectURL(b);
-        const a = document.createElement('a');
-        a.href = u;
-        a.download = `youtube_playlist_saver_data_${timestamp}.json`;
-        document.body.appendChild(a); a.click();
-        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(u); }, 100);
+
+        GM_download({
+            url: u,
+            name: filename,
+            saveAs: false,
+            onload: () => {
+                exportInProgress = false;
+                URL.revokeObjectURL(u);
+                setExportStatus('Exported', '#2ba640', { autoClear: true });
+            },
+            onerror: (error) => {
+                exportInProgress = false;
+                URL.revokeObjectURL(u);
+                setExportStatus('Export failed', '#d93025', { autoClear: true, delay: 4000 });
+                console.error('[YouTube Playlist Saver] Export failed:', error);
+            },
+            ontimeout: () => {
+                exportInProgress = false;
+                URL.revokeObjectURL(u);
+                setExportStatus('Export failed', '#d93025', { autoClear: true, delay: 4000 });
+                console.error('[YouTube Playlist Saver] Export timed out.');
+            }
+        });
     }
 
     function getExportTimestamp(date) {
