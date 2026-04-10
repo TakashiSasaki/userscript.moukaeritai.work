@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.65
-// @lastModified  2026-04-09
+// @version      0.1.67
+// @lastModified  2026-04-10
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -149,7 +149,7 @@
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.58';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.67';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -516,7 +516,7 @@
                 updatePhase('Menu open', true);
                 highlightOutline(popup);
                 if (!waitedForMenu) {
-                    await new Promise(r => setTimeout(r, 500));
+                    await new Promise(r => setTimeout(r, 300));
                     waitedForMenu = true;
                 }
                 // 2. Select all menu items using role="menuitem" for better coverage
@@ -537,8 +537,6 @@
                         target.focus(); // Shift focus before clicking
 
                         highlightOutline(target);
-                        await new Promise(r => setTimeout(r, 400)); // wait a bit before clicking
-
                         target.click();
                         if (!cancelRequested) {
                             const indexVal = videoContainer.querySelector('#index')?.textContent?.trim();
@@ -569,12 +567,10 @@
             const style = window.getComputedStyle(item);
             // Check if removed from DOM or hidden
             if (!item.isConnected || item.style.display === 'none' || item.hidden || style.display === 'none' || style.visibility === 'hidden') {
-                await new Promise(r => setTimeout(r, 500));
                 return true;
             }
             const rect = item.getBoundingClientRect();
             if (rect.width === 0 || rect.height === 0) {
-                await new Promise(r => setTimeout(r, 500));
                 return true;
             }
             await new Promise(r => setTimeout(r, 500));
@@ -668,9 +664,6 @@
                             console.warn('[YouTube Playlist Remover] Item removal timed out:', item);
                         }
                     } else {
-                        // Do not wait for disappear, but wait 1s specifically
-                        updatePhase('Cooldown...', true);
-                        await new Promise(r => setTimeout(r, 1000));
                         candidateStore.remove(item);
                     }
                 }
@@ -683,7 +676,7 @@
 
                 // Small buffer between items
                 updatePhase('Cooldown...', true);
-                await new Promise(r => setTimeout(r, 500));
+                await new Promise(r => setTimeout(r, 300));
             }
 
             if (deletionTimes.length > 0) {
