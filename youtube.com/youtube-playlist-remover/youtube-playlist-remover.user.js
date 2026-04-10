@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.70
+// @version      0.1.71
 // @lastModified  2026-04-10
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @antifeature  webRequestBlocking
@@ -154,7 +154,7 @@
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.70';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.71';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -602,6 +602,20 @@
         return false;
     }
 
+    async function attemptRemoveVideoWithScrollFallback(videoContainer) {
+        const successWithoutScroll = await attemptRemoveVideo(videoContainer);
+        if (successWithoutScroll || !isActive) {
+            return successWithoutScroll;
+        }
+
+        updatePhase('Scrolling...', true);
+        videoContainer.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
+        highlightOutline(videoContainer);
+        await new Promise(r => setTimeout(r, 100));
+
+        return attemptRemoveVideo(videoContainer);
+    }
+
     async function waitForItemDisappearance(item, timeout = 5000) {
         const start = Date.now();
         while (Date.now() - start < timeout) {
@@ -677,13 +691,10 @@
 
                 const indexVal = item.querySelector('#index')?.textContent?.trim() || '?';
                 updateStatus(`Removing #${indexVal} (queued: ${removalQueue.length})`, true);
-                updatePhase('Scrolling...', true);
-                item.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
                 highlightOutline(item);
-                await new Promise(r => setTimeout(r, 100));
 
                 const startRemove = Date.now();
-                const success = await attemptRemoveVideo(item);
+                const success = await attemptRemoveVideoWithScrollFallback(item);
                 const endRemove = Date.now();
 
                 if (success) {
