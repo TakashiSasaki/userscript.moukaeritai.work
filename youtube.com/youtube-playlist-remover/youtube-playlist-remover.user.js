@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.67
+// @version      0.1.68
 // @lastModified  2026-04-10
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @antifeature  webRequestBlocking
@@ -149,7 +149,7 @@
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.67';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.68';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -489,6 +489,16 @@
         return rect.width > 0 || rect.height > 0;
     }
 
+    function getVisibleMenuPopup() {
+        const popups = Array.from(document.querySelectorAll('ytd-menu-popup-renderer'));
+        for (let i = popups.length - 1; i >= 0; i--) {
+            if (isElementVisible(popups[i])) {
+                return popups[i];
+            }
+        }
+        return null;
+    }
+
     async function attemptRemoveVideo(videoContainer) {
         updatePhase('Opening menu...', true);
         // Shift focus to the container itself first
@@ -507,12 +517,13 @@
 
         menuBtn.focus(); // Shift focus before clicking
         menuBtn.click();
+        await new Promise(r => setTimeout(r, 100));
 
         const START = Date.now();
         let waitedForMenu = false;
         while (Date.now() - START < 10000) {
-            const popup = document.querySelector('ytd-menu-popup-renderer');
-            if (popup && isElementVisible(popup)) {
+            const popup = getVisibleMenuPopup();
+            if (popup) {
                 updatePhase('Menu open', true);
                 highlightOutline(popup);
                 if (!waitedForMenu) {
@@ -639,6 +650,7 @@
                 updatePhase('Scrolling...', true);
                 item.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
                 highlightOutline(item);
+                await new Promise(r => setTimeout(r, 100));
 
                 const startRemove = Date.now();
                 const success = await attemptRemoveVideo(item);
