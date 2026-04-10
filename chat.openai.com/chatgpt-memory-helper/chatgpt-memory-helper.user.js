@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Memory Helper
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.3
+// @version      0.3.4
 // @description  Adds serial numbers to memories in ChatGPT's memory management dialog.
 // @author       Takashi Sasaki
 // @match        https://chatgpt.com/*
@@ -54,14 +54,14 @@ const report = () => {
         });
     };
 
-    const observer = new MutationObserver((mutationsList, observer) => {
+    const observer = new MutationObserver((mutationsList, _observer) => {
         for (const mutation of mutationsList) {
             if (mutation.type === 'childList') {
                 mutation.addedNodes.forEach(node => {
                     if (node.nodeType === Node.ELEMENT_NODE && node.matches('div[role="dialog"]')) {
                         const dialog = node;
                         const header = dialog.querySelector('h2');
-                        if (header && header.textContent.includes('保存されたメモリ')) {
+                        if (header && (header.textContent.includes('保存されたメモリ') || header.textContent.includes('Memory'))) {
                             const memoryList = dialog.querySelector('tbody');
                             if (memoryList) {
                                 // Initial run
