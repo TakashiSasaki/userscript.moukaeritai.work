@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.78
+// @version      0.2.79
 // @lastModified 2026-04-10
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @antifeature  webRequestBlocking
@@ -466,25 +466,21 @@
         return { file: blob, name: filename };
     }
 
-    function exportViaManager(exportFile) {
-        return new Promise((resolve, reject) => {
-            if (typeof GM_download !== 'function') {
-                reject(new Error('GM_download is unavailable.'));
-                return;
-            }
-
-            try {
-                GM_download({
-                    url: exportFile.file,
-                    name: exportFile.name,
-                    saveAs: false,
-                    onload: () => resolve('manager'),
-                    onerror: (error) => reject(error || new Error('GM_download failed.')),
-                    ontimeout: () => reject(new Error('GM_download timed out.'))
-                });
-            } catch (error) {
-                reject(error);
-            }
+    function exportViaAnchor(exportFile) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const a = document.createElement('a');
+                a.href = e.target.result; // Data URI avoids blob UUID issues in some contexts
+                a.download = exportFile.name;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    resolve('anchor');
+                }, 0);
+            };
+            reader.readAsDataURL(exportFile.file);
         });
     }
 
@@ -516,19 +512,26 @@
         setExportStatus('Exporting...', '#d9822b');
 
         try {
-            try {
-                await exportViaManager(exportFile);
-                setExportStatus('Exported', '#2ba640', { autoClear: true });
-                return;
-            } catch (managerError) {
-                console.warn('[YouTube Playlist Saver] Manager-backed export failed. Falling back to save dialog.', managerError);
+            if (typeof window.showSaveFilePicker === 'function') {
+                try {
+                    await exportViaSavePicker(exportFile);
+                    setExportStatus('Exported', '#2ba640', { autoClear: true });
+                    return;
+                } catch (pickerError) {
+                    if (pickerError.name === 'AbortError') {
+                        setExportStatus('Cancelled', '#999', { autoClear: true });
+                        return; // User cancelled, no need to fallback
+                    }
+                    console.warn('[YouTube Playlist Saver] Native save dialog failed. Falling back...', pickerError);
+                }
             }
 
-            await exportViaSavePicker(exportFile);
+            // Fallback to anchor download (Data URI)
+            await exportViaAnchor(exportFile);
             setExportStatus('Exported', '#2ba640', { autoClear: true });
-        } catch (pickerError) {
+        } catch (error) {
             setExportStatus('Export failed', '#d93025', { autoClear: true, delay: 4000 });
-            console.error('[YouTube Playlist Saver] Export failed in both manager and save dialog paths:', pickerError);
+            console.error('[YouTube Playlist Saver] Export failed:', error);
         } finally {
             exportInProgress = false;
         }
