@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.59
+// @version      0.1.60
 // @lastModified 2026-04-10
 // @description  YouTube繝励Ξ繧､繝ｪ繧ｹ繝医・繝輔ぅ繝ｫ繧ｿ繝ｪ繝ｳ繧ｰ縲∫憾諷玖｡ｨ遉ｺ(MATCHED)縲∽ｸ諡ｬ蜑企勁讖溯・繧呈署萓帙＠縺ｾ縺吶・
 // @antifeature  webRequestBlocking
@@ -88,6 +88,7 @@
     let processTimerId = null;
     let resultsUpdateTimerId = null;
     let hasAppliedCurrentPage = false;
+    let isResetting = false;
 
     // --- Helpers ---
     function normalizeText(str) {
@@ -186,6 +187,24 @@
         });
     }
 
+    function setResetButtonBusy(busy) {
+        if (!panel) return;
+        const btn = panel.querySelector('#yt-filter-reset-btn');
+        if (!btn) return;
+
+        if (busy) {
+            btn.textContent = 'Resetting...';
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'not-allowed';
+        } else {
+            btn.textContent = 'Reset Filter';
+            btn.disabled = false;
+            btn.style.opacity = '';
+            btn.style.cursor = 'pointer';
+        }
+    }
+
     function resetAppliedFilteringState() {
         syncFilterStateFromInputs();
         isFiltering = false;
@@ -197,19 +216,27 @@
             ...document.querySelectorAll('ytd-playlist-video-renderer')
         ]);
 
-        items.forEach((item) => {
-            if (!item || !item.isConnected) {
-                return;
-            }
+        isResetting = true;
+        setResetButtonBusy(true);
 
-            item.style.display = '';
-            renderMatchedIndicator(item, false);
-        });
+        // Defer heavy DOM work so the browser can paint "Resetting..." first
+        setTimeout(() => {
+            items.forEach((item) => {
+                if (!item || !item.isConnected) {
+                    return;
+                }
 
-        allCachedItems.clear();
-        pendingProcessItems.clear();
-        updateQueueInfo();
-        resetFilterDisplayInfo();
+                item.style.display = '';
+                renderMatchedIndicator(item, false);
+            });
+
+            allCachedItems.clear();
+            pendingProcessItems.clear();
+            updateQueueInfo();
+            resetFilterDisplayInfo();
+            isResetting = false;
+            setResetButtonBusy(false);
+        }, 0);
     }
 
     function cancelScheduledResultsUpdate() {
@@ -340,6 +367,7 @@
         const resetButton = panel.querySelector('#yt-filter-reset-btn');
         if (resetButton) {
             resetButton.addEventListener('click', () => {
+                if (isResetting) return;
                 if (isActive) {
                     stopBackgroundWork();
                 }
