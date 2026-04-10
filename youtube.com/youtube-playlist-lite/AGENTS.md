@@ -38,18 +38,32 @@ YouTube プレイリストページにおいて、サムネイル・プレイリ
 
 ## 3. DOM セレクタ (`PAGE_CONFIG.playlist`)
 
-| 対象 | セレクタ |
-|---|---|
-| サムネイル要素 | `ytd-playlist-video-renderer ytd-thumbnail` |
-| プレイリストヘッダー | `#page-manager > ytd-browse > ytd-playlist-header-renderer` |
-| ミニプレイヤー | `ytd-miniplayer` |
-| サムネイル Observer Root | `ytd-playlist-video-list-renderer` |
-| ヘッダー Observer Root | `#page-manager > ytd-browse` |
-| ミニプレイヤー Observer Root | `ytd-app` |
+| ターゲット | セレクタ | 監視対象 (MutationObserver) |
+|---|---|---|
+| Thumbnails | `ytd-playlist-video-renderer ytd-thumbnail` | `ytd-playlist-video-list-renderer` |
+| Header | `#page-manager > ytd-browse > ytd-playlist-header-renderer` | `#page-manager > ytd-browse` |
+| Miniplayer | `ytd-miniplayer` | `ytd-app` |
+| **Disable Links** | `ytd-playlist-video-renderer` | `document` (Capture Phase Listener) |
 
 ---
 
-## 4. MutationObserver 構成
+## 4. 実装のポイント
+
+### キャプチャ相によるナビゲーション阻止
+YouTube の SPA ナビゲーションは Polymer の内部処理で複雑に制御されています。これを確実に止めるため、`click` および `mousedown` イベントを **キャプチャ相 (`true`)** で捕捉し、`stopImmediatePropagation()` と `preventDefault()` を実行します。
+
+### 除外設定
+以下の要素へのインタラクションは、ナビゲーション防止設定中も許可します：
+- `#menu`, `ytd-menu-renderer` (三点メニュー)
+- `#reorder` (ドラッグハンドル)
+- `.yus-panel` (本スクリプトおよび他スクリプトの UI パネル)
+
+### ポーリングと再試行
+ SPA ナビゲーション直後は Observer の Root 要素が存在しない場合があるため、`setTimeout` による再試行（1000ms間隔）を実装し、要素の出現を待機します。
+
+---
+
+## 5. MutationObserver 構成
 
 オブザーバーは **2 つ** に分離されており、それぞれ異なるルートを監視します：
 
@@ -75,14 +89,14 @@ YouTube プレイリストページにおいて、サムネイル・プレイリ
 
 ---
 
-## 5. テンプレートとフォールバック
+## 6. テンプレートとフォールバック
 
 - `@resource ytLiteTemplate` から HTML テンプレートを読み込み
-- テンプレートが壊れている場合（`hasExpectedPanelControls()` で 3 つのチェックボックスの存在を検証）、`FALLBACK_PANEL_TEMPLATE` にフォールバック
+- テンプレートが壊れている場合（`hasExpectedPanelControls()` で 4 つのチェックボックスの存在を検証）、`FALLBACK_PANEL_TEMPLATE` にフォールバック
 
 ---
 
-## 6. `index.html` のメンテナンス要件
+## 7. `index.html` のメンテナンス要件
 
 1. **バージョン情報の動的取得**:
    - 各 `index.html` は `domain-landing.js` を読み込み、GitHub から最新の `@version` を動的に取得して表示します。HTML 内にバージョン番号をハードコードしないでください。

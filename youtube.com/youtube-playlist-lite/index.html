@@ -23,43 +23,32 @@
 
         <div id="content">
             <h1>YouTube Playlist Lite</h1>
-<p>YouTube プレイリストの軽量化ツールです。サムネイルなどの重い要素を非表示にして、ブラウザの負荷を軽減します。</p>
-<h2>機能</h2>
-<ul>
-<li><strong>Hide (CSS)</strong>: サムネイルをCSS (<code>display: none</code>) で隠します。最も安全な方法で、オフにすればすぐに再表示されます。</li>
-<li><strong>Auto Remove (DOM)</strong>: 新しく追加されたサムネイル要素をDOMから物理的に削除します。<strong>メモリ節約効果が高い</strong>ですが、再表示するにはページのリロードが必要です。</li>
-<li><strong>Clear Thumbs Now</strong>: 現在読み込まれている全てのサムネイルを即座にDOMから削除します。</li>
-<li><strong>自動最小化</strong>: スクリプトの対象外ページではパネルが自動的に切り詰め（最小化）され、余計な表示を抑制します。</li>
-<li><strong>v0.1.44</strong>: メモリリーク対策として、不要になったリサイズイベントリスナーを適切に解除するように変更</li>
-        </ul>
-<h2>インストール</h2>
-<p>👉 <strong><a href="youtube-playlist-lite.user.js">Install YouTube Playlist Lite</a></strong></p>
-<h2>使い方</h2>
-<ol>
-<li>プレイリスト/再生履歴画面で、右下に表示される <strong>Lite</strong> パネルを確認します。</li>
-<li>対象外ページではパネルが自動的に最小化されます。</li>
-<li><strong>Hide (CSS)</strong> をオンにすると、見た目上でサムネイルが消えます。</li>
-<li><strong>Auto Remove (DOM)</strong> をオンにすると、今後読み込まれるサムネイルが自動で物理削除されます。</li>
-<li><strong>Clear Thumbs Now</strong> ボタンを押すと、現在表示されているサムネイルをまとめて削除します。</li>
-</ol>
-<h2>更新履歴</h2>
-<ul>
-            <li><strong>v0.1.45</strong>: MutationObserver 由来の cleanup デバウンス時間を 300ms に延長し、プレイリスト更新時の再実行頻度をさらに抑制。</li>
-            <li><strong>v0.1.23</strong>: フローティングUIが画面外にある場合は、画面内に自動的に位置を調整して表示するようにしました。</li>
-<li><strong>v0.1.22</strong>: タイトル部分にマウスオーバー時のアニメーションを追加し、インタラクティブ性を向上。</li>
-<li><strong>v0.1.21</strong>: Active/Inactive インジケーターを廃止し、非アクティブ時はパネルを強制的に最小化するように改善。ダブルクリックの判定をタイトル部分のみに限定。</li>
-<li><strong>v0.1.20</strong>: UI表示が最小化されているか全体表示されているかを記憶してそれを次回のロード時に反映させるように修正。</li>
-<li><strong>v0.1.19</strong>: MutationObserverにデバウンス処理を導入し、無限スクロール時のCPU負荷を大幅に軽減。ミニプレーヤー除去ロジックの効率化。</li>
-<li><strong>v0.1.18</strong>: 再生履歴ページのサポートを終了し、プレイリスト表示ページのみに動作を限定。バージョン番号のダブルクリックによる手動UI最小化機能を追加。</li>
-<li><strong>v0.1.18</strong>: 再生履歴ページのサポートを終了し、プレイリスト表示ページのみに動作を限定。バージョン番号のダブルクリックによる手動UI最小化機能を追加。</li>
-<li><strong>v0.1.8</strong>: 初期化ディレイを1-3秒のランダムに変更し、他スクリプトと同時に起動しづらく改善。</li>
-<li><strong>v0.1.6</strong>: 手動の最小化ボタンを撤去し、対象ページ以外ではパネル内容を自動的に閉じる方式に変更。</li>
-<li><strong>v0.1.5</strong>: 非対象ページではパネルを自動で最小化し、対象URLでのみ機能を有効化。</li>
-<li><strong>v0.1.4</strong>: 再生履歴ページ (/feed/history) に対応。</li>
-<li><strong>v0.1.2</strong>: ページ遷移時（yt-navigate-finish）の設定再適用とパネル保持を強化。各モードの状態記憶を確実に。</li>
-<li><strong>v0.1.1</strong>: DOMからの物理削除モードおよび即時削除ボタンを追加。</li>
-<li><strong>v0.1.0</strong>: 初回公開。サムネイル非表示機能を実装。</li>
-</ul>
+            <p>YouTube プレイリストの軽量化ツールです。サムネイルなどの重い要素を非表示にして、ブラウザの負荷を軽減します。</p>
+            <h2>機能</h2>
+            <ul>
+                <li><strong>Thumbnails</strong>: プレイリスト内の動画サムネイルをDOMから物理的に削除します。メモリと通信量の節約に効果的です。</li>
+                <li><strong>Playlist Header</strong>: プレイリストの上部にある巨大なヘッダー領域を削除して、表示面積を広げます。</li>
+                <li><strong>Miniplayer</strong>: 画面右下のミニプレイヤーを自動的に削除します。</li>
+                <li><strong>Disable Links (Safe Navigation)</strong>: 動画アイテムをクリックしても再生ページへ遷移しないようにします。プレイリストの編集中に誤って再生が始まるのを防ぎます。三点メニュー等の操作は引き続き可能です。</li>
+                <li><strong>自動最小化</strong>: スクリプトの対象外ページではパネルが自動的に切り詰め（最小化）され、余計な表示を抑制します。</li>
+            </ul>
+            <h2>インストール</h2>
+            <p>👉 <strong><a href="youtube-playlist-lite.user.js">Install YouTube Playlist Lite</a></strong></p>
+            <h2>使い方</h2>
+            <ol>
+                <li>プレイリスト画面で、右下に表示される <strong>Lite</strong> パネルを確認します。</li>
+                <li>対象外ページではパネルが自動的に最小化されます。</li>
+                <li>各種ターゲット（Thumbnails, Header, Miniplayer, Disable Links）をチェックして機能を有効化します。</li>
+                <li>「Disable Links」をオンにすると、行をクリックしても再生が始まらなくなります。</li>
+            </ol>
+            <h2>更新履歴</h2>
+            <ul>
+                <li><strong>v0.1.46</strong>: <strong>Disable Links (Safe Navigation)</strong> 機能を追加。プレイリスト編集中に誤って動画が再生されるのを防ぐため、動画アイテムのリンクを無効化できます（メニュー操作は有効）。</li>
+                <li><strong>v0.1.45</strong>: MutationObserver 由来の cleanup デバウンス時間を 300ms に延長し、プレイリスト更新時の再実行頻度をさらに抑制。</li>
+                <li><strong>v0.1.44</strong>: メモリリーク対策として、不要になったリサイズイベントリスナーを適切に解除するように変更。</li>
+                <li><strong>v0.1.23</strong>: フローティングUIが画面外にある場合は、画面内に自動的に位置を調整して表示するようにしました。</li>
+                <li><strong>v0.1.19</strong>: MutationObserverにデバウンス処理を導入し、無限スクロール時のCPU負荷を大幅に軽減。ミニプレーヤー除去ロジックの効率化。</li>
+            </ul>
 
         </div>
 

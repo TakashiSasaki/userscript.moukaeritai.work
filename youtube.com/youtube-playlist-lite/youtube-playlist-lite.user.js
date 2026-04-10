@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.45
+// @version      0.1.46
 // @description  YouTubeプレイリストでサムネイル、ヘッダー、ミニプレイヤーを継続的に削除して表示を軽量化するツールです。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -37,7 +37,7 @@
             -webkit-backdrop-filter: none !important;
         }
     `);
-const report = () => {
+    const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
                 name: GM_info.script.name,
@@ -60,12 +60,14 @@ const report = () => {
     const TARGET_THUMB_KEY = 'yt_lite_target_thumbnails';
     const TARGET_HEADER_KEY = 'yt_lite_target_header';
     const TARGET_MINIPLAYER_KEY = 'yt_lite_target_miniplayer';
+    const TARGET_DISABLE_LINKS_KEY = 'yt_lite_target_disable_links';
     const MINIMIZED_STATE_KEY = 'yt_lite_is_minimized';
     const STORAGE_UNSET = '__unset__';
     let selectedTargets = {
         thumbnails: false,
         header: false,
-        miniplayer: false
+        miniplayer: false,
+        disableLinks: false
     };
     const PAGE_CONFIG = {
         playlist: {
@@ -93,6 +95,10 @@ const report = () => {
         <div style="display: flex; align-items: center; gap: 4px; font-size: 10px;">
             <input type="checkbox" id="yt-lite-target-miniplayer">
             <label for="yt-lite-target-miniplayer" style="cursor: pointer;">Miniplayer</label>
+        </div>
+        <div style="display: flex; align-items: center; gap: 4px; font-size: 10px;">
+            <input type="checkbox" id="yt-lite-target-disable-links">
+            <label for="yt-lite-target-disable-links" style="cursor: pointer;">Disable Links</label>
         </div>
     </div>
 </div>`;
@@ -128,7 +134,8 @@ const report = () => {
         selectedTargets = {
             thumbnails: getMigratedTargetSelection(TARGET_THUMB_KEY, [LEGACY_HIDE_THUMB_KEY, LEGACY_REMOVE_THUMB_KEY], false),
             header: getStoredBoolean(TARGET_HEADER_KEY, false),
-            miniplayer: getMigratedTargetSelection(TARGET_MINIPLAYER_KEY, [LEGACY_HIDE_MINIPLAYER_KEY, LEGACY_REMOVE_MINIPLAYER_KEY], false)
+            miniplayer: getMigratedTargetSelection(TARGET_MINIPLAYER_KEY, [LEGACY_HIDE_MINIPLAYER_KEY, LEGACY_REMOVE_MINIPLAYER_KEY], false),
+            disableLinks: getStoredBoolean(TARGET_DISABLE_LINKS_KEY, false)
         };
     }
 
@@ -137,7 +144,8 @@ const report = () => {
         return Boolean(
             panelElement.querySelector('#yt-lite-target-thumbnails') &&
             panelElement.querySelector('#yt-lite-target-header') &&
-            panelElement.querySelector('#yt-lite-target-miniplayer')
+            panelElement.querySelector('#yt-lite-target-miniplayer') &&
+            panelElement.querySelector('#yt-lite-target-disable-links')
         );
     }
 
@@ -318,13 +326,58 @@ const report = () => {
         }
     }
 
-    // --- UI Creation ---
+    // --- Navigation Blocking ---
+    let navigationBlockHandler = null;
 
+    function isInPlaylistRow(element) {
+        return !!element.closest('ytd-playlist-video-renderer');
+    }
+
+    function isInExcludedRegion(element) {
+        return !!(
+            element.closest('#menu') ||
+            element.closest('ytd-menu-renderer') ||
+            element.closest('#reorder') ||
+            element.closest('.yus-panel')
+        );
+    }
+
+    function attachNavigationBlock() {
+        if (navigationBlockHandler) return;
+
+        navigationBlockHandler = (e) => {
+            if (!selectedTargets.disableLinks) return;
+
+            const target = e.target;
+            if (!isInPlaylistRow(target)) return;
+            if (isInExcludedRegion(target)) return;
+
+            // Block <a> tag navigation and clicks that trigger Polymer navigation
+            const link = target.closest('a');
+            if (link || target.closest('ytd-playlist-video-renderer #content')) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+            }
+        };
+
+        // Use capture phase to intercept YouTube's SPA navigation handlers
+        document.addEventListener('click', navigationBlockHandler, true);
+        document.addEventListener('mousedown', navigationBlockHandler, true);
+    }
+
+    function detachNavigationBlock() {
+        if (!navigationBlockHandler) return;
+        document.removeEventListener('click', navigationBlockHandler, true);
+        document.removeEventListener('mousedown', navigationBlockHandler, true);
+        navigationBlockHandler = null;
+    }
+
+    // --- UI Creation ---
 
     function createPanel() {
         if (document.getElementById('yt-lite-panel')) return;
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.31';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.46';
         const templateStr = GM_getResourceText('ytLiteTemplate');
         const resourceHtml = templateStr ? templateStr.replace('{{VERSION}}', version) : '';
         panel = resourceHtml ? yusParseHTML(resourceHtml) : null;
@@ -353,6 +406,7 @@ const report = () => {
         bindCheckbox('yt-lite-target-thumbnails', TARGET_THUMB_KEY, 'thumbnails');
         bindCheckbox('yt-lite-target-header', TARGET_HEADER_KEY, 'header');
         bindCheckbox('yt-lite-target-miniplayer', TARGET_MINIPLAYER_KEY, 'miniplayer');
+        bindCheckbox('yt-lite-target-disable-links', TARGET_DISABLE_LINKS_KEY, 'disableLinks');
 
         document.body.appendChild(panel);
         yusUpdatePanelVisibility(panel);
@@ -382,12 +436,14 @@ const report = () => {
     function startMain() {
         createPanel();
         attachPanelResizeHandler();
+        attachNavigationBlock();
         yusSetPanelActive(panel, true);
         applySettings();
     }
 
     function stopMain() {
         detachPanelResizeHandler();
+        detachNavigationBlock();
         yusSetPanelActive(panel, false);
         cleanupFeatures();
     }
