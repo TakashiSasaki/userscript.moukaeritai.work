@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.75
-// @lastModified 2026-04-09
+// @version      0.2.76
+// @lastModified 2026-04-10
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -39,7 +39,7 @@
             -webkit-backdrop-filter: none !important;
         }
     `);
-const report = () => {
+    const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
                 name: GM_info.script.name,
@@ -55,26 +55,6 @@ const report = () => {
 
     const DATA_KEY = 'yt_playlist_data';
     const DATA_VERSION = 2;
-    // Helper to create trash icon
-    const TRASH_ICON_PATHS = [
-        "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
-        "M11 17H9V8h2v9zm4-9h-2v9h2V8zm4-4v1h-1v16H6V5H5V4h4V3h6v1h4zm-2 1H8v15h10V5z",
-        "M19 3h-4V2a1 1 0 00-1-1h-4a1 1 0 00-1 1v1H5a2 2 0 00-2 2h18a2 2 0 00-2-2ZM6 19V7H4v12a4 4 0 004 4h8a4 4 0 004-4V7h-2v12a2 2 0 01-2 2H8a2 2 0 01-2-2Zm4-11a1 1 0 00-1 1v8a1 1 0 102 0V9a1 1 0 00-1-1Zm4 0a1 1 0 00-1 1v8a1 1 0 002 0V9a1 1 0 00-1-1Z"
-    ];
-
-    function createIcon(pathData, color = 'grey') {
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('viewBox', '0 0 24 24');
-        svg.setAttribute('width', '24');
-        svg.setAttribute('height', '24');
-        svg.style.fill = color;
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', pathData);
-        svg.appendChild(path);
-        return svg;
-    }
-
-
     const PANEL_POS_KEY = 'yt_saver_panel_position';
     const MINIMIZED_STATE_KEY = 'yt_saver_is_minimized';
     let isActive = false;
@@ -99,7 +79,7 @@ const report = () => {
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.69';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.76';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -261,40 +241,6 @@ const report = () => {
         return null;
     }
 
-    async function attemptRemoveVideo(videoContainer) {
-        const menuBtn = videoContainer.querySelector('#menu button') ||
-            videoContainer.querySelector('button.dropdown-trigger');
-        if (!menuBtn) return false;
-
-        menuBtn.click();
-
-        // Polling for popup
-        const START = Date.now();
-        while (Date.now() - START < 5000) {
-            const popup = document.querySelector('ytd-menu-popup-renderer');
-            if (popup) {
-                const items = Array.from(popup.querySelectorAll('ytd-menu-service-item-renderer'));
-                for (const item of items) {
-                    const text = item.textContent || "";
-                    if (text.includes('Remove from') || text.includes('から削除')) {
-                        item.click();
-                        document.body.click();
-                        return true;
-                    }
-                    const path = item.querySelector('path');
-                    if (path && TRASH_ICON_PATHS.includes(path.getAttribute('d'))) {
-                        item.click();
-                        document.body.click();
-                        return true;
-                    }
-                }
-            }
-            await new Promise(r => setTimeout(r, 100));
-        }
-        document.body.click();
-        return false;
-    }
-
     function renderIndicator(element, isNew) {
         // Find metadata bar
         let bar = element.querySelector('#engagement-bar') ||
@@ -306,8 +252,6 @@ const report = () => {
         // Clean old
         const oldInd = bar.querySelector('.yt-saver-indicator');
         if (oldInd) oldInd.remove();
-        const oldBtn = bar.querySelector('.yt-saver-remove-btn');
-        if (oldBtn) oldBtn.remove();
 
         // Indicator
         const indicator = document.createElement('span');
@@ -318,29 +262,6 @@ const report = () => {
             color: isNew ? '#3ea6ff' : '#2ba640', verticalAlign: 'middle' // Blue for NEW, Green for SAVED
         });
 
-        // Trash Button
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'yt-saver-remove-btn';
-        removeBtn.title = 'Remove from playlist';
-        Object.assign(removeBtn.style, {
-            background: 'none', border: 'none', cursor: 'pointer', padding: '0',
-            marginLeft: '8px', verticalAlign: 'middle', opacity: '0.7'
-        });
-        removeBtn.appendChild(createIcon('M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z', '#606060'));
-
-        removeBtn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            if (!confirm('Delete this video from playlist?')) return;
-            const success = await attemptRemoveVideo(element);
-            if (success) {
-                element.style.opacity = '0.3';
-                element.style.pointerEvents = 'none';
-            } else {
-                alert('Remove failed. Menu structure might have changed.');
-            }
-        });
-
-        bar.prepend(removeBtn);
         bar.prepend(indicator);
     }
 
