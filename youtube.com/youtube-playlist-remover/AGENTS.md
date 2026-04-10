@@ -77,12 +77,12 @@ YouTube プレイリストページで、スクロールして通り過ぎた（
 
 | 対象 | 方法 | 間隔 |
 |---|---|---|
-| Removable 数の表示更新 | `scheduleCandidatesInfoRefresh()` (`setTimeout`) | 200ms |
+| Removable 数の表示更新 | `scheduleCandidatesInfoRefresh()` (`setTimeout`) | 2000ms |
 | キャッシュクリーンアップ | `lightweightCleanup()` (`setInterval`) | 5000ms |
 
 ### なぜ requestAnimationFrame ではなく setTimeout か
 
-IntersectionObserver はスクロール中に毎フレームコールバックを発火する。`requestAnimationFrame` のガードは同一フレーム内の重複のみ防止し、次フレームで再度実行される。`setTimeout(200ms)` は最低 200ms の間隔を保証し、秒間最大 5 回に制限する。
+IntersectionObserver はスクロール中に毎フレームコールバックを発火する。`requestAnimationFrame` のガードは同一フレーム内の重複のみ防止し、次フレームで再度実行される。`setTimeout(2000ms)` は最低 2000ms の間隔を保証し、2秒に1回に制限する。
 
 ---
 

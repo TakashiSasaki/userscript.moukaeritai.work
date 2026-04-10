@@ -87,7 +87,7 @@ Reset Filter ボタン          → 5 つの入力欄をクリア → beginFilte
 
 - **チャンク処理**: `processChunk()` は 1 回 30 件ずつ処理し、`setTimeout(processChunk, 0)` で再スケジュール（UIスレッドをブロックしない）
 - **メタデータキャッシュ**: タイトル・チャンネル名の取得コストを `itemMetadataCache` (`WeakMap`) にキャッシュ
-- **結果更新のデバウンス**: `scheduleResultsUpdate()` は `RESULTS_UPDATE_DELAY_MS = 1200ms` のデバウンスで `updateCounts()` を呼ぶ
+- **結果更新のデバウンス**: `scheduleResultsUpdate()` は `RESULTS_UPDATE_DELAY_MS = 2000ms` のデバウンスで `updateCounts()` を呼ぶ
 - **MutationObserver スコープ**: `ytd-playlist-video-list-renderer #contents` のみを監視（`subtree: true, childList: true`）
 - **ポーリング禁止**: `startBackgroundWork` が設定する定期タイマーは `recheckCachedItems` (5 秒ごと) のみで、DOM の再スキャンではなくキャッシュクリーンアップのみを行う
 
