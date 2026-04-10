@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT No Margin
 // @namespace    userscript.moukaeritai.work
-// @version      1.2.8
+// @version      1.2.9
 // @description  This script customizes the ChatGPT interface by reducing the margin around each message in the conversation view. It aims to create a tighter layout, thereby making the interface cleaner and allowing more content to be visible at once.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -83,6 +83,7 @@ const report = () => {
         }
 
         /* 6. Embedded Canvas Card: Ensure it has some margin and doesn't touch the screen edges */
+        section[data-turn] .popover.rounded-3xl,
         article .popover.rounded-3xl {
              width: calc(100% - 3rem) !important;
              margin-left: auto !important;
