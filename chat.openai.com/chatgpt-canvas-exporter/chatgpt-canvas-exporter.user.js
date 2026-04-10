@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Canvas Exporter
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.7.5
+// @version      0.7.6
 // @description  ChatGPTの会話ページでキャンバスの内容をエクスポートする
 // @author       Takashi Sasaki
 // @match        https://chatgpt.com/*
@@ -31,10 +31,10 @@ const report = () => {
         return;
     }
 
-    const VERSION = '0.7.5';
+    const VERSION = '0.7.6';
 
     // セレクタの定義
-    const CANVAS_MESSAGE_SELECTOR = 'div[id^="textdoc-message-"]';
+    const CANVAS_MESSAGE_SELECTOR = 'section[data-turn] .popover, div[id^="textdoc-message-"]';
     const CANVAS_ACTIONS_SELECTOR = `${CANVAS_MESSAGE_SELECTOR} .flex.items-center.justify-end`;
     const CANVAS_CONTENT_SELECTOR = '.ProseMirror';
     const CANVAS_TITLE_SELECTOR = `${CANVAS_MESSAGE_SELECTOR} .text-token-text-primary.font-semibold`;
@@ -42,7 +42,7 @@ const report = () => {
     // エクスポート処理 (特定の要素から)
     function downloadCanvasFromElement(messageEl) {
         const contentEl = messageEl.querySelector(CANVAS_CONTENT_SELECTOR);
-        const titleEl = messageEl.querySelector('.text-token-text-primary.font-semibold');
+        const titleEl = messageEl.querySelector(CANVAS_TITLE_SELECTOR);
 
         if (!contentEl) {
             console.error('Canvas content not found in element');
@@ -141,7 +141,7 @@ const report = () => {
         console.log('[CanvasExporter] Starting canvas extraction...');
         messageEls.forEach((messageEl, index) => {
             const contentEl = messageEl.querySelector(CANVAS_CONTENT_SELECTOR);
-            const titleEl = messageEl.querySelector('.text-token-text-primary.font-semibold');
+            const titleEl = messageEl.querySelector(CANVAS_TITLE_SELECTOR);
 
             if (contentEl) {
                 hasContent = true;
@@ -165,7 +165,7 @@ const report = () => {
 
         // --- 2. 会話中の画像のエクスポート ---
         console.log('[CanvasExporter] Starting image extraction...');
-        const imageEls = document.querySelectorAll('article img');
+        const imageEls = document.querySelectorAll('section[data-turn] img, article img');
         const imgPromises = [];
         const seenSrc = new Set();
         let imgCount = 0;
@@ -258,7 +258,7 @@ const report = () => {
     }
 
     // デフォルトのエクスポート処理 (最新または単一)
-    function downloadCanvasContent() {
+    function _downloadCanvasContent() {
         const messageEls = document.querySelectorAll(CANVAS_MESSAGE_SELECTOR);
         if (messageEls.length === 0) {
             alert('キャンバスが見つかりませんでした。');
@@ -272,7 +272,7 @@ const report = () => {
         const messageEls = document.querySelectorAll(CANVAS_MESSAGE_SELECTOR);
 
         messageEls.forEach(messageEl => {
-            const container = messageEl.querySelector('.flex.items-center.justify-end');
+            const container = messageEl.querySelector(CANVAS_ACTIONS_SELECTOR);
             if (!container || container.querySelector('.canvas-exporter-btn')) return;
 
             const btnWrapper = document.createElement('div');
@@ -318,7 +318,7 @@ const report = () => {
         }
 
         messageEls.forEach((messageEl, index) => {
-            const titleEl = messageEl.querySelector('.text-token-text-primary.font-semibold');
+            const titleEl = messageEl.querySelector(CANVAS_TITLE_SELECTOR);
             const title = titleEl ? titleEl.innerText.trim() : `Canvas ${index + 1}`;
 
             const item = document.createElement('div');
