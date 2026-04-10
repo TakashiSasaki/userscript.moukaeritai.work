@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Auto Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.18
+// @version      1.0.19
 // @description  Automatically scrolls the conversation list to load all items.
 // @author       Takashi SASAKI (https://twitter.com/TakashiSasaki)
 // @match        https://chatgpt.com/*
@@ -32,13 +32,12 @@ const report = () => {
     }
 
     const CONVERSATION_LIST_SELECTORS = [
+        "#history",
+        "nav[aria-label=\"チャット履歴\"]",
+        "nav[aria-label=\"Chat history\"]",
         "nav.overflow-y-auto",
         "#stage-slideover-sidebar nav",
-        "nav div.overflow-y-auto",
-        "#__next > div.overflow-hidden.w-full.h-full > div > div > div > div > nav > div.overflow-y-auto",
-        "#__next > div > div > div.overflow-hidden.w-full.h-full.relative.flex.z-0 > div > div > div > div > nav > div.flex-col.overflow-y-auto",
-        "#__next > div > div > div.overflow-hidden.w-full.h-full.relative.flex.z-0 > div > div > div > div > nav > div.flex-col > div > div",
-        "#__next > div.overflow-hidden.w-full.h-full.relative.flex > div.dark.flex-shrink-0.overflow-x-hidden > div > div > div > nav > div.overflow-y-auto"
+        "nav div.overflow-y-auto"
     ];
 
     const ERROR_MESSAGE_LIST_NOT_FOUND = "Unable to retrieve the conversation list. This may be due to changes in the DOM structure of ChatGPT.";
