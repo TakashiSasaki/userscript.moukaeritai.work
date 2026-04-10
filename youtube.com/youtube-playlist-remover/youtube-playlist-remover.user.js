@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.71
+// @version      0.1.72
 // @lastModified  2026-04-10
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @antifeature  webRequestBlocking
@@ -154,7 +154,7 @@
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.71';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.72';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -233,13 +233,14 @@
         el.textContent = count > 0 ? `Removable: ${count} items` : 'Removable: None';
     }
 
+    const CANDIDATES_REFRESH_DEBOUNCE_MS = 200;
     function scheduleCandidatesInfoRefresh() {
         if (candidatesInfoRefreshId !== null) return;
 
-        candidatesInfoRefreshId = requestAnimationFrame(() => {
+        candidatesInfoRefreshId = setTimeout(() => {
             candidatesInfoRefreshId = null;
             updateCandidatesInfo();
-        });
+        }, CANDIDATES_REFRESH_DEBOUNCE_MS);
     }
 
     function hasMatchedBadge(item) {
@@ -818,7 +819,7 @@
         isRemoving = false;
         resetRemovalQueueState();
         if (candidatesInfoRefreshId !== null) {
-            cancelAnimationFrame(candidatesInfoRefreshId);
+            clearTimeout(candidatesInfoRefreshId);
             candidatesInfoRefreshId = null;
         }
         removeFilterListeners();
