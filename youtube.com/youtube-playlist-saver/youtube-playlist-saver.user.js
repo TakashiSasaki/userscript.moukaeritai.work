@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.79
+// @version      0.2.80
 // @lastModified 2026-04-10
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @antifeature  webRequestBlocking
@@ -83,7 +83,7 @@
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.78';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.80';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -444,90 +444,96 @@
     // --- Import / Export Logic (Kept here) ---
     // (Existing Import/Export functions retained same as before...)
 
-    function buildExportFile() {
+    function buildExportData() {
         loadStorage();
         if (!cachedStorage) return null;
 
         const timestamp = getExportTimestamp(new Date());
         const filename = `youtube_playlist_saver_data_${timestamp}.json`;
         const json = JSON.stringify(cachedStorage, null, 2);
-        const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
 
-        if (typeof File === 'function') {
-            return {
-                file: new File([blob], filename, {
-                    type: 'application/json;charset=utf-8',
-                    lastModified: Date.now()
-                }),
-                name: filename
-            };
-        }
-
-        return { file: blob, name: filename };
+        return { json, filename };
     }
 
-    function exportViaAnchor(exportFile) {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const a = document.createElement('a');
-                a.href = e.target.result; // Data URI avoids blob UUID issues in some contexts
-                a.download = exportFile.name;
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    resolve('anchor');
-                }, 0);
-            };
-            reader.readAsDataURL(exportFile.file);
-        });
-    }
-
-    async function exportViaSavePicker(exportFile) {
-        if (typeof window.showSaveFilePicker !== 'function') {
-            throw new Error('showSaveFilePicker is unavailable.');
+    /**
+     * Primary: Use the real page's File System Access API via unsafeWindow.
+     * Tampermonkey's sandbox wraps `window`, hiding showSaveFilePicker.
+     * unsafeWindow gives access to the actual page window object.
+     */
+    async function exportViaSavePicker(json, filename) {
+        const realWindow = (typeof unsafeWindow !== 'undefined') ? unsafeWindow : window;
+        if (typeof realWindow.showSaveFilePicker !== 'function') {
+            throw new Error('showSaveFilePicker is unavailable on this browser.');
         }
 
         setExportStatus('Save dialog opened', '#d9822b');
-        const handle = await window.showSaveFilePicker({
-            suggestedName: exportFile.name,
+        const handle = await realWindow.showSaveFilePicker({
+            suggestedName: filename,
             types: [{
                 description: 'JSON Files',
                 accept: { 'application/json': ['.json'] }
             }]
         });
         const writable = await handle.createWritable();
-        await writable.write(exportFile.file);
+        await writable.write(json);
         await writable.close();
         return 'save-picker';
     }
 
+    /**
+     * Fallback: GM_download with a data: URI.
+     * GM_download delegates to Chrome's chrome.downloads.download API,
+     * which properly respects the `name` parameter for the saved filename.
+     * Using a data: URI avoids blob URL UUID issues entirely.
+     */
+    function exportViaGMDownload(json, filename) {
+        return new Promise((resolve, reject) => {
+            if (typeof GM_download !== 'function') {
+                reject(new Error('GM_download is unavailable.'));
+                return;
+            }
+
+            const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+            try {
+                GM_download({
+                    url: dataUrl,
+                    name: filename,
+                    saveAs: true,
+                    onload: () => resolve('gm_download'),
+                    onerror: (error) => reject(error || new Error('GM_download failed.')),
+                    ontimeout: () => reject(new Error('GM_download timed out.'))
+                });
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
     async function exportDataToFile() {
-        const exportFile = buildExportFile();
-        if (!exportFile) { alert('No data.'); return; }
+        const exportData = buildExportData();
+        if (!exportData) { alert('No data.'); return; }
         if (exportInProgress) return;
 
+        const { json, filename } = exportData;
         exportInProgress = true;
         setExportStatus('Exporting...', '#d9822b');
 
         try {
-            if (typeof window.showSaveFilePicker === 'function') {
-                try {
-                    await exportViaSavePicker(exportFile);
-                    setExportStatus('Exported', '#2ba640', { autoClear: true });
+            // 1. Try native save dialog via unsafeWindow (best UX, user picks location)
+            try {
+                await exportViaSavePicker(json, filename);
+                setExportStatus('Exported', '#2ba640', { autoClear: true });
+                return;
+            } catch (pickerError) {
+                if (pickerError.name === 'AbortError') {
+                    setExportStatus('Cancelled', '#999', { autoClear: true });
                     return;
-                } catch (pickerError) {
-                    if (pickerError.name === 'AbortError') {
-                        setExportStatus('Cancelled', '#999', { autoClear: true });
-                        return; // User cancelled, no need to fallback
-                    }
-                    console.warn('[YouTube Playlist Saver] Native save dialog failed. Falling back...', pickerError);
                 }
+                console.warn('[YouTube Playlist Saver] showSaveFilePicker failed:', pickerError.message);
             }
 
-            // Fallback to anchor download (Data URI)
-            await exportViaAnchor(exportFile);
+            // 2. Fallback: GM_download with data: URI (saveAs dialog)
+            await exportViaGMDownload(json, filename);
             setExportStatus('Exported', '#2ba640', { autoClear: true });
         } catch (error) {
             setExportStatus('Export failed', '#d93025', { autoClear: true, delay: 4000 });
