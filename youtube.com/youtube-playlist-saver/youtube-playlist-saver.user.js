@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Saver
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.77
+// @version      0.2.78
 // @lastModified 2026-04-10
 // @description  [Backend] YouTubeプレイリストの動画IDを記録・管理し、状態インジケーター（NEW/SAVED）を表示します。
 // @antifeature  webRequestBlocking
@@ -83,7 +83,7 @@
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.77';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.2.78';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -444,46 +444,94 @@
     // --- Import / Export Logic (Kept here) ---
     // (Existing Import/Export functions retained same as before...)
 
-    function exportDataToFile() {
+    function buildExportFile() {
         loadStorage();
-        if (!cachedStorage) { alert('No data.'); return; }
-        if (exportInProgress) return;
-        if (typeof GM_download !== 'function') {
-            setExportStatus('Export failed', '#d93025', { autoClear: true, delay: 4000 });
-            console.error('[YouTube Playlist Saver] GM_download is unavailable in this environment.');
-            return;
+        if (!cachedStorage) return null;
+
+        const timestamp = getExportTimestamp(new Date());
+        const filename = `youtube_playlist_saver_data_${timestamp}.json`;
+        const json = JSON.stringify(cachedStorage, null, 2);
+        const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+
+        if (typeof File === 'function') {
+            return {
+                file: new File([blob], filename, {
+                    type: 'application/json;charset=utf-8',
+                    lastModified: Date.now()
+                }),
+                name: filename
+            };
         }
+
+        return { file: blob, name: filename };
+    }
+
+    function exportViaManager(exportFile) {
+        return new Promise((resolve, reject) => {
+            if (typeof GM_download !== 'function') {
+                reject(new Error('GM_download is unavailable.'));
+                return;
+            }
+
+            try {
+                GM_download({
+                    url: exportFile.file,
+                    name: exportFile.name,
+                    saveAs: false,
+                    onload: () => resolve('manager'),
+                    onerror: (error) => reject(error || new Error('GM_download failed.')),
+                    ontimeout: () => reject(new Error('GM_download timed out.'))
+                });
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    async function exportViaSavePicker(exportFile) {
+        if (typeof window.showSaveFilePicker !== 'function') {
+            throw new Error('showSaveFilePicker is unavailable.');
+        }
+
+        setExportStatus('Save dialog opened', '#d9822b');
+        const handle = await window.showSaveFilePicker({
+            suggestedName: exportFile.name,
+            types: [{
+                description: 'JSON Files',
+                accept: { 'application/json': ['.json'] }
+            }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(exportFile.file);
+        await writable.close();
+        return 'save-picker';
+    }
+
+    async function exportDataToFile() {
+        const exportFile = buildExportFile();
+        if (!exportFile) { alert('No data.'); return; }
+        if (exportInProgress) return;
 
         exportInProgress = true;
         setExportStatus('Exporting...', '#d9822b');
 
-        const timestamp = getExportTimestamp(new Date());
-        const filename = `youtube_playlist_saver_data_${timestamp}.json`;
-        const b = new Blob([JSON.stringify(cachedStorage, null, 2)], { type: 'application/json;charset=utf-8' });
-        const u = URL.createObjectURL(b);
-
-        GM_download({
-            url: u,
-            name: filename,
-            saveAs: false,
-            onload: () => {
-                exportInProgress = false;
-                URL.revokeObjectURL(u);
+        try {
+            try {
+                await exportViaManager(exportFile);
                 setExportStatus('Exported', '#2ba640', { autoClear: true });
-            },
-            onerror: (error) => {
-                exportInProgress = false;
-                URL.revokeObjectURL(u);
-                setExportStatus('Export failed', '#d93025', { autoClear: true, delay: 4000 });
-                console.error('[YouTube Playlist Saver] Export failed:', error);
-            },
-            ontimeout: () => {
-                exportInProgress = false;
-                URL.revokeObjectURL(u);
-                setExportStatus('Export failed', '#d93025', { autoClear: true, delay: 4000 });
-                console.error('[YouTube Playlist Saver] Export timed out.');
+                return;
+            } catch (managerError) {
+                console.warn('[YouTube Playlist Saver] Manager-backed export failed. Falling back to save dialog.', managerError);
             }
-        });
+
+            await exportViaSavePicker(exportFile);
+            setExportStatus('Exported', '#2ba640', { autoClear: true });
+        } catch (pickerError) {
+            setExportStatus('Export failed', '#d93025', { autoClear: true, delay: 4000 });
+            console.error('[YouTube Playlist Saver] Export failed in both manager and save dialog paths:', pickerError);
+        } finally {
+            exportInProgress = false;
+        }
     }
 
     function getExportTimestamp(date) {
