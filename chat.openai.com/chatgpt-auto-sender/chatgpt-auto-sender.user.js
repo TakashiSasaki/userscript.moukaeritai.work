@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Auto Prompt Sender
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.4
+// @version      1.0.5
 // @description  Automates sending of next pre-filled prompt in ChatGPT after current response completion.
 // @author       Takashi SASAKI (https://x.com/TakashiSasaki)
 // @match        https://chatgpt.com/*
@@ -30,50 +30,62 @@ const report = () => {
         return;
     }
 
-    // Note: Selectors might need updates for the latest ChatGPT UI.
-    // Original logic preserved from version 1.0.0.20231004.
+    // Updated Selectors (April 2026)
+    const SEND_BUTTON_SELECTOR = '[data-testid="send-button"]';
+    const PROMPT_TEXTAREA_SELECTOR = 'textarea, [data-testid="content-editor-container"] [contenteditable="true"]';
 
     setTimeout(function() {
-        const div = document.querySelector("div:has(>form.stretch)");
+        const main = document.querySelector("main");
 
-        if (!div) {
-            console.warn("ChatGPT Auto Prompt Sender: Target div not found. Selectors may need updating.");
+        if (!main) {
+            console.warn("ChatGPT Auto Prompt Sender: Main container not found.");
             return;
         }
 
-        const observer = new MutationObserver((mutationList, observer)=>{
-            for(let mutation of mutationList){
-                if(mutation.target.querySelector("div.absolute.right-2")){
-                    const targetDiv = mutation.target.querySelector("div.absolute.right-2");
-                    targetDiv.style.background = "yellow";
-                    targetDiv.addEventListener("click", clickEvent=>{
-                        const textarea = mutation.target.querySelector("textarea");
-                        if(textarea) {
-                            if(textarea.style.background === "red") {
-                                textarea.style.background = null;
-                            } else {
-                                textarea.style.background = "red";
-                            }
-                        }
-                    });
-                    return;
-                }
-                if(mutation.target.querySelector("button.absolute")){
-                    const textarea = mutation.target.querySelector("textarea");
-                    if(textarea && textarea.style.background === "red"){
-                        setTimeout(()=> {
-                            const btn = mutation.target.querySelector("button.absolute");
-                            if(btn) btn.click();
-                        }, 1000);
+        const observer = new MutationObserver((mutationList, _observer)=>{
+            for(let _mutation of mutationList){
+                const sendBtn = document.querySelector(SEND_BUTTON_SELECTOR);
+                if (sendBtn) {
+                    // Visual feedback: help identify when the script is active
+                    if (sendBtn.style.background !== "yellow" && !sendBtn.disabled) {
+                         sendBtn.style.background = "yellow";
+                         sendBtn.addEventListener("click", _clickEvent => {
+                             const textarea = document.querySelector(PROMPT_TEXTAREA_SELECTOR);
+                             if (textarea) {
+                                 if (textarea.dataset.autoSendEnabled === "true") {
+                                     textarea.dataset.autoSendEnabled = "false";
+                                     textarea.style.border = "";
+                                 } else {
+                                     textarea.dataset.autoSendEnabled = "true";
+                                     textarea.style.border = "2px solid red";
+                                 }
+                             }
+                         }, { once: true });
                     }
-                    if(textarea) textarea.style.background = null;
+                }
+
+                // Auto-send logic: if the button becomes a "Send" button (not "Stop") and auto-send is enabled
+                if (sendBtn && !sendBtn.disabled) {
+                    const textarea = document.querySelector(PROMPT_TEXTAREA_SELECTOR);
+                    if (textarea && textarea.dataset.autoSendEnabled === "true" && (textarea.value || textarea.textContent).trim() !== "") {
+                        setTimeout(() => {
+                            const currentBtn = document.querySelector(SEND_BUTTON_SELECTOR);
+                            if (currentBtn && !currentBtn.disabled) {
+                                currentBtn.click();
+                            }
+                        }, 1000);
+                        // Reset state after sending
+                        textarea.dataset.autoSendEnabled = "false";
+                        textarea.style.border = "";
+                    }
                 }
             }
         });
 
-        observer.observe(div, {attributes: true,
-                               childList: true,
-                               subtree: true
-                              });
+        observer.observe(main, {
+            attributes: true,
+            childList: true,
+            subtree: true
+        });
     }, 1000);
 })();
