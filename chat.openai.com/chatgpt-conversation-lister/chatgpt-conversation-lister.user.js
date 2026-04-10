@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Conversation Lister
 // @namespace    userscript.moukaeritai.work
-// @version      1.0.18
+// @version      1.0.19
 // @description  Retrieves, searches, and exports conversations in ChatGPT's web interface.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -38,13 +38,11 @@ const report = () => {
     const SCRIPT_NAME = "Conversation Lister";
     const SCRIPT_VERSION = GM_info.script.version;
     const CONVERSATION_LIST_SELECTORS = [
-        // Add new selectors at the top. The script will use the first one that matches.
-        "#history", // 2025-02-01
-        "nav div.overflow-y-auto", // Selector as of late 2023
-        "#__next > div.overflow-hidden.w-full.h-full > div > div > div > div > nav > div.overflow-y-auto", // 2023-08-29
-        "#__next > div > div > div.overflow-hidden.w-full.h-full.relative.flex.z-0 > div > div > div > div > nav > div.flex-col.overflow-y-auto", // 2023-08-28
-        "#__next > div > div > div.overflow-hidden.w-full.h-full.relative.flex.z-0 > div > div > div > div > nav > div.flex-col > div > div", // 2023-08-27
-        "#__next > div.overflow-hidden.w-full.h-full.relative.flex > div.dark.flex-shrink-0.overflow-x-hidden > div > div > div > nav > div.overflow-y-auto" // 2023-08-10
+        "#history",
+        "nav[aria-label=\"チャット履歴\"]",
+        "nav[aria-label=\"Chat history\"]",
+        "nav.overflow-y-auto",
+        "nav div.overflow-y-auto"
     ];
 
     const ERROR_MESSAGE_LIST_NOT_FOUND = "Unable to retrieve the conversation list. This may be due to changes in the DOM structure of ChatGPT. Please await updates to the script.";
