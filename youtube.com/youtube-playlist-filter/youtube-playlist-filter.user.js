@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.58
+// @version      0.1.59
 // @lastModified 2026-04-10
-// @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
+// @description  YouTube繝励Ξ繧､繝ｪ繧ｹ繝医・繝輔ぅ繝ｫ繧ｿ繝ｪ繝ｳ繧ｰ縲∫憾諷玖｡ｨ遉ｺ(MATCHED)縲∽ｸ諡ｬ蜑企勁讖溯・繧呈署萓帙＠縺ｾ縺吶・
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
 // @match        https://www.youtube.com/*
@@ -74,7 +74,7 @@
     let filterIntervalId = null;
     let observerInitTimerId = null;
 
-    let filterState = { query: '', mode: 'title' };
+    let filterState = { queries: ['', '', '', '', ''], mode: 'title' };
     let isFiltering = false;
     let isInputActive = false;
     let panel = null;
@@ -94,6 +94,26 @@
         if (!str) return '';
         // Normalize to NFKC to handle full-width/half-width Japanese characters
         return str.normalize('NFKC').toLowerCase().trim();
+    }
+
+    /**
+     * AND-in-OR matching:
+     * Each non-empty query string is an OR branch.
+     * Within one branch, space-separated tokens are AND conditions.
+     * Returns true if any branch fully matches the target text.
+     * Returns true if all queries are empty (no filter active).
+     */
+    function matchesFilter(targetText, queries) {
+        const activeRows = queries
+            .map(q => normalizeText(q))
+            .filter(q => q.length > 0);
+
+        if (activeRows.length === 0) return true;
+
+        return activeRows.some(row => {
+            const keywords = row.split(/\s+/).filter(k => k.length > 0);
+            return keywords.every(keyword => targetText.includes(keyword));
+        });
     }
 
     function getNodeText(element) {
@@ -129,8 +149,12 @@
             return [];
         }
 
-        const input = panel.querySelector('#yt-filter-query-input');
-        return input ? [input] : [];
+        const inputs = [];
+        for (let i = 1; i <= 5; i++) {
+            const input = panel.querySelector(`#yt-filter-query-input-${i}`);
+            if (input) inputs.push(input);
+        }
+        return inputs;
     }
 
     function syncFilterStateFromInputs() {
@@ -138,7 +162,10 @@
             return;
         }
 
-        filterState.query = panel.querySelector('#yt-filter-query-input')?.value || '';
+        filterState.queries = [];
+        for (let i = 1; i <= 5; i++) {
+            filterState.queries.push(panel.querySelector(`#yt-filter-query-input-${i}`)?.value || '');
+        }
         filterState.mode = panel.querySelector('input[name="yt-filter-mode"]:checked')?.value || 'title';
     }
 
@@ -222,6 +249,7 @@
         setFilterInputsLocked(false);
         resetAppliedFilteringState();
 
+        // input may be null when called from radio button change handler
         if (input) {
             input.focus();
             const cursorPos = input.value.length;
@@ -255,7 +283,7 @@
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.58';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.59';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -266,30 +294,36 @@
         const titleLabel = panel.querySelector('#yt-filter-title');
         yusMakeMinimizable(panel, titleLabel, MINIMIZED_STATE_KEY);
 
-        const input = panel.querySelector('#yt-filter-query-input');
-        input.value = filterState.query;
-        input.addEventListener('focus', () => {
-            Object.assign(input.style, FILTER_INPUT_FOCUS_STYLE);
-        });
-        input.addEventListener('blur', () => {
-            input.style.boxShadow = '';
-            if (input.readOnly) {
-                input.style.borderColor = FILTER_INPUT_LOCKED_STYLE.borderColor;
-            } else {
-                input.style.borderColor = FILTER_INPUT_EDITABLE_STYLE.borderColor;
-            }
-        });
-        input.addEventListener('click', () => {
-            if (input.readOnly) {
-                beginFilterEditing(input);
-            }
-        });
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                commitFilterInputs();
-            }
-        });
+        // Wire up 5 query inputs
+        for (let i = 1; i <= 5; i++) {
+            const input = panel.querySelector(`#yt-filter-query-input-${i}`);
+            if (!input) continue;
+
+            input.value = filterState.queries[i - 1] || '';
+
+            input.addEventListener('focus', () => {
+                Object.assign(input.style, FILTER_INPUT_FOCUS_STYLE);
+            });
+            input.addEventListener('blur', () => {
+                input.style.boxShadow = '';
+                if (input.readOnly) {
+                    input.style.borderColor = FILTER_INPUT_LOCKED_STYLE.borderColor;
+                } else {
+                    input.style.borderColor = FILTER_INPUT_EDITABLE_STYLE.borderColor;
+                }
+            });
+            input.addEventListener('click', () => {
+                if (input.readOnly) {
+                    beginFilterEditing(input);
+                }
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    commitFilterInputs();
+                }
+            });
+        }
 
         panel.querySelectorAll('input[name="yt-filter-mode"]').forEach((radio) => {
             radio.checked = radio.value === filterState.mode;
@@ -297,6 +331,8 @@
                 if (!radio.checked) {
                     return;
                 }
+                // Any mode change is a filter condition change: stop filtering and enter editing mode
+                beginFilterEditing(null);
                 filterState.mode = radio.value;
             });
         });
@@ -311,9 +347,15 @@
                 setFilterInputsLocked(false);
                 resetAppliedFilteringState();
 
-                const queryInput = panel.querySelector('#yt-filter-query-input');
-                if (queryInput) {
-                    queryInput.focus();
+                // Clear all 5 inputs
+                for (let i = 1; i <= 5; i++) {
+                    const inp = panel.querySelector(`#yt-filter-query-input-${i}`);
+                    if (inp) inp.value = '';
+                }
+
+                const firstInput = panel.querySelector('#yt-filter-query-input-1');
+                if (firstInput) {
+                    firstInput.focus();
                 }
             });
         }
@@ -420,7 +462,6 @@
         updateStatus('processor', true);
 
         const CHUNK_SIZE = 30;
-        const queryLower = normalizeText(filterState.query);
         const isTitleMode = filterState.mode === 'title';
 
         const itemsToProcess = [];
@@ -443,7 +484,7 @@
         }
 
         let batchMatches = 0;
-        console.groupCollapsed(`[Playlist Filter Debug] processChunk (batch size: ${itemsToProcess.length}, query: "${queryLower}", mode: "${filterState.mode}")`);
+        console.groupCollapsed(`[Playlist Filter Debug] processChunk (batch size: ${itemsToProcess.length}, queries: ${JSON.stringify(filterState.queries)}, mode: "${filterState.mode}")`);
 
         try {
             itemsToProcess.forEach(item => {
@@ -457,7 +498,7 @@
                 const channel = metadata.normalizedChannel;
 
                 const targetText = isTitleMode ? title : channel;
-                const isMatched = !queryLower || targetText.includes(queryLower);
+                const isMatched = matchesFilter(targetText, filterState.queries);
 
                 if (isMatched) {
                     batchMatches++;
@@ -513,7 +554,7 @@
             console.log(`[Playlist Filter Debug] applyFilters skipped: input is active`);
             return;
         }
-        isFiltering = Boolean(filterState.query);
+        isFiltering = filterState.queries.some(q => q.trim().length > 0);
         hasAppliedCurrentPage = true;
         console.log(`[Playlist Filter Debug] applyFilters (query: "${filterState.query}", mode: "${filterState.mode}", isFiltering: ${isFiltering}, isInputActive: ${isInputActive})`);
         updateStatus('scanner', true);
