@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.60
+// @version      0.1.61
 // @lastModified 2026-04-10
 // @description  YouTube繝励Ξ繧､繝ｪ繧ｹ繝医・繝輔ぅ繝ｫ繧ｿ繝ｪ繝ｳ繧ｰ縲∫憾諷玖｡ｨ遉ｺ(MATCHED)縲∽ｸ諡ｬ蜑企勁讖溯・繧呈署萓帙＠縺ｾ縺吶・
 // @antifeature  webRequestBlocking
@@ -69,7 +69,7 @@
         boxShadow: '0 0 0 2px rgba(16, 163, 127, 0.28)',
         borderColor: '#10a37f'
     };
-    const RESULTS_UPDATE_DELAY_MS = 1200;
+    const RESULTS_UPDATE_DELAY_MS = 2000;
     let isActive = false;
     let filterIntervalId = null;
     let observerInitTimerId = null;
