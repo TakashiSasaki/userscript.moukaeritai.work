@@ -21,6 +21,24 @@ YouTube user script development learnings:
     -   **Avoid `innerHTML`**: Modern sites like YouTube enforce Trusted Types security policies that block assignment to `innerHTML`.
     -   **Use DOM Methods**: Always use `document.createElement()`, `textContent`, `setAttribute()`, and `appendChild()` to securely construct UI elements.
 
+## Script Ecosystem
+
+youtube.com ドメインには以下の 5 つのプレイリスト管理ユーザースクリプトがあり、それぞれ独立して動作しながら協調します。各スクリプトの詳細な設計は個別ディレクトリの `AGENTS.md` を参照してください。
+
+| # | スクリプト | 役割 | 他スクリプトとの連携 |
+|---|---|---|---|
+| 1 | **Playlist Scroller** | 時間指定の自動スクロールで無限読み込みを支援 | なし（起点） |
+| 2 | **Playlist Saver** | 動画 ID を `GM_setValue` に記録し `[NEW]`/`[SAVED]` バッジを表示 | `SaverAPI` を `window.YouTubePlaylistSaver` にエクスポート |
+| 3 | **Playlist Filter** | 5 入力欄の AND/OR 検索でプレイリストをフィルタリング | `.yt-filter-matched` バッジを付与（Remover が参照） |
+| 4 | **Playlist Remover** | スクロール済み/フィルタマッチした動画を一括削除 | `.yt-filter-matched` を参照、YouTube ネイティブ検索入力を監視 |
+| 5 | **Playlist Lite** | サムネイル・ヘッダー・ミニプレイヤーを削除して軽量化 | なし（独立） |
+
+### 共通基盤
+
+- **`youtube-common.js`** (`@require`): `yusInitApp`, `yusMakeDraggable`, `yusMakeMinimizable` 等の共通ユーティリティ
+- **`youtube-common.css`** (`@resource`): 共通パネルスタイル
+- **各スクリプトのテンプレート** (`template.html`): `@resource` として読み込み、`{{VERSION}}` を動的置換
+- **`yusInitApp()`**: `yt-navigate-start`/`yt-navigate-finish` を監視し、プレイリストページで `startMain()` / それ以外で `stopMain()` を自動呼び出し
 
 ## `index.html` のメンテナンス要件
 
