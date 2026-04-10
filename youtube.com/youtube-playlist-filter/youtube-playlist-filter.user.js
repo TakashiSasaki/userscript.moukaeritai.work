@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.54
-// @lastModified 2026-04-09
+// @version      0.1.55
+// @lastModified 2026-04-10
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -64,6 +64,10 @@
         borderColor: '#6699ff',
         color: '#003c99',
         caretColor: 'transparent'
+    };
+    const FILTER_INPUT_FOCUS_STYLE = {
+        boxShadow: '0 0 0 2px rgba(16, 163, 127, 0.28)',
+        borderColor: '#10a37f'
     };
     let isActive = false;
     let filterIntervalId = null;
@@ -145,6 +149,7 @@
         getFilterInputs().forEach((input) => {
             input.readOnly = locked;
             Object.assign(input.style, style);
+            input.style.boxShadow = '';
         });
     }
 
@@ -222,7 +227,7 @@
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.53';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.55';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -237,8 +242,21 @@
             const input = panel.querySelector(`#yt-filter-${key}-input`);
 
             input.value = filterState[key];
+            input.addEventListener('focus', () => {
+                Object.assign(input.style, FILTER_INPUT_FOCUS_STYLE);
+            });
+            input.addEventListener('blur', () => {
+                input.style.boxShadow = '';
+                if (input.readOnly) {
+                    input.style.borderColor = FILTER_INPUT_LOCKED_STYLE.borderColor;
+                } else {
+                    input.style.borderColor = FILTER_INPUT_EDITABLE_STYLE.borderColor;
+                }
+            });
             input.addEventListener('click', () => {
-                beginFilterEditing(input);
+                if (input.readOnly) {
+                    beginFilterEditing(input);
+                }
             });
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
@@ -250,6 +268,24 @@
 
         setupInputGroup('title');
         setupInputGroup('channel');
+
+        const resetButton = panel.querySelector('#yt-filter-reset-btn');
+        if (resetButton) {
+            resetButton.addEventListener('click', () => {
+                if (isActive) {
+                    stopBackgroundWork();
+                }
+                isInputActive = true;
+                setFilterInputsLocked(false);
+                resetAppliedFilteringState();
+
+                const titleInput = panel.querySelector('#yt-filter-title-input');
+                if (titleInput) {
+                    titleInput.focus();
+                }
+            });
+        }
+
         setFilterInputsLocked(false);
 
         document.body.appendChild(panel);
