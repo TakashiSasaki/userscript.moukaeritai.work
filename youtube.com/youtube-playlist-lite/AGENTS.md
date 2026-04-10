@@ -1,43 +1,92 @@
-# YouTube Playlist Lite - Agent Implementation Notes
+# Agent Guidelines: youtube-playlist-lite
 
 This document provides technical details for AI agents developing or maintaining the **YouTube Playlist Lite** userscript. For general project rules, refer to the root [AGENTS.md](/AGENTS.md).
 
-## 1. Domain & Scope
-- **Target URL**: Strictly limited to YouTube Playlist pages (`https://www.youtube.com/playlist*`).
-- **Context Handling**:
-  - Automatically transitions to **Inactive** state (UI collapses and features stop) on non-playlist pages (e.g., watch page, search results).
-  - Use `location.pathname.startsWith('/playlist')` for context validation.
+**スクリプト本体が設計の正本です。** このファイルに記載の情報が古くなった場合は、スクリプト本体を参照して更新してください。
 
-## 2. Technical Selectors
-| Role | Selector |
-| :--- | :--- |
-| **Thumbnail Elements** | `ytd-playlist-video-renderer ytd-thumbnail`, `ytd-playlist-header-renderer ytd-hero-playlist-thumbnail-renderer` |
-| **Observer Root** | `ytd-playlist-video-list-renderer #contents` |
-| **Miniplayer** | `ytd-miniplayer` |
+---
 
-## 3. Design & UI Strategy
-- **Shared UI Patterns**:
-  - **Activity-Linked Panel State**: The panel's open/collapsed state is primarily controlled by `isAutoMinimized` based on the page context.
-  - **Manual Override**: Users can manually toggle the collapsed state via **Double-Click** on the version label text (e.g., "Lite v0.1.19"). This is tracked by `isManuallyMinimized`.
-- **States**:
-  - `Active`: UI contents visible (unless manually minimized), opacity 1.0.
-  - `Inactive`: UI contents hidden, opacity 0.85, status badge "Inactive".
+## スクリプトの設計概要
 
-## 4. Performance & Monitoring
-- **MutationObserver**:
-  - Monitors the `#contents` div of the playlist list with `subtree: true`.
-  - Uses a **150ms debounce** (`performDebouncedCleanup`) to avoid CPU spikes during infinite scrolling.
-- **Cleanup Strategy**:
-  - Performs "Early Cleanup" on `yt-navigate-start` to stop observers and clear styles before the next navigation load.
-  - Re-initializes on `yt-navigate-finish` with a slight delay (500ms).
-- **Miniplayer Removal**: Integrated into the debounced cleanup sweep instead of using polling.
+YouTube プレイリストページにおいて、サムネイル・プレイリストヘッダー・ミニプレイヤーを継続的に削除して表示を軽量化するツールです。3 つの削除ターゲットはユーザーがチェックボックスで個別にオン/オフできます。
 
-## 5. `index.html` のメンテナンス要件
+---
+
+## 1. ページコンテキスト
+
+- **有効条件**: `location.pathname.startsWith('/playlist')` のみ（`getPageConfig()` で判定）
+- **非プレイリストページ**: `stopMain()` が呼ばれ、オブザーバー停止・パネル非アクティブ化
+- **@match**: `https://www.youtube.com/*` と `https://userscript.moukaeritai.work/*` (インストール検知用)
+
+---
+
+## 2. 削除ターゲットと UI
+
+3 つのチェックボックスで各ターゲットの有効/無効を切り替え、`GM_setValue` で永続化：
+
+| ターゲット | チェックボックス ID | ストレージキー | 削除関数 |
+|---|---|---|---|
+| Thumbnails | `#yt-lite-target-thumbnails` | `yt_lite_target_thumbnails` | `clearExistingThumbnails()` |
+| Playlist Header | `#yt-lite-target-header` | `yt_lite_target_header` | `clearExistingHeader()` |
+| Miniplayer | `#yt-lite-target-miniplayer` | `yt_lite_target_miniplayer` | `removeMiniplayerIfPresent()` |
+
+### レガシーマイグレーション
+
+`getMigratedTargetSelection()` で旧ストレージキー（`yt_lite_hide_thumbnails`, `yt_lite_force_remove`, `yt_lite_hide_miniplayer`, `yt_lite_remove_miniplayer`）から現行キーに透過的に移行します。
+
+---
+
+## 3. DOM セレクタ (`PAGE_CONFIG.playlist`)
+
+| 対象 | セレクタ |
+|---|---|
+| サムネイル要素 | `ytd-playlist-video-renderer ytd-thumbnail` |
+| プレイリストヘッダー | `#page-manager > ytd-browse > ytd-playlist-header-renderer` |
+| ミニプレイヤー | `ytd-miniplayer` |
+| サムネイル Observer Root | `ytd-playlist-video-list-renderer` |
+| ヘッダー Observer Root | `#page-manager > ytd-browse` |
+| ミニプレイヤー Observer Root | `ytd-app` |
+
+---
+
+## 4. MutationObserver 構成
+
+オブザーバーは **2 つ** に分離されており、それぞれ異なるルートを監視します：
+
+1. **`playlistObserver`**: Thumbnails / Header ターゲット用
+   - Root: `thumbnailObserverRootSelector` (Thumbnails 有効時) or `contentObserverRootSelector` (Header のみ時)
+   - `childList: true, subtree: true`
+   - `hasPlaylistRelevantMutation()` でフィルタリングし、マッチした場合のみ `performDebouncedCleanup()` を呼ぶ
+
+2. **`miniplayerObserver`**: Miniplayer ターゲット用
+   - Root: `ytd-app`
+   - `childList: true, subtree: true`
+   - `hasMiniplayerRelevantMutation()` でフィルタリングし、マッチした場合のみ `performDebouncedCleanup()` を呼ぶ
+
+### デバウンス
+
+- `performDebouncedCleanup` は **300ms** のデバウンスで一括クリーンアップを実行
+- 汎用 `debounce(fn, ms)` ユーティリティを使用
+
+### リトライ
+
+- 各オブザーバーは Root 要素が見つからない場合、1000ms 後にリトライ（`playlistObserverRetryTimerId`, `miniplayerObserverRetryTimerId`）
+- `stopObserver()` でリトライタイマーも含めてすべてクリーンアップ
+
+---
+
+## 5. テンプレートとフォールバック
+
+- `@resource ytLiteTemplate` から HTML テンプレートを読み込み
+- テンプレートが壊れている場合（`hasExpectedPanelControls()` で 3 つのチェックボックスの存在を検証）、`FALLBACK_PANEL_TEMPLATE` にフォールバック
+
+---
+
+## 6. `index.html` のメンテナンス要件
 
 1. **バージョン情報の動的取得**:
-   - 各 `index.html` は `domain-landing.js` を読み込み、GitHub から最新の `@version` を動的に取得して表示します。このため、HTML 内にバージョン番号をハードコードしないでください。
-   - **HTML 内のバージョン番号を手動で書き換える必要はありません。** ユーザースクリプト（`.user.js`）の `@version` をインクリメントするだけで、ドキュメントページに自動反映されます。
-   - インストールボタンの構造（`<div class="version-info">` 内に `.latest-version` と `.installed-version` を含む構造、および `data-script-name` 属性）を維持することで、自動更新・比較機能が動作します。
+   - 各 `index.html` は `domain-landing.js` を読み込み、GitHub から最新の `@version` を動的に取得して表示します。HTML 内にバージョン番号をハードコードしないでください。
+   - `.user.js` の `@version` をインクリメントするだけで自動反映されます。
 
 2. **ドキュメントの網羅性**:
-   - 新しいスクリプト（システムローダーなどの裏側で動くスクリプトを含む）を追加した場合は、必ず該当するドメインの `index.html` およびルートの `index.html` の一覧にも漏れなく追加してください。
+   - 新しいスクリプトを追加した場合は、必ず該当するドメインの `index.html` およびルートの `index.html` の一覧にも漏れなく追加してください。
