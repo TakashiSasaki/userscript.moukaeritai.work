@@ -152,16 +152,6 @@
 <ul>
 <li><strong>Results</strong>: 現在表示されている動画数 / 全動画数 (例: <code>Results: 5 / 100</code>)。</li>
 </ul>
-<h3>3. &quot;Range&quot; インフォメーション</h3>
-<p>スクロールによってスキャンされた全範囲（通り過ぎた範囲 + 現在表示されている範囲）の動画インデックスとフィルタ結果を表示します。</p>
-<ul>
-<li><strong>表示形式</strong>: <code>Range: #1-#55 (15 matches)</code><ul>
-<li><strong>範囲</strong>: リストの先頭(#1)から、現在表示されている範囲内で最大のインデックス番号(#55など)まで。</li>
-<li><strong>matches</strong>: その範囲内（隠れて見えないもの＋現在見えているものの合計）で、<strong>現在のフィルタ条件に一致している</strong>動画の数。</li>
-<li>これにより、現在の自分の視点までの全範囲において、フィルタにヒットする動画がいくつ存在するかを把握できます。</li>
-</ul>
-</li>
-</ul>
 <h2>一括削除について</h2>
 <p>以前このスクリプトに含まれていた「一括削除 (Remove Above)」機能は、独立した <strong>YouTube Playlist Remover</strong> に移動しました。削除機能を使用したい場合は、以下のスクリプトを別途インストールしてください。</p>
 <p>👉 <strong><a href="../youtube-playlist-remover/index.html">Install YouTube Playlist Remover</a></strong></p>
@@ -180,7 +170,7 @@
 </li>
 <li><strong>自動更新</strong>:<ul>
 <li><strong>MutationObserver</strong>: Enter でフィルタリングを開始した後は、プレイリストの <code>#contents</code> に追加された動画を検知して同じ条件を適用します。</li>
-<li><strong>定期実行</strong>: 接続切れの整理や表示状態の更新のため、軽量な再チェックを定期的に行います。</li>
+<li><strong>定期実行</strong>: 接続切れの整理や <code>Results</code> 表示の更新のため、軽量な再チェックを定期的に行います。</li>
 <li><strong>入力欄との連動</strong>: マウスオーバーだけでは何も起こらず、Enter で入力を確定したときに監視とフィルタ処理が始まります。ロックされた入力欄をクリックすると編集モードに戻り、<code>Reset Filter</code> ボタンを押したときだけ監視・定期処理・フィルタ表示を解除します。</li>
 </ul>
 </li>
@@ -195,6 +185,7 @@
 
 <h2>更新履歴</h2>
 <ul>
+            <li><strong>v0.1.57</strong>: <code>Range</code> 表示を廃止し、IntersectionObserver ベースの関連再計算を削除してフィルタ処理時の負荷を軽減。</li>
             <li><strong>v0.1.55</strong>: 重いフィルタリセット処理を入力欄クリックから分離し、独立した <code>Reset Filter</code> ボタンで手動実行するように変更。</li>
             <li><strong>v0.1.53</strong>: Enter で入力欄を確定色 + リードオンリーにしてフィルタ開始、クリックで編集色に戻してフィルタ終了する操作に変更。マウスオーバー停止を廃止。</li>
             <li><strong>v0.1.52</strong>: 入力欄へのマウスオーバーで停止、クリックで全解除、Enterで再開する操作に変更し、Apply Filter とクリアボタンを削除。</li>

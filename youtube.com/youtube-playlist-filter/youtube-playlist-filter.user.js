@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.55
+// @version      0.1.57
 // @lastModified 2026-04-10
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -69,6 +69,7 @@
         boxShadow: '0 0 0 2px rgba(16, 163, 127, 0.28)',
         borderColor: '#10a37f'
     };
+    const RESULTS_UPDATE_DELAY_MS = 1200;
     let isActive = false;
     let filterIntervalId = null;
     let observerInitTimerId = null;
@@ -77,10 +78,7 @@
     let isFiltering = false;
     let isInputActive = false;
     let panel = null;
-
-
     let listObserver = null;
-    let observerForRange = null;
 
     // --- Performance Optimization Globals ---
     let allCachedItems = new Set();
@@ -88,6 +86,7 @@
     const itemMetadataCache = new WeakMap();
     let isProcessing = false;
     let processTimerId = null;
+    let resultsUpdateTimerId = null;
     let hasAppliedCurrentPage = false;
 
     // --- Helpers ---
@@ -157,6 +156,7 @@
         syncFilterStateFromInputs();
         isFiltering = false;
         hasAppliedCurrentPage = false;
+        cancelScheduledResultsUpdate();
 
         const items = new Set([
             ...allCachedItems,
@@ -170,17 +170,40 @@
 
             item.style.display = '';
             renderMatchedIndicator(item, false);
-            if (observerForRange) {
-                observerForRange.unobserve(item);
-            }
         });
 
         allCachedItems.clear();
         pendingProcessItems.clear();
-        itemsAboveSet.clear();
-        itemsVisibleSet.clear();
         updateQueueInfo();
         resetFilterDisplayInfo();
+    }
+
+    function cancelScheduledResultsUpdate() {
+        if (!resultsUpdateTimerId) {
+            return;
+        }
+
+        clearTimeout(resultsUpdateTimerId);
+        resultsUpdateTimerId = null;
+    }
+
+    function scheduleResultsUpdate({ immediate = false } = {}) {
+        cancelScheduledResultsUpdate();
+
+        if (immediate) {
+            updateCounts();
+            return;
+        }
+
+        resultsUpdateTimerId = window.setTimeout(() => {
+            resultsUpdateTimerId = null;
+
+            if (!isActive || !yusIsPlaylistPage() || !hasAppliedCurrentPage) {
+                return;
+            }
+
+            updateCounts();
+        }, RESULTS_UPDATE_DELAY_MS);
     }
 
     function beginFilterEditing(input) {
@@ -208,8 +231,6 @@
 
         if (!isActive || !yusIsPlaylistPage()) return;
 
-        itemsAboveSet.clear();
-        itemsVisibleSet.clear();
         console.log('[Playlist Filter Debug] commitFilterInputs: Starting background work with locked inputs');
         startBackgroundWork({ applyNow: true });
     }
@@ -227,7 +248,7 @@
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.55';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.57';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -311,9 +332,6 @@
 
     // --- Main Logic: Filtering & Matching Indicator ---
 
-    const itemsAboveSet = new Set();
-    const itemsVisibleSet = new Set();
-
     function renderMatchedIndicator(element, isMatched) {
         let bar = element.querySelector('#engagement-bar') ||
             element.querySelector('.ytd-video-meta-block') ||
@@ -341,28 +359,6 @@
         }
     }
 
-    function ensureRangeObserver() {
-        if (observerForRange) return;
-
-        observerForRange = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                const rect = entry.boundingClientRect;
-                if (entry.isIntersecting) {
-                    itemsVisibleSet.add(entry.target);
-                    itemsAboveSet.delete(entry.target);
-                } else if (rect.bottom < 180) { // Still using 180 as threshold for "Above"
-                    itemsAboveSet.add(entry.target);
-                    itemsVisibleSet.delete(entry.target);
-                } else {
-                    // Below viewport
-                    itemsAboveSet.delete(entry.target);
-                    itemsVisibleSet.delete(entry.target);
-                }
-            });
-            updateRangeInfo();
-        }, { root: null, threshold: 0 });
-    }
-
     function scheduleProcessing() {
         if (isProcessing) {
             console.log(`[Playlist Filter Debug] scheduleProcessing skipped: isProcessing is true`);
@@ -388,11 +384,11 @@
     }
 
     function resetFilterDisplayInfo() {
+        cancelScheduledResultsUpdate();
+
         const countEl = document.getElementById('yt-filter-count');
         if (countEl) countEl.textContent = 'Results: - / -';
 
-        const rangeEl = document.getElementById('yt-filter-range-info');
-        if (rangeEl) rangeEl.textContent = 'Range: None';
     }
 
     function processChunk() {
@@ -430,9 +426,8 @@
             // Finished processing chunk
             console.log(`[Playlist Filter Debug] processChunk finished (total cached: ${allCachedItems.size})`);
             isProcessing = false;
-            updateCounts();
+            scheduleResultsUpdate();
             updateStatus('processor', false);
-            setTimeout(updateRangeInfo, 100);
             return;
         }
 
@@ -440,14 +435,9 @@
         console.groupCollapsed(`[Playlist Filter Debug] processChunk (batch size: ${itemsToProcess.length}, title: "${titleLower}", channel: "${channelLower}")`);
 
         try {
-            // Ensure observer is alive before use
-            ensureRangeObserver();
-
             itemsToProcess.forEach(item => {
                 if (!item.isConnected) {
                     allCachedItems.delete(item);
-                    itemsAboveSet.delete(item);
-                    itemsVisibleSet.delete(item);
                     return;
                 }
 
@@ -469,16 +459,11 @@
                     } else {
                         renderMatchedIndicator(item, false);
                     }
-
-                    if (observerForRange) observerForRange.observe(item);
                 } else {
                     if (item.style.display !== 'none') {
                         item.style.display = 'none';
                     }
                     renderMatchedIndicator(item, false);
-                    itemsAboveSet.delete(item);
-                    itemsVisibleSet.delete(item);
-                    if (observerForRange) observerForRange.unobserve(item);
                 }
             });
             console.log(`[Playlist Filter Debug] Batch finished: ${batchMatches} matches found.`);
@@ -519,8 +504,6 @@
             console.log(`[Playlist Filter Debug] applyFilters skipped: input is active`);
             return;
         }
-        ensureRangeObserver();
-
         isFiltering = Boolean(filterState.title || filterState.channel);
         hasAppliedCurrentPage = true;
         console.log(`[Playlist Filter Debug] applyFilters (title: "${filterState.title}", channel: "${filterState.channel}", isFiltering: ${isFiltering}, isInputActive: ${isInputActive})`);
@@ -537,27 +520,6 @@
         updateQueueInfo();
         scheduleProcessing();
         updateStatus('scanner', false);
-    }
-
-    // --- Range Logic ---
-    function updateRangeInfo() {
-        const div = document.getElementById('yt-filter-range-info');
-        if (!div) return;
-
-        let matchCount = 0;
-
-        // Combine sets for display calculation
-        // "Range" includes items strictly above AND currently visible items.
-        const combined = new Set([...itemsAboveSet, ...itemsVisibleSet]);
-
-        combined.forEach(el => {
-            // Check if matched (display != none)
-            if (el.style.display !== 'none') {
-                matchCount++;
-            }
-        });
-
-        div.textContent = matchCount > 0 ? `Range: ${matchCount} matches` : `Range: None`;
     }
 
     // --- Mutation Observer for Async Loading ---
@@ -601,7 +563,6 @@
             }
             if (hasNewItems) {
                 console.log(`[Playlist Filter Debug] MutationObserver: Detected new items, scheduling processing`);
-                ensureRangeObserver();
                 updateQueueInfo();
                 scheduleProcessing();
             }
@@ -626,16 +587,12 @@
             listObserver = null;
         }
 
-        if (observerForRange) {
-            observerForRange.disconnect();
-            observerForRange = null;
-        }
-
         if (filterIntervalId) {
             clearInterval(filterIntervalId);
             filterIntervalId = null;
         }
 
+        cancelScheduledResultsUpdate();
         isProcessing = false;
         updateStatus('monitor', false);
         updateStatus('scanner', false);
@@ -645,7 +602,6 @@
     function startBackgroundWork({ applyNow = true } = {}) {
         console.log(`[Playlist Filter Debug] startBackgroundWork (applyNow: ${applyNow})`);
         setupMutationObserver();
-        ensureRangeObserver(); // Always ensure range observer is alive
         if (applyNow) {
             applyFilters();
         }
@@ -671,21 +627,9 @@
                 pendingProcessItems.delete(item);
             }
         });
-        itemsAboveSet.forEach(item => {
-            if (!item.isConnected) {
-                itemsAboveSet.delete(item);
-            }
-        });
-        itemsVisibleSet.forEach(item => {
-            if (!item.isConnected) {
-                itemsVisibleSet.delete(item);
-            }
-        });
-
         updateQueueInfo();
         if (hasAppliedCurrentPage) {
-            updateCounts();
-            updateRangeInfo();
+            scheduleResultsUpdate();
         } else {
             resetFilterDisplayInfo();
         }
@@ -712,8 +656,6 @@
         yusSetPanelActive(panel, true);
 
         hasAppliedCurrentPage = false;
-        itemsAboveSet.clear();
-        itemsVisibleSet.clear();
         allCachedItems.clear();
         pendingProcessItems.clear();
         updateQueueInfo();
@@ -732,8 +674,6 @@
         stopBackgroundWork();
 
         hasAppliedCurrentPage = false;
-        itemsAboveSet.clear();
-        itemsVisibleSet.clear();
         allCachedItems.clear();
         pendingProcessItems.clear();
         updateQueueInfo();
