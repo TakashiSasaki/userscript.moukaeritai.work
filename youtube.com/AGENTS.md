@@ -19,7 +19,7 @@ YouTube user script development learnings:
 
 4.  **Trusted Types Compliance (Security)**:
     -   **Avoid `innerHTML`**: Modern sites like YouTube enforce Trusted Types security policies that block assignment to `innerHTML`.
-    -   **Use DOM Methods**: Always use `document.createElement()`, `textContent`, `setAttribute()`, and `appendChild()` to securely construct UI elements.
+    -   **Use `yusParseHTML`**: To securely construct UI elements from HTML templates, always use the `yusParseHTML(html)` utility provided by `youtube-common.js`. This function internally creates a Trusted Types policy (`yusPolicy.createHTML`) and parses the string via `DOMParser`, safely bypassing `innerHTML` restrictions.
 
 ## Script Ecosystem
 
@@ -27,7 +27,7 @@ youtube.com ドメインには以下の 5 つのプレイリスト管理ユー�
 
 | # | スクリプト | 役割 | 他スクリプトとの連携 |
 |---|---|---|---|
-| 1 | **Playlist Scroller** | 時間指定の自動スクロールで無限読み込みを支援 | なし（起点） |
+| 1 | **Playlist Scroller** | 時間指定 (10s/1m/5mなど) の自動スクロールで無限読み込みを支援 | なし（起点） |
 | 2 | **Playlist Saver** | 動画 ID を `GM_setValue` に記録し `[NEW]`/`[SAVED]` バッジを表示 | `SaverAPI` を `window.YouTubePlaylistSaver` にエクスポート |
 | 3 | **Playlist Filter** | 5 入力欄の AND/OR 検索でプレイリストをフィルタリング | `.yt-filter-matched` バッジを付与（Remover が参照） |
 | 4 | **Playlist Remover** | スクロール済み/フィルタマッチした動画を一括削除 | `.yt-filter-matched` を参照、YouTube ネイティブ検索入力を監視 |
