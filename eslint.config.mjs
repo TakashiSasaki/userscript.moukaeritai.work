@@ -12,6 +12,7 @@ export default [
                 GM_info: "readonly",
                 $: "readonly", // jQuery if used
                 registerGeminiUserscript: "readonly", // Loaded via @require from gemini-common.js
+                fflate: "readonly", // Used in ChatGPT Canvas Exporter
             },
         },
         rules: {
