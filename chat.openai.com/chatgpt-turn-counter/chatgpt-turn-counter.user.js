@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.12
+// @version      0.2.13
 // @description  Count user/assistant turns, images, and code blocks in ChatGPT
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -235,7 +235,7 @@ const report = () => {
     const contentDiv = container.querySelector('.ctc-content');
 
     // Event Listeners for main container
-    container.addEventListener('click', (e) => {
+    container.addEventListener('click', (_e) => {
         // Prevent collapsing when interacting with inner elements if necessary
         // But for this current design, click expands it.
         container.classList.add('expanded');
@@ -387,8 +387,8 @@ const report = () => {
         // Disconnect observer to prevent infinite loop where updating UI triggers observer
         observer.disconnect();
 
-        const userTurns = document.querySelectorAll('article[data-turn="user"]');
-        const assistantTurns = document.querySelectorAll('article[data-turn="assistant"]');
+        const userTurns = document.querySelectorAll('section[data-turn][data-message-author-role="user"]');
+        const assistantTurns = document.querySelectorAll('section[data-turn][data-message-author-role="assistant"]');
 
         let userCharCount = 0;
         let imageCount = 0;
@@ -567,7 +567,7 @@ const report = () => {
     };
 
     // Use MutationObserver to detect changes in the DOM (new messages)
-    const observer = new MutationObserver((mutations) => {
+    const observer = new MutationObserver((_mutations) => {
         updateStats();
     });
 
