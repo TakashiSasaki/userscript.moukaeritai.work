@@ -144,6 +144,7 @@
 <li><strong>フィルタとの連携</strong>: <strong>YouTube Playlist Filter</strong> によって非表示 (<code>display: none</code>) になっている動画は、たとえ範囲内にあっても削除操作の対象に<strong>しません</strong>。</li>
 <li><strong>Only MATCHED オプション</strong>: このチェックボックスをONにすると、<strong>YouTube Playlist Filter</strong> によって <code>[MATCHED]</code> バッジが付与された動画のみを削除対象に限定します。特定の検索条件に合致する動画だけを一括削除したい場合に便利です。</li>
 <li><strong>手動追加キュー</strong>: 削除中はボタン表記が <code>Add Items</code> に変わり、押した時点の未登録候補だけをキューへ追加できます。明示的に押さない限り、新しい候補は自動ではキューに入りません。</li>
+<li><strong>失敗時の再追加</strong>: メニュー取得失敗やタイムアウトなどの一時的な失敗で削除できなかった動画は完了扱いにせず、あとで <code>Add Items</code> を押すと再びキューへ追加できます。</li>
 <li><strong>視覚的なフィードバック</strong>: 実行中は現在処理中の動画の連番（#Index）が一時的に<strong>赤太字に変更</strong>され、パネルの <code>Status</code> に現在の動画番号と残キュー数が表示されます。</li>
 <li><strong>⚠️ 注意</strong>: ボタンを押すと確認ダイアログなしで<strong>即座に削除</strong>されます。操作にはご注意ください。</li>
 <li><strong>v0.1.47</strong>: Playlist Liteと同様にマウスオーバーでのバージョン表示強調とダブルクリックによる縮小機能を実装。Activeインジケーターを削除。</li>
@@ -171,11 +172,12 @@
 <li>初回注入時は 1〜3 秒のランダムディレイ後にパネルが表示されます。</li>
 </ul>
 </li>
-<li><code>Removable: N items</code> と表示され、現在の削除候補数が確認できます。</li>
+<li><code>Removable: N items</code> と表示され、現在の削除候補数が確認できます。削除中は、この値が「いま <code>Add Items</code> で追加できる候補数」を示します。</li>
 <li><strong>Remove Items</strong> ボタンを押して実行します。削除中にさらに対象を追加したいときだけ、同じボタンが <code>Add Items</code> に変わった状態で押して、現在の候補を手動でキューに追加します。</li>
 </ol>
 <h2>更新履歴</h2>
 <ul>
+<li><strong>v0.1.70</strong>: 削除失敗した動画を完了扱いにしないように変更し、削除中に <code>Add Items</code> を押せば再キュー投入して再試行できるように改善。削除中の <code>Removable</code> 表示は「いま追加できる候補数」に統一。</li>
 <li><strong>v0.1.69</strong>: 削除方式を手動キュー拡張型に変更。通常時ボタンを <code>Remove Items</code>、削除中ボタンを <code>Add Items</code> に変更し、明示操作でのみ追加候補をキューへ取り込むように改善。</li>
 <li><strong>v0.1.68</strong>: スクロール直後とメニューボタンクリック直後に 100ms の短い待機を追加し、表示中のメニュー popup を複数候補から正しく選ぶように改善。</li>
 <li><strong>v0.1.67</strong>: メニューオープン後の待機を 300ms に短縮し、クリック前待機と <code>Wait for removal</code> OFF 時の専用クールダウンを削除。共通クールダウンも 300ms に短縮。</li>

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.69
+// @version      0.1.70
 // @lastModified  2026-04-10
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @antifeature  webRequestBlocking
@@ -71,7 +71,8 @@
     const filterInputValues = new WeakMap();
     let removalQueue = [];
     let queuedItems = new Set();
-    let processedItems = new Set();
+    let completedItems = new Set();
+    let inFlightItem = null;
 
     // --- Statistics ---
     let deletionStatsElement = null;
@@ -153,7 +154,7 @@
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.69';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.70';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -227,7 +228,7 @@
         if (!el) return;
 
         const count = isRemoving
-            ? removalQueue.length + getCurrentRemovalCandidates().length
+            ? getCurrentRemovalCandidates().length
             : candidateStore.getCount({ matchedOnly: onlyRemoveMatched });
         el.textContent = count > 0 ? `Removable: ${count} items` : 'Removable: None';
     }
@@ -333,7 +334,8 @@
     function resetRemovalQueueState() {
         removalQueue = [];
         queuedItems = new Set();
-        processedItems = new Set();
+        completedItems = new Set();
+        inFlightItem = null;
     }
 
     function isItemHiddenByFilter(element, rect = null) {
@@ -388,7 +390,7 @@
             .filter((el) => {
                 const isBasicsOk = candidateStore.has(el) && el.isConnected && !isItemHiddenByFilter(el);
                 if (!isBasicsOk) return false;
-                if (queuedItems.has(el) || processedItems.has(el)) return false;
+                if (queuedItems.has(el) || completedItems.has(el) || inFlightItem === el) return false;
 
                 if (onlyRemoveMatched) {
                     return candidateStore.isMatched(el, { refresh: true });
@@ -653,18 +655,23 @@
 
                 const item = removalQueue.shift();
                 queuedItems.delete(item);
+                inFlightItem = item;
                 scheduleCandidatesInfoRefresh();
 
-                if (!item || processedItems.has(item)) {
+                if (!item || completedItems.has(item)) {
+                    inFlightItem = null;
                     continue;
                 }
-                processedItems.add(item);
 
                 const isCandidateValid = candidateStore.has(item) && item.isConnected && !isItemHiddenByFilter(item);
                 if (!isCandidateValid) {
+                    completedItems.add(item);
+                    inFlightItem = null;
                     continue;
                 }
                 if (onlyRemoveMatched && !candidateStore.isMatched(item, { refresh: true })) {
+                    completedItems.add(item);
+                    inFlightItem = null;
                     continue;
                 }
 
@@ -695,11 +702,13 @@
                         const disappeared = await waitForItemDisappearance(item, 8000); // Wait up to 8s
                         if (disappeared) {
                             candidateStore.remove(item);
+                            completedItems.add(item);
                         } else {
                             console.warn('[YouTube Playlist Remover] Item removal timed out:', item);
                         }
                     } else {
                         candidateStore.remove(item);
+                        completedItems.add(item);
                     }
                     scheduleCandidatesInfoRefresh();
                 }
@@ -713,6 +722,8 @@
                 // Small buffer between items
                 updatePhase('Cooldown...', true);
                 await new Promise(r => setTimeout(r, 300));
+                inFlightItem = null;
+                scheduleCandidatesInfoRefresh();
             }
 
             if (deletionTimes.length > 0) {
@@ -733,6 +744,7 @@
             updateStatus('Error');
             updatePhase('Check console');
         } finally {
+            inFlightItem = null;
             updateRemoveButtonLabel(ACTION_LABEL_REMOVE);
             isRemoving = false;
             resetRemovalQueueState();
