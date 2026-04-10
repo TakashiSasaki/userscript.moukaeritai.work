@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.57
+// @version      0.1.58
 // @lastModified 2026-04-10
 // @description  YouTubeプレイリストのフィルタリング、状態表示(MATCHED)、一括削除機能を提供します。
 // @antifeature  webRequestBlocking
@@ -74,7 +74,7 @@
     let filterIntervalId = null;
     let observerInitTimerId = null;
 
-    let filterState = { title: '', channel: '' };
+    let filterState = { query: '', mode: 'title' };
     let isFiltering = false;
     let isInputActive = false;
     let panel = null;
@@ -129,9 +129,8 @@
             return [];
         }
 
-        return ['title', 'channel']
-            .map((key) => panel.querySelector(`#yt-filter-${key}-input`))
-            .filter(Boolean);
+        const input = panel.querySelector('#yt-filter-query-input');
+        return input ? [input] : [];
     }
 
     function syncFilterStateFromInputs() {
@@ -139,8 +138,8 @@
             return;
         }
 
-        filterState.title = panel.querySelector('#yt-filter-title-input')?.value || '';
-        filterState.channel = panel.querySelector('#yt-filter-channel-input')?.value || '';
+        filterState.query = panel.querySelector('#yt-filter-query-input')?.value || '';
+        filterState.mode = panel.querySelector('input[name="yt-filter-mode"]:checked')?.value || 'title';
     }
 
     function setFilterInputsLocked(locked) {
@@ -149,6 +148,14 @@
             input.readOnly = locked;
             Object.assign(input.style, style);
             input.style.boxShadow = '';
+        });
+
+        if (!panel) {
+            return;
+        }
+
+        panel.querySelectorAll('input[name="yt-filter-mode"]').forEach((radio) => {
+            radio.disabled = locked;
         });
     }
 
@@ -248,7 +255,7 @@
             return;
         }
 
-        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.57';
+        const version = (typeof GM_info !== 'undefined') && GM_info.script ? GM_info.script.version : '0.1.58';
         const html = templateStr.replace('{{VERSION}}', version);
 
         panel = yusParseHTML(html);
@@ -259,36 +266,40 @@
         const titleLabel = panel.querySelector('#yt-filter-title');
         yusMakeMinimizable(panel, titleLabel, MINIMIZED_STATE_KEY);
 
-        const setupInputGroup = (key) => {
-            const input = panel.querySelector(`#yt-filter-${key}-input`);
+        const input = panel.querySelector('#yt-filter-query-input');
+        input.value = filterState.query;
+        input.addEventListener('focus', () => {
+            Object.assign(input.style, FILTER_INPUT_FOCUS_STYLE);
+        });
+        input.addEventListener('blur', () => {
+            input.style.boxShadow = '';
+            if (input.readOnly) {
+                input.style.borderColor = FILTER_INPUT_LOCKED_STYLE.borderColor;
+            } else {
+                input.style.borderColor = FILTER_INPUT_EDITABLE_STYLE.borderColor;
+            }
+        });
+        input.addEventListener('click', () => {
+            if (input.readOnly) {
+                beginFilterEditing(input);
+            }
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                commitFilterInputs();
+            }
+        });
 
-            input.value = filterState[key];
-            input.addEventListener('focus', () => {
-                Object.assign(input.style, FILTER_INPUT_FOCUS_STYLE);
-            });
-            input.addEventListener('blur', () => {
-                input.style.boxShadow = '';
-                if (input.readOnly) {
-                    input.style.borderColor = FILTER_INPUT_LOCKED_STYLE.borderColor;
-                } else {
-                    input.style.borderColor = FILTER_INPUT_EDITABLE_STYLE.borderColor;
+        panel.querySelectorAll('input[name="yt-filter-mode"]').forEach((radio) => {
+            radio.checked = radio.value === filterState.mode;
+            radio.addEventListener('change', () => {
+                if (!radio.checked) {
+                    return;
                 }
+                filterState.mode = radio.value;
             });
-            input.addEventListener('click', () => {
-                if (input.readOnly) {
-                    beginFilterEditing(input);
-                }
-            });
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    commitFilterInputs();
-                }
-            });
-        };
-
-        setupInputGroup('title');
-        setupInputGroup('channel');
+        });
 
         const resetButton = panel.querySelector('#yt-filter-reset-btn');
         if (resetButton) {
@@ -300,9 +311,9 @@
                 setFilterInputsLocked(false);
                 resetAppliedFilteringState();
 
-                const titleInput = panel.querySelector('#yt-filter-title-input');
-                if (titleInput) {
-                    titleInput.focus();
+                const queryInput = panel.querySelector('#yt-filter-query-input');
+                if (queryInput) {
+                    queryInput.focus();
                 }
             });
         }
@@ -409,8 +420,8 @@
         updateStatus('processor', true);
 
         const CHUNK_SIZE = 30;
-        const titleLower = normalizeText(filterState.title);
-        const channelLower = normalizeText(filterState.channel);
+        const queryLower = normalizeText(filterState.query);
+        const isTitleMode = filterState.mode === 'title';
 
         const itemsToProcess = [];
         for (const item of pendingProcessItems) {
@@ -432,7 +443,7 @@
         }
 
         let batchMatches = 0;
-        console.groupCollapsed(`[Playlist Filter Debug] processChunk (batch size: ${itemsToProcess.length}, title: "${titleLower}", channel: "${channelLower}")`);
+        console.groupCollapsed(`[Playlist Filter Debug] processChunk (batch size: ${itemsToProcess.length}, query: "${queryLower}", mode: "${filterState.mode}")`);
 
         try {
             itemsToProcess.forEach(item => {
@@ -445,10 +456,8 @@
                 const title = metadata.normalizedTitle;
                 const channel = metadata.normalizedChannel;
 
-                const matchTitle = !titleLower || title.includes(titleLower);
-                const matchChannel = !channelLower || channel.includes(channelLower);
-
-                const isMatched = matchTitle && matchChannel;
+                const targetText = isTitleMode ? title : channel;
+                const isMatched = !queryLower || targetText.includes(queryLower);
 
                 if (isMatched) {
                     batchMatches++;
@@ -504,9 +513,9 @@
             console.log(`[Playlist Filter Debug] applyFilters skipped: input is active`);
             return;
         }
-        isFiltering = Boolean(filterState.title || filterState.channel);
+        isFiltering = Boolean(filterState.query);
         hasAppliedCurrentPage = true;
-        console.log(`[Playlist Filter Debug] applyFilters (title: "${filterState.title}", channel: "${filterState.channel}", isFiltering: ${isFiltering}, isInputActive: ${isInputActive})`);
+        console.log(`[Playlist Filter Debug] applyFilters (query: "${filterState.query}", mode: "${filterState.mode}", isFiltering: ${isFiltering}, isInputActive: ${isInputActive})`);
         updateStatus('scanner', true);
 
         allCachedItems.clear();

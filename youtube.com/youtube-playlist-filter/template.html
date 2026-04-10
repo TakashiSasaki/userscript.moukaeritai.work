@@ -5,20 +5,24 @@
     <div id="yt-filter-panel-content" class="yus-content">
         <div style="display: flex; flex-direction: column; gap: 2px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 12px; font-weight: bold;">Title Filter</span>
+                <span style="font-size: 12px; font-weight: bold;">Filter Query</span>
             </div>
-            <input id="yt-filter-title-input" type="text" placeholder="Type and press Enter to lock/apply" style="width: 100%; padding: 4px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 2px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 12px; font-weight: bold;">Channel Filter</span>
+            <div style="display: flex; gap: 10px; font-size: 11px; color: #5c3b00; margin-bottom: 2px;">
+                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                    <input type="radio" name="yt-filter-mode" value="title">
+                    <span>Title</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                    <input type="radio" name="yt-filter-mode" value="channel">
+                    <span>Channel</span>
+                </label>
             </div>
-            <input id="yt-filter-channel-input" type="text" placeholder="Click to unlock and edit filters" style="width: 100%; padding: 4px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+            <input id="yt-filter-query-input" type="text" placeholder="Type and press Enter to lock/apply" style="width: 100%; padding: 4px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
         </div>
         <div id="yt-filter-count" style="font-size: 12px;">Results: - / -</div>
         <div id="yt-filter-queue-info" style="font-size: 11px; color: #666;">Queue: 0 items</div>
         <button id="yt-filter-reset-btn" type="button" style="width: 100%; padding: 4px 6px; font-size: 11px; cursor: pointer; background-color: #fff; color: #5c3b00; border: 1px solid #d69e5b; border-radius: 4px; margin-top: 2px;">Reset Filter</button>
-        <div style="font-size: 10px; color: #666; margin-top: 2px;">Press Enter to lock inputs and start filtering. Click a locked input to unlock for editing. Use Reset Filter only when you want to clear the applied filtering state.</div>
+        <div style="font-size: 10px; color: #666; margin-top: 2px;">Choose Title or Channel, then press Enter to lock and start filtering. Click the locked input to unlock for editing. Use Reset Filter only when you want to clear the applied filtering state.</div>
         <div style="font-size: 10px; color: #666; display: flex; flex-direction: column; gap: 1px;">
             <div id="yt-filter-status-monitor">Monitor: Idle</div>
             <div id="yt-filter-status-scanner">Scanner: Idle</div>
