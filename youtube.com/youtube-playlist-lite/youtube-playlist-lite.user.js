@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Lite
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.47
+// @version      0.1.48
+// @lastModified 2026-04-11
 // @description  YouTubeプレイリストでサムネイル、ヘッダー、ミニプレイヤーを継続的に削除して表示を軽量化するツールです。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -28,15 +29,6 @@
     if (commonCss) {
         GM_addStyle(commonCss);
     }
-    GM_addStyle(`
-        .yus-panel,
-        .yus-panel.yus-active {
-            --yus-panel-opacity: 1 !important;
-            background-color: rgb(var(--yus-panel-bg-rgb)) !important;
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-        }
-    `);
     const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {

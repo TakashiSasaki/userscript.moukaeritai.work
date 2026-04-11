@@ -289,7 +289,8 @@
 
 <h2>更新履歴</h2>
 <ul>
-            <li><strong>v0.2.80</strong>: Tampermonkeyサンドボックス内では<code>window.showSaveFilePicker</code>が隠蔽される問題を特定。<code>unsafeWindow</code>経由でネイティブ保存ダイアログにアクセスし、フォールバックとして<code>GM_download</code>に<code>data:</code> URIを渡す方式に変更。UUIDファイル名問題を根本的に修正。</li>
+            <li><strong>v0.2.81</strong>: フローティングUIの描画パフォーマンス改善のため、透過および影効果を削除しました。</li>
+                <li><strong>v0.2.80</strong>: Tampermonkeyサンドボックス内では<code>window.showSaveFilePicker</code>が隠蔽される問題を特定。<code>unsafeWindow</code>経由でネイティブ保存ダイアログにアクセスし、フォールバックとして<code>GM_download</code>に<code>data:</code> URIを渡す方式に変更。UUIDファイル名問題を根本的に修正。</li>
             <li><strong>v0.2.79</strong>: Export機能がChromeのダウンロード履歴でUUIDファイル名になってしまう問題に対処するため、<code>window.showSaveFilePicker</code>ネイティブダイアログを最優先し、失敗時はData URIを用いたフォールバックを行うよう修正しました。</li>
             <li><strong>v0.2.78</strong>: Export の自動保存経路を `blob:` URL 文字列ではなく `Blob/File` 直接渡しに修正し、自動保存に失敗した環境では保存ダイアログへフォールバックするように改善。</li>
             <li><strong>v0.2.77</strong>: Export を userscript マネージャー経由の実ダウンロードに変更し、blob/UUID だけがダウンロード履歴に残る問題を修正。パネルに Exporting / Exported / Export failed の状態表示を追加。</li>

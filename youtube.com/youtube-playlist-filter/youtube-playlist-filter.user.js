@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Filter
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.61
-// @lastModified 2026-04-10
+// @version      0.1.62
+// @lastModified 2026-04-11
 // @description  YouTube繝励Ξ繧､繝ｪ繧ｹ繝医・繝輔ぅ繝ｫ繧ｿ繝ｪ繝ｳ繧ｰ縲∫憾諷玖｡ｨ遉ｺ(MATCHED)縲∽ｸ諡ｬ蜑企勁讖溯・繧呈署萓帙＠縺ｾ縺吶・
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -27,15 +27,6 @@
     if (commonCss) {
         GM_addStyle(commonCss);
     }
-    GM_addStyle(`
-        .yus-panel,
-        .yus-panel.yus-active {
-            --yus-panel-opacity: 1 !important;
-            background-color: rgb(var(--yus-panel-bg-rgb)) !important;
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-        }
-    `);
     const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
