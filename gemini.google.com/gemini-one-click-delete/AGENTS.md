@@ -24,10 +24,18 @@ Gemini is a Single Page Application (SPA). Moving from the root (`/`) to a speci
 *   Rely on the `window.navigation` API (e.g., catching `#navigatesuccess`) alongside a `setInterval` fallback to gracefully tear down and re-initialize the script (`checkUrlAndManageScriptState()`).
 *   Ensure that event listeners, DOM injections (like floating buttons), and nested observers are cleanly disconnected when navigating away from chat views to prevent memory leaks, unhandled references, and duplicate UI insertions.
 
-### 4. Trusted Types / Security Policy (CSP)
+### 4. Security (Trusted Types & CSP)
 Gemini heavily enforces `TrustedTypes` policies to protect against DOM XSS.
 *   **Simulating Clicks**: When simulating `MouseEvent`s programmatically, always set `view: null` within the event dictionary. Omitting this triggers a non-trusted-event violation in Gemini's runtime context.
-*   **DOM Injection**: Prefer native DOM creation (`document.createElementNS`, `document.createElement`) over assigning raw strings to `innerHTML`.
+*   **DOM Injection**: The script uses a Trusted Types policy (`geminiDeletePanel`) to allow secure HTML injection via `window.geminiSetInnerHTML`.
+
+# UI Architecture
+The script uses an external HTML template and CSS for the UI panel to maintain a clean separation of concerns and adhere to the project's resource refactoring pattern.
+
+- **Styles**: Defined in `gemini-one-click-delete.css`. Loaded via `GM_addStyle`.
+- **Template**: Defined in `gemini-one-click-delete.html`. Injected using `window.geminiSetInnerHTML`.
+- **Placeholders**: Version and emoji are populated into the `.gus-version` element after injection.
+- **Draggable Panel**: Utilizes `window.geminiSetupDraggablePanel` from `gemini-common.js` for mobility and state persistence.
 
 ### 5. Inter-script Communication
 This script listens for a `gemini-one-click-delete:request-delete` CustomEvent on the `window` object.
