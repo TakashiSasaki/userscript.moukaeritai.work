@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.17
+// @version      0.2.18
 // @description  Injects a prompt into Gemini via an external custom event.
 // @lastModified 2026-04-16
 // @author       Takashi Sasaki
@@ -19,8 +19,9 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @noframes
+// @history       0.2.18 UIパネルの最小化・復元をバージョン表示部分のダブルクリックで行うように変更（専用ボタンを削除）
+// @history       0.2.17 外部CSS/JSファイルへの分離とコードの整理、リソースファイルの改名、デザインの大幅刷新。
 // @history       0.2.16 リソースファイル (style.css) をスクリプト名と同じステムに改名
-// @history       0.2.14 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // ==/UserScript==
 
 (function () {
@@ -261,17 +262,9 @@ const report = () => {
                 title.className = 'gus-version';
                 const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '';
                 title.textContent = scriptVersion ? `💉 ${scriptVersion} ${gusEmoji}` : 'Prompt Injector';
-                title.title = 'Gemini Prompt Injector';
-
-                const minBtn = document.createElement('button');
-                minBtn.className = 'gpi-min-btn';
-                window.geminiSetInnerHTML(minBtn, isGpiUIMinimized
-                    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h16v6H4v-6z" opacity="0.5"/><path d="M4 4h16v6H4V4z"/></svg>'
-                    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>', policy);
-                minBtn.title = isGpiUIMinimized ? '復元' : '最小化';
+                title.title = 'Double-click to toggle size';
 
                 header.appendChild(title);
-                header.appendChild(minBtn);
                 uiContainer.appendChild(header);
 
                 const content = document.createElement('div');
@@ -355,17 +348,13 @@ const report = () => {
                 // Drag functionality
                 window.geminiSetupDraggablePanel(uiContainer, title, 'gpi_ui_pos', { right: '20px', bottom: '180px' });
 
-                // Minimize functionality
-                minBtn.onclick = () => {
+                // Toggle size on double-click
+                title.ondblclick = () => {
                     isGpiUIMinimized = !isGpiUIMinimized;
                     content.style.display = isGpiUIMinimized ? 'none' : 'block';
                     if (isGpiUIMinimized) uiContainer.classList.add('minimized');
                     else uiContainer.classList.remove('minimized');
 
-                    window.geminiSetInnerHTML(minBtn, isGpiUIMinimized
-                        ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h16v6H4v-6z" opacity="0.5"/><path d="M4 4h16v6H4V4z"/></svg>'
-                        : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>', policy);
-                    minBtn.title = isGpiUIMinimized ? '復元' : '最小化';
                     GM_setValue('gpi_ui_minimized', isGpiUIMinimized);
 
                     // Re-adjust position after resize

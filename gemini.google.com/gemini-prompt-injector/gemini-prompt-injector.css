@@ -79,16 +79,6 @@
     border-radius: 4px;
 }
 
-.gpi-min-btn {
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    padding: 2px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: inherit;
-}
 
 .gpi-status-container {
     margin-top: 8px;
