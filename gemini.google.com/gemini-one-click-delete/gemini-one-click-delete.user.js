@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.22
-// @lastModified 2026-04-15
+// @version      0.3.23
+// @lastModified 2026-04-16
 // @description  Adds a 1-click floating button with shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -10,13 +10,14 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
-// @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/style.css
+// @resource     geminiOneClickDeleteCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.css
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @grant        GM_info
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
-// @history       0.3.21 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
+// @history       0.3.23 リソースファイル (style.css) をスクリプト名と同じステムに改名
+// @history       0.3.22 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // ==/UserScript==
 
 (function () {
@@ -108,7 +109,7 @@ const report = () => {
                 }
 
                 if (document.getElementById('gemini-delete-styles')) return;
-                const css = GM_getResourceText('customCSS');
+                const css = GM_getResourceText('geminiOneClickDeleteCSS');
                 const style = GM_addStyle(css);
                 if (style) {
                     style.id = 'gemini-delete-styles';

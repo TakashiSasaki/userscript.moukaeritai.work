@@ -1,0 +1,128 @@
+:root {
+    --primary: #10a37f;
+    --primary-dark: #0e8a6c;
+    --bg-gradient: linear-gradient(135.2deg, rgba(7, 12, 10, 1) 1.2%, rgba(13, 44, 40, 1) 98.1%);
+    --glass: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --text-main: #ffffff;
+    --text-dim: #b0b8c4;
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    margin: 0;
+    padding: 2em;
+    background: var(--bg-gradient);
+    background-attachment: fixed;
+    color: var(--text-main);
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 3rem;
+    backdrop-filter: blur(15px);
+}
+
+.top-nav {
+    margin-bottom: 2em;
+}
+
+.top-nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text-dim);
+    padding: 8px 16px;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 50px;
+    transition: all 0.3s ease;
+}
+
+.top-nav-link:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(-5px);
+}
+
+#content h1 {
+    background: linear-gradient(90deg, #10a37f, #20e3b2);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-top: 0;
+}
+
+#content h2 {
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 0.5rem;
+    margin-top: 2rem;
+}
+
+#content code {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+#content pre {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+.install-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--glass-border);
+    text-align: center;
+}
+
+.install-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 32px;
+    background: var(--primary);
+    color: white;
+    text-decoration: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(16, 163, 127, 0.3);
+}
+
+.install-button:hover {
+    background: var(--primary-dark);
+    box-shadow: 0 6px 20px rgba(16, 163, 127, 0.5);
+    transform: scale(1.05);
+}
+
+.version-info {
+    font-size: 0.85em;
+    opacity: 0.9;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    padding-left: 16px;
+}
+
+.version-badge {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-weight: bold;
+}

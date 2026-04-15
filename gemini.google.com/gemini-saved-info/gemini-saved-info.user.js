@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.28
-// @lastModified 2026-04-15
+// @version      0.2.29
+// @lastModified 2026-04-16
 // @description  Adds serial numbers and copy buttons to custom instructions on Gemini.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -12,12 +12,13 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
-// @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/style.css
+// @resource     geminiSavedInfoCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.css
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @license      MIT
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js
 // @noframes
+// @history       0.2.29 リソースファイル (style.css) をスクリプト名と同じステムに改名
 // @history       0.2.27 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // ==/UserScript==
 
@@ -54,7 +55,7 @@ const report = () => {
             }
 
             // Inject custom styles
-            const customCSS = GM_getResourceText('customCSS');
+            const customCSS = GM_getResourceText('geminiSavedInfoCSS');
             if (customCSS && !document.getElementById('gemini-saved-info-styles')) {
                 const style = GM_addStyle(customCSS);
                 if (style) style.id = 'gemini-saved-info-styles';

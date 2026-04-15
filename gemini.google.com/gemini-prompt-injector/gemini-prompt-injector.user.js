@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.15
+// @version      0.2.16
 // @description  Injects a prompt into Gemini via an external custom event.
-// @lastModified 2026-04-15
+// @lastModified 2026-04-16
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
 // @match        https://gemini.google.com/*
@@ -13,12 +13,13 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
-// @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/style.css
+// @resource     geminiPromptInjectorCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.css
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @homepageURL  https://x.com/TakashiSasaki
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @noframes
+// @history       0.2.16 リソースファイル (style.css) をスクリプト名と同じステムに改名
 // @history       0.2.14 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // ==/UserScript==
 
@@ -54,7 +55,7 @@ const report = () => {
             }
 
             // Inject custom styles
-            const customCSS = GM_getResourceText('customCSS');
+            const customCSS = GM_getResourceText('geminiPromptInjectorCSS');
             if (customCSS && !document.getElementById('gemini-prompt-injector-styles')) {
                 const style = GM_addStyle(customCSS);
                 if (style) style.id = 'gemini-prompt-injector-styles';

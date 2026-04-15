@@ -1,22 +1,20 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini Artifact Exporter Worker</title>
-    <style>
-        body { font-family: sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: 0 auto; }
-        h1, h2, h3 { color: #333; }
-        code { background-color: #f4f4f4; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
-        pre { background-color: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; font-family: monospace; }
-    </style>
+    <link rel="stylesheet" href="../../index.css">
+    <link rel="stylesheet" href="index.css">
+    <script src="index.js" defer></script>
 </head>
+
 <body>
     <p>このユーザースクリプトは、Gemini の「アーティファクト（Article）」を Google ドキュメントにエクスポートするメインUI <a href="../gemini-artifact-exporter/index.html">gemini-artifact-exporter</a> のワーカー（バックグラウンド処理用）スクリプトです。<br><strong>単体では機能しない、内部依存用のスクリプトです。</strong></p>
-    
-    <div id="script-info"
-        style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #f39c12; font-size: 14px;">
-        <strong>最新バージョン:</strong> <span id="ver-info">v0.2.25</span><br>
+
+    <div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #f39c12; font-size: 14px;">
+        <strong>最新バージョン:</strong> <span id="ver-info">Loading...</span><br>
     </div>
 
     <h2>概要</h2>
@@ -27,8 +25,20 @@
 
     <h2>インストール</h2>
     <p>
-        <a href="./gemini-artifact-exporter-worker.user.js">こちらをクリックしてインストール</a>
-
+        <a href="gemini-artifact-exporter-worker.user.js" class="install-button" id="install-button">
+            <span style="display: flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span class="button-text">Install</span>
+            </span>
+            <div class="version-info">
+                <span class="version-badge latest-version">Loading...</span>
+                <span class="version-badge installed-version" style="display: none;"></span>
+            </div>
+        </a>
     </p>
 
     <h2>主な機能</h2>
@@ -38,8 +48,6 @@
         <li>実行状態を示す常時表示のフローティング UI インジケーター（ドラッグ可能・位置記憶・バージョン番号付き）</li>
         <li><code>gemini-artifact-exporter-worker:result</code> イベントによる結果の返信</li>
     </ul>
-
-
 
 
     <h2>連携スクリプト</h2>
@@ -63,17 +71,18 @@
     </ul>
 
     <h2>更新履歴</h2>
-        <ul>
-            <li><strong>v0.2.30</strong>: リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名</li>
-            <li><strong>v0.2.29</strong>: 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)</li>
-            <li><strong>v0.2.28</strong>: UIの透過効果および影効果を削除</li>
+    <ul>
+        <li><strong>v0.2.31</strong>: 外部CSS/JSファイルへの分離とコードの整理</li>
+        <li><strong>v0.2.30</strong>: リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名</li>
+        <li><strong>v0.2.29</strong>: 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)</li>
+        <li><strong>v0.2.28</strong>: UIの透過効果および影効果を削除</li>
 
-            <li><strong>v0.2.27</strong>: 共有ライブラリ(gemini-common.js)の更新に合わせてセキュリティ強化とバージョンアップを行いました。</li>
-<li><strong>v0.2.26</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
-            <li><strong>v0.2.24</strong>: バージョン表記のハードコードを廃止し、GM_infoから取得するように変更</li>
-                <li><strong>v0.2.23</strong>: 共通ライブラリのバグ修正により、UIが移動できない問題を修正</li>
+        <li><strong>v0.2.27</strong>: 共有ライブラリ(gemini-common.js)の更新に合わせてセキュリティ強化とバージョンアップを行いました。</li>
+        <li><strong>v0.2.26</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
+        <li><strong>v0.2.24</strong>: バージョン表記のハードコードを廃止し、GM_infoから取得するように変更</li>
+        <li><strong>v0.2.23</strong>: 共通ライブラリのバグ修正により、UIが移動できない問題を修正</li>
         <li><strong>v0.2.20</strong>: 汎用ユーティリティ関数（sleepやwaitForElementなど）をgemini-common.jsにオフロードし、コードを共通化しました。</li>
-            <li><strong>v0.2.9</strong> (2026-03-30): CSSやHTMLテンプレートの読み込みに失敗した場合の不完全なフォールバックUIの表示をやめ、コンソールにエラーを出力して安全に早期終了するよう挙動を改善しました。</li>
+        <li><strong>v0.2.9</strong> (2026-03-30): CSSやHTMLテンプレートの読み込みに失敗した場合の不完全なフォールバックUIの表示をやめ、コンソールにエラーを出力して安全に早期終了するよう挙動を改善しました。</li>
         <li><strong>v0.2.8</strong> (2026-03-30): UIの構築（スタイルとHTML構造）を <code>style.css</code> と <code>template.html</code> にオフロードし、JavaScript のコード量を削減するリファクタリングを実施しました。</li>
         <li><strong>v0.2.7</strong> (2026-03-29): Gemini の TrustedHTML ポリシーに対応するため、<code>innerHTML</code> の使用を廃止し、DOM API を使った安全な実装に変更しました。</li>
         <li><strong>v0.2.6</strong> (2026-03-29): 最小化表示（バージョンハンドル）にスクリプトを識別するための絵文字 (⚙️) を追加しました。</li>
@@ -86,5 +95,7 @@
         通信は <code>document.dispatchEvent(new CustomEvent(...))</code> を介して行われ、メイン側は Promise で結果を待機する設計になっています。
     </p>
 
+    <script src="../../domain-landing.js"></script>
 </body>
+
 </html>

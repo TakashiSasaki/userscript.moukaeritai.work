@@ -5,74 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini 1-Click Export to Docs - Moukaeritai</title>
-    <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/index.html"
-        rel="canonical" />
+    <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/index.html" rel="canonical" />
     <!-- Github Markdown CSS for styling -->
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
-    <style>
-        body {
-            box-sizing: border-box;
-            min-width: 200px;
-            max-width: 980px;
-            margin: 0 auto;
-            padding: 45px;
-        }
-
-        @media (max-width: 767px) {
-            body {
-                padding: 15px;
-            }
-        }
-
-        .home-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #24292e;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            transition: background-color 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .home-button svg {
-            fill: currentColor;
-        }
-
-        .home-button:hover {
-            background-color: #0366d6;
-            color: white;
-            text-decoration: none;
-        }
-
-        .install-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 16px;
-            padding: 12px 24px;
-            background-color: #2ea44f !important;
-            color: white !important;
-            font-weight: 600;
-            border-radius: 6px;
-            text-decoration: none !important;
-            margin: 20px 0;
-            transition: background-color 0.2s;
-            border: 1px solid rgba(27, 31, 35, .15);
-        }
-
-        .install-button:hover {
-            background-color: #2c974b;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <link rel="stylesheet" href="../../index.css">
+    <link rel="stylesheet" href="index.css">
+    <script src="index.js" defer></script>
 </head>
 
 <body class="markdown-body">
@@ -88,13 +26,12 @@
 
         <p>Geminiのウェブアプリケーション（SPA）において、会話の特定のターンまたはキャンバスをGoogle Docsにエクスポートする操作を簡略化するユーザースクリプトです。</p>
 
-        <div id="script-info"
-            style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
-            <strong>最新バージョン:</strong> <span id="ver-info">v0.4.47</span><br>
-            <strong>最終更新日:</strong> <span id="date-info">2026-03-30</span>
+        <div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
+            <strong>最新バージョン:</strong> <span id="ver-info">Loading...</span><br>
+            <strong>最終更新日:</strong> <span id="date-info">Loading...</span>
         </div>
 
-        <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js" class="install-button">
+        <a href="gemini-export-to-docs.user.js" class="install-button" id="install-button">
             <span style="display: flex; align-items: center; gap: 8px;">
                 <span class="button-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -105,39 +42,40 @@
                 </span>
                 <span class="button-text">Install</span>
             </span>
-            <div class="version-info" style="font-size: 0.85em; opacity: 0.9; display: flex; flex-direction: row; align-items: center; gap: 12px; border-left: 1px solid rgba(255,255,255,0.3); padding-left: 16px;">
-                <span class="version-badge latest-version"></span>
+            <div class="version-info">
+                <span class="version-badge latest-version">Loading...</span>
                 <span class="version-badge installed-version" style="display: none;"></span>
             </div>
         </a>
+
         <div style="margin-top: 24px;">
             <p><strong>依存設定（前提スクリプト）</strong>: このスクリプトの全機能を利用するには、以下の3つのスクリプトもインストールして有効にしてください。</p>
             <div id="dependency-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
                 <!-- Auto-Select Next -->
-                <div class="dep-card" data-script-name="Gemini Auto-Select Next" data-url="../gemini-auto-select-next/gemini-auto-select-next.user.js" style="padding: 12px; border: 1px solid #e1e4e8; border-radius: 6px; background: #fafbfc;">
+                <div class="dep-card" data-script-name="Gemini Auto-Select Next" data-url="../gemini-auto-select-next/gemini-auto-select-next.user.js">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <strong><a href="../gemini-auto-select-next/index.html">Gemini Auto-Select Next</a></strong>
-                        <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-select-next/gemini-auto-select-next.user.js" target="_blank" class="dep-install-btn" style="font-size: 12px; padding: 4px 8px; background: #2ea44f; color: white; border-radius: 6px; text-decoration: none;">Install</a>
+                        <a href="../gemini-auto-select-next/gemini-auto-select-next.user.js" target="_blank" class="dep-install-btn">Install</a>
                     </div>
                     <div style="font-size: 0.8em; color: #586069; margin-top: 6px;">
                         Latest: <span class="dep-latest">確認中...</span> | Installed: <span class="dep-installed">未インストール</span>
                     </div>
                 </div>
                 <!-- 1-Click Delete -->
-                <div class="dep-card" data-script-name="Gemini 1-Click Delete Conversation" data-url="../gemini-one-click-delete/gemini-one-click-delete.user.js" style="padding: 12px; border: 1px solid #e1e4e8; border-radius: 6px; background: #fafbfc;">
+                <div class="dep-card" data-script-name="Gemini 1-Click Delete Conversation" data-url="../gemini-one-click-delete/gemini-one-click-delete.user.js">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <strong><a href="../gemini-one-click-delete/index.html">Gemini 1-Click Delete Conversation</a></strong>
-                        <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js" target="_blank" class="dep-install-btn" style="font-size: 12px; padding: 4px 8px; background: #2ea44f; color: white; border-radius: 6px; text-decoration: none;">Install</a>
+                        <a href="../gemini-one-click-delete/gemini-one-click-delete.user.js" target="_blank" class="dep-install-btn">Install</a>
                     </div>
                     <div style="font-size: 0.8em; color: #586069; margin-top: 6px;">
                         Latest: <span class="dep-latest">確認中...</span> | Installed: <span class="dep-installed">未インストール</span>
                     </div>
                 </div>
                 <!-- Turn Counter -->
-                <div class="dep-card" data-script-name="Gemini Turn Counter" data-url="../gemini-turn-counter/gemini-turn-counter.user.js" style="padding: 12px; border: 1px solid #e1e4e8; border-radius: 6px; background: #fafbfc;">
+                <div class="dep-card" data-script-name="Gemini Turn Counter" data-url="../gemini-turn-counter/gemini-turn-counter.user.js">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <strong><a href="../gemini-turn-counter/index.html">Gemini Turn Counter</a></strong>
-                        <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js" target="_blank" class="dep-install-btn" style="font-size: 12px; padding: 4px 8px; background: #2ea44f; color: white; border-radius: 6px; text-decoration: none;">Install</a>
+                        <a href="../gemini-turn-counter/gemini-turn-counter.user.js" target="_blank" class="dep-install-btn">Install</a>
                     </div>
                     <div style="font-size: 0.8em; color: #586069; margin-top: 6px;">
                         Latest: <span class="dep-latest">確認中...</span> | Installed: <span class="dep-installed">未インストール</span>
@@ -241,12 +179,10 @@
             <li><strong>Trusted Types対応</strong>: <code>innerHTML</code> の使用を禁止し、<code>document.createElementNS</code>
                 等でDOMを構築する。</li>
             <li><strong>Trusted Click</strong>: <code>MouseEvent</code> の <code>view</code> プロパティを <code>null</code>
-                に設定することで、ブラウザのセキュリティ制約による <code>TypeError</code> を回避する。</li>
+                に設定することで、ブラウザ의セキュリティ制約による <code>TypeError</code> を回避する。</li>
             <li><strong>Wait処理</strong>: 非同期DOM更新に対応するため、単純な <code>querySelector</code> ではなく、タイムアウト付きのリトライ待機ロジックを実装する。
             </li>
         </ul>
-
-
 
         <h2>UI仕様</h2>
         <ul>
@@ -261,14 +197,15 @@
 
         <h2>更新履歴</h2>
         <ul>
+            <li><strong>v0.4.61</strong>: 外部CSS/JSファイルへの分離とコードの整理</li>
             <li><strong>v0.4.60</strong>: リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名</li>
             <li><strong>v0.4.58</strong>: UIの透過効果および影効果を削除</li>
 
             <li><strong>v0.4.57</strong>: 最小化表示のスタイルとクラス名を共通化（gemini-common.css/jsを活用）</li>
-<li><strong>v0.4.56</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
+            <li><strong>v0.4.56</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
             <li><strong>v0.4.55</strong>: バージョン表記のバッジをマウスオーバーで拡大表示するように変更。</li>
 
-                <li><strong>v0.4.54</strong>: 共通ライブラリのバグ修正により、UIが移動できない問題を修正</li>
+            <li><strong>v0.4.54</strong>: 共通ライブラリのバグ修正により、UIが移動できない問題を修正</li>
             <li><strong>v0.4.51</strong>: 汎用ユーティリティ関数（sleepやwaitForElementなど）をgemini-common.jsにオフロードし、コードを共通化しました。</li>
             <li><strong>v0.4.43</strong>: エクスポートボタンのHTML構造を <code>template.html</code> にオフロードし、インラインスタイルをCSSクラスに移行するリファクタリングを実施しました。</li>
             <li><strong>v0.4.42</strong>: 最小化表示（Inactive）時に「Export to Docs」の文字表示を削除し、バージョン番号の前にアイコン（📄）を追加しました。</li>
@@ -277,7 +214,7 @@
             <li><strong>v0.4.38</strong>: アクティブ状態のパネル背景色をライトピンクの透過背景に変更し、削除時のステータスポップアップを削除、Auto(URL)の表記をAuto-Exportに変更しました。</li>
             <li><strong>v0.4.37</strong>: 最小化表示（Inactive）時に「(Inactive)」というテキストを削除し、代わりに極小サイズの文字でスクリプト名（Export to Docs）を表示するようにUIを改善しました。</li>
             <li><strong>v0.4.36</strong>: 最小化表示（Inactive）時のパネル背景色をライトピンクの透過背景に変更し、視認性を高めました。</li>
-            <li><strong>v0.4.35</strong>: 1ターン専用パネルが非表示になるのではなく、最小化（Inactive）された状態で画面に残り、スクリプトの動作状況を常に把握できるようにUIパターンを改善しました。</li>
+            <li><strong>v0.4.35</strong>: 1ターンの会話専用パネルが非表示になるのではなく、最小化（Inactive）された状態で画面に残り、スクリプトの動作状況を常に把握できるようにUIパターンを改善しました。</li>
             <li><strong>v0.4.33</strong>: SVGアイコンやUIパネルのDOM構造を `template.html` にオフロードし、JavaScriptのファイルサイズと不要なセレクタを削減するリファクタリングを実施しました。</li>
             <li><strong>v0.4.24</strong>: 1ターンの専用UIパネルに、<code>gemini-turn-counter</code> と連携して一発で全画像をコピーできる「📋 Copy Images」ボタンを追加しました。</li>
             <li><strong>v0.4.18</strong>: URLの比較を行う際に大文字・小文字を区別しないように修正し、<code>Https://</code>のように入力された場合でも正しく自動実行がトリガーされるように改善しました。</li>
@@ -326,155 +263,7 @@
         <li><strong>Turn Counter</strong>: <code>gemini-turn-counter-copy-images-result</code> イベントを受信して画像コピー結果を受け取ります。</li>
     </ul>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            let serverVersion = null;
-            try {
-                // Fetch from Github raw URL as requested, to bypass CORS and get the latest
-                const rawUrl = 'https://raw.githubusercontent.com/TakashiSasaki/userscript.moukaeritai.work/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js';
-                const response = await fetch(rawUrl);
-                if (response.ok) {
-                    const text = await response.text();
-                    const versionMatch = text.match(/\/\/ @version\s+([\d.]+)/);
-                    const dateMatch = text.match(/\/\/ @lastModified\s+([\d-]+)/);
-                    if (versionMatch) {
-                        serverVersion = versionMatch[1];
-                        const date = dateMatch ? dateMatch[1] : '不明';
-
-                        const verEl = document.getElementById('ver-info');
-                        const dateEl = document.getElementById('date-info');
-                        if (verEl) verEl.textContent = `v${serverVersion}`;
-                        if (dateEl) dateEl.textContent = date;
-
-                        const latestBadge = document.querySelector('.latest-version');
-                        if (latestBadge) {
-                            latestBadge.textContent = `Latest: v${serverVersion}`;
-                        }
-                    }
-                }
-            } catch (e) {
-                console.warn('Could not fetch script version:', e);
-            }
-
-            // Helper for version comparison
-            function parseVersion(v) { return v ? v.split('.').map(Number) : []; }
-            function checkUpdate(latest, installed) {
-                if (!latest || !installed) return false;
-                const lParts = parseVersion(latest);
-                const iParts = parseVersion(installed);
-                for (let i = 0; i < Math.max(lParts.length, iParts.length); i++) {
-                    const l = lParts[i] || 0, inst = iParts[i] || 0;
-                    if (l > inst) return true;
-                    if (l < inst) return false;
-                }
-                return false;
-            }
-
-            // Fetch Dependency Versions
-            const depCards = document.querySelectorAll('.dep-card');
-            depCards.forEach(async (card) => {
-                const url = card.getAttribute('data-url');
-                try {
-                    const response = await fetch(url);
-                    if (response.ok) {
-                        const text = await response.text();
-                        const vMatch = text.match(/\/\/ @version\s+([\d.]+)/);
-                        if (vMatch) {
-                            const version = vMatch[1];
-                            card.dataset.latestVersion = version;
-                            const latestSpan = card.querySelector('.dep-latest');
-                            if (latestSpan) latestSpan.textContent = `v${version}`;
-                            updateDepCardState(card);
-                        }
-                    }
-                } catch (e) {}
-            });
-
-            function updateDepCardState(card) {
-                const latest = card.dataset.latestVersion;
-                const installed = card.dataset.installedVersion;
-                const btn = card.querySelector('.dep-install-btn');
-                if (!installed || !btn) return;
-                
-                if (latest && checkUpdate(latest, installed)) {
-                    btn.textContent = 'Update';
-                    btn.style.backgroundColor = '#f39c12';
-                } else {
-                    btn.textContent = 'Installed';
-                    btn.style.backgroundColor = '#f6f8fa';
-                    btn.style.color = '#24292e';
-                    btn.style.border = '1px solid #e1e4e8';
-                }
-            }
-
-            // Listen for installed userscript reports
-            document.addEventListener('userscript-check-installed', (event) => {
-                const { name, version } = event.detail;
-                
-                // Logic for main script
-                if (name === 'Gemini 1-Click Export to Docs' || name === 'Gemini 1-Click Export to Docs (Dev)') {
-                    const installedBadge = document.querySelector('.installed-version');
-                    if (installedBadge) {
-                        installedBadge.textContent = `Installed: v${version}`;
-                        installedBadge.style.display = 'block';
-                    }
-                    
-                    const installBtn = document.querySelector('.install-button');
-                    const btnText = document.querySelector('.button-text');
-                    if (serverVersion && installBtn && btnText) {
-                        if (checkUpdate(serverVersion, version)) {
-                            btnText.textContent = 'Update';
-                            installBtn.style.backgroundColor = '#f39c12';
-                            installBtn.style.color = '#fff';
-                        } else {
-                            btnText.textContent = 'Installed';
-                            installBtn.style.backgroundColor = '#f6f8fa';
-                            installBtn.style.color = '#24292e';
-                        }
-                    }
-                }
-
-                // Logic for dependency scripts
-                depCards.forEach(card => {
-                    const scriptName = card.getAttribute('data-script-name');
-                    if (name === scriptName) {
-                        card.dataset.installedVersion = version;
-                        const installedSpan = card.querySelector('.dep-installed');
-                        if (installedSpan) {
-                            installedSpan.textContent = `v${version}`;
-                            installedSpan.style.color = '#2ea44f';
-                            installedSpan.style.fontWeight = 'bold';
-                        }
-                        updateDepCardState(card);
-                    }
-                });
-            });
-
-            // Ping installed userscripts after a short delay
-            setTimeout(() => {
-                document.dispatchEvent(new CustomEvent('userscript-ping'));
-            }, 1000);
-
-            // Poll for installation status after clicking an install button
-            const startPolling = () => {
-                let attempts = 0;
-                const maxAttempts = 5;
-                const intervalMs = 2000;
-                const pollInterval = setInterval(() => {
-                    attempts++;
-                    document.dispatchEvent(new CustomEvent('userscript-ping'));
-                    if (attempts >= maxAttempts) clearInterval(pollInterval);
-                }, intervalMs);
-            };
-
-            const mainInstallBtn = document.querySelector('.install-button');
-            if (mainInstallBtn) mainInstallBtn.addEventListener('click', startPolling);
-
-            const depInstallBtns = document.querySelectorAll('.dep-install-btn');
-            depInstallBtns.forEach(btn => btn.addEventListener('click', startPolling));
-        });
-    </script>
-    <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
+    <script src="../../domain-landing.js"></script>
     <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
         <p>
             Hosted on GitHub Pages |

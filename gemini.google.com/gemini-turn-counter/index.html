@@ -7,73 +7,10 @@
     <title>Gemini Turn Counter - Moukaeritai</title>
     <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/index.html" rel="canonical" />
     <!-- Github Markdown CSS for styling -->
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
-    <style>
-        body {
-            box-sizing: border-box;
-            min-width: 200px;
-            max-width: 980px;
-            margin: 0 auto;
-            padding: 45px;
-        }
-
-        @media (max-width: 767px) {
-            body {
-                padding: 15px;
-            }
-        }
-
-        .home-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #24292e;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            transition: background-color 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .home-button svg {
-            fill: currentColor;
-        }
-
-        .home-button:hover {
-            background-color: #0366d6;
-            color: white;
-            text-decoration: none;
-        }
-
-        .install-button {
-            display: inline-block;
-            padding: 12px 24px;
-            background-color: #2ea44f;
-            color: white !important;
-            font-weight: 600;
-            border-radius: 6px;
-            text-decoration: none !important;
-            margin: 20px 0;
-            transition: background-color 0.2s;
-        }
-
-        .install-button:hover {
-            background-color: #2c974b;
-        }
-
-        h2, h3 {
-            border-bottom: 1px solid #eaecef;
-            padding-bottom: 0.3em;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <link rel="stylesheet" href="../../index.css">
+    <link rel="stylesheet" href="index.css">
+    <script src="index.js" defer></script>
 </head>
 
 <body class="markdown-body">
@@ -93,20 +30,22 @@
             <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
         </div>
 
-        <a href="gemini-turn-counter.user.js" class="install-button" data-version="0.4.50">
-                        <span class="button-icon">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                        </span>
-
-                        <div class="version-info">
-                            <span class="version-badge latest-version">v0.4.48</span>
-                            <span class="version-badge installed-version" style="display: none;"></span>
-                        </div>
-                    </a>
+        <a href="gemini-turn-counter.user.js" class="install-button" id="install-button">
+            <span style="display: flex; align-items: center; gap: 8px;">
+                <span class="button-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </span>
+                <span class="button-text">Install</span>
+            </span>
+            <div class="version-info">
+                <span class="version-badge latest-version">Loading...</span>
+                <span class="version-badge installed-version" style="display: none;"></span>
+            </div>
+        </a>
 
 
         <h2>1. 概要と目的</h2>
@@ -145,7 +84,7 @@
         <ul>
             <li><strong>初期状態</strong>: 画面右上に浮動パネルとして表示</li>
             <li><strong>ドラッグ＆ドロップ</strong>: パネルを自由に移動でき、その位置は保存されます (<code>localStorage</code> に記憶)</li>
-            <li><strong>展開 / 最小化</strong>: クリックで詳細表示とアイコン表示（最小化）を切り替えられます。最小化状態でも主要なカウント概要を確認可能です。</li>
+            <li><strong>展開 / 最小化</strong>: クリックで詳細表示とアイコン表示（最小化）を切り替え替えられます。最小化状態でも主要なカウント概要を確認可能です。</li>
         </ul>
 
         <h2>3. 技術仕様</h2>
@@ -171,6 +110,7 @@
 
         <h2>更新履歴</h2>
         <ul>
+            <li><strong>v0.4.56</strong>: 外部CSS/JSファイルへの分離とコードの整理、リソースファイルの改名</li>
             <li><strong>v0.4.54</strong>: 整理のため、コメントアウトされていた不要なコードを削除しました。</li>
             <li><strong>v0.4.54</strong>: UIの透過効果および影効果を削除</li>
 
@@ -178,13 +118,13 @@
         </ul>
         <ul>
             <li><strong>v0.4.52</strong>: 最小化表示のスタイルとクラス名を共通化（gemini-common.css/jsを活用）</li>
-<li><strong>v0.4.51</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
-                        <li><strong>v0.4.50</strong>: フローティングUIのドラッグハンドルをgus-versionに修正し、バージョン表示のフォーマットを標準化</li>
-<li><strong>v0.4.49</strong>: バージョン表記のハードコードを廃止し、GM_infoから取得するように変更</li>
+            <li><strong>v0.4.51</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
+            <li><strong>v0.4.50</strong>: フローティングUIのドラッグハンドルをgus-versionに修正し、バージョン表示のフォーマットを標準化</li>
+            <li><strong>v0.4.49</strong>: バージョン表記のハードコードを廃止し、GM_infoから取得するように変更</li>
             <li><strong>v0.4.48</strong>: バージョン表記のバッジをマウスオーバーで拡大表示するように変更。</li>
             <li><strong>v0.4.48</strong>: パネル展開時にバージョン表記が重複して表示される問題を修正しました。</li>
 
-                <li><strong>v0.4.47</strong>: 共通ライブラリのバグ修正により、UIが移動できない問題を修正</li>
+            <li><strong>v0.4.47</strong>: 共通ライブラリのバグ修正により、UIが移動できない問題を修正</li>
             <li><strong>v0.4.44</strong>: 汎用ユーティリティ関数（sleepやwaitForElementなど）をgemini-common.jsにオフロードし、コードを共通化しました。</li>
             <li><strong>v0.4.35</strong>: gemini.google.com 全体で動作するように変更</li>
             <li><strong>v0.4.34</strong>: サムネイルリセット処理時の `innerHTML` を `textContent` に置き換え、Gemini のセキュリティポリシー (Trusted Types) 違反によるエラーを修正しました。</li>
@@ -207,59 +147,8 @@
         </ul>
     </div>
 
+    <script src="../../domain-landing.js"></script>
 
-    <h2>連携スクリプト</h2>
-    <p>他のユーザースクリプトとカスタムイベントを通じて連携します。</p>
-
-    <h3>送信（使う側）</h3>
-    <p>以下のスクリプトに対してイベントをディスパッチし、処理を依頼します：</p>
-    <ul>
-        <li><strong>Artifact Exporter Worker</strong> / <strong>Export to Docs</strong>: <code>gemini-turn-counter-copy-images-result</code> イベントを送信して画像コピーの結果（成功数やタイムアウト等）を返却します。</li>
-    </ul>
-
-    <h3>受信（使われる側）</h3>
-    <p>以下のスクリプトからイベントを受信し、自身の処理を実行します：</p>
-    <ul>
-        <li><strong>Artifact Exporter Worker</strong> / <strong>Export to Docs</strong>: <code>gemini-turn-counter-copy-images</code> イベントを受信して会話内の画像（Blob）のクリップボードへのコピー処理を実行します。</li>
-    </ul>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Fetch version from script metadata
-            try {
-                const response = await fetch('gemini-turn-counter.user.js');
-                if (response.ok) {
-                    const text = await response.text();
-                    const versionMatch = text.match(/\/\/ @version\s+([\d.]+)/);
-                    const dateMatch = text.match(/\/\/ @lastModified\s+([\d-]+)/);
-                    if (versionMatch) {
-                        const version = versionMatch[1];
-                        const date = dateMatch ? dateMatch[1] : '不明';
-
-                        // Update info labels
-                        const verEl = document.getElementById('ver-info');
-                        if (verEl) verEl.textContent = 'v' + version;
-                        const dateEl = document.getElementById('date-info');
-                        if (dateEl) dateEl.textContent = date;
-
-                        // Update install button version text
-                        const btnSpan = document.querySelector('.install-button span:not(.button-icon)');
-                        if (btnSpan) btnSpan.textContent = 'スクリプトをインストール (v' + version + ')';
-                    } else {
-                        document.getElementById('ver-info').textContent = '取得エラー';
-                        document.getElementById('date-info').textContent = '取得エラー';
-                    }
-                } else {
-                    document.getElementById('ver-info').textContent = '取得エラー';
-                    document.getElementById('date-info').textContent = '取得エラー';
-                }
-            } catch (e) {
-                document.getElementById('ver-info').textContent = '取得エラー';
-                document.getElementById('date-info').textContent = '取得エラー';
-                console.warn('Could not fetch script version:', e);
-            }
-        });
-    </script>
     <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
     <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
         <p>

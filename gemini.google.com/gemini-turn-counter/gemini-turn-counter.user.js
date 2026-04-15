@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.55
-// @lastModified 2026-04-14
+// @version      0.4.56
+// @lastModified 2026-04-16
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -10,14 +10,15 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
-// @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/style.css
-// @resource     templateHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/template.html
+// @resource     geminiTurnCounterCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.css
+// @resource     geminiTurnCounterHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.4.56 リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名
 // @history       0.4.54 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // ==/UserScript==
 
@@ -91,7 +92,7 @@ const report = () => {
                     document.head.appendChild(commonStyle);
                 }
 
-                const css = GM_getResourceText('customCSS');
+                const css = GM_getResourceText('geminiTurnCounterCSS');
                 const style = GM_addStyle(css);
                 if (style) {
                     style.id = 'gemini-turn-counter-style';
@@ -333,7 +334,7 @@ const report = () => {
                     }
 
                     if (!contentDiv.hasAttribute('data-gtc-initialized')) {
-                        const template = GM_getResourceText('templateHTML');
+                        const template = GM_getResourceText('geminiTurnCounterHTML');
                         window.geminiSetInnerHTML(contentDiv, template.replace('{{scriptVersion}}', `📊 ${scriptVersion} ${gusEmoji}`), policy);
                         contentDiv.setAttribute('data-gtc-initialized', 'true');
 

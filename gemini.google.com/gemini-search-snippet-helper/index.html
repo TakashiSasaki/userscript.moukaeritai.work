@@ -6,117 +6,8 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Gemini Search Snippet Helper - Moukaeritai</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #10a37f;
-            --primary-dark: #0e8a6c;
-            --bg-gradient: linear-gradient(135.2deg, rgba(7, 12, 10, 1) 1.2%, rgba(13, 44, 40, 1) 98.1%);
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --text-main: #ffffff;
-            --text-dim: #b0b8c4;
-        }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            margin: 0;
-            padding: 2em;
-            background: var(--bg-gradient);
-            background-attachment: fixed;
-            color: var(--text-main);
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 3rem;
-            backdrop-filter: blur(15px);
-        }
-
-        .top-nav {
-            margin-bottom: 2em;
-        }
-
-        .top-nav-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            color: var(--text-dim);
-            padding: 8px 16px;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 50px;
-            transition: all 0.3s ease;
-        }
-
-        .top-nav-link:hover {
-            color: white;
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateX(-5px);
-        }
-
-        #content h1 {
-            background: linear-gradient(90deg, #10a37f, #20e3b2);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-top: 0;
-        }
-
-        #content h2 {
-            border-bottom: 1px solid var(--glass-border);
-            padding-bottom: 0.5rem;
-            margin-top: 2rem;
-        }
-
-        #content code {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 0.2rem 0.4rem;
-            border-radius: 4px;
-            font-family: monospace;
-        }
-
-        #content pre {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 1rem;
-            border-radius: 8px;
-            overflow-x: auto;
-        }
-
-        .install-section {
-            margin-top: 3rem;
-            padding-top: 2rem;
-            border-top: 1px solid var(--glass-border);
-            text-align: center;
-        }
-
-        .install-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 16px 32px;
-            background: var(--primary);
-            color: white;
-            text-decoration: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(16, 163, 127, 0.3);
-        }
-
-        .install-button:hover {
-            background: var(--primary-dark);
-            box-shadow: 0 6px 20px rgba(16, 163, 127, 0.5);
-            transform: scale(1.05);
-        }
-    </style>
+    <link rel="stylesheet" href="index.css">
+    <script src="index.js" defer></script>
 </head>
 
 <body>
@@ -133,49 +24,59 @@
 
         <div id="content">
             <h1>Gemini Search Snippet Helper</h1>
-<p>Gemini の検索結果一覧において、各会話カードのタイトルに連番を表示し、視認性と識別性を向上させるユーザースクリプトです。</p>
-<h2>機能</h2>
-<ol>
-<li><p><strong>連番付与</strong>:</p>
-<ul>
-<li>検索結果として表示される会話タイトルの先頭に、`1.`, `2.` といった連番を追加します。</li>
-<li>連番は小さなモノスペースフォントで、薄い色で表示されます。</li>
-</ul>
-</li>
-<li><p><strong>動的更新への追従</strong>:</p>
-<ul>
-<li>無限スクロールによる追加読み込みや、新しい検索によるリストの再描画を `MutationObserver` で検知します。</li>
-<li>DOM の変更があるたびに番号を再計算・再描画し、常に正しい順序（上から 1, 2, 3...）を維持します。</li>
-</ul>
-</li>
-</ol>
-<h2>対象 URL</h2>
-<ul>
-<li>`<a href="https://gemini.google.com/search%5C%60">https://gemini.google.com/search\`</a> (検索結果ページ)</li>
-<li>`<a href="https://gemini.google.com/app%5C%60">https://gemini.google.com/app\`</a></li>
-</ul>
-<p>本スクリプトはユーザーが明示的に検索を行ったページ（URLが `<a href="https://gemini.google.com/search%5C%60">https://gemini.google.com/search\`</a> で始まる場合）でのみ機能を有効化します。</p>
-<h2>UI/スタイル</h2>
-<ul>
-<li>タイトルの先頭に要素を追加して描画します。</li>
-<li>スタイル: `0.75em`, 控えめな色あい。</li>
-</ul>
+            <p>Gemini の検索結果一覧において、各会話カードのタイトルに連番を表示し、視認性と識別性を向上させるユーザースクリプトです。</p>
+            <h2>機能</h2>
+            <ol>
+                <li><p><strong>連番付与</strong>:</p>
+                    <ul>
+                        <li>検索結果として表示される会話タイトルの先頭に、`1.`, `2.` といった連番を追加します。</li>
+                        <li>連番は小さなモノスペースフォントで、薄い色で表示されます。</li>
+                    </ul>
+                </li>
+                <li><p><strong>動的更新への追従</strong>:</p>
+                    <ul>
+                        <li>無限スクロールによる追加読み込みや、新しい検索によるリストの再描画を `MutationObserver` で検知します。</li>
+                        <li>DOM の変更があるたびに番号を再計算・再描画し、常に正しい順序（上から 1, 2, 3...）を維持します。</li>
+                    </ul>
+                </li>
+            </ol>
+            <h2>対象 URL</h2>
+            <ul>
+                <li>`<a href="https://gemini.google.com/search">https://gemini.google.com/search</a>` (検索結果ページ)</li>
+                <li>`<a href="https://gemini.google.com/app">https://gemini.google.com/app</a>`</li>
+            </ul>
+            <p>本スクリプトはユーザーが明示的に検索を行ったページ（URLが `<a href="https://gemini.google.com/search">https://gemini.google.com/search</a>` で始まる場合）でのみ機能を有効化します。</p>
+            <h2>UI/スタイル</h2>
+            <ul>
+                <li>タイトルの先頭に要素を追加して描画します。</li>
+                <li>スタイル: `0.75em`, 控えめな色あい。</li>
+            </ul>
+
+            <h2>更新履歴</h2>
+            <ul>
+                <li><strong>v0.1.8</strong>: 外部CSS/JSファイルへの分離とコードの整理</li>
+                <li><strong>v0.1.7</strong>: UIの透過効果および影効果を削除</li>
+                <li><strong>v0.1.6</strong>: 共有ライブラリ(gemini-common.js)の更新に合わせてセキュリティ強化とバージョンアップを行いました。</li>
+            <li><strong>v0.1.5</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
+            <li><strong>0.1.4</strong>: 共通ライブラリのバグ修正により、UIが移動できない問題を修正</li>
+            </ul>
 
         </div>
 
         <div class="install-section">
-            <a class="install-button" id="install-btn" href="gemini-search-snippet-helper.user.js" data-version="0.1.7">
-                        <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
+            <a class="install-button" id="install-btn" href="gemini-search-snippet-helper.user.js">
+                <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                 </svg>
-                        <span>Install</span>
-                        <div class="version-info">
-                            <span class="version-badge latest-version">v0.1.7</span>
-                            <span class="version-badge installed-version" style="display: none;"></span>
-                        </div>
-                    </a>
+                <span>Install</span>
+                <div class="version-info">
+                    <span class="version-badge latest-version">Loading...</span>
+                    <span class="version-badge installed-version" style="display: none;"></span>
+                </div>
+            </a>
         </div>
     </div>
+    <script src="../../domain-landing.js"></script>
 </body>
 
 </html>

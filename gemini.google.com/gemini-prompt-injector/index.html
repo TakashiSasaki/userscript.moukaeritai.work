@@ -5,33 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>gemini-prompt-injector - ユーザースクリプト</title>
     <link rel="stylesheet" href="../../index.css">
-    <style>
-        .install-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 16px;
-            padding: 12px 24px;
-            background-color: #2ea44f;
-            color: white;
-            font-weight: 600;
-            border-radius: 6px;
-            text-decoration: none;
-            margin: 20px 0;
-            transition: background-color 0.2s;
-            border: 1px solid rgba(27, 31, 35, .15);
-        }
-        .install-button:hover { background-color: #2c974b; color: white; }
-        .version-info {
-            font-size: 0.85em; opacity: 0.9; display: flex; flex-direction: row; align-items: center; gap: 12px; border-left: 1px solid rgba(255,255,255,0.3); padding-left: 16px;
-        }
-        .version-badge {
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-weight: bold;
-        }
-    </style>
+    <link rel="stylesheet" href="index.css">
+    <script src="index.js" defer></script>
 </head>
 <body>
     <div class="container">
@@ -96,6 +71,7 @@
 
     <h2>更新履歴</h2>
         <ul>
+            <li><strong>v0.2.16</strong>: リソースファイル (style.css) をスクリプト名と同じステムに改名</li>
             <li><strong>v0.2.14</strong>: UIの透過効果および影効果を削除</li>
 
             <li><strong>v0.2.13</strong>: Trusted Types を必須化し、DOM-Based XSS 脆弱性を修正しました。</li>
@@ -124,83 +100,6 @@
         <li><code>gemini-switch-model</code>: モデル（高速、思考、Pro）を切り替えます。</li>
         <li><code>gemini-enable-canvas</code>: Canvas（アーティファクト）機能を有効化します。</li>
     </ul>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            let serverVersion = null;
-            try {
-                const response = await fetch('gemini-prompt-injector.user.js');
-                if (response.ok) {
-                    const text = await response.text();
-                    const versionMatch = text.match(/\/\/ @version\s+([\d.]+)/);
-                    if (versionMatch) {
-                        serverVersion = versionMatch[1];
-                        const latestBadge = document.querySelector('.latest-version');
-                        if (latestBadge) latestBadge.textContent = `Latest: v${serverVersion}`;
-                    }
-                }
-            } catch (e) {
-                console.warn('Could not fetch script version:', e);
-            }
-
-            function parseVersion(v) { return v ? v.split('.').map(Number) : []; }
-            function checkUpdate(latest, installed) {
-                if (!latest || !installed) return false;
-                const lParts = parseVersion(latest);
-                const iParts = parseVersion(installed);
-                for (let i = 0; i < Math.max(lParts.length, iParts.length); i++) {
-                    const l = lParts[i] || 0, inst = iParts[i] || 0;
-                    if (l > inst) return true;
-                    if (l < inst) return false;
-                }
-                return false;
-            }
-
-            document.addEventListener('userscript-check-installed', (event) => {
-                const { name, version } = event.detail;
-                if (name === 'Gemini Prompt Injector' || name === 'gemini-prompt-injector') {
-                    const installedBadge = document.querySelector('.installed-version');
-                    if (installedBadge) {
-                        installedBadge.textContent = `Installed: v${version}`;
-                        installedBadge.style.display = 'block';
-                    }
-                    
-                    const installBtn = document.querySelector('.install-button');
-                    const btnText = document.querySelector('.button-text');
-                    if (serverVersion && installBtn && btnText) {
-                        if (checkUpdate(serverVersion, version)) {
-                            btnText.textContent = 'Update';
-                            installBtn.style.backgroundColor = '#f39c12';
-                            installBtn.style.color = '#fff';
-                        } else {
-                            btnText.textContent = 'Installed';
-                            installBtn.style.backgroundColor = '#f6f8fa';
-                            installBtn.style.color = '#24292e';
-                        }
-                    }
-                }
-            });
-
-            // Ping installed userscripts after a short delay
-            setTimeout(() => {
-                document.dispatchEvent(new CustomEvent('userscript-ping'));
-            }, 1000);
-
-            // Poll for installation status after clicking an install button
-            const startPolling = () => {
-                let attempts = 0;
-                const maxAttempts = 5;
-                const intervalMs = 2000;
-                const pollInterval = setInterval(() => {
-                    attempts++;
-                    document.dispatchEvent(new CustomEvent('userscript-ping'));
-                    if (attempts >= maxAttempts) clearInterval(pollInterval);
-                }, intervalMs);
-            };
-
-            const mainInstallBtn = document.querySelector('.install-button');
-            if (mainInstallBtn) mainInstallBtn.addEventListener('click', startPolling);
-        });
-    </script>
+    <script src="../../domain-landing.js"></script>
 </body>
 </html>

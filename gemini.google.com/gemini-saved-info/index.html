@@ -6,117 +6,9 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Gemini Saved Info Helper - Moukaeritai</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #10a37f;
-            --primary-dark: #0e8a6c;
-            --bg-gradient: linear-gradient(135.2deg, rgba(7, 12, 10, 1) 1.2%, rgba(13, 44, 40, 1) 98.1%);
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --text-main: #ffffff;
-            --text-dim: #b0b8c4;
-        }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            margin: 0;
-            padding: 2em;
-            background: var(--bg-gradient);
-            background-attachment: fixed;
-            color: var(--text-main);
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 3rem;
-            backdrop-filter: blur(15px);
-        }
-
-        .top-nav {
-            margin-bottom: 2em;
-        }
-
-        .top-nav-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            color: var(--text-dim);
-            padding: 8px 16px;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 50px;
-            transition: all 0.3s ease;
-        }
-
-        .top-nav-link:hover {
-            color: white;
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateX(-5px);
-        }
-
-        #content h1 {
-            background: linear-gradient(90deg, #10a37f, #20e3b2);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-top: 0;
-        }
-
-        #content h2 {
-            border-bottom: 1px solid var(--glass-border);
-            padding-bottom: 0.5rem;
-            margin-top: 2rem;
-        }
-
-        #content code {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 0.2rem 0.4rem;
-            border-radius: 4px;
-            font-family: monospace;
-        }
-
-        #content pre {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 1rem;
-            border-radius: 8px;
-            overflow-x: auto;
-        }
-
-        .install-section {
-            margin-top: 3rem;
-            padding-top: 2rem;
-            border-top: 1px solid var(--glass-border);
-            text-align: center;
-        }
-
-        .install-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 16px 32px;
-            background: var(--primary);
-            color: white;
-            text-decoration: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(16, 163, 127, 0.3);
-        }
-
-        .install-button:hover {
-            background: var(--primary-dark);
-            box-shadow: 0 6px 20px rgba(16, 163, 127, 0.5);
-            transform: scale(1.05);
-        }
-    </style>
+    <link rel="stylesheet" href="../../index.css">
+    <link rel="stylesheet" href="index.css">
+    <script src="index.js" defer></script>
 </head>
 
 <body>
@@ -133,124 +25,48 @@
 
         <div id="content">
             <h1>Gemini Saved Info Helper</h1>
-<p>GeminiのウェブUIにおいて、ユーザーのカスタムインストラクションやユーザープロファイルを保存する画面 (`/saved-info`) の使いやすさを向上させるユーザースクリプトです。</p>
-<h2>機能 (Features)</h2>
-<ul>
-<li><strong>連番表示:</strong> 各カスタムインストラクションの先頭に連番を振り、視認性を向上させます。</li>
-<li><strong>クリップボードコピー:</strong> 各インストラクションの3ドットメニューの横にコピーボタンを追加します。ボタンをクリックすると、そのインストラクションのテキスト内容がクリップボードにコピーされます。</li>
-<li><strong>一括コピー:</strong> 複数のインストラクションがある場合、ヘッダー部分に &quot;Copy all&quot; ボタンを追加し、全体を形式に沿ってコピーできます。</li>
-</ul>
-<h2>実装詳細 (Implementation Details)</h2>
-<h3>SPA対応および動的更新ロジック</h3>
-<ul>
-<li><strong>ページ監視:</strong> `MutationObserver` で `document.body` を監視し、SPAによるページ遷移を検知します。</li>
-<li><strong>UI更新:</strong> リストに変更が加わるたびに再描画され、UIの整合性が常に保たれます。</li>
-</ul>
+            <p>GeminiのウェブUIにおいて、ユーザーのカスタムインストラクションやユーザープロファイルを保存する画面 (`/saved-info`) の使いやすさを向上させるユーザースクリプトです。</p>
+            <h2>機能 (Features)</h2>
+            <ul>
+                <li><strong>連番表示:</strong> 各カスタムインストラクションの先頭に連番を振り、視認性を向上させます。</li>
+                <li><strong>クリップボードコピー:</strong> 各インストラクションの3ドットメニューの横にコピーボタンを追加します。ボタンをクリックすると、そのインストラクションのテキスト内容がクリップボードにコピーされます。</li>
+                <li><strong>一括コピー:</strong> 複数のインストラクションがある場合、ヘッダー部分に &quot;Copy all&quot; ボタンを追加し、全体を形式に沿ってコピーできます。</li>
+            </ul>
+            <h2>実装詳細 (Implementation Details)</h2>
+            <h3>SPA対応および動的更新ロジック</h3>
+            <ul>
+                <li><strong>ページ監視:</strong> `MutationObserver` で `document.body` を監視し、SPAによるページ遷移を検知します。</li>
+                <li><strong>UI更新:</strong> リストに変更が加わるたびに再描画され、UIの整合性が常に保たれます。</li>
+            </ul>
 
 
-<h2>更新履歴</h2>
-<ul>
-            <li><strong>v0.2.27</strong>: UIの透過効果および影効果を削除</li>
-
-            <li><strong>v0.2.26</strong>: 共有ライブラリ(gemini-common.js)の更新に合わせてセキュリティ強化とバージョンアップを行いました。</li>
-<li><strong>v0.2.25</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
-    <li><strong>v0.2.24</strong>: フローティングUIをドラッグで移動できるように改善。</li>
-</ul>
+            <h2>更新履歴</h2>
+            <ul>
+                <li><strong>v0.2.30</strong>: 外部CSS/JSファイルへの分離とコードの整理</li>
+                <li><strong>v0.2.29</strong>: リソースファイル (style.css) をスクリプト名と同じステムに改名</li>
+                <li><strong>v0.2.27</strong>: UIの透過効果および shadow 効果を削除</li>
+                <li><strong>v0.2.26</strong>: 共有ライブラリ(gemini-common.js)の更新に合わせてセキュリティ強化とバージョンアップを行いました。</li>
+                <li><strong>v0.2.25</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
+                <li><strong>v0.2.24</strong>: フローティングUIをドラッグで移動できるように改善。</li>
+            </ul>
 
         </div>
 
         <div class="install-section">
             <a class="install-button" id="install-btn" href="gemini-saved-info.user.js">
-                        <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
+                <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                 </svg>
-                        <span class="button-text">Install</span>
-                        <div class="version-info">
-                            <span class="version-badge latest-version">Loading...</span>
-                            <span class="version-badge installed-version" style="display: none;"></span>
-                        </div>
-                    </a>
+                <span class="button-text">Install</span>
+                <div class="version-info">
+                    <span class="version-badge latest-version">Loading...</span>
+                    <span class="version-badge installed-version" style="display: none;"></span>
+                </div>
+            </a>
         </div>
     </div>
 
     <script src="../../domain-landing.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            let serverVersion = null;
-            try {
-                const response = await fetch('gemini-saved-info.user.js');
-                if (response.ok) {
-                    const text = await response.text();
-                    const versionMatch = text.match(/\/\/ @version\s+([\d.]+)/);
-                    if (versionMatch) {
-                        serverVersion = versionMatch[1];
-                        const latestBadge = document.querySelector('.latest-version');
-                        if (latestBadge) latestBadge.textContent = `Latest: v${serverVersion}`;
-                    }
-                }
-            } catch (e) {
-                console.warn('Could not fetch script version:', e);
-            }
-
-            function parseVersion(v) { return v ? v.split('.').map(Number) : []; }
-            function checkUpdate(latest, installed) {
-                if (!latest || !installed) return false;
-                const lParts = parseVersion(latest);
-                const iParts = parseVersion(installed);
-                for (let i = 0; i < Math.max(lParts.length, iParts.length); i++) {
-                    const l = lParts[i] || 0, inst = iParts[i] || 0;
-                    if (l > inst) return true;
-                    if (l < inst) return false;
-                }
-                return false;
-            }
-
-            document.addEventListener('userscript-check-installed', (event) => {
-                const { name, version } = event.detail;
-                if (name === 'Gemini Saved Info Helper' || name === 'gemini-saved-info') {
-                    const installedBadge = document.querySelector('.installed-version');
-                    if (installedBadge) {
-                        installedBadge.textContent = `Installed: v${version}`;
-                        installedBadge.style.display = 'block';
-                    }
-
-                    const installBtn = document.querySelector('.install-button');
-                    const btnText = document.querySelector('.button-text');
-                    if (serverVersion && installBtn && btnText) {
-                        if (checkUpdate(serverVersion, version)) {
-                            btnText.textContent = 'Update';
-                            installBtn.style.backgroundColor = '#f39c12';
-                            installBtn.style.color = '#fff';
-                        } else {
-                            btnText.textContent = 'Installed';
-                            installBtn.style.backgroundColor = '#f6f8fa';
-                            installBtn.style.color = '#24292e';
-                        }
-                    }
-                }
-            });
-
-            // Ping installed userscripts after a short delay
-            setTimeout(() => {
-                document.dispatchEvent(new CustomEvent('userscript-ping'));
-            }, 1000);
-
-            // Poll for installation status after clicking an install button
-            const startPolling = () => {
-                let attempts = 0;
-                const maxAttempts = 5;
-                const intervalMs = 2000;
-                const pollInterval = setInterval(() => {
-                    attempts++;
-                    document.dispatchEvent(new CustomEvent('userscript-ping'));
-                    if (attempts >= maxAttempts) clearInterval(pollInterval);
-                }, intervalMs);
-            };
-
-            const mainInstallBtn = document.querySelector('.install-button');
-            if (mainInstallBtn) mainInstallBtn.addEventListener('click', startPolling);
-        });
-    </script>
 </body>
 
 </html>
