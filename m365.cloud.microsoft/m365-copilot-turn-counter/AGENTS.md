@@ -13,12 +13,12 @@
 ## セレクタ (Selectors)
 ※M365 Copilot の HTML 構造は動的に変化するため、属性ベースのセレクタを優先します。
 
--   **Message Container**: `div[role="log"]` や `div[aria-label*="conversation"]` 内の個別メッセージ。
--   **User Message**: `div[data-author-role="user"]` (推定)
--   **Assistant Message**: `div[data-author-role="assistant"]` (推定)
+-   **Message Container**: `div.fui-Virtualizer` 内の各メッセージ要素。
+-   **User Message**: `div[aria-label^="You said:"]` または `div[aria-label^="送信済み:"]` (ロケールに依存)。
+-   **Assistant Message**: `div[aria-label^="Copilot said:"]` または `div[aria-label^="Copilot:"]`。
 -   **Artifact Containers**: 
-    -   `div[data-testid="artifact-card"]`
-    -   `div.artifact-container`
+    -   `div.fui-Card`: リサーチ結果などのカード。
+    -   `.fai-Citation`, `a[aria-label*="引用"]`: 出典や引用のリンク。
 
 ## UIコンポーネント
 -   `#m365-turn-counter-ui`: メインのフローティングコンテナ。
