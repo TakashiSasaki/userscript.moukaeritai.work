@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini History Loader
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.22
+// @version      0.1.23
 // @lastModified 2026-04-15
 // @description  A utility script that forces Gemini to load the entire chat history by programmatically scrolling to the top. Features a compact floating UI that expands when loading history.
 // @author       Takashi Sasaki
@@ -12,12 +12,13 @@
 // @grant        GM_addStyle
 // @grant        GM_getResourceText
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
-// @resource     css https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/style.css
-// @resource     templateHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/template.html
+// @resource     geminiHistoryLoaderCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.css
+// @resource     geminiHistoryLoaderHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @noframes
+// @history       0.1.23 リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名
 // @history       0.1.21 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // ==/UserScript==
 
@@ -55,7 +56,7 @@ const report = () => {
                     document.head.appendChild(commonStyle);
                 }
 
-                const css = GM_getResourceText('css');
+                const css = GM_getResourceText('geminiHistoryLoaderCSS');
                 if (css) {
                     GM_addStyle(css);
                 }
@@ -131,7 +132,7 @@ const report = () => {
                 uiPanel.id = 'gemini-history-loader-panel';
                 uiPanel.className = 'gus-panel';
 
-                const templateStr = GM_getResourceText('templateHTML').replace(/{{scriptVersion}}/g, `🔄 ${GM_info.script.version} ${gusEmoji}`);
+                const templateStr = GM_getResourceText('geminiHistoryLoaderHTML').replace(/{{scriptVersion}}/g, `🔄 ${GM_info.script.version} ${gusEmoji}`);
                 window.geminiSetInnerHTML(uiPanel, templateStr, policy);
                 document.body.appendChild(uiPanel);
 
