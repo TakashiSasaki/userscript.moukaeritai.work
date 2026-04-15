@@ -7,179 +7,131 @@
     <title>Gemini Artifact Exporter - Moukaeritai</title>
     <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/index.html"
         rel="canonical" />
-    <!-- Github Markdown CSS for styling -->
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
-    <link rel="stylesheet" href="index.css">
-    <script src="index.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../index.css">
 </head>
 
-<body class="markdown-body">
-    <a href="https://userscript.moukaeritai.work/" class="home-button">
-        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
-            <path
-                d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-        </svg>
-        userscript.moukaeritai.work
-    </a>
-    <div id="content">
-        <h1>Gemini Artifact Exporter</h1>
-        <p>Google Gemini のサイドバーに表示されるすべての「記事 (Article)」タイプのアーティファクトを、Google ドキュメントへ一括でエクスポートするユーザースクリプトです。</p>
+<body>
+    <div class="top-nav">
+        <a href="../index.html" class="home-button">
+            <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
+                <path d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" fill="currentColor"/>
+            </svg>
+            Gemini Project List
+        </a>
+    </div>
 
-        <div id="script-info"
-            style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
-            <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
-            <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
-        </div>
+    <div class="container">
+        <header>
+            <h1>Gemini Artifact Exporter</h1>
+            <p class="header-desc">Google Gemini のサイドバーに表示されるすべての「記事 (Article)」タイプのアーティファクトを、Google ドキュメントへ一括でエクスポートするユーザースクリプトです。</p>
+        </header>
 
-        <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js" target="_blank" class="install-button" data-version="0.4.18">
-            <span class="button-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <a href="gemini-artifact-exporter.user.js" class="install-button" data-script-name="Gemini Artifact Exporter">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="7 10 12 15 17 10"></polyline>
                     <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
-            </span>
-            <span class="button-text">Install</span>
-            <div class="version-info">
-                <span class="version-badge latest-version">v0.4.18</span>
-                <span class="version-badge installed-version" style="display: none;"></span>
+                Install
+            </a>
+            <div class="version-info" style="margin-top: 1.5rem; justify-content: center; flex-direction: row; gap: 20px;">
+                <div class="version-row">
+                    <span class="version-label">Latest:</span>
+                    <span class="version-badge latest-version">Loading...</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Installed:</span>
+                    <span class="version-badge installed-version" style="display: none;">-</span>
+                </div>
             </div>
-        </a>
+        </div>
 
+        <section>
+            <h2>概要</h2>
+            <p>Geminiの会話ページ（例: <code>https://gemini.google.com/app/xxxxxxxx</code>）を開くと、画面上にドラッグ可能な「Artifact
+                Exporter」コントロールパネルが表示されます。<br>
+                このパネルを使用して、会話内に生成された複数の記事を一括で保存できます。</p>
 
-        <h2>概要</h2>
-        <p>Geminiの会話ページ（例: <code>https://gemini.google.com/app/xxxxxxxx</code>）を開くと、画面上にドラッグ可能な「Artifact
-            Exporter」コントロールパネルが表示されます。<br>
-            このパネルを使用して、会話内に生成された複数の記事を一括で保存できます。</p>
+            <h2>主な機能</h2>
+            <ul>
+                <li><strong>アーティファクトのスキャン</strong>: 会話内にあるすべての「記事」タイプアーティファクトを自動検出し、リスト表示します。</li>
+                <li><strong>一括エクスポート</strong>: リストから選択した記事を、一つずつ順番に Google ドキュメントへエクスポートします。</li>
+                <li><strong>スタック回避ロジック</strong>: GeminiのUIバグ（処理完了後に背景やトーストが残る現象）を自動で検知・解決し、連続したエクスポート処理を維持します。</li>
+                <li><strong>設定の保存</strong>: コントロールパネルの位置や待機設定はブラウザに保存され、次回アクセス時も維持されます。</li>
+            </ul>
 
-        <h2>主な機能</h2>
-        <ul>
-            <li><strong>アーティファクトのスキャン</strong>: 会話内にあるすべての「記事」タイプアーティファクトを自動検出し、リスト表示します。</li>
-            <li><strong>一括エクスポート</strong>: リストから選択した記事を、一つずつ順番に Google ドキュメントへエクスポートします。</li>
-            <li><strong>スタック回避ロジック</strong>: GeminiのUIバグ（処理完了後に背景やトーストが残る現象）を自動で検知・解決し、連続したエクスポート処理を維持します。</li>
-            <li><strong>設定の保存</strong>: コントロールパネルの位置や待機設定はブラウザに保存され、次回アクセス時も維持されます。</li>
-        </ul>
+            <h2>連携スクリプト（送信先）</h2>
+            <p>このスクリプトは、以下のスクリプトにイベントを送信し、機能してもらうことを期待しています。</p>
+            <ul>
+                <li><a href="../gemini-artifact-exporter-worker/index.html">Artifact Exporter Worker</a> (<code>gemini-artifact-exporter-worker:request</code>, <code>gemini-artifact-exporter-worker:cancel</code>)</li>
+                <li><a href="../gemini-history-loader/index.html">History Loader</a> (<code>gemini-history-loader:request</code>)</li>
+                <li><a href="../gemini-one-click-delete/index.html">One Click Delete</a> (<code>gemini-one-click-delete:request-delete</code>)</li>
+            </ul>
 
-        <h2>連携スクリプト（送信先）</h2>
-        <p>このスクリプトは、以下のスクリプトにイベントを送信し、機能してもらうことを期待しています。</p>
-        <ul>
-            <li><a href="../gemini-artifact-exporter-worker/index.html">Artifact Exporter Worker</a> (<code>gemini-artifact-exporter-worker:request</code>, <code>gemini-artifact-exporter-worker:cancel</code>)</li>
-            <li><a href="../gemini-history-loader/index.html">History Loader</a> (<code>gemini-history-loader:request</code>)</li>
-            <li><a href="../gemini-one-click-delete/index.html">One Click Delete</a> (<code>gemini-one-click-delete:request-delete</code>)</li>
-        </ul>
+            <h2>連携スクリプト（受信元）</h2>
+            <p>このスクリプトは、以下のスクリプトからイベントを受信して動作します。</p>
+            <ul>
+                <li><a href="../gemini-artifact-exporter-worker/index.html">Artifact Exporter Worker</a> (<code>gemini-artifact-exporter-worker:result</code>)</li>
+                <li><a href="../gemini-history-loader/index.html">History Loader</a> (<code>gemini-history-loader:complete</code>)</li>
+            </ul>
 
-        <h2>連携スクリプト（受信元）</h2>
-        <p>このスクリプトは、以下のスクリプトからイベントを受信して動作します。</p>
-        <ul>
-            <li><a href="../gemini-artifact-exporter-worker/index.html">Artifact Exporter Worker</a> (<code>gemini-artifact-exporter-worker:result</code>)</li>
-            <li><a href="../gemini-history-loader/index.html">History Loader</a> (<code>gemini-history-loader:complete</code>)</li>
-        </ul>
+            <h2>使い方</h2>
+            <p><strong>注意:</strong> このスクリプトを機能させるには、以下の2つの内部用スクリプトも同時にインストールしておく必要があります。</p>
+            <ul>
+                <li><a href="../gemini-artifact-exporter-worker/index.html">gemini-artifact-exporter-worker</a> (実際のエクスポート処理を担当するワーカー)</li>
+                <li><a href="../gemini-history-loader/index.html">gemini-history-loader</a> (履歴ロード処理を担当するユーティリティ)</li>
+            </ul>
+            <ol>
+                <li><strong>インストール</strong>: 上記の依存スクリプトと共に、Tampermonkey 等のマネージャにスクリプトをインストールします。</li>
+                <li><strong>ページを開く</strong>: アーティファクトを含むGeminiの会話ページを開きます。</li>
+                <li><strong>スキャン</strong>: パネルの <strong><code>Scan Sidebar Menu</code></strong> または <strong><code>Scan Chat History</code></strong> ボタンをクリックして記事一覧を取得します。</li>
+                <li><strong>選択</strong>: エクスポートしたい記事にチェックを入れます（デフォルトで全選択）。</li>
+                <li><strong>実行</strong>: <strong><code>Export Selected</code></strong> ボタンをクリックしてエクスポートを開始します。</li>
+                <li><strong>完了待機</strong>: 順番に処理が実行されます。処理中はタブを閉じないでください。</li>
+            </ol>
 
-        <h2>使い方</h2>
-        <p><strong>注意:</strong> このスクリプトを機能させるには、以下の2つの内部用スクリプトも同時にインストールしておく必要があります。</p>
-        <ul>
-            <li><a href="../gemini-artifact-exporter-worker/index.html">gemini-artifact-exporter-worker</a> (実際のエクスポート処理を担当するワーカー)</li>
-            <li><a href="../gemini-history-loader/index.html">gemini-history-loader</a> (履歴ロード処理を担当するユーティリティ)</li>
-        </ul>
-        <ol>
-            <li><strong>インストール</strong>: 上記の依存スクリプトと共に、Tampermonkey 等のマネージャにスクリプトをインストールします。</li>
-            <li><strong>ページを開く</strong>: アーティファクトを含むGeminiの会話ページを開きます。</li>
-            <li><strong>スキャン</strong>: パネルの <strong><code>Scan Sidebar Menu</code></strong> または <strong><code>Scan Chat History</code></strong> ボタンをクリックして記事一覧を取得します。</li>
-            <li><strong>選択</strong>: エクスポートしたい記事にチェックを入れます（デフォルトで全選択）。</li>
-            <li><strong>実行</strong>: <strong><code>Export Selected</code></strong> ボタンをクリックしてエクスポートを開始します。</li>
-            <li><strong>完了待機</strong>: 順番に処理が実行されます。処理中はタブを閉じないでください。</li>
-        </ol>
+            <h2>コントロールパネルの項目</h2>
+            <ul>
+                <li><strong><code>Scan Sidebar Menu</code></strong>: 右サイドバーを展開し、最近のアーティファクトを高速にスキャンします。</li>
+                <li><strong><code>Scan Chat History</code></strong>: 会話全体を上部までスクロールしながら、履歴に埋もれたすべてのアーティファクトを強力にスキャンします。数秒かかります。</li>
+                <li><strong><code>Export Selected</code></strong>: 選択中のアイテムのエクスポートを開始します。実行中は <code>Cancel Export</code>
+                    ボタンに変わり、途中で停止できます。</li>
+                <li><strong><code>Auto-Delete Chat</code></strong>:
+                    全エクスポート完了後、会話を自動的に削除します（<code>Gemini 1-Click Delete</code> との連携が必要です）。</li>
+            </ul>
 
-        <h2>コントロールパネルの項目</h2>
-        <ul>
-            <li><strong><code>Scan Sidebar Menu</code></strong>: 右サイドバーを展開し、最近のアーティファクトを高速にスキャンします。</li>
-            <li><strong><code>Scan Chat History</code></strong>: 会話全体を上部までスクロールしながら、履歴に埋もれたすべてのアーティファクトを強力にスキャンします。数秒かかります。</li>
-            <li><strong><code>Export Selected</code></strong>: 選択中のアイテムのエクスポートを開始します。実行中は <code>Cancel Export</code>
-                ボタンに変わり、途中で停止できます。</li>
-            <li><strong><code>Auto-Delete Chat</code></strong>:
-                全エクスポート完了後、会話を自動的に削除します（<code>Gemini 1-Click Delete</code> との連携が必要です）。</li>
-        </ul>
+            <h2>注意事項</h2>
+            <ul>
+                <li><strong>Google ログイン</strong>: 事前に Google ドキュメントが利用可能なアカウントでログインしている必要があります。</li>
+                <li><strong>UIの自動操作</strong>: このスクリプトは Gemini の標準機能を自動でクリックして操作します。処理中に手動でメニューを操作すると干渉する場合があります。</li>
+                <li><strong>処理時間</strong>: 記事の数が多い場合、完了まで数分かかることがあります。</li>
+            </ul>
 
-        <h2>注意事項</h2>
-        <ul>
-            <li><strong>Google ログイン</strong>: 事前に Google ドキュメントが利用可能なアカウントでログインしている必要があります。</li>
-        </ul>
-
-        <h2>注意事項</h2>
-        <ul>
-            <li><strong>Google ログイン</strong>: 事前に Google ドキュメントが利用可能なアカウントでログインしている必要があります。</li>
-            <li><strong>UIの自動操作</strong>: このスクリプトは Gemini の標準機能を自動でクリックして操作します。処理中に手動でメニューを操作すると干渉する場合があります。</li>
-            <li><strong>処理時間</strong>: 記事の数が多い場合、完了まで数分かかることがあります。</li>
-        </ul>
-
-        <h2>更新履歴</h2>
-        <ul>
-            <li><strong>v0.4.35</strong>: リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名</li>
-            <li><strong>v0.4.34</strong>: 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)</li>
-            <li><strong>v0.4.33</strong>: UIの透過効果および影効果を削除</li>
-
-<li><strong>v0.4.32</strong>: 非アクティブ時の最小化表示を他のスクリプトと共通化（バージョンバッジのみ表示）しました。</li>
-<li><strong>v0.4.31</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
-            <li><strong>v0.4.30</strong>: バージョン表記のバッジをマウスオーバーで拡大表示するように変更。</li>
-
+            <h2>更新履歴</h2>
+            <ul>
+                <li><strong>v0.4.36</strong>: 外部CSS/JSファイルへの分離とコードの整理、リソースファイルの改名、デザインの大幅刷新。</li>
+                <li><strong>v0.4.35</strong>: リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名</li>
+                <li><strong>v0.4.34</strong>: 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)</li>
+                <li><strong>v0.4.33</strong>: UIの透過効果および影効果を削除</li>
+                <li><strong>v0.4.32</strong>: 非アクティブ時の最小化表示を他のスクリプトと共通化（バージョンバッジのみ表示）しました。</li>
+                <li><strong>v0.4.31</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
+                <li><strong>v0.4.30</strong>: バージョン表記のバッジをマウスオーバーで拡大表示するように変更。</li>
                 <li><strong>v0.4.29</strong>: 共通ライブラリのバグ修正により、UIが移動できない問題を修正</li>
                 <li><strong>v0.4.26</strong>: 汎用ユーティリティ関数（sleepやwaitForElementなど）をgemini-common.jsにオフロードし、コードを共通化しました。</li>
-            <li class="changelog-item"><strong>v0.4.18</strong>: 最小化表示（バージョンハンドル）にスクリプトを識別するための絵文字 (📦) を追加しました。</li>
-                <li class="changelog-item"><strong>v0.4.17</strong>: ライトピンクの背景に合わせてUI要素の文字色を変更し、視認性を向上させました。</li>
-                <li class="changelog-item"><strong>v0.4.15</strong>: gemini.google.com 全体で動作するように変更</li>
-                <li class="changelog-item">v0.4.10: パネルの背景色をライトピンクに変更し、文字色を見やすく調整しました。</li>
-                <li class="changelog-item">v0.4.6: メインパネル内に連携スクリプトの状態（Script Status）を示すインジケーターを統合しました。不要なフローティングUIが生成されなくなりました。</li>
-                <li class="changelog-item">v0.4.2: 会話履歴の全体読み込み処理（Deep Scan）を新設の <code>gemini-history-loader</code> スクリプトに委譲し、コードサイズを削減しました。</li>
-                <li class="changelog-item">v0.4.1: UIパネルからウェイト関連の設定項目（Export Wait, Canvas Init, Panel Reopen）を削除し、内部のハードコードされた最適値（6秒、1秒、1秒）に固定しました。</li>
-                <li class="changelog-item">v0.3.13 (2026-03-16): 「Export Selected」ボタンのクリック時に、<code>gemini-turn-counter</code> と連携して会話内の全画像をクリップボードに自動コピーする機能を追加。コピー結果は専用インジケーターに表示されます（画像数、なし、タイムアウト）。</li>
-                <li class="changelog-item">v0.3.08 (2026-03-11): Improved session cleanup before scanning. The script now explicitly closes any open Canvas (artifact) panel to ensure Gemini's history lazy-loader can operate at full-width.</li>
-                <li class="changelog-item">v0.3.07 (2026-03-11): Fixed the "Double Scroller" bug. The script now correctly distinguishes between the sidebar history scroller and the main chat window scroller by prioritizing the `infinite-scroller.chat-history` selector and adding width-based heuristics.</li>
-                <li class="changelog-item">v0.3.06 (2026-03-11): Fixed Deep Scan auto-scroll failure caused by overlapping `behavior: smooth` animations. Reverted to instantaneous scroll jumps while maintaining stall detection and active container focus.</li>
-                <li class="changelog-item">v0.3.05 (2026-03-11): Improved Deep Scan scroll stability. Implemented human-like smooth scrolling combined with a 3-strike stall detector to ensure the script doesn't prematurely abort when Gemini's lazy loading is slow due to network latency.</li>
-                <li class="changelog-item">v0.3.04 (2026-03-11): Compacted UI by placing Scan and Deep Scan buttons side-by-side.</li>
-                <li class="changelog-item">v0.3.03 (2026-03-11): Fixed Deep Scan auto-scroll logic. Replaced instantaneous `scrollTop = 0` with incremental `scrollBy` and synthetic wheel events to reliably trigger Gemini's historical message lazy-loading.</li>
-                <li class="changelog-item">v0.3.02 (2026-03-11): Refactored script to extract shared scanning helpers (`setScanningUIState`, `closeAllPanels`, `getChatScroller`, `finishScanning`), reducing script size and logic duplication.</li>
-                <li class="changelog-item">v0.3.01 (2026-03-11): Added "Deep Scan" feature to overcome Gemini's virtual scrolling by programmatically scrolling to the absolute top to discover all historical artifacts.</li>
-                <li class="changelog-item">v0.3.00 (2026-03-11): Implement Dual-Source Scanning (Sidebar + Chat Stream) to ensure 100% artifact coverage. Merged duplicate entries and added source indicators.</li>
-                <li class="changelog-item">v0.2.57 (2026-03-11): Remove dead code (unused selectors and intermediate variables).</li>
-                <li class="changelog-item">v0.2.56 (2026-03-10): Remove installCheckSuffixes and simplify hostname check.</li>
-            <li><strong>v0.2.55</strong>: ファイル数が多い場合にUIパネル内のリストが圧縮されて見えなくなる不具合を修正。垂直スクロールが可能に。</li>
-            <li><strong>v0.2.54</strong>: Geminiの仮想スクロール（Lazy Loading）に対応。サイドバーを自動スクロールして全てのファイルをスキャン・検出できるように改善。</li>
-            <li><strong>v0.2.43</strong>: エクスポート完了検知をやめ、開始シグナル確認後に固定時間待機する方式へ変更。設定項目を <code>Export Wait</code> 中心に整理。</li>
-            <li><strong>v0.2.39</strong>: 画面上にアーティファクトが存在しない場合にパネルを自動で非表示にする機能を実装。</li>
-            <li><strong>v0.2.38</strong>: 各種待機時間（ウェイト/タイムアウト）を調整可能にし、UIレスポンスを改善。</li>
-        </ul>
+            </ul>
+        </section>
+
+        <footer>
+            <p>
+                Hosted on GitHub Pages |
+                <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
+                Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
+            </p>
+        </footer>
     </div>
-
-
-    <h2>連携スクリプト</h2>
-    <p>他のユーザースクリプトとカスタムイベントを通じて連携します。</p>
-
-    <h3>送信（使う側）</h3>
-    <p>以下のスクリプトに対してイベントをディスパッチし、処理を依頼します：</p>
-    <ul>
-        <li><strong>Artifact Exporter Worker</strong>: <code>gemini-artifact-exporter-worker:request</code> イベントを送信してエクスポートのバックグラウンド処理を開始させます。</li>
-        <li><strong>Artifact Exporter Worker</strong>: <code>gemini-artifact-exporter-worker:cancel</code> イベントを送信して処理をキャンセルさせます。</li>
-        <li><strong>History Loader</strong>: <code>gemini-history-loader:request</code> イベントを送信して会話履歴の全体スキャン（Deep Scan）を依頼します。</li>
-        <li><strong>One Click Delete</strong>: <code>gemini-one-click-delete:request-delete</code> イベントを送信してエクスポート完了後に会話を削除します（Auto-Delete有効時）。</li>
-    </ul>
-
-    <h3>受信（使われる側）</h3>
-    <p>以下のスクリプトからイベントを受信し、自身の処理を実行します：</p>
-    <ul>
-        <li><strong>Artifact Exporter Worker</strong>: <code>gemini-artifact-exporter-worker:result</code> イベントを受信してエクスポートの進捗や結果を画面に反映します。</li>
-        <li><strong>History Loader</strong>: <code>gemini-history-loader:complete</code> イベントを受信して履歴の全読み込み完了を検知し、ファイル抽出処理を再開します。</li>
-    </ul>
-
-    <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
-    <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
-        <p>
-            Hosted on GitHub Pages |
-            <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
-            Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
-        </p>
-    </footer>
+    <script src="../../domain-landing.js"></script>
 </body>
 
 </html>

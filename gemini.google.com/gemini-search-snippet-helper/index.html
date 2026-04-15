@@ -2,81 +2,92 @@
 <html lang="ja">
 
 <head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini Search Snippet Helper - Moukaeritai</title>
+    <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-search-snippet-helper/index.html" rel="canonical" />
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="index.css">
-    <script src="index.js" defer></script>
+    <link rel="stylesheet" href="../../index.css">
 </head>
 
 <body>
-    <div class="container">
-        <nav class="top-nav">
-            <a class="top-nav-link" href="../index.html">
-                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
-                    <path
-                        d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-                </svg>
-                Back to Home
-            </a>
-        </nav>
+    <div class="top-nav">
+        <a href="../index.html" class="home-button">
+            <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
+                <path d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" fill="currentColor"/>
+            </svg>
+            Gemini Project List
+        </a>
+    </div>
 
-        <div id="content">
+    <div class="container">
+        <header>
             <h1>Gemini Search Snippet Helper</h1>
-            <p>Gemini の検索結果一覧において、各会話カードのタイトルに連番を表示し、視認性と識別性を向上させるユーザースクリプトです。</p>
+            <p class="header-desc">Gemini の検索結果一覧において、各会話カードのタイトルに連番を表示し、視認性と識別性を向上させるユーザースクリプトです。</p>
+        </header>
+
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <a href="gemini-search-snippet-helper.user.js" class="install-button" data-script-name="Gemini Search Snippet Helper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Install
+            </a>
+            <div class="version-info" style="margin-top: 1.5rem; justify-content: center; flex-direction: row; gap: 20px;">
+                <div class="version-row">
+                    <span class="version-label">Latest:</span>
+                    <span class="version-badge latest-version">Loading...</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Installed:</span>
+                    <span class="version-badge installed-version" style="display: none;">-</span>
+                </div>
+            </div>
+        </div>
+
+        <section>
             <h2>機能</h2>
             <ol>
                 <li><p><strong>連番付与</strong>:</p>
                     <ul>
-                        <li>検索結果として表示される会話タイトルの先頭に、`1.`, `2.` といった連番を追加します。</li>
-                        <li>連番は小さなモノスペースフォントで、薄い色で表示されます。</li>
+                        <li>検索結果タイトルの先頭に、<code>1.</code>, <code>2.</code> といった連番を追加。</li>
+                        <li>控えめなデザインで視認性を向上。</li>
                     </ul>
                 </li>
                 <li><p><strong>動的更新への追従</strong>:</p>
                     <ul>
-                        <li>無限スクロールによる追加読み込みや、新しい検索によるリストの再描画を `MutationObserver` で検知します。</li>
-                        <li>DOM の変更があるたびに番号を再計算・再描画し、常に正しい順序（上から 1, 2, 3...）を維持します。</li>
+                        <li><code>MutationObserver</code> で無限スクロールや再描画を検知。</li>
+                        <li>常に正しい順序を維持。</li>
                     </ul>
                 </li>
             </ol>
+
             <h2>対象 URL</h2>
             <ul>
-                <li>`<a href="https://gemini.google.com/search">https://gemini.google.com/search</a>` (検索結果ページ)</li>
-                <li>`<a href="https://gemini.google.com/app">https://gemini.google.com/app</a>`</li>
-            </ul>
-            <p>本スクリプトはユーザーが明示的に検索を行ったページ（URLが `<a href="https://gemini.google.com/search">https://gemini.google.com/search</a>` で始まる場合）でのみ機能を有効化します。</p>
-            <h2>UI/スタイル</h2>
-            <ul>
-                <li>タイトルの先頭に要素を追加して描画します。</li>
-                <li>スタイル: `0.75em`, 控えめな色あい。</li>
+                <li><code>https://gemini.google.com/search</code></li>
+                <li><code>https://gemini.google.com/app</code></li>
             </ul>
 
             <h2>更新履歴</h2>
             <ul>
+                <li><strong>v0.1.22</strong>: 外部CSS/JSファイルへの分離とコードの整理、リソースファイルの改名、デザインの大幅刷新。</li>
                 <li><strong>v0.1.8</strong>: 外部CSS/JSファイルへの分離とコードの整理</li>
                 <li><strong>v0.1.7</strong>: UIの透過効果および影効果を削除</li>
-                <li><strong>v0.1.6</strong>: 共有ライブラリ(gemini-common.js)の更新に合わせてセキュリティ強化とバージョンアップを行いました。</li>
-            <li><strong>v0.1.5</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
-            <li><strong>0.1.4</strong>: 共通ライブラリのバグ修正により、UIが移動できない問題を修正</li>
+                <li><strong>v0.1.6</strong>: 共有ライブラリ(gemini-common.js)の更新に合わせてセキュリティ強化とバージョンアップ。</li>
             </ul>
+        </section>
 
-        </div>
-
-        <div class="install-section">
-            <a class="install-button" id="install-btn" href="gemini-search-snippet-helper.user.js">
-                <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                <span>Install</span>
-                <div class="version-info">
-                    <span class="version-badge latest-version">Loading...</span>
-                    <span class="version-badge installed-version" style="display: none;"></span>
-                </div>
-            </a>
-        </div>
+        <footer>
+            <p>
+                Hosted on GitHub Pages |
+                <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
+                Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
+            </p>
+        </footer>
     </div>
     <script src="../../domain-landing.js"></script>
 </body>
 
-</html>
+</html>

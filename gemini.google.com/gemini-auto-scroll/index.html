@@ -6,115 +6,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini Auto-Scroll - Moukaeritai</title>
     <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/index.html" rel="canonical" />
-    <!-- Github Markdown CSS for styling -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../index.css">
-    <link rel="stylesheet" href="index.css">
-    <script src="index.js" defer></script>
 </head>
 
-<body class="markdown-body">
-    <a href="https://userscript.moukaeritai.work/" class="home-button">
-        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
-            <path
-                d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-        </svg>
-        userscript.moukaeritai.work
-    </a>
-    <div id="content">
-        <h1>Gemini Auto-Scroll</h1>
-        <p>Geminiのウェブインターフェースにおいて、会話リストを自動的に延々とスクロールさせ、すべての会話履歴をロードするためのユーザースクリプトです。</p>
-
-        <div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
-            <strong>最新バージョン:</strong> <span id="ver-info">Loading...</span><br>
-            <strong>最終更新日:</strong> <span id="date-info">Loading...</span>
-        </div>
-
-        <a href="gemini-auto-scroll.user.js" class="install-button" id="install-button">
-            <span style="display: flex; align-items: center; gap: 8px;">
-                <span class="button-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                </span>
-                <span class="button-text">Install</span>
-            </span>
-            <div class="version-info">
-                <span class="version-badge latest-version">Loading...</span>
-                <span class="version-badge installed-version" style="display: none;"></span>
-            </div>
+<body>
+    <div class="top-nav">
+        <a href="../index.html" class="home-button">
+            <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
+                <path d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" fill="currentColor"/>
+            </svg>
+            Gemini Project List
         </a>
-
-        <h2>背景</h2>
-        <p>Geminiで過去の会話を遡りたい場合、手動でスクロールし続ける必要があり手間がかかります。本スクリプトは、全履歴のロードを主目的とした「延々とスクロールする」機能を提供します。特に、会話のバックアップや検索の準備段階として有用です。
-        </p>
-
-        <h2>機能概要</h2>
-
-        <h3>1. フローティング・ウィジェット (ボタンスタイル)</h3>
-        <p>画面右上に、洗練されたグラスモフィズム（透過・ぼかし）デザインの操作ウィジェットを表示します。</p>
-        <ul>
-            <li><strong>グラスモフィズム</strong>: 透明感のあるモダンなデザインで、Gemini の UI に自然に溶け込みます。</li>
-            <li><strong>自由な配置</strong>: ウィジェット全体をドラッグして自由に移動可能。位置は自動的に記憶されます。</li>
-            <li><strong>最小化機能</strong>: シンプルなアイコンのみの表示に最小化でき、作業の邪魔になりません。</li>
-            <li><strong>リアルタイムステータス</strong>: ロード済みアイテム数や現在の会話IDをコンパクトに表示。</li>
-        </ul>
-
-        <h3>2. 機能詳説</h3>
-
-        <h4>自動スクロール (Auto-Scroll)</h4>
-        <ul>
-            <li><strong>動作</strong>: 会話リスト（サイドバー）を自動的に下方向へスクロールし続けます。</li>
-            <li><strong>安全性</strong>: "Couldn't load recent chats" などのエラーを検知した場合、自動的に停止してアラートでお知らせします。</li>
-        </ul>
-
-        <h3>3. UI調整</h3>
-        <ul>
-            <li><strong>インデックス表示</strong>: 会話リストに連番を表示し、位置関係を把握しやすくします。</li>
-            <li><strong>高視認性スクロールバー</strong>: スクロールバーの色を際立たせ、現在のロード状況を視覚的に分かりやすくします。</li>
-        </ul>
-
-        <h2>更新履歴</h2>
-        <ul>
-            <li><strong>v0.2.57</strong>: 外部CSS/JSファイルへの分離とコードの整理</li>
-            <li><strong>v0.2.56</strong>: リソースファイル (style.css) をスクリプト名と同じステムに改名</li>
-            <li><strong>v0.2.55</strong>: 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)</li>
-            <li><strong>v0.2.54</strong>: UIの透過効果および影効果を削除</li>
-
-            <li><strong>v0.2.53</strong>: Trusted Types を必須化し、DOM-Based XSS 脆弱性を修正しました。</li>
-        </ul>
-        <ul>
-            <li><strong>v0.2.52</strong>: 最小化表示のスタイルとクラス名を共通化（gemini-common.css/jsを活用）</li>
-            <li><strong>v0.2.51</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
-            <li><strong>v0.2.50</strong>: バージョン表記のバッジをマウスオーバーで拡大表示するように変更。</li>
-
-            <li><strong>v0.2.49</strong>: 共通ライブラリのバグ修正により、UIが移動できない問題を修正</li>
-            <li><strong>v0.2.38</strong>: 使用されなくなったデバッグ用カスタムメニュー（現在の会話IDを表示）および関連する関数を削除しました。</li>
-            <li><strong>v0.2.37</strong>: gemini.google.com 全体で動作するように変更</li>
-            <li><strong>v0.2.35</strong>: アイテム数とバージョン番号を縦並びに変更しました。</li>
-            <li><strong>v0.2.34</strong>: フローティングパネルの背景色をライトピンクに変更し、文字色を見やすく調整しました。</li>
-            <li><strong>v0.2.27</strong>: UI を大幅に刷新。タイトルバー付きパネルから、グラスモフィズムを採用したモダンなボタン式ウィジェットに変更。</li>
-            <li><strong>v0.2.26</strong>: サイドバーの開閉状態を検知するロジックを追加し、スクロールの安定性を向上。</li>
-            <li><strong>v0.2.23</strong>: 「次の会話を自動選択」機能を <code>Gemini Auto-Select Next</code> スクリプトに分離。</li>
-            <li><strong>v0.2.22</strong>: 最終更新日のメタデータ表示に対応。</li>
-            <li><strong>v0.2.21</strong>: Navigation API を利用した SPA ルーティングの安定性向上。</li>
-            <li><strong>v0.2.20</strong>: UI のリファクタリング、最小化機能の導入。</li>
-            <li><strong>v0.1.27</strong>: エラー検知によるセーフティ停止機能を実装。</li>
-        </ul>
     </div>
 
-    <script src="../../domain-landing.js"></script>
+    <div class="container">
+        <header>
+            <h1>Gemini Auto-Scroll</h1>
+            <p class="header-desc">Geminiのウェブインターフェースにおいて、会話リストを自動的に延々とスクロールさせ、すべての会話履歴をロードするためのユーザースクリプトです。</p>
+        </header>
 
-    <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
-    <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
-        <p>
-            Hosted on GitHub Pages |
-            <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
-            Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
-        </p>
-    </footer>
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <a href="gemini-auto-scroll.user.js" class="install-button" data-script-name="Gemini Auto-Scroll">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Install
+            </a>
+            <div class="version-info" style="margin-top: 1.5rem; justify-content: center; flex-direction: row; gap: 20px;">
+                <div class="version-row">
+                    <span class="version-label">Latest:</span>
+                    <span class="version-badge latest-version">Loading...</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Installed:</span>
+                    <span class="version-badge installed-version" style="display: none;">-</span>
+                </div>
+            </div>
+        </div>
+
+        <section>
+            <h2>背景</h2>
+            <p>Geminiで過去の会話を遡りたい場合、手動でスクロールし続ける必要があり手間がかかります。本スクリプトは、全履歴のロードを主目的とした「延々とスクロールする」機能を提供します。特に、会話のバックアップや検索の準備段階として有用です。
+            </p>
+
+            <h2>機能概要</h2>
+
+            <h3>1. フローティング・ウィジェット (ボタンスタイル)</h3>
+            <p>画面右上に、洗練されたグラスモフィズム（透過・ぼかし）デザインの操作ウィジェットを表示します。</p>
+            <ul>
+                <li><strong>グラスモフィズム</strong>: 透明感のあるモダンなデザインで、Gemini の UI に自然に溶け込みます。</li>
+                <li><strong>自由な配置</strong>: ウィジェット全体をドラッグして自由に移動可能。位置は自動的に記憶されます。</li>
+                <li><strong>最小化機能</strong>: シンプルなアイコンのみの表示に最小化でき、作業の邪魔になりません。</li>
+                <li><strong>リアルタイムステータス</strong>: ロード済みアイテム数や現在の会話IDをコンパクトに表示。</li>
+            </ul>
+
+            <h3>2. 機能詳説</h3>
+
+            <h4>自動スクロール (Auto-Scroll)</h4>
+            <ul>
+                <li><strong>動作</strong>: 会話リスト（サイドバー）を自動的に下方向へスクロールし続けます。</li>
+                <li><strong>安全性</strong>: "Couldn't load recent chats" などのエラーを検知した場合、自動的に停止してアラートでお知らせします。</li>
+            </ul>
+
+            <h3>3. UI調整</h3>
+            <ul>
+                <li><strong>インデックス表示</strong>: 会話リストに連番を表示し、位置関係を把握しやすくします。</li>
+                <li><strong>高視認性スクロールバー</strong>: スクロールバーの色を際立たせ、現在のロード状況を視覚的に分かりやすくします。</li>
+            </ul>
+
+            <h2>更新履歴</h2>
+            <ul>
+                <li><strong>v0.2.57</strong>: 外部CSS/JSファイルへの分離とコードの整理、リソースファイルの改名、デザインの大幅刷新。</li>
+                <li><strong>v0.2.57</strong>: 外部CSS/JSファイルへの分離とコードの整理</li>
+                <li><strong>v0.2.56</strong>: リソースファイル (style.css) をスクリプト名と同じステムに改名</li>
+                <li><strong>v0.2.55</strong>: 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)</li>
+                <li><strong>v0.2.54</strong>: UIの透過効果および影効果を削除</li>
+                <li><strong>v0.2.53</strong>: Trusted Types を必須化し、DOM-Based XSS 脆弱性を修正しました。</li>
+                <li><strong>v0.2.52</strong>: 最小化表示のスタイルとクラス名を共通化（gemini-common.css/jsを活用）</li>
+            </ul>
+        </section>
+
+        <footer>
+            <p>
+                Hosted on GitHub Pages |
+                <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
+                Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
+            </p>
+        </footer>
+    </div>
+    <script src="../../domain-landing.js"></script>
 </body>
 
 </html>

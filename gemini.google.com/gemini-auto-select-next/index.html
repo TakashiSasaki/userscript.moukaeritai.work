@@ -6,158 +6,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini Auto-Select Next - Moukaeritai</title>
     <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-auto-select-next/index.html" rel="canonical" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../index.css">
-    <link rel="stylesheet" href="index.css">
-    <script src="index.js" defer></script>
 </head>
 
-<body class="markdown-body">
-    <a href="https://userscript.moukaeritai.work/" class="home-button">
-        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
-            <path
-                d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-        </svg>
-        userscript.moukaeritai.work
-    </a>
-    <div id="content">
-        <h1>Gemini Auto-Select Next</h1>
-        <p>Geminiで会話を削除した際、自動的に次の会話を選択するユーザースクリプトです。削除のたびにトップページに戻るのを防ぎ、連続的な会話の整理を効率化します。</p>
-
-        <div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
-            <strong>最新バージョン:</strong> <span id="ver-info">Loading...</span><br>
-            <strong>最終更新日:</strong> <span id="date-info">Loading...</span>
-        </div>
-
-        <a href="gemini-auto-select-next.user.js" class="install-button" id="install-button">
-            <span style="display: flex; align-items: center; gap: 8px;">
-                <span class="button-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                </span>
-                <span class="button-text">Install</span>
-            </span>
-            <div class="version-info">
-                <span class="version-badge latest-version">Loading...</span>
-                <span class="version-badge installed-version" style="display: none;"></span>
-            </div>
+<body>
+    <div class="top-nav">
+        <a href="../index.html" class="home-button">
+            <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
+                <path d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" fill="currentColor"/>
+            </svg>
+            Gemini Project List
         </a>
-
-
-        <h2>機能概要</h2>
-        <ul>
-            <li><strong>自動選択</strong>: 現在の会話が削除または削除によってDOMから除去されたことを検知すると、自動的にリスト内の次の会話をクリックします。</li>
-            <li><strong>手動スキップ</strong>: 会話を削除せずに、パネルの「⏭️ Skip to Next」ボタンから手動で次の会話に移動することができます。</li>
-            <li><strong>フローティングパネル</strong>: 機能をON/OFFするための小さなドラッグ可能なパネルを表示します。位置は自動的に保存されます。</li>
-            <li><strong>SPA対応</strong>: Geminiの画面遷移を検知し、チャット画面でのみ動作します。</li>
-        </ul>
-
-        <div class="section">
-            <h2>連携スクリプト（受信元）</h2>
-            <p>このスクリプトは、以下のスクリプトからイベントを受信して動作します。</p>
-            <ul>
-                <li><a href="../gemini-export-to-docs/index.html">Export to Docs</a> (<code>gemini-auto-select-next:request-next</code>)</li>
-            </ul>
-        </div>
-
-        <div class="section">
-            <h2 class="section-title"><svg fill="currentColor" height="24" viewBox="0 -960 960 960" width="24">
-                    <path
-                        d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T760-80H240Zm280-520v-200H240v640h520v-440H520ZM240-800v200-200 640-640Z" />
-                </svg> 更新履歴</h2>
-            <div class="changelog">
-                <div class="changelog-item">
-                    <div class="changelog-version">v0.2.53</div>
-                    <ul class="changelog-list">
-                        <li>外部CSS/JSファイルへの分離とコードの整理</li>
-                    </ul>
-                </div>
-                <div class="changelog-item">
-                    <div class="changelog-version">v0.2.52</div>
-                    <ul class="changelog-list">
-                        <li>リソースファイル (style.css) をスクリプト名と同じステムに改名</li>
-                    </ul>
-                </div>
-                <div class="changelog-item">
-                    <div class="changelog-version">v0.2.51</div>
-                    <ul class="changelog-list">
-                        <li>共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)</li>
-                    </ul>
-                </div>
-                <div class="changelog-item">
-                    <div class="changelog-version">v0.2.50</div>
-                    <ul class="changelog-list">
-                        <li>共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整</li>
-                    </ul>
-                </div>
-                <div class="changelog-item">
-                    <div class="changelog-version">v0.2.35</div>
-                    <ul class="changelog-list">
-                        <li>gemini.google.com 全体で動作するように変更</li>
-                    </ul>
-                </div>
-                <div class="changelog-item">
-                    <div class="changelog-version">v0.2.27</div>
-                    <div class="changelog-date">2026-03-11</div>
-                    <ul class="changelog-list">
-                        <li>インストール検知ロジックから <code>installCheckSuffixes</code> を削除し、チェックを簡素化しました。</li>
-                    </ul>
-                </div>
-                <div class="changelog-item">
-                    <div class="changelog-version">v0.2.26</div>
-                    <div class="changelog-date">2026-03-11</div>
-                    <ul class="changelog-list">
-                        <li>UIパネルをタイトバーなしのコンパクトな「ピル型ボタン」デザインに大幅刷新しました。</li>
-                        <li>トグルスイッチをチェックボックスに変更し、設定状態を一目で確認しやすくしました。</li>
-                        <li>パネル全体がドラッグ可能になり、操作性が向上しました。</li>
-                    </ul>
-                </div>
-                <div class="changelog-item">
-                    <div class="changelog-version">v0.2.25</div>
-                    <div class="changelog-date">2026-03-10</div>
-                    <ul class="changelog-list">
-                        <li>自動削除を待たずに手動で次の会話へ移動できる「⏭️ Skip to Next」ボタンをUIパネルに追加しました。</li>
-                    </ul>
-                </div>
-                <div class="changelog-item">
-                    <div class="changelog-version">v0.2.24</div>
-                    <div class="changelog-date">2026-03-10</div>
-                    <ul class="changelog-list">
-                        <li>Geminiのトップページ（<code>/app</code>）でロードインジケーターが無限に回り続ける不具合を修正しました。</li>
-                        <li>DOM監視ロジックを最適化し、不要なUI更新を削減しました。</li>
-                    </ul>
-                </div>
-                <div class="changelog-item">
-                    <div class="changelog-version">v0.2.23</div>
-                    <div class="changelog-date">2026-03-10</div>
-                    <ul class="changelog-list">
-                        <li><code>Gemini Auto-Scroll</code> から独立したスクリプトとして新規作成。</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
     </div>
 
+    <div class="container">
+        <header>
+            <h1>Gemini Auto-Select Next</h1>
+            <p class="header-desc">Geminiで会話を削除した際、自動的に次の会話を選択するユーザースクリプトです。削除のたびにトップページに戻るのを防ぎ、連続的な会話の整理を効率化します。</p>
+        </header>
 
-    <h2>連携スクリプト</h2>
-    <p>他のユーザースクリプトとカスタムイベントを通じて連携します。</p>
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <a href="gemini-auto-select-next.user.js" class="install-button" data-script-name="Gemini Auto-Select Next">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Install
+            </a>
+            <div class="version-info" style="margin-top: 1.5rem; justify-content: center; flex-direction: row; gap: 20px;">
+                <div class="version-row">
+                    <span class="version-label">Latest:</span>
+                    <span class="version-badge latest-version">Loading...</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Installed:</span>
+                    <span class="version-badge installed-version" style="display: none;">-</span>
+                </div>
+            </div>
+        </div>
 
-    <h3>送信（使う側）</h3>
-    <p>現在、他のスクリプトに対してイベントを送信することはありません。</p>
+        <section>
+            <h2>機能概要</h2>
+            <ul>
+                <li><strong>自動選択</strong>: 現在の会話が削除または削除によってDOMから除去されたことを検知すると、自動的にリスト内の次の会話をクリックします。</li>
+                <li><strong>手動スキップ</strong>: 会話を削除せずに、パネルの「⏭️ Skip to Next」ボタンから手動で次の会話に移動することができます。</li>
+                <li><strong>フローティングパネル</strong>: 機能をON/OFFするための小さなドラッグ可能なパネルを表示します。位置は自動的に保存されます。</li>
+                <li><strong>SPA対応</strong>: Geminiの画面遷移を検知し、チャット画面でのみ動作します。</li>
+            </ul>
 
-    <h3>受信（使われる側）</h3>
-    <p>以下のスクリプトからイベントを受信し、自身の処理を実行します：</p>
-    <ul>
-        <li><strong>Export to Docs</strong>: <code>gemini-auto-select-next:request-next</code> イベントを受信して会話リストの次のアイテムを選択します。</li>
-    </ul>
+            <h2>連携スクリプト</h2>
+            <p>他のユーザースクリプトとカスタムイベントを通じて連携します。</p>
 
+            <h3>送信（使う側）</h3>
+            <p>現在、他のスクリプトに対してイベントを送信することはありません。</p>
+
+            <h3>受信（使われる側）</h3>
+            <p>以下のスクリプトからイベントを受信し、自身の処理を実行します：</p>
+            <ul>
+                <li><strong>Export to Docs</strong>: <code>gemini-auto-select-next:request-next</code> イベントを受信して会話リストの次のアイテムを選択します。</li>
+            </ul>
+
+            <h2>更新履歴</h2>
+            <ul>
+                <li><strong>v0.2.53</strong>: 外部CSS/JSファイルへの分離とコードの整理、リソースファイルの改名、デザインの大幅刷新。</li>
+                <li><strong>v0.2.53</strong>: 外部CSS/JSファイルへの分離とコードの整理</li>
+                <li><strong>v0.2.52</strong>: リソースファイル (style.css) をスクリプト名と同じステムに改名</li>
+                <li><strong>v0.2.51</strong>: 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)</li>
+                <li><strong>v0.2.50</strong>: 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整</li>
+            </ul>
+        </section>
+
+        <footer>
+            <p>
+                Hosted on GitHub Pages |
+                <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
+                Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
+            </p>
+        </footer>
+    </div>
     <script src="../../domain-landing.js"></script>
-    <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 40px; border-top: 1px solid #eaecef; padding-top: 20px;">
-        <p>Hosted on GitHub Pages | Developed by Takashi Sasaki</p>
-    </footer>
 </body>
 
 </html>

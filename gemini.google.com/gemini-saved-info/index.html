@@ -2,71 +2,84 @@
 <html lang="ja">
 
 <head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini Saved Info Helper - Moukaeritai</title>
+    <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/index.html" rel="canonical" />
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../index.css">
-    <link rel="stylesheet" href="index.css">
-    <script src="index.js" defer></script>
 </head>
 
 <body>
-    <div class="container">
-        <nav class="top-nav">
-            <a class="top-nav-link" href="../index.html">
-                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
-                    <path
-                        d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-                </svg>
-                Back to Home
-            </a>
-        </nav>
+    <div class="top-nav">
+        <a href="../index.html" class="home-button">
+            <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
+                <path d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" fill="currentColor"/>
+            </svg>
+            Gemini Project List
+        </a>
+    </div>
 
-        <div id="content">
+    <div class="container">
+        <header>
             <h1>Gemini Saved Info Helper</h1>
-            <p>GeminiのウェブUIにおいて、ユーザーのカスタムインストラクションやユーザープロファイルを保存する画面 (`/saved-info`) の使いやすさを向上させるユーザースクリプトです。</p>
+            <p class="header-desc">GeminiのウェブUIにおいて、ユーザーのカスタムインストラクションやユーザープロファイルを保存する画面 (<code>/saved-info</code>) の使いやすさを向上させるユーザースクリプトです。</p>
+        </header>
+
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <a href="gemini-saved-info.user.js" class="install-button" data-script-name="Gemini Saved Info Helper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Install
+            </a>
+            <div class="version-info" style="margin-top: 1.5rem; justify-content: center; flex-direction: row; gap: 20px;">
+                <div class="version-row">
+                    <span class="version-label">Latest:</span>
+                    <span class="version-badge latest-version">Loading...</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Installed:</span>
+                    <span class="version-badge installed-version" style="display: none;">-</span>
+                </div>
+            </div>
+        </div>
+
+        <section>
             <h2>機能 (Features)</h2>
             <ul>
-                <li><strong>連番表示:</strong> 各カスタムインストラクションの先頭に連番を振り、視認性を向上させます。</li>
-                <li><strong>クリップボードコピー:</strong> 各インストラクションの3ドットメニューの横にコピーボタンを追加します。ボタンをクリックすると、そのインストラクションのテキスト内容がクリップボードにコピーされます。</li>
-                <li><strong>一括コピー:</strong> 複数のインストラクションがある場合、ヘッダー部分に &quot;Copy all&quot; ボタンを追加し、全体を形式に沿ってコピーできます。</li>
-            </ul>
-            <h2>実装詳細 (Implementation Details)</h2>
-            <h3>SPA対応および動的更新ロジック</h3>
-            <ul>
-                <li><strong>ページ監視:</strong> `MutationObserver` で `document.body` を監視し、SPAによるページ遷移を検知します。</li>
-                <li><strong>UI更新:</strong> リストに変更が加わるたびに再描画され、UIの整合性が常に保たれます。</li>
+                <li><strong>連番表示:</strong> 各カスタムインストラクションの先頭に連番を振り、視認性を向上。</li>
+                <li><strong>クリップボードコピー:</strong> 各インストラクションにコピーボタンを追加。</li>
+                <li><strong>一括コピー:</strong> ヘッダー部分に "Copy all" ボタンを追加し、全体を一括コピー。</li>
             </ul>
 
+            <h2>実装詳細</h2>
+            <ul>
+                <li><strong>SPA対応:</strong> <code>MutationObserver</code> でページ遷移とDOM更新を検知。</li>
+                <li><strong>UI更新:</strong> リストの変更に合わせて即座に再描画。</li>
+            </ul>
 
             <h2>更新履歴</h2>
             <ul>
+                <li><strong>v0.2.30</strong>: 外部CSS/JSファイルへの分離とコードの整理、リソースファイルの改名、デザインの大幅刷新。</li>
                 <li><strong>v0.2.30</strong>: 外部CSS/JSファイルへの分離とコードの整理</li>
                 <li><strong>v0.2.29</strong>: リソースファイル (style.css) をスクリプト名と同じステムに改名</li>
                 <li><strong>v0.2.27</strong>: UIの透過効果および shadow 効果を削除</li>
-                <li><strong>v0.2.26</strong>: 共有ライブラリ(gemini-common.js)の更新に合わせてセキュリティ強化とバージョンアップを行いました。</li>
-                <li><strong>v0.2.25</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
-                <li><strong>v0.2.24</strong>: フローティングUIをドラッグで移動できるように改善。</li>
+                <li><strong>v0.2.26</strong>: 共有ライブラリ(gemini-common.js)の更新に合わせてセキュリティ強化とバージョンアップ。</li>
             </ul>
+        </section>
 
-        </div>
-
-        <div class="install-section">
-            <a class="install-button" id="install-btn" href="gemini-saved-info.user.js">
-                <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                <span class="button-text">Install</span>
-                <div class="version-info">
-                    <span class="version-badge latest-version">Loading...</span>
-                    <span class="version-badge installed-version" style="display: none;"></span>
-                </div>
-            </a>
-        </div>
+        <footer>
+            <p>
+                Hosted on GitHub Pages |
+                <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
+                Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
+            </p>
+        </footer>
     </div>
-
     <script src="../../domain-landing.js"></script>
 </body>
 
-</html>
+</html>

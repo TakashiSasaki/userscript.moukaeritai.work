@@ -6,271 +6,126 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini 1-Click Export to Docs - Moukaeritai</title>
     <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/index.html" rel="canonical" />
-    <!-- Github Markdown CSS for styling -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../index.css">
-    <link rel="stylesheet" href="index.css">
-    <script src="index.js" defer></script>
 </head>
 
-<body class="markdown-body">
-    <a href="https://userscript.moukaeritai.work/" class="home-button">
-        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
-            <path
-                d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-        </svg>
-        userscript.moukaeritai.work
-    </a>
-    <div id="content">
-        <h1>Gemini 1-Click Export to Docs</h1>
-
-        <p>Geminiのウェブアプリケーション（SPA）において、会話の特定のターンまたはキャンバスをGoogle Docsにエクスポートする操作を簡略化するユーザースクリプトです。</p>
-
-        <div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
-            <strong>最新バージョン:</strong> <span id="ver-info">Loading...</span><br>
-            <strong>最終更新日:</strong> <span id="date-info">Loading...</span>
-        </div>
-
-        <a href="gemini-export-to-docs.user.js" class="install-button" id="install-button">
-            <span style="display: flex; align-items: center; gap: 8px;">
-                <span class="button-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                </span>
-                <span class="button-text">Install</span>
-            </span>
-            <div class="version-info">
-                <span class="version-badge latest-version">Loading...</span>
-                <span class="version-badge installed-version" style="display: none;"></span>
-            </div>
+<body>
+    <div class="top-nav">
+        <a href="../index.html" class="home-button">
+            <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
+                <path d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" fill="currentColor"/>
+            </svg>
+            Gemini Project List
         </a>
-
-        <div style="margin-top: 24px;">
-            <p><strong>依存設定（前提スクリプト）</strong>: このスクリプトの全機能を利用するには、以下の3つのスクリプトもインストールして有効にしてください。</p>
-            <div id="dependency-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
-                <!-- Auto-Select Next -->
-                <div class="dep-card" data-script-name="Gemini Auto-Select Next" data-url="../gemini-auto-select-next/gemini-auto-select-next.user.js">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <strong><a href="../gemini-auto-select-next/index.html">Gemini Auto-Select Next</a></strong>
-                        <a href="../gemini-auto-select-next/gemini-auto-select-next.user.js" target="_blank" class="dep-install-btn">Install</a>
-                    </div>
-                    <div style="font-size: 0.8em; color: #586069; margin-top: 6px;">
-                        Latest: <span class="dep-latest">確認中...</span> | Installed: <span class="dep-installed">未インストール</span>
-                    </div>
-                </div>
-                <!-- 1-Click Delete -->
-                <div class="dep-card" data-script-name="Gemini 1-Click Delete Conversation" data-url="../gemini-one-click-delete/gemini-one-click-delete.user.js">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <strong><a href="../gemini-one-click-delete/index.html">Gemini 1-Click Delete Conversation</a></strong>
-                        <a href="../gemini-one-click-delete/gemini-one-click-delete.user.js" target="_blank" class="dep-install-btn">Install</a>
-                    </div>
-                    <div style="font-size: 0.8em; color: #586069; margin-top: 6px;">
-                        Latest: <span class="dep-latest">確認中...</span> | Installed: <span class="dep-installed">未インストール</span>
-                    </div>
-                </div>
-                <!-- Turn Counter -->
-                <div class="dep-card" data-script-name="Gemini Turn Counter" data-url="../gemini-turn-counter/gemini-turn-counter.user.js">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <strong><a href="../gemini-turn-counter/index.html">Gemini Turn Counter</a></strong>
-                        <a href="../gemini-turn-counter/gemini-turn-counter.user.js" target="_blank" class="dep-install-btn">Install</a>
-                    </div>
-                    <div style="font-size: 0.8em; color: #586069; margin-top: 6px;">
-                        Latest: <span class="dep-latest">確認中...</span> | Installed: <span class="dep-installed">未インストール</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <h2>目的</h2>
-        <p>標準機能では複数回のクリック（メニュー展開など）が必要ですが、これを「1クリック」または「キーボードショートカット」で実行できる機能を追加します。<br>
-            本ユーザースクリプトはTampermonkeyでの利用を想定し、ファイル名は <code>gemini-export-to-docs.user.js</code> とします。</p>
-
-        <h2>経緯</h2>
-        <p>以前作成したスクリプトの課題（DOM要素検出の不安定さ、イベントトリガーの信頼性）を解消するため、ゼロベースで再設計・実装を行う。</p>
-
-        <h2>ユーザースクリプト情報</h2>
-        <ul>
-            <li><strong>Match URL</strong>: <code>https://gemini.google.com/*</code>
-                （スクリプト内部でURLを監視し、チャットページでのみ動的に有効化されます。現在、<code>/app/</code> および <code>/gem/</code> のパス形式に対応しています。）</li>
-        </ul>
-
-        <h2>技術仕様</h2>
-
-        <h3>1. セレクタ戦略</h3>
-        <p>Geminiは動的なSPAであるため、以下の優先順位で要素を特定する。</p>
-        <ol>
-            <li><strong>data-test-id属性</strong>: Googleがテスト用に付与している不変性の高い属性（例:
-                <code>data-test-id="more-menu-button"</code>）。
-            </li>
-            <li><strong>アイコンフォント</strong>: ボタンを特定できない場合、<code>mat-icon</code> の名前（<code>docs</code>など）を補助的に使用する。</li>
-            <li><strong>DOM構造</strong>: 親要素（<code>response-container</code>）からの相対位置など。</li>
-        </ol>
-
-        <h3>2. 自動化ロジックフロー</h3>
-
-        <h4>ターンエクスポート</h4>
-        <ol>
-            <li><strong>トリガー</strong>: スクリプトが「︙」ボタン（<code>more-menu-button</code>）をクリック。</li>
-            <li><strong>メニュー待機</strong>: メニューパネルが表示されるのを待機（<code>waitForElement</code>）。</li>
-            <li><strong>エクスポート実行</strong>:
-                <ul>
-                    <li><strong>PC版</strong>: メニュー内の「Export to Docs」ボタンを即座にクリック。</li>
-                    <li><strong>モバイル版</strong>: 「Export to...」ボタンをクリック → サブメニュー待機 → 「Export to Docs」をクリック。</li>
-                </ul>
-            </li>
-        </ol>
-
-        <h4>キャンバスエクスポート</h4>
-        <ol>
-            <li><strong>オープン</strong>: キャンバスが閉じていれば開く。</li>
-            <li><strong>共有</strong>: キャンバス内の「共有（Share）」ボタンをクリック。</li>
-            <li><strong>エクスポート</strong>: 共有メニュー内の「Export to Docs」をクリック。</li>
-        </ol>
-
-        <h3>3. 機能要件</h3>
-
-        <h4>A. 1クリックボタン（UI注入）</h4>
-        <ul>
-            <li><strong>配置</strong>:
-                <ul>
-                    <li>各レスポンスの下部（フッター）にある「︙」メニューボタンの隣。</li>
-                    <li>各レスポンスの上部（ヘッダー）にあるコントロールエリア。</li>
-                    <li>キャンバスの「Open」チップの隣。</li>
-                </ul>
-            </li>
-            <li><strong>状態同期</strong>: 同一レスポンスに対して複数のボタンがある場合、一つがクリックされると全てが「完了状態（緑色チェック）」に同期される。</li>
-        </ul>
-
-        <h4>B. キーボードショートカット (<code>Ctrl + E</code>)</h4>
-        <ul>
-            <li><strong>機能</strong>: ページ内で <strong>最初に見つかった</strong> 会話のレスポンス（通常は最初のターン）を対象にエクスポートを実行する。</li>
-            <li><strong>動作条件</strong>: テキスト入力エリア（<code>input</code>, <code>textarea</code>,
-                <code>contenteditable</code>）にフォーカスがない場合のみ発火する。
-            </li>
-            <li><strong>フィードバック</strong>: 通常のボタンクリックと同様、処理中はオーバーレイを表示し、完了後に成功ステータスへ更新する。</li>
-        </ul>
-
-        <h4>C. 1ターン専用オートエクスポート＆削除</h4>
-        <ul>
-            <li><strong>機能</strong>: 会話が1ターン（プロンプト1回、回答1回）のみの場合に、画面右下に専用のパネルを表示します。</li>
-            <li><strong>自動削除連動</strong>: 「Export & Delete」ボタンをクリックすると、Google
-                Docsへのエクスポートが実行され、その後指定した秒数が経過すると、<code>gemini-one-click-delete</code> と連携して会話を自動的に削除します。</li>
-            <li><strong>待機時間の調整</strong>: 削除までの待機時間（秒）はパネル上で自由に変更可能（デフォルト3秒、ブラウザに保存）です。</li>
-            <li><strong>画像一括コピー機能</strong>: パネルに「📋 Copy Images」ボタンを追加。クリックすると <code>gemini-turn-counter</code> スクリプトと連携し、会話内の全画像をクリップボードにコピーします。（※要 <code>gemini-turn-counter</code> v0.4.27 以降）</li>
-            <li><strong>フローティング・ドラッグ移動</strong>: パネル上部のヘッダー（⠿）をドラッグすることで、画面内の好きな位置に移動できます。位置は自動的に保存され、次回ロード時にも維持されます。
-            </li>
-            <li><strong>自動消滅</strong>: 会話が2ターン以上に増えた場合や、他のページに移動した場合は、自動的にこのパネルは消去されます。</li>
-        </ul>
-
-        <h3>4. SPA（シングルページアプリケーション）対応とパフォーマンス</h3>
-        <ul>
-            <li>GeminiはSPAであるため、ページ遷移を検知してスクリプトの機能を動的に制御します。</li>
-            <li><strong>有効化</strong>: チャットページ (<code>/app/...</code> または <code>/gem/...</code> )
-                に遷移した際に、エクスポートボタンやショートカット機能が自動的に有効になります。</li>
-            <li><strong>無効化（クリーンアップ）</strong>: チャットページから他のページ（ホームページなど）に移動すると、追加したボタンや機能はすべて削除され、リソースを解放します。</li>
-            <li>これにより、スクリプトが必要な場面でのみ動作し、サイト全体のパフォーマンスへの影響を最小限に抑えます。</li>
-        </ul>
-
-        <h3>5. セキュリティと安定性（Reliability）</h3>
-        <ul>
-            <li><strong>Trusted Types対応</strong>: <code>innerHTML</code> の使用を禁止し、<code>document.createElementNS</code>
-                等でDOMを構築する。</li>
-            <li><strong>Trusted Click</strong>: <code>MouseEvent</code> の <code>view</code> プロパティを <code>null</code>
-                に設定することで、ブラウザ의セキュリティ制約による <code>TypeError</code> を回避する。</li>
-            <li><strong>Wait処理</strong>: 非同期DOM更新に対応するため、単純な <code>querySelector</code> ではなく、タイムアウト付きのリトライ待機ロジックを実装する。
-            </li>
-        </ul>
-
-        <h2>UI仕様</h2>
-        <ul>
-            <li><strong>ボタンデザイン</strong>:
-                <ul>
-                    <li>初期状態: 薄い緑色の背景 (<code>#e6f4ea</code>) にDocsアイコン。</li>
-                    <li>処理中: 全画面オーバーレイとスピナーを表示。</li>
-                    <li>完了状態: 濃い緑色 (<code>#1e8e3e</code>) に変化し、アイコンがチェックマークになる。</li>
-                </ul>
-            </li>
-        </ul>
-
-        <h2>更新履歴</h2>
-        <ul>
-            <li><strong>v0.4.61</strong>: 外部CSS/JSファイルへの分離とコードの整理</li>
-            <li><strong>v0.4.60</strong>: リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名</li>
-            <li><strong>v0.4.58</strong>: UIの透過効果および影効果を削除</li>
-
-            <li><strong>v0.4.57</strong>: 最小化表示のスタイルとクラス名を共通化（gemini-common.css/jsを活用）</li>
-            <li><strong>v0.4.56</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
-            <li><strong>v0.4.55</strong>: バージョン表記のバッジをマウスオーバーで拡大表示するように変更。</li>
-
-            <li><strong>v0.4.54</strong>: 共通ライブラリのバグ修正により、UIが移動できない問題を修正</li>
-            <li><strong>v0.4.51</strong>: 汎用ユーティリティ関数（sleepやwaitForElementなど）をgemini-common.jsにオフロードし、コードを共通化しました。</li>
-            <li><strong>v0.4.43</strong>: エクスポートボタンのHTML構造を <code>template.html</code> にオフロードし、インラインスタイルをCSSクラスに移行するリファクタリングを実施しました。</li>
-            <li><strong>v0.4.42</strong>: 最小化表示（Inactive）時に「Export to Docs」の文字表示を削除し、バージョン番号の前にアイコン（📄）を追加しました。</li>
-            <li><strong>v0.4.41</strong>: gemini.google.com 全体で動作するように変更</li>
-            <li><strong>v0.4.40</strong>: ターンに挿入される各エクスポートボタンの背景色もライトピンクに統一し、エクスポート完了後のステータスカラーをピンク系に変更しました。</li>
-            <li><strong>v0.4.38</strong>: アクティブ状態のパネル背景色をライトピンクの透過背景に変更し、削除時のステータスポップアップを削除、Auto(URL)の表記をAuto-Exportに変更しました。</li>
-            <li><strong>v0.4.37</strong>: 最小化表示（Inactive）時に「(Inactive)」というテキストを削除し、代わりに極小サイズの文字でスクリプト名（Export to Docs）を表示するようにUIを改善しました。</li>
-            <li><strong>v0.4.36</strong>: 最小化表示（Inactive）時のパネル背景色をライトピンクの透過背景に変更し、視認性を高めました。</li>
-            <li><strong>v0.4.35</strong>: 1ターンの会話専用パネルが非表示になるのではなく、最小化（Inactive）された状態で画面に残り、スクリプトの動作状況を常に把握できるようにUIパターンを改善しました。</li>
-            <li><strong>v0.4.33</strong>: SVGアイコンやUIパネルのDOM構造を `template.html` にオフロードし、JavaScriptのファイルサイズと不要なセレクタを削減するリファクタリングを実施しました。</li>
-            <li><strong>v0.4.24</strong>: 1ターンの専用UIパネルに、<code>gemini-turn-counter</code> と連携して一発で全画像をコピーできる「📋 Copy Images」ボタンを追加しました。</li>
-            <li><strong>v0.4.18</strong>: URLの比較を行う際に大文字・小文字を区別しないように修正し、<code>Https://</code>のように入力された場合でも正しく自動実行がトリガーされるように改善しました。</li>
-            <li><strong>v0.4.17</strong>: インストール検知のホスト制限をより厳格化し、コード内のインデントや不要な空白を整理して保守性を向上させました。</li>
-            <li><strong>v0.4.16</strong>: YouTubeのライブ配信URL（<code>youtube.com/live/</code>）からの動画ID抽出に対応しました。</li>
-            <li><strong>v0.4.15</strong>: 内部的な修正として、不要になったインストール検知用のロジック（GitHub Codespaces環境等向けの判定）を削除し、コードを整理しました。</li>
-            <li><strong>v0.4.14</strong>: URL抽出およびYouTubeのURL判定における正規表現に大文字・小文字を区別しないフラグ（<code>/i</code>）を追加し、スマートフォンの入力などで<code>Https://</code>のように大文字が混ざった手動入力URLでも正しく抽出と自動実行の判定が行われるように修正しました。</li>
-            <li><strong>v0.4.13</strong>: 「Auto(URL)」の一致判定において、YouTubeのURL（<code>youtu.be</code>短縮URLや<code>youtube.com/watch</code>など）については形式の違いを無視し、動画IDさえ一致すれば自動実行が発動するように改良を行いました。</li>
-            <li><strong>v0.4.12</strong>: GeminiのSPA（単一ページアプリケーション）遷移に対応するため、サイドバー等から別の会話へ移動した際にもURL自動判定のフラグをリセットし、描画完了を待機する時間を2秒に延長する修正を行いました。</li>
-            <li><strong>v0.4.11</strong>: 「Auto(URL)」の条件に合致し自動実行が決定した際、即座にエクスポートが走るのではなく、設定した秒数ぶん「Cancel Auto (Ns)」とボタンが黄色くカウントダウン表示され、その間にクリックすれば自動実行をキャンセルできるよう猶予期間を設ける機能を追加しました。</li>
-            <li><strong>v0.4.10</strong>: モデルの回答からURLを抽出する際、単なるテキストとしてのURLだけでなく、リンク（アンカー要素の <code>href</code> 属性）として埋め込まれたURLも抽出するように改善。</li>
-            <li><strong>v0.4.9</strong>: 1ターンの専用UIのドラッグハンドル部分に、現在インストールされているスクリプトのバージョン番号を表示するように改善。および検出されたURLをコンソールログに出力するデバッグ機能を追加。</li>
-            <li><strong>v0.4.8</strong>: 「Auto(URL)」の条件を緩和し、モデルの回答内に他のURLが含まれていても、ユーザーが送信した1つのURLと同一のURLが回答内に含まれていれば自動実行されるようにしました。</li>
-            <li><strong>v0.4.7</strong>: Gemini側のセキュリティポリシー（TrustedHTML）変更により、スクリプトがブロックされてパネルが表示されなくなるエラーを修正（<code>innerHTML</code>の使用を除去）。</li>
-            <li><strong>v0.4.6</strong>: ユーザーのプロンプトとAIの回答に「全く同じURLが1つだけ」含まれている場合、自動的に「Export & Delete」を開始する「Auto(URL)」機能を追加。</li>
-            <li><strong>v0.4.5</strong>: 1ターンの会話専用パネルを、横長のコンパクトなボタンバー（ピル型）に変更し、自動削除のオンオフを切り替えるチェックボックスを追加。</li>
-            <li><strong>v0.4.4</strong>: 1-Turn Auto Export パネルをフローティング化（ドラッグ移動可能）し、位置を保存・永続化する機能を追加。</li>
-            <li><strong>v0.4.3</strong>: 1-Turn Auto Export パネル上にスクリプトのバージョンを表示するように改善。</li>
-            <li><strong>v0.4.2</strong>: 会話削除後や別のチャットへの移動時に「Deleting...」のままUIがスタックする問題に対応するため、SPA遷移時の完全リセット処理を追加。</li>
-            <li><strong>v0.4.1</strong>: 初回ロード時のスキャンをポーリング方式（最大5秒待機）に変更し、描画が遅い環境でも確実にUIが注入されるよう改善。</li>
-            <li><strong>v0.4.0</strong>: Geminiの最新UI（タグ名ベースのセレクタ）に対応し、ボタンやパネルが表示されない問題を根本修正。</li>
-            <li><strong>v0.3.9</strong>: AI回答の検出ロジックを改善し、一部の環境でボタンやパネルが表示されない問題を修正。</li>
-            <li><strong>v0.3.8</strong>: 1ターン判定用のセレクタ変更に伴う退行バグ（各ターンのエクスポートボタンが消える問題）を修正。</li>
-            <li><strong>v0.3.6</strong>: MutationObserverの負荷を軽減（デバウンス処理の改善）し、初回ロード時の検出漏れを修正。</li>
-            <li><strong>v0.3.3</strong>: 1ターンの会話専用の「Export & Delete」フローティングUIを追加。削除待機時間を調整可能に。</li>
-        </ul>
     </div>
 
+    <div class="container">
+        <header>
+            <h1>Gemini 1-Click Export to Docs</h1>
+            <p class="header-desc">Geminiのウェブアプリケーション（SPA）において、会話の特定のターンまたはキャンバスをGoogle Docsにエクスポートする操作を簡略化するユーザースクリプトです。</p>
+        </header>
 
-    <h2>連携スクリプト</h2>
-    <p>他のユーザースクリプトとカスタムイベントを通じて連携します。</p>
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <a href="gemini-export-to-docs.user.js" class="install-button" data-script-name="Gemini 1-Click Export to Docs">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Install
+            </a>
+            <div class="version-info" style="margin-top: 1.5rem; justify-content: center; flex-direction: row; gap: 20px;">
+                <div class="version-row">
+                    <span class="version-label">Latest:</span>
+                    <span class="version-badge latest-version">Loading...</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Installed:</span>
+                    <span class="version-badge installed-version" style="display: none;">-</span>
+                </div>
+            </div>
+        </div>
 
-    <h3>送信（使う側）</h3>
-    <p>以下のスクリプトに対してイベントをディスパッチし、処理を依頼します：</p>
-    <ul>
-        <li><strong>Turn Counter</strong>: <code>gemini-turn-counter-copy-images</code> イベントを送信して画像コピー処理を依頼します。</li>
-        <li><strong>Auto Paste in New Tab</strong>: (別ドメイン) <code>EmulateDocsPaste</code> イベントを送信してDocsへの貼り付けを依頼します。</li>
-        <li><strong>Gemini Exported Docs Auto-Closer</strong>: (別ドメイン) <code>gemini-docs-closer-force-close</code> イベントを送信してDocsタブの強制終了を依頼します。</li>
-        <li><strong>One Click Delete</strong>: <code>gemini-one-click-delete:request-delete</code> イベントを送信してエクスポート完了後に会話を自動削除します。</li>
-        <li><strong>Auto-Select Next</strong>: <code>gemini-auto-select-next:request-next</code> イベントを送信して次のアイテムを自動選択します。</li>
-    </ul>
+        <section>
+            <p><strong>依存設定（前提スクリプト）</strong>: このスクリプトの全機能を利用するには、以下のスクリプトもインストールして有効にしてください。</p>
+            <ul style="list-style: none; padding-left: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                <li style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <strong><a href="../gemini-auto-select-next/index.html">Gemini Auto-Select Next</a></strong>
+                </li>
+                <li style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <strong><a href="../gemini-one-click-delete/index.html">Gemini 1-Click Delete</a></strong>
+                </li>
+                <li style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <strong><a href="../gemini-turn-counter/index.html">Gemini Turn Counter</a></strong>
+                </li>
+            </ul>
 
-    <h3>受信（使われる側）</h3>
-    <p>以下のスクリプトからイベントを受信し、自身の処理を実行します：</p>
-    <ul>
-        <li><strong>Turn Counter</strong>: <code>gemini-turn-counter-copy-images-result</code> イベントを受信して画像コピー結果を受け取ります。</li>
-    </ul>
+            <h2>目的</h2>
+            <p>標準機能では複数回のクリック（メニュー展開など）が必要ですが、これを「1クリック」または「キーボードショートカット」で実行できる機能を追加します。<br>
+                本ユーザースクリプトはTampermonkeyでの利用を想定し、ファイル名は <code>gemini-export-to-docs.user.js</code> とします。</p>
 
+            <h2>経緯</h2>
+            <p>以前作成したスクリプトの課題（DOM要素検出の不安定さ、イベントトリガーの信頼性）を解消するため、ゼロベースで再設計・実装を行う。</p>
+
+            <h2>ユーザースクリプト情報</h2>
+            <ul>
+                <li><strong>Match URL</strong>: <code>https://gemini.google.com/*</code>
+                    （スクリプト内部でURLを監視し、チャットページでのみ動的に有効化されます。現在、<code>/app/</code> および <code>/gem/</code> のパス形式に対応しています。）</li>
+            </ul>
+
+            <h2>機能概要</h2>
+
+            <h3>1. 1クリックボタン（UI注入）</h3>
+            <ul>
+                <li><strong>配置</strong>:
+                    <ul>
+                        <li>各レスポンスの下部（フッター）にある「︙」メニューボタンの隣。</li>
+                        <li>各レスポンスの上部（ヘッダー）にあるコントロールエリア。</li>
+                        <li>キャンバスの「Open」チップの隣。</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>2. キーボードショートカット (<code>Ctrl + E</code>)</h3>
+            <ul>
+                <li><strong>機能</strong>: ページ内で <strong>最初に見つかった</strong> 会話のレスポンス（通常は最初のターン）を対象にエクスポートを実行する。</li>
+            </ul>
+
+            <h3>3. 1ターン専用オートエクスポート＆削除</h3>
+            <ul>
+                <li><strong>機能</strong>: 会話が1ターン（プロンプト1回、回答1回）のみの場合に、画面右下に専用のパネルを表示します。</li>
+                <li><strong>自動削除連動</strong>: エクスポート完了後、指定した秒数が経過すると会話を自動的に削除します。</li>
+            </ul>
+
+            <h2>連携スクリプト</h2>
+            <p>他のユーザースクリプトとカスタムイベントを通じて連携します。</p>
+
+            <h3>送信（使う側）</h3>
+            <ul>
+                <li><strong>Turn Counter</strong>: 画像コピー処理を依頼。</li>
+                <li><strong>One Click Delete</strong>: エクスポート完了後に会話を自動削除。</li>
+                <li><strong>Auto-Select Next</strong>: 次のアイテムを自動選択。</li>
+            </ul>
+
+            <h2>更新履歴</h2>
+            <ul>
+                <li><strong>v0.4.61</strong>: 外部CSS/JSファイルへの分離とコードの整理、リソースファイルの改名、デザインの大幅刷新。</li>
+                <li><strong>v0.4.61</strong>: 外部CSS/JSファイルへの分離とコードの整理</li>
+                <li><strong>v0.4.60</strong>: リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名</li>
+                <li><strong>v0.4.58</strong>: UIの透過効果および影効果を削除</li>
+            </ul>
+        </section>
+
+        <footer>
+            <p>
+                Hosted on GitHub Pages |
+                <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
+                Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
+            </p>
+        </footer>
+    </div>
     <script src="../../domain-landing.js"></script>
-    <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
-        <p>
-            Hosted on GitHub Pages |
-            <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
-            Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
-        </p>
-    </footer>
 </body>
 
 </html>

@@ -4,85 +4,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini History Loader</title>
+    <title>Gemini History Loader - Moukaeritai</title>
+    <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/index.html" rel="canonical" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../index.css">
-    <link rel="stylesheet" href="index.css">
-    <script src="index.js" defer></script>
 </head>
 
 <body>
-    <p>このユーザースクリプトは、Gemini の仮想スクロールを回避し、過去の会話履歴を一番上まで強制的に読み込むための共有モジュールです。<a href="../gemini-artifact-exporter/index.html">gemini-artifact-exporter</a> などの他のユーザースクリプトと連携してバックグラウンドで機能します。<br><strong>インストール状況を示すフローティングUIが画面に表示され、履歴取得中はプログレスを表示するパネルに展開されます。</strong></p>
-
-    <div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #f39c12; font-size: 14px;">
-        <strong>最新バージョン:</strong> <span id="ver-info">Loading...</span><br>
+    <div class="top-nav">
+        <a href="../index.html" class="home-button">
+            <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
+                <path d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" fill="currentColor"/>
+            </svg>
+            Gemini Project List
+        </a>
     </div>
 
-    <h2>概要</h2>
-    <p>
-        <code>gemini-artifact-exporter</code> などと連携し、<code>gemini-history-loader:request</code> イベントを受信すると、Geminiのチャット画面を最上部までプログレッシブにスクロールし、すべての履歴をDOM上に展開させます。完了すると <code>gemini-history-loader:complete</code> イベントを発行します。
-    </p>
+    <div class="container">
+        <header>
+            <h1>Gemini History Loader</h1>
+            <p class="header-desc">Gemini の仮想スクロールを回避し、過去の会話履歴を一番上まで強制的に読み込むための共有モジュールです。</p>
+        </header>
 
-    <h2>インストール</h2>
-    <p>
-        <a href="gemini-history-loader.user.js" class="install-button" id="install-button">
-            <span style="display: flex; align-items: center; gap: 8px;">
-                <span class="button-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                </span>
-                <span class="button-text">Install</span>
-            </span>
-            <div class="version-info">
-                <span class="version-badge latest-version">Loading...</span>
-                <span class="version-badge installed-version" style="display: none;"></span>
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <a href="gemini-history-loader.user.js" class="install-button" data-script-name="Gemini History Loader">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Install
+            </a>
+            <div class="version-info" style="margin-top: 1.5rem; justify-content: center; flex-direction: row; gap: 20px;">
+                <div class="version-row">
+                    <span class="version-label">Latest:</span>
+                    <span class="version-badge latest-version">Loading...</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Installed:</span>
+                    <span class="version-badge installed-version" style="display: none;">-</span>
+                </div>
             </div>
-        </a>
-    </p>
+        </div>
 
-    <h2>主な機能</h2>
-    <ul>
-        <li><code>gemini-history-loader:request</code> イベントの受信</li>
-        <li>Angular の仮想スクロール (Lazy Loading) 機構を強制的にアクティブ化して過去履歴を取得するアルゴリズム</li>
-        <li>アニメーション相殺バグを回避した確実な <code>scrollTop</code> 制御</li>
-        <li>コンパクトな状態表示・進捗表示用のフローティングUI（ドラッグ移動・位置記憶対応）</li>
-        <li><code>gemini-history-loader:complete</code> イベントのディスパッチ</li>
-    </ul>
+        <section>
+            <h2>概要</h2>
+            <p>
+                <code>gemini-artifact-exporter</code> などと連携し、<code>gemini-history-loader:request</code> イベントを受信すると、Geminiのチャット画面を最上部までプログレッシブにスクロールし、すべての履歴をDOM上に展開させます。
+            </p>
 
+            <h2>主な機能</h2>
+            <ul>
+                <li><code>gemini-history-loader:request</code> イベントの受信。</li>
+                <li>Angular の仮想スクロール機構を強制的にアクティブ化して過去履歴を取得。</li>
+                <li>コンパクトな状態表示・進捗表示パネル。</li>
+                <li><code>gemini-history-loader:complete</code> イベントのディスパッチ。</li>
+            </ul>
 
-    <h2>更新履歴</h2>
-    <ul>
-        <li><strong>v0.1.24</strong>: 外部CSS/JSファイルへの分離とコードの整理</li>
-        <li><strong>v0.1.23</strong>: リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名</li>
-        <li><strong>v0.1.22</strong>: 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)</li>
-        <li><strong>v0.1.21</strong>: UIの透過効果および影効果を削除</li>
+            <h2>連携スクリプト</h2>
+            <h3>送信（使う側） / 受信（使われる側）</h3>
+            <ul>
+                <li><a href="../gemini-artifact-exporter/index.html">Artifact Exporter</a></li>
+            </ul>
 
-        <li><strong>v0.1.20</strong>: 共有ライブラリ(gemini-common.js)の更新に合わせてセキュリティ強化とバージョンアップを行いました。</li>
-        <li><strong>v0.1.19</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
-        <li><strong>v0.1.18</strong>: バージョン表記のバッジをマウスオーバーで拡大表示するように変更。</li>
+            <h2>更新履歴</h2>
+            <ul>
+                <li><strong>v0.1.24</strong>: 外部CSS/JSファイルへの分離とコードの整理、リソースファイルの改名、デザインの大幅刷新。</li>
+                <li><strong>v0.1.24</strong>: 外部CSS/JSファイルへの分離とコード의整理</li>
+                <li><strong>v0.1.23</strong>: リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名</li>
+                <li><strong>v0.1.21</strong>: UIの透過効果および影効果を削除</li>
+                <li><strong>v0.1.20</strong>: 共有ライブラリ(gemini-common.js)の更新に合わせてセキュリティ強化とバージョンアップ。</li>
+            </ul>
+        </section>
 
-        <li><strong>v0.1.17</strong>: 最小化表示のスクリプト名表記を削除。</li>
-        <li><strong>v0.1.16</strong>: 共通ライブラリのバグ修正により、UIが移動できない問題を修正</li>
-        <li><strong>v0.1.13</strong>: 汎用ユーティリティ関数（sleepやwaitForElementなど）をgemini-common.jsにオフロードし、コードを共通化しました。</li>
-    </ul>
-
-    <h2>連携スクリプト</h2>
-    <p>他のユーザースクリプトとカスタムイベントを通じて連携します。</p>
-
-    <h3>送信（使う側）</h3>
-    <p>以下のスクリプトに対してイベントをディスパッチし、処理を依頼します：</p>
-    <ul>
-        <li><strong>Artifact Exporter</strong>: <code>gemini-history-loader:complete</code> イベントを送信して履歴の全読み込み完了を通知します。</li>
-    </ul>
-
-    <h3>受信（使われる側）</h3>
-    <p>以下のスクリプトからイベントを受信し、自身の処理を実行します：</p>
-    <ul>
-        <li><strong>Artifact Exporter</strong>: <code>gemini-history-loader:request</code> イベントを受信して履歴の全読み込み処理を開始します。</li>
-    </ul>
-
+        <footer>
+            <p>
+                Hosted on GitHub Pages |
+                <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
+                Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
+            </p>
+        </footer>
+    </div>
     <script src="../../domain-landing.js"></script>
 </body>
 

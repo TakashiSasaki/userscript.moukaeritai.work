@@ -4,97 +4,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Artifact Exporter Worker</title>
+    <title>Gemini Artifact Exporter Worker - Moukaeritai</title>
+    <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/index.html"
+        rel="canonical" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../index.css">
-    <link rel="stylesheet" href="index.css">
-    <script src="index.js" defer></script>
 </head>
 
 <body>
-    <p>このユーザースクリプトは、Gemini の「アーティファクト（Article）」を Google ドキュメントにエクスポートするメインUI <a href="../gemini-artifact-exporter/index.html">gemini-artifact-exporter</a> のワーカー（バックグラウンド処理用）スクリプトです。<br><strong>単体では機能しない、内部依存用のスクリプトです。</strong></p>
-
-    <div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #f39c12; font-size: 14px;">
-        <strong>最新バージョン:</strong> <span id="ver-info">Loading...</span><br>
+    <div class="top-nav">
+        <a href="../index.html" class="home-button">
+            <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
+                <path d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" fill="currentColor"/>
+            </svg>
+            Gemini Project List
+        </a>
     </div>
 
-    <h2>概要</h2>
-    <p>
-        <code>gemini-artifact-exporter</code> と連携し、カスタムイベントを受信して実際のエクスポート操作（DOMのクリック、メニューの展開、待機処理など）をバックグラウンドで実行します。
-        実行中は画面上に控えめなインジケーターが表示され、進行状況（どのタイトルのキャンバスをエクスポートしているか）が視覚的に分かります。
-    </p>
+    <div class="container">
+        <header>
+            <h1>Gemini Artifact Exporter Worker</h1>
+            <p class="header-desc">このユーザースクリプトは、Gemini の「アーティファクト（Article）」を Google ドキュメントにエクスポートするメインUI <a href="../gemini-artifact-exporter/index.html">gemini-artifact-exporter</a> のワーカー（バックグラウンド処理用）スクリプトです。<br><strong>単体では機能しない、内部依存用のスクリプトです。</strong></p>
+        </header>
 
-    <h2>インストール</h2>
-    <p>
-        <a href="gemini-artifact-exporter-worker.user.js" class="install-button" id="install-button">
-            <span style="display: flex; align-items: center; gap: 8px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <a href="gemini-artifact-exporter-worker.user.js" class="install-button" data-script-name="Gemini Artifact Exporter Worker">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="7 10 12 15 17 10"></polyline>
                     <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
-                <span class="button-text">Install</span>
-            </span>
-            <div class="version-info">
-                <span class="version-badge latest-version">Loading...</span>
-                <span class="version-badge installed-version" style="display: none;"></span>
+                Install
+            </a>
+            <div class="version-info" style="margin-top: 1.5rem; justify-content: center; flex-direction: row; gap: 20px;">
+                <div class="version-row">
+                    <span class="version-label">Latest:</span>
+                    <span class="version-badge latest-version">Loading...</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Installed:</span>
+                    <span class="version-badge installed-version" style="display: none;">-</span>
+                </div>
             </div>
-        </a>
-    </p>
+        </div>
 
-    <h2>主な機能</h2>
-    <ul>
-        <li><code>gemini-artifact-exporter-worker:request</code> イベントの受信と処理</li>
-        <li>エクスポート対象のアーティファクトを直接クリック（存在しない場合はタイトルで再検索）</li>
-        <li>実行状態を示す常時表示のフローティング UI インジケーター（ドラッグ可能・位置記憶・バージョン番号付き）</li>
-        <li><code>gemini-artifact-exporter-worker:result</code> イベントによる結果の返信</li>
-    </ul>
+        <section>
+            <h2>概要</h2>
+            <p>
+                <code>gemini-artifact-exporter</code> と連携し、カスタムイベントを受信して実際のエクスポート操作（DOMのクリック、メニューの展開、待機処理など）をバックグラウンドで実行します。
+                実行中は画面上に控えめなインジケーターが表示され、進行状況（どのタイトルのキャンバスをエクスポートしているか）が視覚的に分かります。
+            </p>
 
+            <h2>主な機能</h2>
+            <ul>
+                <li><code>gemini-artifact-exporter-worker:request</code> イベントの受信と処理</li>
+                <li>エクスポート対象のアーティファクトを直接クリック（存在しない場合はタイトルで再検索）</li>
+                <li>実行状態を示す常時表示のフローティング UI インジケーター（ドラッグ可能・位置記憶・バージョン番号付き）</li>
+                <li><code>gemini-artifact-exporter-worker:result</code> イベントによる結果の返信</li>
+            </ul>
 
-    <h2>連携スクリプト</h2>
-    <p>他のユーザースクリプトとカスタムイベントを通じて連携します。</p>
+            <h2>連携スクリプト</h2>
+            <p>他のユーザースクリプトとカスタムイベントを通じて連携します。</p>
 
-    <h3>送信（使う側）</h3>
-    <p>以下のスクリプトに対してイベントをディスパッチし、処理を依頼します：</p>
-    <ul>
-        <li><strong>Artifact Exporter</strong>: <code>gemini-artifact-exporter-worker:result</code> イベントを送信してエクスポート処理の成功や失敗（タイムアウト等）を通知します。</li>
-        <li><strong>Turn Counter</strong>: <code>gemini-turn-counter-copy-images</code> イベントを送信して画像コピー処理を依頼します。</li>
-        <li><strong>Auto Paste in New Tab</strong>: (別ドメイン) <code>EmulateDocsPaste</code> イベントを送信してDocsへの貼り付けを依頼します。</li>
-        <li><strong>Gemini Exported Docs Auto-Closer</strong>: (別ドメイン) <code>gemini-docs-closer-force-close</code> イベントを送信してDocsタブの強制終了を依頼します。</li>
-    </ul>
+            <h3>送信（使う側）</h3>
+            <p>以下のスクリプトに対してイベントをディスパッチし、処理を依頼します：</p>
+            <ul>
+                <li><strong>Artifact Exporter</strong>: <code>gemini-artifact-exporter-worker:result</code> イベントを送信してエクスポート処理の成功や失敗（タイムアウト等）を通知します。</li>
+                <li><strong>Turn Counter</strong>: <code>gemini-turn-counter-copy-images</code> イベントを送信して画像コピー処理を依頼します。</li>
+                <li><strong>Auto Paste in New Tab</strong>: (別ドメイン) <code>EmulateDocsPaste</code> イベントを送信してDocsへの貼り付けを依頼します。</li>
+                <li><strong>Gemini Exported Docs Auto-Closer</strong>: (別ドメイン) <code>gemini-docs-closer-force-close</code> イベントを送信してDocsタブの強制終了を依頼します。</li>
+            </ul>
 
-    <h3>受信（使われる側）</h3>
-    <p>以下のスクリプトからイベントを受信し、自身の処理を実行します：</p>
-    <ul>
-        <li><strong>Artifact Exporter</strong>: <code>gemini-artifact-exporter-worker:request</code> イベントを受信してエクスポートのバックグラウンド処理を開始します。</li>
-        <li><strong>Artifact Exporter</strong>: <code>gemini-artifact-exporter-worker:cancel</code> イベントを受信して実行中のエクスポート処理をキャンセルします。</li>
-        <li><strong>Turn Counter</strong>: <code>gemini-turn-counter-copy-images-result</code> イベントを受信して画像コピー結果を受け取ります。</li>
-    </ul>
+            <h3>受信（使われる側）</h3>
+            <p>以下のスクリプトからイベントを受信し、自身の処理を実行します：</p>
+            <ul>
+                <li><strong>Artifact Exporter</strong>: <code>gemini-artifact-exporter-worker:request</code> イベントを受信してエクスポートのバックグラウンド処理を開始します。</li>
+                <li><strong>Artifact Exporter</strong>: <code>gemini-artifact-exporter-worker:cancel</code> イベントを受信して実行中のエクスポート処理をキャンセルします。</li>
+                <li><strong>Turn Counter</strong>: <code>gemini-turn-counter-copy-images-result</code> イベントを受信して画像コピー結果を受け取ります。</li>
+            </ul>
 
-    <h2>更新履歴</h2>
-    <ul>
-        <li><strong>v0.2.31</strong>: 外部CSS/JSファイルへの分離とコードの整理</li>
-        <li><strong>v0.2.30</strong>: リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名</li>
-        <li><strong>v0.2.29</strong>: 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)</li>
-        <li><strong>v0.2.28</strong>: UIの透過効果および影効果を削除</li>
+            <h2>技術的な詳細</h2>
+            <p>
+                メインUIを持つ <code>gemini-artifact-exporter</code> との責務の分離を図るため、DOM操作や待機ロジックをこのスクリプトに切り出しています。
+                通信は <code>document.dispatchEvent(new CustomEvent(...))</code> を介して行われ、メイン側は Promise で結果を待機する設計になっています。
+            </p>
 
-        <li><strong>v0.2.27</strong>: 共有ライブラリ(gemini-common.js)の更新に合わせてセキュリティ強化とバージョンアップを行いました。</li>
-        <li><strong>v0.2.26</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
-        <li><strong>v0.2.24</strong>: バージョン表記のハードコードを廃止し、GM_infoから取得するように変更</li>
-        <li><strong>v0.2.23</strong>: 共通ライブラリのバグ修正により、UIが移動できない問題を修正</li>
-        <li><strong>v0.2.20</strong>: 汎用ユーティリティ関数（sleepやwaitForElementなど）をgemini-common.jsにオフロードし、コードを共通化しました。</li>
-        <li><strong>v0.2.9</strong> (2026-03-30): CSSやHTMLテンプレートの読み込みに失敗した場合の不完全なフォールバックUIの表示をやめ、コンソールにエラーを出力して安全に早期終了するよう挙動を改善しました。</li>
-        <li><strong>v0.2.8</strong> (2026-03-30): UIの構築（スタイルとHTML構造）を <code>style.css</code> と <code>template.html</code> にオフロードし、JavaScript のコード量を削減するリファクタリングを実施しました。</li>
-        <li><strong>v0.2.7</strong> (2026-03-29): Gemini の TrustedHTML ポリシーに対応するため、<code>innerHTML</code> の使用を廃止し、DOM API を使った安全な実装に変更しました。</li>
-        <li><strong>v0.2.6</strong> (2026-03-29): 最小化表示（バージョンハンドル）にスクリプトを識別するための絵文字 (⚙️) を追加しました。</li>
-        <li><strong>v0.2.5</strong> (2026-03-22): 最小化表示（バージョンハンドル）の背景をライトピンクに変更し、文字色を読みやすく調整しました。</li>
-    </ul>
+            <h2>更新履歴</h2>
+            <ul>
+                <li><strong>v0.2.31</strong>: 外部CSS/JSファイルへの分離とコードの整理、リソースファイルの改名、デザインの大幅刷新。</li>
+                <li><strong>v0.2.30</strong>: リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名</li>
+                <li><strong>v0.2.29</strong>: 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)</li>
+                <li><strong>v0.2.28</strong>: UIの透過効果および影効果を削除</li>
+                <li><strong>v0.2.27</strong>: 共有ライブラリ(gemini-common.js)の更新に合わせてセキュリティ強化とバージョンアップを行いました。</li>
+            </ul>
+        </section>
 
-    <h2>技術的な詳細</h2>
-    <p>
-        メインUIを持つ <code>gemini-artifact-exporter</code> との責務の分離を図るため、DOM操作や待機ロジックをこのスクリプトに切り出しています。
-        通信は <code>document.dispatchEvent(new CustomEvent(...))</code> を介して行われ、メイン側は Promise で結果を待機する設計になっています。
-    </p>
-
+        <footer>
+            <p>
+                Hosted on GitHub Pages |
+                <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
+                Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
+            </p>
+        </footer>
+    </div>
     <script src="../../domain-landing.js"></script>
 </body>
 

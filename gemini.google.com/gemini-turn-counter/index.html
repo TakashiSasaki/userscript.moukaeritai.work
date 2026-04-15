@@ -6,157 +6,88 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini Turn Counter - Moukaeritai</title>
     <link href="https://userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/index.html" rel="canonical" />
-    <!-- Github Markdown CSS for styling -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../index.css">
-    <link rel="stylesheet" href="index.css">
-    <script src="index.js" defer></script>
 </head>
 
-<body class="markdown-body">
-    <a href="https://userscript.moukaeritai.work/" class="home-button">
-        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
-            <path
-                d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" />
-        </svg>
-        userscript.moukaeritai.work
-    </a>
-    <div id="content">
-        <h1>Gemini Turn Counter</h1>
-        <p>Google Gemini 上での会話において、メッセージ数（ターン数）や文字数をリアルタイムにカウントし、画面上に表示するためのユーザースクリプトです。</p>
-
-        <div id="script-info" style="margin: 20px 0; padding: 10px; background-color: #f6f8fa; border-left: 4px solid #2ea44f; font-size: 14px;">
-            <strong>最新バージョン:</strong> <span id="ver-info">読み込み中...</span><br>
-            <strong>最終更新日:</strong> <span id="date-info">読み込み中...</span>
-        </div>
-
-        <a href="gemini-turn-counter.user.js" class="install-button" id="install-button">
-            <span style="display: flex; align-items: center; gap: 8px;">
-                <span class="button-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                </span>
-                <span class="button-text">Install</span>
-            </span>
-            <div class="version-info">
-                <span class="version-badge latest-version">Loading...</span>
-                <span class="version-badge installed-version" style="display: none;"></span>
-            </div>
+<body>
+    <div class="top-nav">
+        <a href="../index.html" class="home-button">
+            <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
+                <path d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z" fill="currentColor"/>
+            </svg>
+            Gemini Project List
         </a>
-
-
-        <h2>1. 概要と目的</h2>
-        <p>すでに作成済みの <code>chatgpt-turn-counter</code> と同様に、Google Gemini 上での会話において、メッセージ数や文字数をリアルタイムにカウントし、画面上に表示することを目的としています。</p>
-
-        <h2>2. 機能一覧</h2>
-
-        <h3>2.1 カウンター機能 (Turn Counter)</h3>
-        <p>以下の要素をカウントし、表示します。</p>
-        <ul>
-            <li><strong>ディープスキャン機能 (Deep Scan)</strong>: 過去の長い会話履歴を全件遡って数え上げる「Deep Scan History」ボタンを搭載</li>
-            <li><strong>ユーザー送信数 (User)</strong>: ユーザーがメッセージを送信した回数
-                <ul>
-                    <li><strong>文字数表示</strong>: テキストノードの合計文字数を併記</li>
-                </ul>
-            </li>
-            <li><strong>モデル応答数 (Model)</strong>: Geminiがレスポンスを返した回数
-                <ul>
-                    <li><strong>文字数表示</strong>: 応答メッセージの合計文字数を併記</li>
-                </ul>
-            </li>
-            <li><strong>画像送信/生成数 (Images)</strong>: ユーザー送信画像とモデル生成画像の数を別々にカウント (U:M表示)
-                <ul>
-                    <li><strong>サムネイル表示</strong>: 画像を縮小表示し、一覧で確認可能 (モデル生成画像には青枠を表示)</li>
-                    <li><strong>画像一括コピー (📋U / 📋M / 📋All)</strong>: "Images" 行の各ボタンをクリックすると、ユーザー画像のみ、モデル画像のみ、あるいは全画像をHTMLタグ（Data URI埋め込み）としてクリップボードに一括コピーします。画像コピー時に適用する Max Height 制限を指定可能。</li>
-                    <li><strong>外部スクリプト連携</strong>: カスタムイベント (<code>gemini-turn-counter-copy-images</code>) を通じて、外部のユーザースクリプトからも画像コピー機能を利用可能です。</li>
-                </ul>
-            </li>
-            <li><strong>思考プロセス (Thinking Process)</strong>: 応答に含まれる「思考プロセス」ブロックの数をカウント</li>
-            <li><strong>アーティファクト / リンクカード (Maps等)</strong>: 応答に含まれるキャンバス（Artifacts）や、Googleマップ等のリンクカードの数を独立してカウント</li>
-            <li><strong>コードブロック / テーブル数</strong>: 応答に含まれるコードブロックやテーブルの数を独立してカウント</li>
-        </ul>
-
-        <h3>2.2 ユーザーインターフェイス (UI)</h3>
-        <p><code>chatgpt-turn-counter</code> のデザインをベースに、Gemini向けに最適化されています。</p>
-        <ul>
-            <li><strong>初期状態</strong>: 画面右上に浮動パネルとして表示</li>
-            <li><strong>ドラッグ＆ドロップ</strong>: パネルを自由に移動でき、その位置は保存されます (<code>localStorage</code> に記憶)</li>
-            <li><strong>展開 / 最小化</strong>: クリックで詳細表示とアイコン表示（最小化）を切り替え替えられます。最小化状態でも主要なカウント概要を確認可能です。</li>
-        </ul>
-
-        <h2>3. 技術仕様</h2>
-        <ul>
-            <li><strong>対象URLパターン</strong>: <code>https://gemini.google.com/*</code></li>
-            <li><strong>名前空間</strong>: <code>userscript.moukaeritai.work</code></li>
-            <li><strong>自動アップデート (Automatic Updates)</strong>: GitHub 上の raw ファイルを参照して自動更新されます。</li>
-        </ul>
-
-        <h2>連携スクリプト（送信先）</h2>
-        <p>このスクリプトは、以下のスクリプトにイベントを送信し、機能してもらうことを期待しています。</p>
-        <ul>
-            <li><a href="../gemini-artifact-exporter-worker/index.html">Artifact Exporter Worker</a> (<code>gemini-turn-counter-copy-images-result</code>)</li>
-            <li><a href="../gemini-export-to-docs/index.html">Export to Docs</a> (<code>gemini-turn-counter-copy-images-result</code>)</li>
-        </ul>
-
-        <h2>連携スクリプト（受信元）</h2>
-        <p>このスクリプトは、以下のスクリプトからイベントを受信して動作します。</p>
-        <ul>
-            <li><a href="../gemini-artifact-exporter-worker/index.html">Artifact Exporter Worker</a> (<code>gemini-turn-counter-copy-images</code>)</li>
-            <li><a href="../gemini-export-to-docs/index.html">Export to Docs</a> (<code>gemini-turn-counter-copy-images</code>)</li>
-        </ul>
-
-        <h2>更新履歴</h2>
-        <ul>
-            <li><strong>v0.4.56</strong>: 外部CSS/JSファイルへの分離とコードの整理、リソースファイルの改名</li>
-            <li><strong>v0.4.54</strong>: 整理のため、コメントアウトされていた不要なコードを削除しました。</li>
-            <li><strong>v0.4.54</strong>: UIの透過効果および影効果を削除</li>
-
-            <li><strong>v0.4.53</strong>: Trusted Types を必須化し、DOM-Based XSS 脆弱性を修正しました。</li>
-        </ul>
-        <ul>
-            <li><strong>v0.4.52</strong>: 最小化表示のスタイルとクラス名を共通化（gemini-common.css/jsを活用）</li>
-            <li><strong>v0.4.51</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
-            <li><strong>v0.4.50</strong>: フローティングUIのドラッグハンドルをgus-versionに修正し、バージョン表示のフォーマットを標準化</li>
-            <li><strong>v0.4.49</strong>: バージョン表記のハードコードを廃止し、GM_infoから取得するように変更</li>
-            <li><strong>v0.4.48</strong>: バージョン表記のバッジをマウスオーバーで拡大表示するように変更。</li>
-            <li><strong>v0.4.48</strong>: パネル展開時にバージョン表記が重複して表示される問題を修正しました。</li>
-
-            <li><strong>v0.4.47</strong>: 共通ライブラリのバグ修正により、UIが移動できない問題を修正</li>
-            <li><strong>v0.4.44</strong>: 汎用ユーティリティ関数（sleepやwaitForElementなど）をgemini-common.jsにオフロードし、コードを共通化しました。</li>
-            <li><strong>v0.4.35</strong>: gemini.google.com 全体で動作するように変更</li>
-            <li><strong>v0.4.34</strong>: サムネイルリセット処理時の `innerHTML` を `textContent` に置き換え、Gemini のセキュリティポリシー (Trusted Types) 違反によるエラーを修正しました。</li>
-            <li><strong>v0.4.33</strong>: フローティングUIの背景色をライトピンクに変更し、文字色を見やすく調整しました。</li>
-            <li><strong>v0.4.29</strong>: 直近のGemini UI変更により <code>user-message</code> 要素がDOMから削除されたため、独自の属性（<code>data-test-id="uploaded-img"</code>）を使用して確実かつ一意にアップロード画像を検出できるようセレクタを再調整。</li>
-            <li><strong>v0.4.28</strong>: ユーザー側のアップロード画像数を集計する際、GeminiのUI上の仕様（非表示のプロフィール画像など）が含まれてしまう不具合を修正。さらに画像収集ループが重複して二重カウントを行っていた内部ロジックを解消し、正確な枚数が反映されるように改修。</li>
-            <li><strong>v0.4.27</strong>: 長い会話履歴を遡って全件を数え上げる「Deep Scan History」機能を追加および内部の変数重複の修正。</li>
-            <li><strong>v0.4.26</strong>: 外部スクリプトから画像コピー機能を利用できるカスタムイベント (<code>gemini-turn-counter-copy-images</code>) を追加し、内部処理をリファクタリング。</li>
-            <li><strong>v0.4.25</strong>: ローカル環境用のインストール検知ガードコード (<code>127.0.0.1</code>, <code>.app.github.dev</code>) を削除。</li>
-            <li><strong>v0.4.24</strong>: 画像コピーボタンを3つ（📋U:ユーザーのみ, 📋M:モデルのみ, 📋All:全て）に分割し、対象を絞ってコピーできるように改善。</li>
-            <li><strong>v0.4.23</strong>: モデル生成画像、Googleマップ連携カード、思考プロセス (Thinking Process) ブロックのカウント機能を追加。画像コピー時に生成元種別 (user/model) を属性として付与。</li>
-            <li><strong>v0.4.22</strong>: MutationObserverにデバウンス処理(300ms)を追加しパフォーマンスを改善。</li>
-            <li><em>v0.1.30 ~ v0.4.21 の更新: 画像コピーの高さ制限設定追加、テーブル・コードブロックのカウント強化、各種UI微調整など</em></li>
-            <li><strong>v0.1.29</strong>: インストール用の動的ドキュメントページへのアップデート。</li>
-            <li><strong>v0.1.25</strong>: アーティファクトの二重カウント問題を修正。</li>
-            <li><strong>v0.1.22</strong>: UIのドラッグ＆ドロップ移動および位置の保存に対応。</li>
-            <li><strong>v0.1.21</strong>: UIの最小化ボタン追加と状態保存に対応。</li>
-            <li><strong>v0.1.20</strong>: アーティファクト（Canvas）およびリンクカードのカウントに対応。</li>
-            <li><strong>v0.1.19</strong>: SPAナビゲーション検知を <code>window.navigation</code> API に移行しパフォーマンス向上。</li>
-        </ul>
     </div>
 
-    <script src="../../domain-landing.js"></script>
+    <div class="container">
+        <header>
+            <h1>Gemini Turn Counter</h1>
+            <p class="header-desc">Google Gemini 上での会話において、メッセージ数（ターン数）や文字数をリアルタイムにカウントし、画面上に表示するためのユーザースクリプトです。</p>
+        </header>
 
-    <hr style="margin-top: 40px; border-top: 1px solid #eaecef;">
-    <footer style="text-align: center; color: #586069; font-size: 14px; margin-top: 20px;">
-        <p>
-            Hosted on GitHub Pages |
-            <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
-            Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
-        </p>
-    </footer>
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <a href="gemini-turn-counter.user.js" class="install-button" data-script-name="Gemini Turn Counter">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" x2="15" y2="3"></line>
+                </svg>
+                Install
+            </a>
+            <div class="version-info" style="margin-top: 1.5rem; justify-content: center; flex-direction: row; gap: 20px;">
+                <div class="version-row">
+                    <span class="version-label">Latest:</span>
+                    <span class="version-badge latest-version">Loading...</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Installed:</span>
+                    <span class="version-badge installed-version" style="display: none;">-</span>
+                </div>
+            </div>
+        </div>
+
+        <section>
+            <h2>機能一覧</h2>
+            <h3>カウンター機能</h3>
+            <ul>
+                <li><strong>Deep Scan</strong>: 履歴を全件遡ってカウントする機能を搭載。</li>
+                <li><strong>ユーザー/モデル別カウント</strong>: メッセージ数と文字数をリアルタイムに集計。</li>
+                <li><strong>画像集計 (Images)</strong>: ユーザー送信とモデル生成画像を別々に集計。一括コピーにも対応。</li>
+                <li><strong>その他</strong>: 思考プロセス、アーティファクト、コードブロック、テーブル数もカウント。</li>
+            </ul>
+
+            <h3>UI仕様</h3>
+            <ul>
+                <li><strong>ドラッグ移動</strong>: 浮動パネルの位置を記憶.</li>
+                <li><strong>最小化</strong>: アイコン表示に切り替え可能.</li>
+            </ul>
+
+            <h2>連携スクリプト</h2>
+            <h3>送信（使う側） / 受信（使われる側）</h3>
+            <ul>
+                <li><a href="../gemini-export-to-docs/index.html">Export to Docs</a></li>
+                <li><a href="../gemini-artifact-exporter-worker/index.html">Artifact Exporter Worker</a></li>
+            </ul>
+
+            <h2>更新履歴</h2>
+            <ul>
+                <li><strong>v0.4.57</strong>: 外部CSS/JSファイルへの分離とコードの整理、リソースファイルの改名、デザインの大幅刷新。</li>
+                <li><strong>v0.4.56</strong>: 外部CSS/JSファイルへの分離とコードの整理、リソースファイルの改名</li>
+                <li><strong>v0.4.54</strong>: UIの透過効果および影効果を削除</li>
+                <li><strong>v0.4.53</strong>: Trusted Types を必須化し、DOM-Based XSS 脆弱性を修正。</li>
+            </ul>
+        </section>
+
+        <footer>
+            <p>
+                Hosted on GitHub Pages |
+                <a href="https://userscript.moukaeritai.work/">userscript.moukaeritai.work</a> |
+                Developed by <a href="https://x.com/TakashiSasaki">Takashi Sasaki</a>
+            </p>
+        </footer>
+    </div>
+    <script src="../../domain-landing.js"></script>
 </body>
 
 </html>
