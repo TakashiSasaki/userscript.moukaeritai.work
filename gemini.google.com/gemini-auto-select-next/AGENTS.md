@@ -24,12 +24,16 @@ This project follows the agent development guidelines outlined in the root [AGEN
 - Uses a strict hostname check (`installCheckHosts`) restricted to `userscript.moukaeritai.work` and `127.0.0.1`.
 - `installCheckSuffixes` (e.g., for GitHub Codespaces) has been removed for simplicity.
 
-# UI Design Strategy
+# UI Architecture
+The script uses an external HTML template and CSS for the auto-select-next panel to maintain a clean separation of concerns and adhere to the project's resource refactoring pattern.
 
-- **Pill-shaped Button**: The UI is a compact, horizontal pill-shaped element to minimize screen obstruction.
-- **Draggable Pill**: The entire pill body acts as a drag handle (using `mousedown` events on the container). Dragging is disabled when clicking interactive elements (buttons/checkboxes).
-- **Control Layout**: Contains a native checkbox for "Auto" toggle, a "⏭️ Next" button for manual skipping, and the version badge.
-- **Visuals**: Uses `backdrop-filter: blur(8px)` and semi-transparent backgrounds for a premium look that conforms to site-wide standards.
+- **Styles**: Defined in `gemini-auto-select-next.css`. Loaded via `GM_addStyle`.
+- **Template**: Defined in `gemini-auto-select-next.html`. Injected using `window.geminiSetInnerHTML`.
+- **Placeholders**: Version and emoji are populated into the `.gus-version` element after injection.
+- **Draggable Panel**: Utilizes `window.geminiSetupDraggablePanel` from `gemini-common.js` for mobility and state persistence.
+
+# Security
+All HTML injection is performed through a Trusted Types policy (`geminiAutoSwitch`) to ensure compatibility with Gemini's security requirements.
 
 
 
