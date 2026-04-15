@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Scroller
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.32
+// @version      0.1.33
+// @lastModified 2026-04-11
 // @description  YouTubeプレイリストを自動的にスクロールし、バックグラウンドでの読み込みを支援します。
 // @author       Takashi Sasaki
 // @match        https://www.youtube.com/*
@@ -25,15 +26,6 @@
     if (commonCss) {
         GM_addStyle(commonCss);
     }
-    GM_addStyle(`
-        .yus-panel,
-        .yus-panel.yus-active {
-            --yus-panel-opacity: 1 !important;
-            background-color: rgb(var(--yus-panel-bg-rgb)) !important;
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-        }
-    `);
     const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
