@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.33
+// @version      0.4.34
 // @lastModified 2026-04-15
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
@@ -20,7 +20,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @noframes
-// @history       0.4.33 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
+// @history       0.4.34 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)
 // ==/UserScript==
 
 (function () {
@@ -41,7 +41,7 @@
             GM_addStyle(css);
         }
     }
-const report = () => {
+    const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
                 name: GM_info.script.name,
