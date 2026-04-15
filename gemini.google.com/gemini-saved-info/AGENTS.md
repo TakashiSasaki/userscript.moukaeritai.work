@@ -4,6 +4,16 @@ This project follows the agent development guidelines outlined in the root [AGEN
 
 Please refer to the root `AGENTS.md` for all operational procedures, including Git practices, documentation structure, and HTML sample preprocessing.
 
+# UI Architecture
+The script uses an external HTML template and CSS for various UI elements (version badge, buttons, toasts) to maintain a clean separation of concerns and adhere to the project's resource refactoring pattern.
+- **Styles**: Defined in `gemini-saved-info.css`. Loaded via `GM_addStyle`.
+- **Template**: Defined in `gemini-saved-info.html`. Multiple fragments are extracted using `DOMParser` from the template file.
+- **Injection**: Securely injected using `window.geminiSetInnerHTML` with dynamic data population.
+- **Draggable Panel**: The version badge utilized `window.geminiSetupDraggablePanel` from `gemini-common.js` for mobility.
+
+# Security
+All dynamic HTML content is processed through a Trusted Types policy (`geminiSavedInfo`) to ensure compatibility with Gemini's security requirements.
+
 
 ## `index.html` のメンテナンス要件
 
