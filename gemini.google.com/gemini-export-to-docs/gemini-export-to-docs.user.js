@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.59
+// @version      0.4.60
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-15
 // @author       Takashi Sasaki
@@ -10,8 +10,8 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
-// @resource     customCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/style.css
-// @resource     templateHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/template.html
+// @resource     geminiExportToDocsCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.css
+// @resource     geminiExportToDocsHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -19,6 +19,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.4.60 リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名
 // @history       0.4.58 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // ==/UserScript==
 
@@ -91,7 +92,7 @@
                     document.head.appendChild(commonStyle);
                 }
 
-                const css = GM_getResourceText('customCSS');
+                const css = GM_getResourceText('geminiExportToDocsCSS');
                 GM_addStyle(css);
                 // GM_addStyle returns the style element or undefined depending on TM version
                 // Try to find it if we need to remove it later, or just let it be.
@@ -102,7 +103,7 @@
             function getTemplate(id) {
                 if (!templatesContainer) {
                     templatesContainer = document.createElement('div');
-                    const templateHtml = GM_getResourceText('templateHTML').replace(/{{scriptVersion}}/g, `${GM_info.script.version} ${gusEmoji}`);
+                    const templateHtml = GM_getResourceText('geminiExportToDocsHTML').replace(/{{scriptVersion}}/g, `${GM_info.script.version} ${gusEmoji}`);
                     window.geminiSetInnerHTML(templatesContainer, templateHtml, policy);
                 }
                 const tpl = templatesContainer.querySelector(`#${id}`);
