@@ -16,9 +16,9 @@
     white-space: nowrap;
 }
 #gemini-turn-counter-ui.expanded {
-    background-color: rgba(255, 182, 193, 0.9); /* LightPink expanded */
+    background-color: rgb(255, 182, 193); /* LightPink expanded */
     color: #333;
-    border: 1px solid rgba(255, 182, 193, 0.9);
+    border: 1px solid rgb(255, 182, 193);
     width: auto;
     height: auto;
     min-width: 180px;

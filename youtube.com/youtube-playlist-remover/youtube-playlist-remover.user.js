@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YouTube Playlist Remover
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.74
-// @lastModified 2026-04-11
+// @version      0.1.75
+// @lastModified 2026-04-14
 // @description  YouTubeプレイリストで、スクロールして通り過ぎた（Above）動画、またはフィルタリングされた動画を一括削除する機能を提供します。
 // @antifeature  webRequestBlocking
 // @author       Takashi Sasaki
@@ -70,16 +70,25 @@
 
     function calculateStatistics(times) {
         if (!times || times.length === 0) return null;
-        const min = times.reduce((a, b) => Math.min(a, b), Infinity);
-        const max = times.reduce((a, b) => Math.max(a, b), -Infinity);
-        const sum = times.reduce((a, b) => a + b, 0);
-        const avg = sum / times.length;
 
-        const sorted = [...times].sort((a, b) => a - b);
-        const mid = Math.floor(sorted.length / 2);
-        const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+        // In-place sort to avoid unnecessary copy. Mutation is safe here as 'times' (deletionTimes)
+        // is only used for statistics.
+        times.sort((a, b) => a - b);
 
-        return { min, max, avg, median, count: times.length };
+        const count = times.length;
+        const min = times[0];
+        const max = times[count - 1];
+
+        let sum = 0;
+        for (let i = 0; i < count; i++) {
+            sum += times[i];
+        }
+        const avg = sum / count;
+
+        const mid = Math.floor(count / 2);
+        const median = count % 2 !== 0 ? times[mid] : (times[mid - 1] + times[mid]) / 2;
+
+        return { min, max, avg, median, count };
     }
 
     function updateDeletionStats(stats) {

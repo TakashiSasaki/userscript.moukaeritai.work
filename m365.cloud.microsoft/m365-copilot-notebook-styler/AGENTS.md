@@ -12,21 +12,19 @@ Fluent UIの動的なクラス名（例: `___1skyeoy`）への依存を避ける
 1. **特定プロセス (`findAndTagPanes`)**:
    - `https://m365.cloud.microsoft/notebooks/*` では、ノートブックUIの全体が `iframe[title="Notebooks"]` 内 (`srcdoc`) にカプセル化されています。
    - スクリプトは `getTargetDocument()` にて対象ドキュメントを特定（`iframe.contentDocument` または親 `document`）し、その中で要素を探索します。
-   - まず、明示的な属性を持つ中央ワークスペース `div[scrollable="true"]` を探します。
-   - その親要素（通常はFlexコンテナ）を取得し、子要素を走査します。
-   - ペイン間の仕切りである `div[role="separator"]` と中央ワークスペースの位置関係から、左ナビゲーション（中央の直前）、中央、右チャット（セパレーターの直後）を特定します。
-2. **スタイルの適用**:
-   - 特定した要素に対し、安定したカスタムクラス (`.m365-pane-left`, `.m365-pane-center`, `.m365-pane-right`) を付与します。
-   - `MutationObserver` (`mainObserver` および `iframeObserver`) を使用し、SPAのページ遷移や `iframe` の遅延読み込み時にも確実にクラスを付与し直すようにしています（デバウンス処理あり）。ユーザーが異なるページを行き来した際のコンテキストの切り替えも監視します。
+   - 1. **セパレーターの特定 (Separator Anchor)**
+   - `div[role="separator"]` をプライマリ・アンカーとして検索します。
+   - その親コンテナ内の兄弟要素の順序に基づいて各ペインを特定します。
+   - 2. **ペインの特定**
+   - セパレーターの直前の兄弟要素を「中央ペイン (Center Pane)」と見なします（エディタまたはチャット履歴）。
+   - セパレーターの直後の兄弟要素を「右ペイン (Right Pane)」と見なします（通常は Copilot チャットパネル）。
+   - 中央ペインのさらに前の兄弟要素を「左ペイン (Left Pane)」と見なします（ナビゲーションツリー）。
 
 ### セレクタリスト
-- **ルート状態**: `body.m365-styler-active` (CSSの適用ON/OFF制御用)
-- **中央ペイン侯補**: `div[scrollable="true"]`
-- **セパレーター**: `div[role="separator"]`
-- **付与するクラス**: 
-  - 左: `m365-pane-left`
-  - 中央: `m365-pane-center`
-  - 右: `m365-pane-right`
+- **アンカー**: `div[role="separator"]`
+- **左ペイン**: `.m365-pane-left` (動的に付与)
+- **中央ペイン**: `.m365-pane-center` (動的に付与)
+- **右ペイン**: `.m365-pane-right` (動的に付与)
 
 ### 状態管理
 - `GM_getValue` / `GM_setValue` を使用し、キー `m365-copilot-styler-enabled` でトグルの状態を保存しています。

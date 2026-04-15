@@ -3,7 +3,7 @@
 // @namespace    userscript.moukaeritai.work
 // @version      0.2.14
 // @description  Injects a prompt into Gemini via an external custom event.
-// @lastModified   2026-04-15
+// @lastModified 2026-04-15
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
 // @match        https://gemini.google.com/*

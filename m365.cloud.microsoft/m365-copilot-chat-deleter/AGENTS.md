@@ -24,11 +24,11 @@ Fluent UIによって動的に生成されるクラス（`___<hash>`）への直
    - `button.fui-Button` のうち、テキストが `削除する` である要素を探してクリック。
 
 ### セレクタリスト
-- **アクティブアイテム**: `button.fui-NavItem[aria-current="page"]`, `button.fui-NavItem[aria-selected="true"]`
+- **アクティブアイテム**: `[aria-current="page"]`, `[aria-selected="true"]` (クラス名への依存を排除)
 - **コンテナ**: `.fui-SplitNavItem`
-- **メニューボタン**: `button[aria-label="その他"]`, `.fui-SplitNavItem__menuButton`
-- **メニュー内「削除」項目**: `[role="menuitem"], .fui-MenuItem` + テキスト走査（`削除`）
-- **「削除する」確定ボタン**: `button.fui-Button` + テキスト走査（`削除する`）
+- **メニューボタン**: `[aria-label*="その他"]`, `[aria-label*="More"]`, `.fui-SplitNavItem__menuButton`
+- **メニュー項目**: `[role="menuitem"]`, `.fui-MenuItem` + 正規表現（`削除\|Delete`）
+- **確定ボタン**: `button.fui-Button` + 正規表現（`削除する\|Delete`）
 
 ### トラブルシューティング
 スクリプトが動作しなくなった場合、Microsoft側のDOM更新で上記のテキスト内容や `aria` 属性の使い方が変わった可能性が高いため、ブラウザのDOMインスペクタで該当箇所を再調査してください。
