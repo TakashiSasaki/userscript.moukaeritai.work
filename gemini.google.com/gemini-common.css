@@ -2,17 +2,15 @@
 
 /* Design Tokens as CSS Custom Properties */
 :root {
-    --gus-panel-bg: rgba(255, 182, 193, 0.9); /* LightPink */
+    --gus-panel-bg: rgb(255, 182, 193); /* LightPink */
     --gus-panel-radius: 12px;
-    --gus-panel-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     --gus-panel-border: 1px solid rgba(0, 0, 0, 0.08);
-    --gus-panel-backdrop: blur(8px);
     --gus-panel-font: 'Outfit', 'Google Sans', 'Roboto', sans-serif;
     --gus-panel-color: #333;
     --gus-version-font: monospace;
     --gus-version-size: 10px;
     --gus-version-color: #000;
-    --gus-version-bg: rgba(255, 230, 235, 0.9); /* Slightly whitish pink */
+    --gus-version-bg: rgb(255, 230, 235); /* Slightly whitish pink */
     --gus-version-radius: 4px;
     --gus-version-padding: 2px 4px;
 }
@@ -21,10 +19,7 @@
 .gus-panel {
     background-color: var(--gus-panel-bg) !important;
     border-radius: var(--gus-panel-radius) !important;
-    box-shadow: var(--gus-panel-shadow) !important;
     border: var(--gus-panel-border) !important;
-    backdrop-filter: var(--gus-panel-backdrop) !important;
-    -webkit-backdrop-filter: var(--gus-panel-backdrop) !important;
     font-family: var(--gus-panel-font) !important;
     color: var(--gus-panel-color) !important;
     user-select: none !important;
@@ -56,7 +51,7 @@ span.gus-version:active {
 
 /* === Minimizable Panel Styles === */
 .gus-panel.gus-minimized {
-    opacity: 0.9 !important;
+    opacity: 1 !important;
     padding: 4px 12px !important;
 }
 
