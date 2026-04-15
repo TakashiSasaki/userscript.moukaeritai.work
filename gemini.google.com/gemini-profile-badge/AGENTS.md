@@ -18,3 +18,18 @@ Please refer to the root `AGENTS.md` for all operational procedures, including G
 
 3. **ドキュメントの網羅性**:
    - 新しいスクリプト（システムローダーなどの裏側で動くスクリプトを含む）を追加した場合は、必ず該当するドメインの `index.html` およびルートの `index.html` の一覧にも漏れなく追加してください。
+
+## Implementation Notes
+
+### UI Architecture
+The script uses an external HTML template and CSS for the profile badge to maintain a clean separation of concerns and adhere to the project's resource refactoring pattern.
+
+- **Styles**: Defined in `gemini-profile-badge.css`. Loaded via `GM_addStyle`.
+- **Template**: Defined in `gemini-profile-badge.html`. Injected using `window.geminiSetInnerHTML`.
+- **Injection Target**: The `.right-section` within the `<top-bar-actions>` component.
+
+### Security
+All HTML injection is performed through a Trusted Types policy (`gemini-profile-badge-policy`) to ensure compatibility with Gemini's security requirements.
+
+### State Persistence
+The badge text is stored in `GM_setValue` using the key `gemini_profile_badge_text`. Updates via the script menu command trigger an immediate re-render.

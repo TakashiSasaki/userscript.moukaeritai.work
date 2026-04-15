@@ -1,0 +1,17 @@
+/* Gemini Profile Badge Styles */
+.gemini-custom-profile-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #1f1f1f;
+    color: #e3e3e3;
+    padding: 4px 8px;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-right: 8px;
+    border: 1px solid #444;
+    white-space: nowrap;
+    vertical-align: middle;
+    user-select: none;
+}
