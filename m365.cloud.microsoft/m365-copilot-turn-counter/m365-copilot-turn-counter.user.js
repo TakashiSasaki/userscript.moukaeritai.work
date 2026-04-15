@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         M365 Copilot Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.0
-// @description  Count turns, artifacts, and images in M365 Copilot chat with virtualization support
+// @version      0.3.0
+// @description  Count turns, artifacts, and images in M365 Copilot with persistent UI and compact mode
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://m365.cloud.microsoft/*
@@ -30,12 +30,27 @@
         return;
     }
 
+    // --- Persistence ---
+    const STORAGE_KEY = 'm365_tc_settings';
+    const loadSettings = () => {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+        } catch {
+            return {};
+        }
+    };
+    const saveSettings = (updates) => {
+        const current = loadSettings();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...current, ...updates }));
+    };
+
+    const settings = loadSettings();
+
     // --- State Management ---
     const seenTurns = new Set();
     const seenArtifacts = new Set();
     const seenImages = new Set();
 
-    // Hashing helper for stable identification
     const getHash = (text) => {
         if (!text) return 'empty';
         let hash = 0;
@@ -51,9 +66,6 @@
     const SELECTORS = {
         VIRTUAL_CONTAINER: '.fui-Virtualizer, .fui-Virtualizer-Scroll-View-Dynamic__container',
         USER_MSG: 'div[aria-label^="You said:"], div[aria-label^="送信済み:"]',
-        // Note: Assistant labels vary by context (Copilot, Research Agent, Notebook Workspace name)
-        // We look for elements that have aria-label ending with "said:" or starting with "Copilot" in assistant context.
-        ASSISTANT_MSG_HINT: 'div[aria-label$="said:"], div[aria-label^="Copilot"]',
         ARTIFACTS: [
             'div.fui-Card',
             '.fai-Citation',
@@ -88,24 +100,38 @@
             cursor: default;
             user-select: none;
             min-width: 140px;
+            transition: opacity 0.3s, transform 0.2s, height 0.3s;
+            overflow: hidden;
+        }
+        #m365-turn-counter-ui.compact {
+            padding: 8px 12px;
+            min-width: unset;
+        }
+        #m365-turn-counter-ui.compact .m365-tc-content,
+        #m365-turn-counter-ui.compact .m365-tc-controls {
+            display: none;
         }
         .m365-tc-header {
             font-size: 10px;
-            color: rgba(255, 255, 255, 0.5);
-            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 0px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+        }
+        #m365-turn-counter-ui:not(.compact) .m365-tc-header {
+            margin-bottom: 10px;
         }
         .m365-tc-row {
             display: flex;
             justify-content: space-between;
             margin: 6px 0;
+            white-space: nowrap;
         }
         .m365-tc-val {
             font-weight: 700;
             color: #10a37f;
             font-variant-numeric: tabular-nums;
+            margin-left: 15px;
         }
         .m365-tc-controls {
             margin-top: 12px;
@@ -129,21 +155,36 @@
         .m365-tc-btn:hover {
             background: rgba(255, 255, 255, 0.2);
         }
-        .m365-tc-btn:active {
-            transform: translateY(1px);
-        }
         #m365-tc-drag-handle {
             cursor: move;
             flex-grow: 1;
+            padding: 2px 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        #m365-turn-counter-ui.compact #m365-tc-drag-handle {
+            font-weight: bold;
+            color: #10a37f;
+            max-width: 100px;
         }
     `;
     document.head.appendChild(style);
 
     const container = document.createElement('div');
     container.id = 'm365-turn-counter-ui';
+    if (settings.isCompact) container.classList.add('compact');
+    
+    // Apply position
+    if (settings.position) {
+        container.style.left = settings.position.left + 'px';
+        container.style.top = settings.position.top + 'px';
+        container.style.right = 'auto';
+    }
+
     container.innerHTML = `
         <div class="m365-tc-header">
-            <span id="m365-tc-drag-handle">Copilot Stats v${GM_info.script.version}</span>
+            <span id="m365-tc-drag-handle" title="Double click to toggle view. Drag to move.">Copilot Turn Counter v${GM_info.script.version}</span>
         </div>
         <div class="m365-tc-content">
             <div class="m365-tc-row"><span>Turns</span> <span class="m365-tc-val" id="m365-tc-turns">0</span></div>
@@ -151,40 +192,42 @@
             <div class="m365-tc-row"><span>Images</span> <span class="m365-tc-val" id="m365-tc-images">0</span></div>
         </div>
         <div class="m365-tc-controls">
-            <button class="m365-tc-btn" id="m365-btn-top" title="Scroll to Top">↑ Top</button>
-            <button class="m365-tc-btn" id="m365-btn-bottom" title="Scroll to Bottom">↓ Bottom</button>
+            <button class="m365-tc-btn" id="m365-btn-top">↑ Top</button>
+            <button class="m365-tc-btn" id="m365-btn-bottom">↓ Bottom</button>
         </div>
     `;
     document.body.appendChild(container);
 
     const updateUI = () => {
-        document.getElementById('m365-tc-turns').textContent = seenTurns.size;
+        const turns = seenTurns.size;
+        document.getElementById('m365-tc-turns').textContent = turns;
         document.getElementById('m365-tc-artifacts').textContent = seenArtifacts.size;
         document.getElementById('m365-tc-images').textContent = seenImages.size;
+        
+        // Update header in compact mode
+        if (container.classList.contains('compact')) {
+            dragHandle.textContent = `Turns: ${turns}`;
+        } else {
+            dragHandle.textContent = `Copilot Turn Counter v${GM_info.script.version}`;
+        }
     };
 
-    // --- Main Logid ---
-
     const scanForItems = () => {
-        // 1. Scan for Turns (User Messages)
         const userMessages = document.querySelectorAll(SELECTORS.USER_MSG);
         userMessages.forEach(msg => {
             const label = msg.getAttribute('aria-label') || '';
             const msgHash = getHash(label);
             if (msgHash) seenTurns.add(msgHash);
 
-            // 2. Scan for Images within User Messages
             const imgs = msg.querySelectorAll('img');
             imgs.forEach(img => {
                 if (img.src) seenImages.add(img.src);
             });
         });
 
-        // 3. Scan for Artifacts
         SELECTORS.ARTIFACTS.forEach(selector => {
             const items = document.querySelectorAll(selector);
             items.forEach((item, index) => {
-                // Try to find a stable ID. If not available, use label + proximity
                 const id = item.id || getHash(item.ariaLabel || item.textContent || selector + index);
                 seenArtifacts.add(id);
             });
@@ -193,7 +236,6 @@
         updateUI();
     };
 
-    // MutationObserver with debounce
     let debounceTimer;
     const observer = new MutationObserver(() => {
         clearTimeout(debounceTimer);
@@ -201,34 +243,33 @@
     });
     observer.observe(document.body, { childList: true, subtree: true });
 
-    // Initial scan
     scanForItems();
 
-    // --- Control Handlers ---
+    // --- Interactivity ---
 
-    const getScrollContainer = () => {
-        return document.querySelector(SELECTORS.VIRTUAL_CONTAINER);
-    };
+    const dragHandle = document.getElementById('m365-tc-drag-handle');
+
+    // Toggle View
+    dragHandle.addEventListener('dblclick', () => {
+        const isCompact = container.classList.toggle('compact');
+        saveSettings({ isCompact });
+        updateUI();
+    });
+
+    // Scrolling
+    const getScrollContainer = () => document.querySelector(SELECTORS.VIRTUAL_CONTAINER);
 
     document.getElementById('m365-btn-top').addEventListener('click', () => {
         const scroller = getScrollContainer();
-        if (scroller) {
-            scroller.scrollTo({ top: 0, behavior: 'smooth' });
-        } else {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        if (scroller) scroller.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
     document.getElementById('m365-btn-bottom').addEventListener('click', () => {
         const scroller = getScrollContainer();
-        if (scroller) {
-            scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
-        } else {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        }
+        if (scroller) scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
     });
 
-    // Reset logic on navigation (URL change)
+    // Navigation Reset
     let lastUrl = location.href;
     setInterval(() => {
         if (location.href !== lastUrl) {
@@ -241,14 +282,13 @@
         }
     }, 1000);
 
-    // --- Dragging logic ---
-    const dragHandle = document.getElementById('m365-tc-drag-handle');
+    // Dragging
     let isDragging = false;
-    let offset = { x: 0, y: 0 };
+    let dragOffset = { x: 0, y: 0 };
 
     dragHandle.addEventListener('mousedown', (e) => {
         isDragging = true;
-        offset = {
+        dragOffset = {
             x: container.offsetLeft - e.clientX,
             y: container.offsetTop - e.clientY
         };
@@ -258,15 +298,23 @@
 
     document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
-        container.style.left = (e.clientX + offset.x) + 'px';
-        container.style.top = (e.clientY + offset.y) + 'px';
+        const left = e.clientX + dragOffset.x;
+        const top = e.clientY + dragOffset.y;
+        container.style.left = left + 'px';
+        container.style.top = top + 'px';
         container.style.right = 'auto';
     });
 
     document.addEventListener('mouseup', () => {
         if (isDragging) {
             isDragging = false;
-            container.style.transition = 'opacity 0.3s';
+            container.style.transition = 'opacity 0.3s, transform 0.2s, height 0.3s';
+            saveSettings({
+                position: {
+                    left: parseInt(container.style.left, 10),
+                    top: parseInt(container.style.top, 10)
+                }
+            });
         }
     });
 
