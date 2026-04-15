@@ -151,8 +151,80 @@
      * @param {string} storageKey - A unique string key for localStorage (e.g., 'gus-pos-scriptname').
      * @param {Object} [defaultPos={ right: '20px', bottom: '20px' }] - Default CSS position if no saved state exists.
      */
-    window.geminiSetupDraggablePanel = function (panel, handle, storageKey, defaultPos = { right: '20px', bottom: '20px' }) {
+        window.geminiSetupDraggablePanel = function (panel, handle, storageKey, defaultPos = { right: '20px', bottom: '20px' }) {
         if (!panel || !handle || !storageKey) return;
+
+        // Add a common class to identify these panels for collision detection
+        panel.classList.add('gus-draggable-panel');
+
+        // Function to check and resolve collisions with other panels
+        function resolveCollisions() {
+            const margin = 10;
+            const panels = Array.from(document.querySelectorAll('.gus-draggable-panel')).filter(p => p !== panel && p.style.display !== 'none');
+
+            let currentRect = panel.getBoundingClientRect();
+            let collisionFound = true;
+            let iterations = 0;
+            const maxIterations = 10; // Prevent infinite loops
+
+            while (collisionFound && iterations < maxIterations) {
+                collisionFound = false;
+                iterations++;
+
+                for (const otherPanel of panels) {
+                    const otherRect = otherPanel.getBoundingClientRect();
+
+                    // Check for overlap
+                    if (currentRect.left < otherRect.right + margin &&
+                        currentRect.right + margin > otherRect.left &&
+                        currentRect.top < otherRect.bottom + margin &&
+                        currentRect.bottom + margin > otherRect.top) {
+
+                        collisionFound = true;
+
+                        // Calculate distances to resolve collision in 4 directions
+                        const shiftUp = currentRect.bottom - otherRect.top + margin;
+                        const shiftDown = otherRect.bottom - currentRect.top + margin;
+                        const shiftLeft = currentRect.right - otherRect.left + margin;
+                        const shiftRight = otherRect.right - currentRect.left + margin;
+
+                        // Find the minimum shift required
+                        const minShift = Math.min(shiftUp, shiftDown, shiftLeft, shiftRight);
+
+                        // Apply the minimum shift, ensuring it stays within window bounds if possible
+                        if (minShift === shiftUp) {
+                            currentRect.y -= shiftUp;
+                        } else if (minShift === shiftDown) {
+                            currentRect.y += shiftDown;
+                        } else if (minShift === shiftLeft) {
+                            currentRect.x -= shiftLeft;
+                        } else if (minShift === shiftRight) {
+                            currentRect.x += shiftRight;
+                        }
+
+                        // Enforce basic window constraints after shift
+                        currentRect.y = Math.max(0, Math.min(currentRect.y, window.innerHeight - currentRect.height));
+                        currentRect.x = Math.max(0, Math.min(currentRect.x, window.innerWidth - currentRect.width));
+
+                        // Update the currentRect for the next iteration
+                        currentRect.top = currentRect.y;
+                        currentRect.bottom = currentRect.y + currentRect.height;
+                        currentRect.left = currentRect.x;
+                        currentRect.right = currentRect.x + currentRect.width;
+
+                        break; // Re-evaluate all collisions after a shift
+                    }
+                }
+            }
+
+            // Apply final resolved position
+            panel.style.top = currentRect.top + 'px';
+            panel.style.left = currentRect.left + 'px';
+            panel.style.right = 'auto';
+            panel.style.bottom = 'auto';
+
+            return iterations > 1; // Return true if position was changed due to collision
+        }
 
         // Function to constrain panel position within the window
         function constrainPanelPosition() {
@@ -189,8 +261,12 @@
             if (constrained) {
                 panel.style.top = newTop + "px";
                 panel.style.left = newLeft + "px";
+            }
 
-                // Save constrained position to LocalStorage
+            const resolvedCollision = resolveCollisions();
+
+            if (constrained || resolvedCollision) {
+                // Save constrained/resolved position to LocalStorage
                 try {
                     localStorage.setItem(storageKey, JSON.stringify({
                         top: panel.style.top,
@@ -219,7 +295,7 @@
             } else {
                 Object.assign(panel.style, defaultPos);
             }
-        } catch (e) {
+        } catch {
             Object.assign(panel.style, defaultPos);
         }
 
@@ -290,6 +366,9 @@
             handle.style.cursor = 'grab';
             panel.style.transition = ''; // Restore transitions
 
+            // Resolve collisions and enforce constraints after dropping
+            resolveCollisions();
+
             // 3. Save to LocalStorage
             try {
                 localStorage.setItem(storageKey, JSON.stringify({
@@ -302,7 +381,7 @@
         }
     };
 
-    /**
+/**
      * Creates a Trusted Types policy for inserting HTML safely.
      * @param {string} policyName - A unique name for the policy.
      * @returns {TrustedTypePolicy|null} - The created policy or null if TrustedTypes is not supported.
