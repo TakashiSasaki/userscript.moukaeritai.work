@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.18
+// @version      0.2.19
 // @description  Injects a prompt into Gemini via an external custom event.
 // @lastModified 2026-04-16
 // @author       Takashi Sasaki
@@ -14,14 +14,15 @@
 // @grant        GM_addStyle
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
 // @resource     geminiPromptInjectorCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.css
+// @resource     geminiPromptInjectorHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @homepageURL  https://x.com/TakashiSasaki
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @noframes
+// @history       0.2.19 UI構築ロジックを外部HTMLテンプレート (@resource) に移行し、コードの保守性を向上
 // @history       0.2.18 UIパネルの最小化・復元をバージョン表示部分のダブルクリックで行うように変更（専用ボタンを削除）
 // @history       0.2.17 外部CSS/JSファイルへの分離とコードの整理、リソースファイルの改名、デザインの大幅刷新。
-// @history       0.2.16 リソースファイル (style.css) をスクリプト名と同じステムに改名
 // ==/UserScript==
 
 (function () {
@@ -62,45 +63,6 @@ const report = () => {
                 if (style) style.id = 'gemini-prompt-injector-styles';
             }
 
-            // UI Helper for displaying status
-            function showTargetScriptStatus(targetName, statusDetail) {
-                const uiId = 'userscript-target-status-ui';
-                let ui = document.getElementById(uiId);
-
-                if (!ui) {
-                    ui = document.createElement('div');
-                    ui.id = uiId;
-                    ui.className = 'gus-panel';
-
-                    // Position is managed entirely by geminiSetupDraggablePanel
-
-                    // Make draggable
-                    window.geminiSetupDraggablePanel(ui, ui, 'userscript-status-ui-pos', { right: '20px', top: '100px' });
-
-                    document.body.appendChild(ui);
-                }
-
-                const statusText = statusDetail
-                    ? `✅ ${targetName} (v${statusDetail.version})`
-                    : `❌ ${targetName} Not Found`;
-
-                ui.textContent = '';
-                const titleDiv = document.createElement('div');
-                titleDiv.className = 'target-status-title';
-                titleDiv.textContent = 'Script Status:';
-                ui.appendChild(titleDiv);
-                const statusDiv = document.createElement('div');
-                statusDiv.className = 'target-status-text';
-                statusDiv.textContent = statusText;
-                ui.appendChild(statusDiv);
-
-                // Auto hide after 5 seconds if successful, keep if failed
-                if (statusDetail) {
-                    setTimeout(() => {
-                        if (ui && ui.parentNode) ui.parentNode.removeChild(ui);
-                    }, 5000);
-                }
-            }
 
             // Main logic for gemini.google.com
             document.addEventListener('gemini-inject-prompt', (event) => {
@@ -233,8 +195,10 @@ const report = () => {
             function initTestUI() {
                 if (document.getElementById('gpi-test-ui')) return;
 
-                // Retrieve saved state or default (must be before any use of isGpiUIMinimized)
-                // Prefer 'let' with specific names to to avoid TDZ issues in Tampermonkey's sandboxed Promise wrapping
+                const templateHTML = GM_getResourceText('geminiPromptInjectorHTML');
+                if (!templateHTML) return;
+
+                // Retrieve saved state
                 let isGpiUIMinimized = GM_getValue('gpi_ui_minimized', false);
                 let gpiSavedX = GM_getValue('gpi_ui_x', window.innerWidth - 320);
                 let gpiSavedY = GM_getValue('gpi_ui_y', window.innerHeight - 320);
@@ -244,7 +208,21 @@ const report = () => {
                 uiContainer.className = 'gus-panel';
                 if (isGpiUIMinimized) uiContainer.classList.add('minimized');
 
-                // Adjust position to ensure it stays within the window
+                // Inject template
+                window.geminiSetInnerHTML(uiContainer, templateHTML, policy);
+
+                // Initialize state dependent elements
+                const content = uiContainer.querySelector('#gpi-content');
+                const title = uiContainer.querySelector('#gpi-version-display');
+                if (content) content.style.display = isGpiUIMinimized ? 'none' : 'block';
+
+                // Set version and area
+                const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '';
+                if (title) {
+                    title.textContent = scriptVersion ? `💉 ${scriptVersion} ${gusEmoji}` : 'Prompt Injector';
+                }
+
+                // Adjust position
                 const uiWidth = isGpiUIMinimized ? 50 : 300;
                 const uiHeight = isGpiUIMinimized ? 30 : 250;
                 if (gpiSavedX < 0) gpiSavedX = 0;
@@ -255,123 +233,82 @@ const report = () => {
                 uiContainer.style.left = `${gpiSavedX}px`;
                 uiContainer.style.top = `${gpiSavedY}px`;
 
-                const header = document.createElement('div');
-                header.className = 'gpi-header';
-
-                const title = document.createElement('span');
-                title.className = 'gus-version';
-                const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '';
-                title.textContent = scriptVersion ? `💉 ${scriptVersion} ${gusEmoji}` : 'Prompt Injector';
-                title.title = 'Double-click to toggle size';
-
-                header.appendChild(title);
-                uiContainer.appendChild(header);
-
-                const content = document.createElement('div');
-                content.className = 'gpi-content';
-                content.style.display = isGpiUIMinimized ? 'none' : 'block';
-
-                // Inject Prompt Group
-                const group1 = document.createElement('div');
-                group1.className = 'gpi-group';
-                const textarea = document.createElement('textarea');
-                textarea.className = 'gpi-textarea';
-                textarea.placeholder = 'Test prompt...';
-                const injectBtn = document.createElement('button');
-                injectBtn.className = 'gpi-button';
-                injectBtn.textContent = 'Inject & Send';
-                injectBtn.onclick = () => {
-                    if (textarea.value) {
-                        window.geminiCheckTargetUserscript('Gemini Prompt Injector').then((installed) => { window.geminiShowTargetScriptStatus('gpi-status-container', 'Gemini Prompt Injector', installed); document.dispatchEvent(new CustomEvent('gemini-inject-prompt', { detail: { prompt: textarea.value } })); });
-                    }
-                };
-                group1.appendChild(textarea);
-                group1.appendChild(injectBtn);
-
-                // Send Prompt Group
-                const group2 = document.createElement('div');
-                group2.className = 'gpi-group';
-                const sendBtn = document.createElement('button');
-                sendBtn.className = 'gpi-button';
-                sendBtn.textContent = 'Send Current';
-                sendBtn.onclick = () => {
-                    window.geminiCheckTargetUserscript('Gemini Prompt Injector').then((installed) => { window.geminiShowTargetScriptStatus('gpi-status-container', 'Gemini Prompt Injector', installed); document.dispatchEvent(new CustomEvent('gemini-send-prompt')); });
-                };
-                group2.appendChild(sendBtn);
-
-                // Switch Model Group
-                const group3 = document.createElement('div');
-                group3.className = 'gpi-row';
-                const selectModel = document.createElement('select');
-                selectModel.className = 'gpi-select';
-                ['flash', 'thinking', 'pro'].forEach(m => {
-                    const opt = document.createElement('option');
-                    opt.value = m;
-                    opt.textContent = m;
-                    selectModel.appendChild(opt);
-                });
-                const switchBtn = document.createElement('button');
-                switchBtn.className = 'gpi-button';
-                switchBtn.style.width = 'auto';
-                switchBtn.textContent = 'Switch';
-                switchBtn.onclick = () => {
-                    window.geminiCheckTargetUserscript('Gemini Prompt Injector').then((installed) => { window.geminiShowTargetScriptStatus('gpi-status-container', 'Gemini Prompt Injector', installed); document.dispatchEvent(new CustomEvent('gemini-switch-model', { detail: { model: selectModel.value } })); });
-                };
-                group3.appendChild(selectModel);
-                group3.appendChild(switchBtn);
-
-                // Enable Canvas Group
-                const group4 = document.createElement('div');
-                group4.className = 'gpi-group';
-                const canvasBtn = document.createElement('button');
-                canvasBtn.className = 'gpi-button';
-                canvasBtn.textContent = 'Enable Canvas';
-                canvasBtn.onclick = () => {
-                    window.geminiCheckTargetUserscript('Gemini Prompt Injector').then((installed) => { window.geminiShowTargetScriptStatus('gpi-status-container', 'Gemini Prompt Injector', installed); document.dispatchEvent(new CustomEvent('gemini-enable-canvas')); });
-                };
-                group4.appendChild(canvasBtn);
-
-                content.appendChild(group1);
-                content.appendChild(group2);
-                content.appendChild(group3);
-                content.appendChild(group4);
-
-                const statusContainer = document.createElement('div');
-                statusContainer.id = 'gpi-status-container';
-                statusContainer.className = 'gpi-status-container';
-                content.appendChild(statusContainer);
-
-                uiContainer.appendChild(content);
-
                 document.body.appendChild(uiContainer);
 
-                // Drag functionality
-                window.geminiSetupDraggablePanel(uiContainer, title, 'gpi_ui_pos', { right: '20px', bottom: '180px' });
+                // Event Listeners
+                const textarea = uiContainer.querySelector('#gpi-textarea');
+                const injectBtn = uiContainer.querySelector('#gpi-btn-inject');
+                const sendBtn = uiContainer.querySelector('#gpi-btn-send');
+                const selectModel = uiContainer.querySelector('#gpi-select-model');
+                const switchBtn = uiContainer.querySelector('#gpi-btn-switch');
+                const canvasBtn = uiContainer.querySelector('#gpi-btn-canvas');
 
-                // Toggle size on double-click
-                title.ondblclick = () => {
-                    isGpiUIMinimized = !isGpiUIMinimized;
-                    content.style.display = isGpiUIMinimized ? 'none' : 'block';
-                    if (isGpiUIMinimized) uiContainer.classList.add('minimized');
-                    else uiContainer.classList.remove('minimized');
+                if (injectBtn && textarea) {
+                    injectBtn.onclick = () => {
+                        if (textarea.value) {
+                            window.geminiCheckTargetUserscript('Gemini Prompt Injector').then((installed) => {
+                                window.geminiShowTargetScriptStatus('gpi-status-container', 'Gemini Prompt Injector', installed);
+                                document.dispatchEvent(new CustomEvent('gemini-inject-prompt', { detail: { prompt: textarea.value } }));
+                            });
+                        }
+                    };
+                }
 
-                    GM_setValue('gpi_ui_minimized', isGpiUIMinimized);
+                if (sendBtn) {
+                    sendBtn.onclick = () => {
+                        window.geminiCheckTargetUserscript('Gemini Prompt Injector').then((installed) => {
+                            window.geminiShowTargetScriptStatus('gpi-status-container', 'Gemini Prompt Injector', installed);
+                            document.dispatchEvent(new CustomEvent('gemini-send-prompt'));
+                        });
+                    };
+                }
 
-                    // Re-adjust position after resize
-                    let currentX = uiContainer.offsetLeft;
-                    let currentY = uiContainer.offsetTop;
-                    const width = uiContainer.offsetWidth;
-                    const height = uiContainer.offsetHeight;
+                if (switchBtn && selectModel) {
+                    switchBtn.onclick = () => {
+                        window.geminiCheckTargetUserscript('Gemini Prompt Injector').then((installed) => {
+                            window.geminiShowTargetScriptStatus('gpi-status-container', 'Gemini Prompt Injector', installed);
+                            document.dispatchEvent(new CustomEvent('gemini-switch-model', { detail: { model: selectModel.value } }));
+                        });
+                    };
+                }
 
-                    if (currentX + width > window.innerWidth) {
-                        uiContainer.style.left = `${window.innerWidth - width}px`;
-                        GM_setValue('gpi_ui_x', window.innerWidth - width);
-                    }
-                    if (currentY + height > window.innerHeight) {
-                        uiContainer.style.top = `${window.innerHeight - height}px`;
-                        GM_setValue('gpi_ui_y', window.innerHeight - height);
-                    }
-                };
+                if (canvasBtn) {
+                    canvasBtn.onclick = () => {
+                        window.geminiCheckTargetUserscript('Gemini Prompt Injector').then((installed) => {
+                            window.geminiShowTargetScriptStatus('gpi-status-container', 'Gemini Prompt Injector', installed);
+                            document.dispatchEvent(new CustomEvent('gemini-enable-canvas'));
+                        });
+                    };
+                }
+
+                if (title) {
+                    // Toggle size on double-click
+                    title.ondblclick = () => {
+                        isGpiUIMinimized = !isGpiUIMinimized;
+                        if (content) content.style.display = isGpiUIMinimized ? 'none' : 'block';
+                        if (isGpiUIMinimized) uiContainer.classList.add('minimized');
+                        else uiContainer.classList.remove('minimized');
+
+                        GM_setValue('gpi_ui_minimized', isGpiUIMinimized);
+
+                        // Re-adjust position after resize
+                        let currentX = uiContainer.offsetLeft;
+                        let currentY = uiContainer.offsetTop;
+                        const width = uiContainer.offsetWidth;
+                        const height = uiContainer.offsetHeight;
+
+                        if (currentX + width > window.innerWidth) {
+                            uiContainer.style.left = `${window.innerWidth - width}px`;
+                            GM_setValue('gpi_ui_x', window.innerWidth - width);
+                        }
+                        if (currentY + height > window.innerHeight) {
+                            uiContainer.style.top = `${window.innerHeight - height}px`;
+                            GM_setValue('gpi_ui_y', window.innerHeight - height);
+                        }
+                    };
+                    // Drag functionality
+                    window.geminiSetupDraggablePanel(uiContainer, title, 'gpi_ui_pos', { right: '20px', bottom: '180px' });
+                }
 
                 // Re-adjust position on window resize
                 window.addEventListener('resize', () => {
