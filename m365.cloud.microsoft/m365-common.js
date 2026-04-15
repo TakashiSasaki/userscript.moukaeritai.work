@@ -102,6 +102,12 @@
             this.setupDragging();
 
             document.body.appendChild(this.element);
+            
+            // Resolve collisions after appending to body
+            setTimeout(() => this.resolveCollisions(), 100);
+            
+            // Listen for resize to re-constrain
+            window.addEventListener('resize', () => this.resolveCollisions());
         }
 
         /**
@@ -232,12 +238,94 @@
                     isDragging = false;
                     this.element.style.transition = '';
                     this.handleEl.style.cursor = 'move';
+                    this.resolveCollisions();
                     this.savePosition();
                 }
             });
             
             // Set initial cursor
             this.handleEl.style.cursor = 'move';
+        }
+
+        /**
+         * Detects overlaps with other panels and shifts the current panel to resolve them.
+         */
+        resolveCollisions() {
+            if (!this.element) return false;
+
+            const margin = 10;
+            const panels = Array.from(document.querySelectorAll('.m365-common-panel'))
+                .filter(p => p !== this.element && p.style.display !== 'none');
+
+            let currentRect = this.element.getBoundingClientRect();
+            let collisionFound = true;
+            let iterations = 0;
+            const maxIterations = 10;
+
+            while (collisionFound && iterations < maxIterations) {
+                collisionFound = false;
+                iterations++;
+
+                for (const otherPanel of panels) {
+                    const otherRect = otherPanel.getBoundingClientRect();
+
+                    // Check for overlap
+                    if (currentRect.left < otherRect.right + margin &&
+                        currentRect.right + margin > otherRect.left &&
+                        currentRect.top < otherRect.bottom + margin &&
+                        currentRect.bottom + margin > otherRect.top) {
+
+                        collisionFound = true;
+
+                        // Calculate distances to resolve collision in 4 directions
+                        const shiftUp = currentRect.bottom - otherRect.top + margin;
+                        const shiftDown = otherRect.bottom - currentRect.top + margin;
+                        const shiftLeft = currentRect.right - otherRect.left + margin;
+                        const shiftRight = otherRect.right - currentRect.left + margin;
+
+                        // Find the minimum shift required
+                        const minShift = Math.min(shiftUp, shiftDown, shiftLeft, shiftRight);
+                        const direction = minShift === shiftUp ? 'UP' : minShift === shiftDown ? 'DOWN' : minShift === shiftLeft ? 'LEFT' : 'RIGHT';
+
+                        console.log(`[M365 Common] UI Overlap detected! Shifting panel ${direction} by ${minShift.toFixed(1)}px to resolve collision (Iteration: ${iterations})`, {
+                            panel: this.id,
+                            collidedWith: otherPanel.id || 'another panel'
+                        });
+
+                        // Apply the minimum shift
+                        if (minShift === shiftUp) {
+                            currentRect.y -= shiftUp;
+                        } else if (minShift === shiftDown) {
+                            currentRect.y += shiftDown;
+                        } else if (minShift === shiftLeft) {
+                            currentRect.x -= shiftLeft;
+                        } else if (minShift === shiftRight) {
+                            currentRect.x += shiftRight;
+                        }
+
+                        // Enforce window boundaries
+                        currentRect.y = Math.max(0, Math.min(currentRect.y, window.innerHeight - currentRect.height));
+                        currentRect.x = Math.max(0, Math.min(currentRect.x, window.innerWidth - currentRect.width));
+
+                        // Update currentRect for next iteration
+                        currentRect.top = currentRect.y;
+                        currentRect.bottom = currentRect.y + currentRect.height;
+                        currentRect.left = currentRect.x;
+                        currentRect.right = currentRect.x + currentRect.width;
+
+                        break; 
+                    }
+                }
+            }
+
+            if (iterations > 1) {
+                this.element.style.top = currentRect.top + 'px';
+                this.element.style.left = currentRect.left + 'px';
+                this.element.style.right = 'auto';
+                this.element.style.bottom = 'auto';
+                return true;
+            }
+            return false;
         }
     };
 })();

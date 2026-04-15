@@ -191,6 +191,12 @@
                         // Find the minimum shift required
                         const minShift = Math.min(shiftUp, shiftDown, shiftLeft, shiftRight);
 
+                        const direction = minShift === shiftUp ? 'UP' : minShift === shiftDown ? 'DOWN' : minShift === shiftLeft ? 'LEFT' : 'RIGHT';
+                        console.log(`[GUS] UI Overlap detected! Shifting panel ${direction} by ${minShift.toFixed(1)}px to resolve collision (Iteration: ${iterations})`, {
+                            panel: panel.id || storageKey,
+                            collidedWith: otherPanel.id || 'another panel'
+                        });
+
                         // Apply the minimum shift, ensuring it stays within window bounds if possible
                         if (minShift === shiftUp) {
                             currentRect.y -= shiftUp;
