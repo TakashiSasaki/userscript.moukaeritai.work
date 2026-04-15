@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Gemini Profile Badge - Moukaeritai</title>
+    <title>M365 Copilot Turn Counter - Moukaeritai</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -75,20 +75,6 @@
             margin-top: 2rem;
         }
 
-        #content code {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 0.2rem 0.4rem;
-            border-radius: 4px;
-            font-family: monospace;
-        }
-
-        #content pre {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 1rem;
-            border-radius: 8px;
-            overflow-x: auto;
-        }
-
         .install-section {
             margin-top: 3rem;
             padding-top: 2rem;
@@ -116,6 +102,21 @@
             box-shadow: 0 6px 20px rgba(16, 163, 127, 0.5);
             transform: scale(1.05);
         }
+
+        .version-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 0.8rem;
+        }
+
+        .version-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin: 2px;
+        }
     </style>
 </head>
 
@@ -132,53 +133,38 @@
         </nav>
 
         <div id="content">
-            <h1>Gemini Profile Badge</h1>
-<p>Google Gemini のウェブページにおいて、ユーザープロフィール画像が表示される箇所に任意の文字列（数文字程度のテキストや絵文字）を「バッジ」として追加表示するユーザースクリプトです。</p>
-<p>対象URL: `<a href="https://gemini.google.com/app%5C%60">https://gemini.google.com/app\`</a></p>
-<h2>設定 (Configuration)</h2>
-<p>ユーザースクリプトのメニューコマンドを通じてバッジのテキストを簡単設定できます。</p>
-<ol>
-<li>ブラウザのツールバーにあるTampermonkeyのアイコンをクリックします。</li>
-<li>表示されるメニューから「<strong>Set Badge Text</strong>」を選択します。</li>
-<li>プロンプトが表示されたら、バッジとして表示したいテキストを入力し、「OK」をクリックします。<ul>
-<li>テキストを空にすると、バッジは非表示になります。</li>
-<li>設定は即座に反映されます。</li>
-</ul>
-</li>
-</ol>
-<p>この設定はTampermonkeyが提供するローカルストレージに保存されます。</p>
-<h2>機能仕様</h2>
-<ul>
-<li><strong>パフォーマンス設計</strong>: ページの初期表示に必須ではないため、読み込みパフォーマンスに影響を与えないよう `MutationObserver` を用いて非同期で描画処理を行います。</li>
-<li><strong>重複描画の防止</strong>: `MutationObserver` が複数回発火した場合でもバッジが重複して描画されないよう制御しています。</li>
-<li><strong>動的な更新</strong>: メニューからバッジテキストが更新された際、既存のバッジの内容を即座に更新します。</li>
-</ul>
+            <h1>M365 Copilot Turn Counter</h1>
+            <h2>概要 (Overview)</h2>
+            <p>Microsoft 365 Copilot (m365.cloud.microsoft) での会話統計をリアルタイムに表示するユーザースクリプトです。</p>
+            <ul>
+                <li><strong>ターンの数</strong>: 会話のやり取りの回数をカウント。</li>
+                <li><strong>アーティファクト</strong>: 生成されたページやリサーチ結果をカウント。</li>
+                <li><strong>画像</strong>: ユーザーがアップロードした画像をカウント。</li>
+            </ul>
+            <p>UIはドラッグして好きな位置に移動でき、最小化状態では邪魔になりません。</p>
 
-        <h2>更新履歴</h2>
-        <ul>
-            <li><strong>v0.1.34</strong>: UIの透過効果および影効果を削除</li>
-
-            <li><strong>v0.1.33</strong>: 共有ライブラリ(gemini-common.js)の更新に合わせてセキュリティ強化とバージョンアップを行いました。</li>
-<li><strong>v0.1.32</strong>: フローティングUIが画面外にはみ出した場合に画面内に強制移動する機能を共通ライブラリ(gemini-common.js)に追加。</li>
-                <li><strong>v0.1.31</strong>: 共通ライブラリのバグ修正により、UIが移動できない問題を修正</li>
-            <li><strong>v0.1.22</strong>: gemini.google.com 全体で動作するように変更</li>
-        </ul>
-
+            <h2>主な機能 (Features)</h2>
+            <ul>
+                <li>MutationObserver によるリアルタイムカウント。</li>
+                <li>ドラッグ可能なフローティングパネル。</li>
+                <li>統計情報の自動更新と永続化（将来対応）。</li>
+            </ul>
         </div>
 
         <div class="install-section">
-            <a class="install-button" id="install-btn" href="gemini-profile-badge.user.js" data-version="0.1.21">
-                        <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
+            <a class="install-button" id="install-btn" href="m365-copilot-turn-counter.user.js" data-script-name="M365 Copilot Turn Counter">
+                <svg height="24" viewbox="0 0 24 24" width="24" fill="white">
                     <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
                 </svg>
-                        <span>Install</span>
-                        <div class="version-info">
-                            <span class="version-badge latest-version">v0.1.21</span>
-                            <span class="version-badge installed-version" style="display: none;"></span>
-                        </div>
-                    </a>
+                <span>Install</span>
+                <div class="version-info">
+                    <span class="version-badge latest-version">Loading...</span>
+                    <span class="version-badge installed-version" style="display: none;"></span>
+                </div>
+            </a>
         </div>
     </div>
+    <script src="../../domain-landing.js"></script>
 </body>
 
 </html>
