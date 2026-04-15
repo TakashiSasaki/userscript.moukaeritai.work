@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         M365 Copilot Notebook Styler
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.0
+// @version      0.2.1
 // @description  Adds subtle background colors to M365 Copilot Notebook panes to clarify boundaries. Updated for modern design.
 // @author       Takashi Sasaki
 // @match        https://m365.cloud.microsoft/*
@@ -9,6 +9,9 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_info
+// @grant        GM_getResourceText
+// @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/m365.cloud.microsoft/m365-common.js
+// @resource     m365CommonHtml https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/m365.cloud.microsoft/m365-common.html
 // ==/UserScript==
 
 (function () {
@@ -29,21 +32,6 @@
         return;
     }
 
-    // --- Settings & Persistence ---
-    const STORAGE_KEY = 'm365-notebook-styler-settings';
-    const loadSettings = () => {
-        try {
-            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-        } catch {
-            return {};
-        }
-    };
-    const saveSettings = (updates) => {
-        const current = loadSettings();
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...current, ...updates }));
-    };
-
-    const settings = loadSettings();
     let isEnabled = GM_getValue('m365-copilot-styler-enabled', true);
 
     // --- CSS Implementation ---
@@ -57,44 +45,6 @@
         }
         body.m365-styler-active .m365-pane-right {
             background-color: var(--colorBrandBackground2, rgba(0, 120, 212, 0.04)) !important;
-        }
-
-        #m365-styler-panel {
-            position: fixed;
-            top: 20px;
-            right: 140px; /* Offset to avoid overlap */
-            z-index: 10000;
-            background-color: rgba(32, 33, 35, 0.85);
-            color: #fff;
-            padding: 12px 16px;
-            border-radius: 14px;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            font-size: 13px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            user-select: none;
-            transition: opacity 0.3s;
-            opacity: 0.85;
-            min-width: 130px;
-        }
-        #m365-styler-panel:hover {
-            opacity: 1;
-        }
-        .m365-st-header {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.5);
-            margin-bottom: 8px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 4px;
-        }
-        #m365-st-drag-handle {
-            cursor: move;
-            flex-grow: 1;
         }
         .m365-st-toggle {
             display: flex;
@@ -147,69 +97,36 @@
     }
 
     // --- UI Implementation ---
+    /* global M365FloatingPanel */
     function createUI() {
         if (document.getElementById('m365-styler-panel')) return;
 
-        const panel = document.createElement('div');
-        panel.id = 'm365-styler-panel';
+        const commonHtml = GM_getResourceText('m365CommonHtml');
+        const panel = new M365FloatingPanel({
+            id: 'm365-styler-panel',
+            title: 'Pane Styler',
+            version: GM_info.script.version,
+            storageKey: 'm365-notebook-styler-pos',
+            template: commonHtml,
+            defaultPosition: { right: '140px', top: '20px' }
+        });
 
-        if (settings.position) {
-            panel.style.left = settings.position.left + 'px';
-            panel.style.top = settings.position.top + 'px';
-            panel.style.right = 'auto';
-        }
-
-        panel.innerHTML = `
-            <div class="m365-st-header">
-                <span id="m365-st-drag-handle">Pane Styler v${GM_info.script.version}</span>
-            </div>
-            <label class="m365-st-toggle" title="Enable/Disable subtle background colors">
+        const contentStr = `
+            <label class="m365-st-toggle" title="Enable/Disable subtle background colors" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px;">
                 <input type="checkbox" id="m365-st-enabled" ${isEnabled ? 'checked' : ''}>
                 <span>Colorize Panes</span>
             </label>
         `;
-        document.body.appendChild(panel);
+        panel.setContent(contentStr);
 
-        document.getElementById('m365-st-enabled').addEventListener('change', (e) => {
-            isEnabled = e.target.checked;
-            GM_setValue('m365-copilot-styler-enabled', isEnabled);
-            updateBodyClass();
-        });
-
-        // Dragging Logic
-        const dragHandle = document.getElementById('m365-st-drag-handle');
-        let isDragging = false;
-        let dragOffset = { x: 0, y: 0 };
-
-        dragHandle.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            dragOffset = {
-                x: panel.offsetLeft - e.clientX,
-                y: panel.offsetTop - e.clientY
-            };
-            panel.style.transition = 'none';
-            e.preventDefault();
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            panel.style.left = (e.clientX + dragOffset.x) + 'px';
-            panel.style.top = (e.clientY + dragOffset.y) + 'px';
-            panel.style.right = 'auto';
-        });
-
-        document.addEventListener('mouseup', () => {
-            if (isDragging) {
-                isDragging = false;
-                panel.style.transition = 'opacity 0.3s';
-                saveSettings({
-                    position: {
-                        left: parseInt(panel.style.left, 10),
-                        top: parseInt(panel.style.top, 10)
-                    }
-                });
-            }
-        });
+        const checkbox = document.getElementById('m365-st-enabled');
+        if (checkbox) {
+            checkbox.addEventListener('change', (e) => {
+                isEnabled = e.target.checked;
+                GM_setValue('m365-copilot-styler-enabled', isEnabled);
+                updateBodyClass();
+            });
+        }
     }
 
     // --- Runtime ---

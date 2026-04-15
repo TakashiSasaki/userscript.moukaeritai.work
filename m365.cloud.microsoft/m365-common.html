@@ -1,0 +1,73 @@
+<style>
+    .m365-common-panel {
+        position: fixed;
+        z-index: 10000;
+        background-color: var(--colorNeutralBackground1, rgba(32, 33, 35, 0.85));
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        font-size: 13px;
+        display: flex;
+        flex-direction: column;
+        user-select: none;
+        backdrop-filter: blur(10px);
+        opacity: 0.85;
+        transition: opacity 0.3s, transform 0.2s, height 0.3s;
+        /* Default position, overridden by JS */
+        bottom: 20px;
+        right: 20px;
+        min-width: 130px;
+    }
+    .m365-common-panel:hover {
+        opacity: 1;
+    }
+    .m365-common-header {
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 6px 12px 6px 12px;
+    }
+    .m365-common-drag-handle {
+        cursor: move;
+        flex-grow: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .m365-common-content {
+        padding: 8px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    /* Compact mode styles */
+    .m365-common-panel.compact {
+        padding: 0;
+        min-width: unset;
+    }
+    .m365-common-panel.compact .m365-common-content {
+        display: none;
+    }
+    .m365-common-panel.compact .m365-common-header {
+        border-bottom: none;
+        padding: 8px 12px;
+    }
+    .m365-common-panel.compact .m365-common-drag-handle {
+        color: #10a37f;
+        max-width: 100px;
+    }
+</style>
+
+<div class="m365-common-panel">
+    <div class="m365-common-header">
+        <span class="m365-common-drag-handle" title="Drag to move. Double-click to toggle compact view.">{{TITLE}} v{{VERSION}}</span>
+    </div>
+    <div class="m365-common-content">
+    </div>
+</div>

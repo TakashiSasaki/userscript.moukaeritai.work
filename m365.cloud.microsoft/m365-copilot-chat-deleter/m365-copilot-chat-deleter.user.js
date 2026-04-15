@@ -1,12 +1,15 @@
 // ==UserScript==
 // @name         M365 Copilot One-Click Delete
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.0
+// @version      0.2.1
 // @description  Adds a floating button and Ctrl+Shift+Backspace shortcut to delete the currently active M365 Copilot chat. Robust against design changes and multiple languages.
 // @author       Takashi Sasaki
 // @match        https://m365.cloud.microsoft/chat/*
 // @match        https://userscript.moukaeritai.work/*
 // @grant        GM_info
+// @grant        GM_getResourceText
+// @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/m365.cloud.microsoft/m365-common.js
+// @resource     m365CommonHtml https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/m365.cloud.microsoft/m365-common.html
 // ==/UserScript==
 
 (function () {
@@ -47,42 +50,7 @@
     // Custom CSS for Floating Panel
     const STYLE_ID = 'm365-deleter-style';
     const cssContent = `
-        #m365-deleter-panel {
-            position: fixed;
-            bottom: 20px;
-            right: 80px; /* Offset to not overlap with Turn Counter if both active */
-            z-index: 10000;
-            background-color: var(--colorNeutralBackground1, rgba(32, 33, 35, 0.85));
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
-            padding: 10px 14px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            font-size: 13px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            user-select: none;
-            cursor: default;
-            backdrop-filter: blur(10px);
-            opacity: 0.85;
-            transition: opacity 0.2s;
-        }
-        #m365-deleter-panel:hover {
-            opacity: 1;
-        }
-        #m365-deleter-panel .header {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.5);
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 4px;
-        }
-        #m365-deleter-panel button.delete-btn {
+        button.delete-btn {
             background-color: rgba(255, 59, 48, 0.2);
             border: 1px solid rgba(255, 59, 48, 0.5);
             color: #ff453a;
@@ -91,18 +59,19 @@
             cursor: pointer;
             font-weight: 600;
             transition: all 0.2s;
+            width: 100%;
         }
-        #m365-deleter-panel button.delete-btn:hover:not(:disabled) {
+        button.delete-btn:hover:not(:disabled) {
             background-color: rgba(255, 59, 48, 0.4);
             border-color: #ff453a;
         }
-        #m365-deleter-panel button.delete-btn:disabled {
+        button.delete-btn:disabled {
             border-color: rgba(255, 255, 255, 0.1);
             color: rgba(255, 255, 255, 0.3);
             background-color: transparent;
             cursor: not-allowed;
         }
-        #m365-deleter-panel .shortcut-hint {
+        .shortcut-hint {
             font-size: 10px;
             color: rgba(255, 255, 255, 0.4);
             text-align: center;
@@ -197,29 +166,31 @@
         }
     }
 
+    /* global M365FloatingPanel */
     function createFloatingPanel() {
         if (document.getElementById('m365-deleter-panel')) return;
 
-        const panel = document.createElement('div');
-        panel.id = 'm365-deleter-panel';
+        const commonHtml = GM_getResourceText('m365CommonHtml');
+        const panel = new M365FloatingPanel({
+            id: 'm365-deleter-panel',
+            title: '1-Click Delete',
+            version: GM_info.script.version,
+            storageKey: 'm365-chat-deleter-pos',
+            template: commonHtml,
+            defaultPosition: { right: '80px', bottom: '20px' }
+        });
 
-        const header = document.createElement('div');
-        header.className = 'header';
-        header.innerHTML = `<span>1-Click Delete</span><span>v${GM_info.script.version}</span>`;
+        const contentHtml = `
+            <button class="delete-btn" id="m365-deleter-btn">🗑️ Delete Active Chat</button>
+            <div class="shortcut-hint">Ctrl+Shift+Backspace</div>
+        `;
+        panel.setContent(contentHtml);
 
-        deleteBtnEl = document.createElement('button');
-        deleteBtnEl.className = 'delete-btn';
+        deleteBtnEl = document.getElementById('m365-deleter-btn');
         updateButtonState();
-        deleteBtnEl.onclick = executeDeleteSequence;
-
-        const hint = document.createElement('div');
-        hint.className = 'shortcut-hint';
-        hint.textContent = 'Ctrl+Shift+Backspace';
-
-        panel.appendChild(header);
-        panel.appendChild(deleteBtnEl);
-        panel.appendChild(hint);
-        document.body.appendChild(panel);
+        if (deleteBtnEl) {
+            deleteBtnEl.onclick = executeDeleteSequence;
+        }
     }
 
     function setupShortcuts() {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         M365 Copilot Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.3.0
+// @version      0.3.1
 // @description  Count turns, artifacts, and images in M365 Copilot with persistent UI and compact mode
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -10,6 +10,9 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/m365.cloud.microsoft/m365-copilot-turn-counter/m365-copilot-turn-counter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/m365.cloud.microsoft/m365-copilot-turn-counter/m365-copilot-turn-counter.user.js
 // @grant        GM_info
+// @grant        GM_getResourceText
+// @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/m365.cloud.microsoft/m365-common.js
+// @resource     m365CommonHtml https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/m365.cloud.microsoft/m365-common.html
 // ==/UserScript==
 
 (function () {
@@ -81,46 +84,9 @@
     };
 
     // --- UI Construction ---
+    /* global M365FloatingPanel */
     const style = document.createElement('style');
     style.textContent = `
-        #m365-turn-counter-ui {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: rgba(32, 33, 35, 0.85);
-            color: #fff;
-            padding: 12px 16px;
-            border-radius: 14px;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            font-size: 13px;
-            z-index: 10000;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            cursor: default;
-            user-select: none;
-            min-width: 140px;
-            transition: opacity 0.3s, transform 0.2s, height 0.3s;
-            overflow: hidden;
-        }
-        #m365-turn-counter-ui.compact {
-            padding: 8px 12px;
-            min-width: unset;
-        }
-        #m365-turn-counter-ui.compact .m365-tc-content,
-        #m365-turn-counter-ui.compact .m365-tc-controls {
-            display: none;
-        }
-        .m365-tc-header {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: 0px;
-            display: flex;
-            align-items: center;
-        }
-        #m365-turn-counter-ui:not(.compact) .m365-tc-header {
-            margin-bottom: 10px;
-        }
         .m365-tc-row {
             display: flex;
             justify-content: space-between;
@@ -155,48 +121,55 @@
         .m365-tc-btn:hover {
             background: rgba(255, 255, 255, 0.2);
         }
-        #m365-tc-drag-handle {
-            cursor: move;
-            flex-grow: 1;
-            padding: 2px 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        #m365-turn-counter-ui.compact #m365-tc-drag-handle {
-            font-weight: bold;
-            color: #10a37f;
-            max-width: 100px;
-        }
     `;
     document.head.appendChild(style);
 
-    const container = document.createElement('div');
-    container.id = 'm365-turn-counter-ui';
-    if (settings.isCompact) container.classList.add('compact');
-    
-    // Apply position
-    if (settings.position) {
-        container.style.left = settings.position.left + 'px';
-        container.style.top = settings.position.top + 'px';
-        container.style.right = 'auto';
-    }
+    const commonHtml = GM_getResourceText('m365CommonHtml');
+    const panel = new M365FloatingPanel({
+        id: 'm365-turn-counter-ui',
+        title: 'Copilot Turn Counter',
+        version: GM_info.script.version,
+        storageKey: 'm365_tc_settings', // uses legacy key to preserve bounds
+        template: commonHtml,
+        defaultPosition: { right: '20px', top: '20px' },
+        onDoubleClickHeader: () => {
+            const isCompact = panel.containerNode.classList.toggle('compact');
+            saveSettings({ isCompact });
+            updateUI();
+        }
+    });
 
-    container.innerHTML = `
-        <div class="m365-tc-header">
-            <span id="m365-tc-drag-handle" title="Double click to toggle view. Drag to move.">Copilot Turn Counter v${GM_info.script.version}</span>
-        </div>
-        <div class="m365-tc-content">
-            <div class="m365-tc-row"><span>Turns</span> <span class="m365-tc-val" id="m365-tc-turns">0</span></div>
-            <div class="m365-tc-row"><span>Artifacts</span> <span class="m365-tc-val" id="m365-tc-artifacts">0</span></div>
-            <div class="m365-tc-row"><span>Images</span> <span class="m365-tc-val" id="m365-tc-images">0</span></div>
-        </div>
+    if (settings.isCompact) panel.containerNode.classList.add('compact');
+
+    const contentStr = `
+        <div class="m365-tc-row"><span>Turns</span> <span class="m365-tc-val" id="m365-tc-turns">0</span></div>
+        <div class="m365-tc-row"><span>Artifacts</span> <span class="m365-tc-val" id="m365-tc-artifacts">0</span></div>
+        <div class="m365-tc-row"><span>Images</span> <span class="m365-tc-val" id="m365-tc-images">0</span></div>
         <div class="m365-tc-controls">
             <button class="m365-tc-btn" id="m365-btn-top">↑ Top</button>
             <button class="m365-tc-btn" id="m365-btn-bottom">↓ Bottom</button>
         </div>
     `;
-    document.body.appendChild(container);
+    panel.setContent(contentStr);
+
+    // --- Scrolling Interactivity ---
+    const getScrollContainer = () => document.querySelector(SELECTORS.VIRTUAL_CONTAINER);
+
+    const btnTop = document.getElementById('m365-btn-top');
+    if (btnTop) {
+        btnTop.addEventListener('click', () => {
+            const scroller = getScrollContainer();
+            if (scroller) scroller.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    const btnBottom = document.getElementById('m365-btn-bottom');
+    if (btnBottom) {
+        btnBottom.addEventListener('click', () => {
+            const scroller = getScrollContainer();
+            if (scroller) scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
+        });
+    }
 
     const updateUI = () => {
         const turns = seenTurns.size;
@@ -205,10 +178,10 @@
         document.getElementById('m365-tc-images').textContent = seenImages.size;
         
         // Update header in compact mode
-        if (container.classList.contains('compact')) {
-            dragHandle.textContent = `Turns: ${turns}`;
+        if (panel.containerNode.classList.contains('compact')) {
+            panel.setTitle(`Turns: ${turns}`);
         } else {
-            dragHandle.textContent = `Copilot Turn Counter v${GM_info.script.version}`;
+            panel.setTitle(`Copilot Turn Counter v${GM_info.script.version}`);
         }
     };
 
@@ -245,30 +218,6 @@
 
     scanForItems();
 
-    // --- Interactivity ---
-
-    const dragHandle = document.getElementById('m365-tc-drag-handle');
-
-    // Toggle View
-    dragHandle.addEventListener('dblclick', () => {
-        const isCompact = container.classList.toggle('compact');
-        saveSettings({ isCompact });
-        updateUI();
-    });
-
-    // Scrolling
-    const getScrollContainer = () => document.querySelector(SELECTORS.VIRTUAL_CONTAINER);
-
-    document.getElementById('m365-btn-top').addEventListener('click', () => {
-        const scroller = getScrollContainer();
-        if (scroller) scroller.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-
-    document.getElementById('m365-btn-bottom').addEventListener('click', () => {
-        const scroller = getScrollContainer();
-        if (scroller) scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
-    });
-
     // Navigation Reset
     let lastUrl = location.href;
     setInterval(() => {
@@ -281,41 +230,5 @@
             scanForItems();
         }
     }, 1000);
-
-    // Dragging
-    let isDragging = false;
-    let dragOffset = { x: 0, y: 0 };
-
-    dragHandle.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        dragOffset = {
-            x: container.offsetLeft - e.clientX,
-            y: container.offsetTop - e.clientY
-        };
-        container.style.transition = 'none';
-        e.preventDefault();
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        const left = e.clientX + dragOffset.x;
-        const top = e.clientY + dragOffset.y;
-        container.style.left = left + 'px';
-        container.style.top = top + 'px';
-        container.style.right = 'auto';
-    });
-
-    document.addEventListener('mouseup', () => {
-        if (isDragging) {
-            isDragging = false;
-            container.style.transition = 'opacity 0.3s, transform 0.2s, height 0.3s';
-            saveSettings({
-                position: {
-                    left: parseInt(container.style.left, 10),
-                    top: parseInt(container.style.top, 10)
-                }
-            });
-        }
-    });
 
 })();
