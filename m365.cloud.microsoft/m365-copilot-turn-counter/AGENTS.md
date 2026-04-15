@@ -25,6 +25,9 @@
     -   `button.fai-Reference`: ファイル参照チップ（Word/Excel等）。
     -   `div[aria-label='ソース']`: 検索ソースのサマリーチップ。
     -   `.scc-ChainOfThought__expandButton`: 思考プロセスの展開ボタン。
+-   **Context-Specific Selectors**:
+    -   **Notebook**: アシスタントメッセージが `[Workspace Name] said:` となる場合がある。メイン領域の要素は `.scriptor-paragraph`, `.scriptor-listItem` 等。
+    -   **Research Agent**: 仮想化コンテナが `.fui-Virtualizer-Scroll-View-Dynamic__container` となる。アシスタント名は `リサーチ ツール said:`。
 
 ## UIコンポーネント
 -   `#m365-turn-counter-ui`: メインのフローティングコンテナ。
