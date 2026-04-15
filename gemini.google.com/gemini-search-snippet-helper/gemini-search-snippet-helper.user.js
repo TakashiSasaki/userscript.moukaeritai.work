@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Search Snippet Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.19
-// @lastModified 2026-04-07
+// @version      0.1.20
+// @lastModified   2026-04-15
 // @description  Add sequential numbers to Gemini search result conversation titles.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -10,6 +10,7 @@
 // @grant        GM_info
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @noframes
+// @history       0.1.20 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // ==/UserScript==
 
 (function () {

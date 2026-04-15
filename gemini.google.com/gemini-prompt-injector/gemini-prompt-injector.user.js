@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.13
+// @version      0.2.14
 // @description  Injects a prompt into Gemini via an external custom event.
-// @lastModified 2026-04-07
+// @lastModified   2026-04-15
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
 // @match        https://gemini.google.com/*
@@ -19,6 +19,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @noframes
+// @history       0.2.14 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // ==/UserScript==
 
 (function () {
