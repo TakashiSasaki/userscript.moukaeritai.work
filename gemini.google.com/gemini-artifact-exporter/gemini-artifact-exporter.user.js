@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.34
+// @version      0.4.35
 // @lastModified 2026-04-15
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
@@ -14,12 +14,13 @@
 // @grant        GM_addStyle
 // @grant        GM_getResourceText
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
-// @resource     css https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/style.css
-// @resource     templateHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/template.html
+// @resource     geminiArtifactExporterCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.css
+// @resource     geminiArtifactExporterHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @noframes
+// @history       0.4.35 リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名
 // @history       0.4.34 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)
 // ==/UserScript==
 
@@ -36,7 +37,7 @@
             document.head.appendChild(commonStyle);
         }
 
-        const css = GM_getResourceText('css');
+        const css = GM_getResourceText('geminiArtifactExporterCSS');
         if (css) {
             GM_addStyle(css);
         }
@@ -611,7 +612,7 @@
                 panel.className = 'gus-panel';
                 panel.style.display = 'flex'; // Always visible (minimal state)
 
-                const templateStr = GM_getResourceText('templateHTML').replace(/📦 {{scriptVersion}}/g, `📦 ${GM_info.script.version} ${gusEmoji}`);
+                const templateStr = GM_getResourceText('geminiArtifactExporterHTML').replace(/📦 {{scriptVersion}}/g, `📦 ${GM_info.script.version} ${gusEmoji}`);
                 window.geminiSetInnerHTML(panel, templateStr, policy);
                 document.body.appendChild(panel);
                 log('Artifact Exporter panel attached to document body.');

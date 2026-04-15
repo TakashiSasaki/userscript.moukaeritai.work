@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.29
+// @version      0.2.30
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @lastModified 2026-04-15
 // @author       Takashi Sasaki
@@ -15,12 +15,13 @@
 // @grant        GM_deleteValue
 // @grant        GM_getResourceText
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
-// @resource     style https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/style.css
-// @resource     template https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/template.html
+// @resource     geminiArtifactExporterWorkerCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.css
+// @resource     geminiArtifactExporterWorkerHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @noframes
+// @history       0.2.30 リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名
 // @history       0.2.29 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)
 // ==/UserScript==
 
@@ -69,17 +70,17 @@ const report = () => {
                     document.head.appendChild(commonStyle);
                 }
 
-                const style = GM_getResourceText('style');
+                const style = GM_getResourceText('geminiArtifactExporterWorkerCSS');
                 if (style) {
                     const styleEl = document.createElement('style');
                     styleEl.textContent = style;
                     document.head.appendChild(styleEl);
                 } else {
-                    console.error('[Gemini Artifact Exporter Worker] Fatal Error: style.css resource not found. The script cannot continue and will exit.');
+                    console.error('[Gemini Artifact Exporter Worker] Fatal Error: gemini-artifact-exporter-worker.css resource not found. The script cannot continue and will exit.');
                     return;
                 }
 
-                const template = GM_getResourceText('template');
+                const template = GM_getResourceText('geminiArtifactExporterWorkerHTML');
                 if (template) {
                     // Only inject template on relevant pages to avoid DOM pollution
                     if (isDocs || (isGemini && isChatPage)) {
@@ -88,7 +89,7 @@ const report = () => {
                         document.body.appendChild(tempDiv);
                     }
                 } else {
-                    console.error('[Gemini Artifact Exporter Worker] Fatal Error: template.html resource not found. The script cannot continue and will exit.');
+                    console.error('[Gemini Artifact Exporter Worker] Fatal Error: gemini-artifact-exporter-worker.html resource not found. The script cannot continue and will exit.');
                     return;
                 }
             } else {
