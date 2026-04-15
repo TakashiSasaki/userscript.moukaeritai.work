@@ -1,21 +1,27 @@
 // ==UserScript==
 // @name         Gemini Search Snippet Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.22
-// @lastModified 2026-04-15
+// @version      0.1.23
+// @lastModified 2026-04-16
 // @description  Add sequential numbers to Gemini search result conversation titles.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @grant        GM_info
+// @grant        GM_getResourceText
+// @grant        GM_addStyle
+// @resource     geminiSearchSnippetHelperHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-search-snippet-helper/gemini-search-snippet-helper.html
+// @resource     geminiSearchSnippetHelperCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-search-snippet-helper/gemini-search-snippet-helper.css
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @noframes
+// @history       0.1.23 リソース化リファクタリング: UIテンプレート(HTML/CSS)を外部ファイルに分離
 // @history       0.1.20 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // ==/UserScript==
 
 (function () {
     'use strict';
-const report = () => {
+
+    const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
                 name: GM_info.script.name,
@@ -33,95 +39,95 @@ const report = () => {
     registerGeminiUserscript(GM_info.script.name, GM_info.script.version);
 
     const initUserScript = () => {
+        const policy = window.geminiCreateTrustedHTMLPolicy('geminiSearchSnippet');
 
-        const initUserScript = () => {
+        const SNIPPET_SELECTOR = 'search-snippet';
+        const TITLE_SELECTOR = '.title';
+        const NUMBER_CLASS = 'search-snippet-helper-number';
+        const SEARCH_PAGE_PREFIX = 'https://gemini.google.com/search';
 
-            const SNIPPET_SELECTOR = 'search-snippet';
-            const TITLE_SELECTOR = '.title';
-            const NUMBER_CLASS = 'search-snippet-helper-number';
-            const SEARCH_PAGE_PREFIX = 'https://gemini.google.com/search';
+        let observer = null;
+        let debounceTimer = null;
 
-            function isSearchPage() {
-                return window.location.href.startsWith(SEARCH_PAGE_PREFIX);
+        function isSearchPage() {
+            return window.location.href.startsWith(SEARCH_PAGE_PREFIX);
+        }
+
+        function addStyles() {
+            const css = GM_getResourceText('geminiSearchSnippetHelperCSS');
+            if (css && !document.getElementById('gemini-search-snippet-styles')) {
+                const style = GM_addStyle(css);
+                if (style) style.id = 'gemini-search-snippet-styles';
             }
+        }
 
-            // --- URL Change Detection ---
-            function onUrlChange() {
-                if (isSearchPage()) {
-                    addNumbers();
-                }
-            }
+        function addNumbers() {
+            if (!isSearchPage()) return;
 
-            // 1. Listen for browser back/forward
-            window.addEventListener('popstate', onUrlChange);
+            const template = GM_getResourceText('geminiSearchSnippetHelperHTML');
+            if (!template) return;
 
-            // 2. Monkey-patch pushState and replaceState for SPA navigation
-            const originalPushState = history.pushState;
-            history.pushState = function () {
-                const ret = originalPushState.apply(this, arguments);
-                onUrlChange();
-                return ret;
-            };
-
-            const originalReplaceState = history.replaceState;
-            history.replaceState = function () {
-                const ret = originalReplaceState.apply(this, arguments);
-                onUrlChange();
-                return ret;
-            };
-            // -----------------------------
-
-            function addNumbers() {
-                if (!isSearchPage()) return;
-
-                const snippets = document.querySelectorAll(SNIPPET_SELECTOR);
-                snippets.forEach((snippet, index) => {
-                    const title = snippet.querySelector(TITLE_SELECTOR);
-                    if (title) {
-                        let numberSpan = title.querySelector(`.${NUMBER_CLASS}`);
-                        if (!numberSpan) {
-                            numberSpan = document.createElement('span');
-                            numberSpan.className = NUMBER_CLASS;
-                            numberSpan.style.fontSize = '0.75em';
-                            numberSpan.style.color = 'var(--text-dim, #888)'; // Trying to use variable or fallback
-                            numberSpan.style.marginRight = '6px';
-                            numberSpan.style.opacity = '0.7';
-                            numberSpan.style.fontFamily = 'monospace';
+            const snippets = document.querySelectorAll(SNIPPET_SELECTOR);
+            snippets.forEach((snippet, index) => {
+                const title = snippet.querySelector(TITLE_SELECTOR);
+                if (title) {
+                    let numberSpan = title.querySelector(`.${NUMBER_CLASS}`);
+                    if (!numberSpan) {
+                        const temp = document.createElement('div');
+                        window.geminiSetInnerHTML(temp, template, policy);
+                        numberSpan = temp.firstElementChild;
+                        if (numberSpan) {
                             title.insertBefore(numberSpan, title.firstChild);
                         }
+                    }
+                    if (numberSpan) {
                         // Always update the number to ensure correctness when lists change
                         numberSpan.textContent = `${index + 1}.`;
                     }
-                });
-            }
-
-            const observer = new MutationObserver((mutations) => {
-                if (!isSearchPage()) return;
-
-                let shouldUpdate = false;
-                for (const mutation of mutations) {
-                    if (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0) {
-                        shouldUpdate = true;
-                        break;
-                    }
-                }
-
-                if (shouldUpdate) {
-                    requestAnimationFrame(addNumbers);
                 }
             });
-
-            observer.observe(document.body, { childList: true, subtree: true });
-
-            // Initial run
-            addNumbers();
-        };
-
-        if (document.readyState === 'complete') {
-            initUserScript();
-        } else {
-            window.addEventListener('load', initUserScript);
         }
+
+        function checkAndApply() {
+            if (isSearchPage()) {
+                addNumbers();
+            }
+        }
+
+        addStyles();
+
+        // Use Navigation API for SPA routing
+        if (window.navigation) {
+            window.navigation.addEventListener('navigatesuccess', () => {
+                setTimeout(checkAndApply, 500);
+            });
+            console.log('[Gemini Search Snippet Helper] Using Navigation API for SPA routing.');
+        }
+
+        observer = new MutationObserver((mutations) => {
+            if (!isSearchPage()) return;
+
+            let shouldUpdate = false;
+            for (const mutation of mutations) {
+                if (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0) {
+                    shouldUpdate = true;
+                    break;
+                }
+            }
+
+            if (shouldUpdate) {
+                if (debounceTimer) clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    debounceTimer = null;
+                    addNumbers();
+                }, 200);
+            }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        // Initial run
+        checkAndApply();
     };
 
     if (document.readyState === 'complete') {

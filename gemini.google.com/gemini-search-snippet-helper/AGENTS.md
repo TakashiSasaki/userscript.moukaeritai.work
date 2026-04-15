@@ -4,6 +4,18 @@ This project follows the agent development guidelines outlined in the root [AGEN
 
 Please refer to the root `AGENTS.md` for all operational procedures, including Git practices, documentation structure, and HTML sample preprocessing.
 
+# UI Architecture
+The script uses an external HTML template and CSS for the number indicator to maintain a clean separation of concerns and adhere to the project's resource refactoring pattern.
+- **Styles**: Defined in `gemini-search-snippet-helper.css`. Loaded via `GM_addStyle`.
+- **Template**: Defined in `gemini-search-snippet-helper.html`. Injected using `window.geminiSetInnerHTML`.
+- **Injection**: Securely injected using `window.geminiSetInnerHTML` and `window.geminiCreateTrustedHTMLPolicy`.
+
+# Security
+All dynamic HTML content is processed through a Trusted Types policy (`geminiSearchSnippet`) to ensure compatibility with Gemini's security requirements.
+
+# SPA Navigation
+The script utilizes the `window.navigation` API (where available) to detect client-side routing on the Search page and re-apply numbers to the results.
+
 
 ## `index.html` のメンテナンス要件
 

@@ -1,0 +1,7 @@
+.search-snippet-helper-number {
+    font-size: 0.75em;
+    color: var(--text-dim, #888);
+    margin-right: 6px;
+    opacity: 0.7;
+    font-family: monospace;
+}
