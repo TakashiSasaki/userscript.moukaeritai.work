@@ -19,12 +19,16 @@ Please refer to the root `AGENTS.md` for all operational procedures, including G
 - **Scroll Throttling**: Resets `scrollTop` to a high value every 500ms when enabled.
 - **Critical Errors**: Monitors `mat-snack-bar-container` for loading errors. If found, it disables auto-scroll and alerts the user.
 
-### 3. Glassmorphic UI (v0.2.27+)
-- **Refactored Design**: Moved from a panel with a title bar to a unified floating "pill" widget.
-- **Styling**: Uses `backdrop-filter: blur(12px)` for glassmorphism.
-- **Draggable Unified Card**: The entire widget is draggable via the header or the minimized icon.
-- **Minimize State**: Supports a compact circle mode (`.minimized`) which displays an icon. State is persisted in `localStorage` (`gemini_auto_scroll_minimized`).
-- **Interactive Feedback**: Button text and background colors change based on whether the action is running, processing, or blocked by a closed sidebar.
+### 3. UI Architecture
+The script uses an external HTML template and CSS for the auto-scroll panel to maintain a clean separation of concerns and adhere to the project's resource refactoring pattern.
+
+- **Styles**: Defined in `gemini-auto-scroll.css`. Loaded via `GM_addStyle`.
+- **Template**: Defined in `gemini-auto-scroll.html`. Injected using `window.geminiSetInnerHTML`.
+- **Placeholders**: Version and emoji are populated into `.gus-version` elements after injection.
+- **Draggable Panel**: Utilizes `window.geminiSetupDraggablePanel` from `gemini-common.js` for mobility and state persistence.
+
+### 4. Security
+All HTML injection is performed through a Trusted Types policy (`geminiAutoScroll`) to ensure compatibility with Gemini's security requirements.
 
 
 ## `index.html` のメンテナンス要件
