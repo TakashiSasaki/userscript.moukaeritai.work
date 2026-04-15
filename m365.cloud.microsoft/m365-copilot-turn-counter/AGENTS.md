@@ -19,6 +19,12 @@
 -   **Artifact Containers**: 
     -   `div.fui-Card`: リサーチ結果などのカード。
     -   `.fai-Citation`, `a[aria-label*="引用"]`: 出典や引用のリンク。
+    -   `table`, `.fui-Table`: データテーブル。
+    -   `div[aria-label='コードのプレビュー']`: コードブロック。
+    -   `button[aria-label='Pages で編集']`: Copilot Pages (Loop) 連携ボタン。
+    -   `button.fai-Reference`: ファイル参照チップ（Word/Excel等）。
+    -   `div[aria-label='ソース']`: 検索ソースのサマリーチップ。
+    -   `.scc-ChainOfThought__expandButton`: 思考プロセスの展開ボタン。
 
 ## UIコンポーネント
 -   `#m365-turn-counter-ui`: メインのフローティングコンテナ。
