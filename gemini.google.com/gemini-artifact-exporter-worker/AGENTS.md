@@ -60,5 +60,11 @@
 ## 実装ノート
 
 *   **Google Docs での動作**: Docs 側では `gemini-docs-closer-force-close` イベントを使用してタブを閉じる等の、ドメインを跨いだ制御を行います。
-*   **Trusted Types**: `geminiSetInnerHTML` を介して、CSP 制限のある環境でも安全に UI テンプレートを注入します。
 *   **UI パフォーマンス**: `MutationObserver` などの高負荷な監視は行わず、イベントベースで UI 更新を行います。
+
+### セレクタの安定性 (2026-04-16 更新)
+
+Canvas（アーティファクト詳細）内の「Google ドキュメントにエクスポート」ボタンの特定について、UIテキストや不安定な `aria-label` 属性に依存するフォールバックを回避するため、以下の堅牢なセレクタを第一段階として利用しています。
+
+*   **追加セレクタ**: `button[role="menuitem"]:has(mat-icon[data-mat-icon-name="google_docs_color"])`
+*   **理由**: Angular Material の `mat-icon` 内の属性 `data-mat-icon-name` は、言語設定に関係なく同一であり、テキストのように翻訳によって変化することがないため、極めて安定した識別子となります。
