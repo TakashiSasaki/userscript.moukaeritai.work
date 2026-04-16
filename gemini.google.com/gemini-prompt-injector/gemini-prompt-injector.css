@@ -9,9 +9,8 @@
     font-weight: bold;
 }
 
-#gpi-test-ui {
-    /* Base styles now handled by .gus-panel-shell */
-    width: 300px;
+.gpi-content {
+    width: 280px;
 }
 
 .gpi-group {
