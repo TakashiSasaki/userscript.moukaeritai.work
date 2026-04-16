@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.58
+// @version      0.2.59
 // @lastModified 2026-04-16
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
@@ -21,6 +21,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.2.59 URLの正規表現を修正し、/app (末尾スラッシュなし) でUIが非表示になる不具合を修正
 // @history       0.2.58 ヘッダー右側のバージョン表示を廃止
 // @history       0.2.57 テンプレート読み込みエラーの診断ログを強化
 // @history       0.2.56 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
@@ -283,7 +284,7 @@
         }
 
         function checkUrl() {
-            if (/^\/(app|gem)\//.test(location.pathname)) {
+            if (/^\/(app|gem)(?:\/|$)/.test(location.pathname)) {
                 init();
             } else {
                 isInitialized = false;
