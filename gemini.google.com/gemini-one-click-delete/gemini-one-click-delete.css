@@ -1,65 +1,87 @@
-.gemini-quick-delete-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 32px;
-    height: 32px;
-    border-radius: 16px;
-    border: 1px solid #ffcccc;
-    background-color: #ffe6e6;
-    cursor: pointer;
-    margin-left: 8px;
-    color: #5f6368;
-    transition: background-color 0.2s, opacity 0.2s;
-    position: relative;
-    z-index: 1000;
-    pointer-events: auto;
-}
-.gemini-quick-delete-btn:hover { background-color: #ffcccc; color: #d93025; border-color: #d93025; }
-.gemini-quick-delete-btn.processing { opacity: 0.5; padding: 4px; border-radius: 4px; animation: pulse-red 1s infinite; cursor: wait; }
-.gemini-quick-delete-btn:disabled { background-color: #f0f0f0; border-color: #ccc; color: #aaa; cursor: help; }
+/* Gemini 1-Click Delete Conversation Styles */
 
-/* --- Draggable Button Styles --- */
 #gemini-delete-panel {
-    position: fixed;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
-    transition: background-color 0.2s;
+    /* Main container is now .gus-panel-shell */
+    width: auto;
+    min-width: 140px;
 }
-.gdp-main-delete-btn {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background-color: #d93025;
+
+.gdp-content {
+    padding: 2px 8px 8px 8px;
+}
+
+.gdp-button {
+    background-color: #d93025; /* Google Red */
     color: white;
     border: none;
-    border-radius: 12px;
-    padding: 4px 10px;
-    cursor: pointer;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
     font-weight: 500;
-    font-size: 11px;
-    transition: background-color 0.2s, transform 0.1s;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    position: relative;
+    min-height: 36px;
 }
-.gdp-main-delete-btn:hover:not(:disabled) {
-    background-color: #c5221f;
+
+.gdp-button:hover:not(:disabled) {
+    background-color: #b31412;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    transform: translateY(-1px);
 }
-.gdp-main-delete-btn:active:not(:disabled) {
-    transform: scale(0.98);
-}
-.gdp-main-delete-btn:disabled {
+
+.gdp-button:disabled {
     background-color: #f1f3f4;
     color: #9aa0a6;
     cursor: not-allowed;
+    box-shadow: none;
 }
-.version-badge {
-    padding: 0 4px;
+
+.gdp-button.processing .gdp-btn-content {
+    visibility: hidden;
 }
-@media (prefers-color-scheme: dark) {
-    /* Keep panel light pink even in dark mode */
-    #gemini-delete-panel { border-color: #5f6368; }
-    .gdp-main-delete-btn:disabled { background-color: #3c4043; color: #80868b; }
+
+.gdp-button.processing .gdp-spinner {
+    display: flex;
 }
-@keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+.gdp-btn-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gdp-icon {
+    font-size: 18px;
+}
+
+/* Spinner Styles */
+.gdp-spinner {
+    display: none;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    gap: 4px;
+}
+
+.gdp-dot {
+    width: 6px;
+    height: 6px;
+    background-color: white;
+    border-radius: 50%;
+    animation: gdp-bounce 1.4s infinite ease-in-out both;
+}
+
+.gdp-dot:nth-child(1) { animation-delay: -0.32s; }
+.gdp-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes gdp-bounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1.0); }
+}

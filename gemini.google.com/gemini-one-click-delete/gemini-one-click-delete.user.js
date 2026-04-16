@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.25
+// @version      0.3.26
 // @lastModified 2026-04-16
 // @description  Adds a 1-click floating button with shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
@@ -10,6 +10,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
+// @resource     gusCommonHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.html
 // @resource     geminiOneClickDeleteCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.css
 // @resource     geminiOneClickDeleteHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
@@ -17,6 +18,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.3.26 UI共通化: パネルの外枠を gemini-common.html に統合し、ダブルクリックで開閉するように変更
 // @history       0.3.25 リソース化リファクタリング: UIテンプレート(HTML)を外部ファイルに分離
 // @history       0.3.23 リソースファイル (style.css) をスクリプト名と同じステムに改名
 // @history       0.3.22 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
@@ -203,27 +205,33 @@
 
             addStyles();
 
-            const template = GM_getResourceText('geminiOneClickDeleteHTML');
-            if (!template) {
-                console.error('[Gemini 1-Click Delete] Template not found');
+            const templateHTML = GM_getResourceText('geminiOneClickDeleteHTML');
+            const commonHTMLStr = GM_getResourceText('gusCommonHTML');
+            if (!templateHTML || !commonHTMLStr) {
+                console.error('[Gemini 1-Click Delete] Resource not found');
                 return;
             }
 
-            const panel = document.createElement('div');
-            panel.id = 'gemini-delete-panel';
-            panel.className = 'gus-panel';
+            const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '';
 
-            window.geminiSetInnerHTML(panel, template, policy);
+            // Create inner content wrapper
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'gdp-content';
+            window.geminiSetInnerHTML(contentDiv, templateHTML, policy);
 
-            // Populate dynamic content
-            const versionElement = panel.querySelector('.gus-version');
-            if (versionElement) {
-                versionElement.textContent += `${GM_info.script.version} ${gusEmoji}`;
-            }
+            // Assemble panel shell
+            const panelShell = window.geminiCreateCommonPanel({
+                htmlString: commonHTMLStr,
+                policy: policy,
+                title: `🗑️ ${scriptVersion} ${gusEmoji}`,
+                icon: `🗑️ ${scriptVersion} ${gusEmoji}`,
+                contentElement: contentDiv
+            });
 
-            document.body.appendChild(panel);
+            panelShell.id = 'gemini-delete-panel';
+            document.body.appendChild(panelShell);
 
-            const delBtn = panel.querySelector('#gdp-global-delete-btn');
+            const delBtn = panelShell.querySelector('#gdp-global-delete-btn');
             if (delBtn) {
                 delBtn.addEventListener('click', async (e) => {
                     e.preventDefault(); e.stopPropagation();
@@ -242,10 +250,16 @@
                 });
             }
 
-            const handle = panel.querySelector('.version-badge');
-            if (handle) {
-                window.geminiSetupDraggablePanel(panel, handle, 'gemini_1click_delete_panel_pos', { right: '20px', bottom: '120px' });
+            const dragHandle = panelShell.querySelector('.gus-panel-header');
+            const inactiveHandle = panelShell.querySelector('.gus-inactive-content');
+            if (inactiveHandle) {
+                window.geminiSetupDraggablePanel(panelShell, inactiveHandle, 'gemini_1click_delete_panel_pos', { right: '20px', bottom: '120px' });
             }
+            if (dragHandle) {
+                window.geminiSetupDraggablePanel(panelShell, dragHandle, 'gemini_1click_delete_panel_pos', { right: '20px', bottom: '120px' });
+            }
+
+            window.geminiSetupMinimizablePanel(panelShell, 'gemini_1click_delete_minimized', dragHandle, false);
 
             updatePanelState();
         }

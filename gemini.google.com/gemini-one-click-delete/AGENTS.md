@@ -29,13 +29,15 @@ Gemini heavily enforces `TrustedTypes` policies to protect against DOM XSS.
 *   **Simulating Clicks**: When simulating `MouseEvent`s programmatically, always set `view: null` within the event dictionary. Omitting this triggers a non-trusted-event violation in Gemini's runtime context.
 *   **DOM Injection**: The script uses a Trusted Types policy (`geminiDeletePanel`) to allow secure HTML injection via `window.geminiSetInnerHTML`.
 
-# UI Architecture
-The script uses an external HTML template and CSS for the UI panel to maintain a clean separation of concerns and adhere to the project's resource refactoring pattern.
+## UI 設計と共通シェル
 
-- **Styles**: Defined in `gemini-one-click-delete.css`. Loaded via `GM_addStyle`.
-- **Template**: Defined in `gemini-one-click-delete.html`. Injected using `window.geminiSetInnerHTML`.
-- **Placeholders**: Version and emoji are populated into the `.gus-version` element after injection.
-- **Draggable Panel**: Utilizes `window.geminiSetupDraggablePanel` from `gemini-common.js` for mobility and state persistence.
+このスクリプトは `gemini-common.html` で定義された共通パネルシェルを使用しています。
+
+-   **共通シェル構成**:
+    -   **ヘッダー (`.gus-panel-header`)**: バージョン番号とアイコンを表示。ドラッグハンドルとして機能。
+    -   **最小化挙動**: ヘッダー（タイトル部分）を**ダブルクリック**することで、パネルの開閉（最小化/復元）をトグります。
+    -   **コンテンツエリア (`.gdp-content`)**: `gemini-one-click-delete.html` から読み込まれる「Delete」ボタンが配置されます。
+-   **処理中の表示**: 削除ボタンをクリックすると `.processing` クラスが付与され、ボタンテキストの代わりにバウンスアニメーション（スピナー）が表示されます。
 
 ### 5. Inter-script Communication
 This script listens for a `gemini-one-click-delete:request-delete` CustomEvent on the `window` object.
