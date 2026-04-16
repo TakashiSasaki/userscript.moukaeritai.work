@@ -337,6 +337,7 @@ const report = () => {
                 });
 
                 document.body.appendChild(workerPanel);
+                workerPanel.id = 'gemini-worker-export-indicator';
 
                 // Setup drag and minimization
                 const handle = workerPanel.querySelector('.gus-panel-header') || workerPanel;
@@ -380,7 +381,7 @@ const report = () => {
                 statusContainer.appendChild(icon);
                 statusContainer.appendChild(text);
 
-                statusContainer.style.display = 'flex';
+                statusContainer.style.setProperty('display', 'flex', 'important');
             }
 
             function hideIndicator(delay = 3000) {

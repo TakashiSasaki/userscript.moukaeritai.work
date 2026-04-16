@@ -1,63 +1,24 @@
-#userscript-target-status-ui {
-    position: fixed;
-    z-index: 999999;
-    padding: 8px 12px;
-    font-size: 12px;
-    cursor: move;
-}
+/* === Gemini Artifact Exporter Worker Styles === */
 
-.target-status-title {
-    font-weight: bold;
-}
+/* The outer shell is managed by .gus-panel-shell from gemini-common.css */
 
-.target-status-text {
-    /* Dynamic content */
-    display: block;
-}
-
-#gemini-worker-export-indicator {
-    position: fixed;
-    z-index: 10000;
-    padding: 4px 8px;
-    font-size: 12px;
-    display: flex;
+/* Inner status container */
+#gemini-worker-export-status {
+    display: none; /* Initially hidden, managed by showIndicator/hideIndicator */
     align-items: center;
     gap: 8px;
-}
-
-.worker-indicator-handle {
-    cursor: grab;
-    font-weight: bold;
-    padding: 2px 4px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.worker-indicator-handle:active {
-    cursor: grabbing;
-}
-
-.worker-indicator-label {
-    font-size: 10px;
-    line-height: 1;
-}
-
-/* Styles handled by .gus-version */
-
-#gemini-worker-export-status {
-    display: none; /* Initially hidden */
-    align-items: center;
-    gap: 4px;
+    padding: 4px 0;
+    min-width: 250px; /* Ensure a decent width for visibility */
 }
 
 .worker-status-icon {
-    font-size: 14px;
+    font-size: 16px;
+    flex-shrink: 0;
 }
 
 .worker-status-text {
-    /* Text content */
-    display: inline-block;
+    font-size: 13px;
+    line-height: 1.4;
+    white-space: normal;
+    word-break: break-word;
 }
