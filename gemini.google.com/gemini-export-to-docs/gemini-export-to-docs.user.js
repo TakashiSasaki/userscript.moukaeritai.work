@@ -1,15 +1,16 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.61
+// @version      0.4.62
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
-// @lastModified 2026-04-15
+// @lastModified 2026-04-16
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
+// @resource     gusCommonHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.html
 // @resource     geminiExportToDocsCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.css
 // @resource     geminiExportToDocsHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
@@ -18,7 +19,7 @@
 // @grant        GM_info
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
-// @noframes
+// @history       0.4.62 UI共通化: パネルの外枠を gemini-common.html に統合し、ダブルクリックで開閉するように変更
 // @history       0.4.60 リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名
 // @history       0.4.58 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // ==/UserScript==
@@ -440,11 +441,11 @@
                 let panel = document.getElementById('gemini-one-turn-panel');
                 if (!panel) {
                     panel = createOneTurnPanel();
-                    panel.classList.add('gus-minimized'); // Default to inactive until we confirm it's 1-turn
                 }
 
                 if (isOneTurn) {
-                    panel.classList.remove('gus-minimized');
+                    // Update: Managing visibility via shell element
+                    panel.style.display = 'flex';
 
                     // --- Auto URL Export Logic ---
                     if (!autoExportTriggered && GM_getValue(AUTO_URL_TOGGLE_KEY, false)) {
@@ -553,7 +554,7 @@
                         }
                     }
                 } else if (panel) {
-                    panel.classList.add('gus-minimized');
+                    panel.style.display = 'none';
                     autoExportTriggered = false; // Reset trigger state if UI is closed (e.g., user started a new topic or more turns added)
                     if (autoExportTimerId) {
                         clearInterval(autoExportTimerId);
@@ -640,46 +641,69 @@
             }
 
             function createOneTurnPanel() {
-                const panel = document.createElement('div');
-                panel.id = 'gemini-one-turn-panel';
-                panel.className = 'gus-panel';
+                if (document.getElementById('gemini-one-turn-panel')) return document.getElementById('gemini-one-turn-panel');
 
-                const tpl = getTemplate('tpl-one-turn-panel');
-                if (tpl) {
-                    panel.appendChild(tpl);
+                const templateHTML = GM_getResourceText('geminiExportToDocsHTML');
+                const commonHTMLStr = GM_getResourceText('gusCommonHTML');
+                if (!templateHTML || !commonHTMLStr) {
+                    console.error('[Gemini 1-Click Export to Docs] Resource not found');
+                    return null;
                 }
-                document.body.appendChild(panel);
+
+                const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '';
+
+                // Create inner content wrapper
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'ge2d-panel-content';
+                const tplWrapper = document.createElement('div');
+                window.geminiSetInnerHTML(tplWrapper, templateHTML, policy);
+                const tpl = tplWrapper.querySelector('#tpl-one-turn-panel');
+                if (tpl) {
+                    contentDiv.appendChild(tpl.content.cloneNode(true));
+                }
+
+                // Assemble panel shell
+                const panelShell = window.geminiCreateCommonPanel({
+                    htmlString: commonHTMLStr,
+                    policy: policy,
+                    title: `📦 ${scriptVersion} ${gusEmoji}`,
+                    icon: `📦 ${scriptVersion} ${gusEmoji}`,
+                    contentElement: contentDiv
+                });
+
+                panelShell.id = 'gemini-one-turn-panel';
+                document.body.appendChild(panelShell);
 
                 // Bind Dragging Logic
-                const versionActive = panel.querySelector('.one-turn-version');
-                const versionInactive = panel.querySelector('.gus-inactive-content');
-                if (versionActive) window.geminiSetupDraggablePanel(panel, versionActive, 'gemini-export-panel-pos', { bottom: '20px', right: '20px' });
-                if (versionInactive) window.geminiSetupDraggablePanel(panel, versionInactive, 'gemini-export-panel-pos', { bottom: '20px', right: '20px' });
+                const dragHandle = panelShell.querySelector('.gus-panel-header');
+                const inactiveHandle = panelShell.querySelector('.gus-inactive-content');
+                if (dragHandle) window.geminiSetupDraggablePanel(panelShell, dragHandle, 'gemini-export-panel-pos', { bottom: '20px', right: '20px' });
+                if (inactiveHandle) window.geminiSetupDraggablePanel(panelShell, inactiveHandle, 'gemini-export-panel-pos', { bottom: '20px', right: '20px' });
 
                 // Hover pause logic
-                panel.addEventListener('mouseenter', () => { countdownPaused = true; });
-                panel.addEventListener('mouseleave', () => { countdownPaused = false; });
+                panelShell.addEventListener('mouseenter', () => { countdownPaused = true; });
+                panelShell.addEventListener('mouseleave', () => { countdownPaused = false; });
 
                 // Bind Checkboxes
-                const deleteCheckbox = panel.querySelector('#gemini-auto-delete-cb');
+                const deleteCheckbox = panelShell.querySelector('#gemini-auto-delete-cb');
                 if (deleteCheckbox) {
                     deleteCheckbox.checked = GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
                 }
 
-                const autoEnableCheckbox = panel.querySelector('#gemini-auto-url-cb');
+                const autoEnableCheckbox = panelShell.querySelector('#gemini-auto-url-cb');
                 if (autoEnableCheckbox) {
                     autoEnableCheckbox.checked = GM_getValue(AUTO_URL_TOGGLE_KEY, false);
                     autoEnableCheckbox.onchange = () => GM_setValue(AUTO_URL_TOGGLE_KEY, autoEnableCheckbox.checked);
                 }
 
-                const autoCopyImagesCheckbox = panel.querySelector('#gemini-auto-copy-images-cb');
+                const autoCopyImagesCheckbox = panelShell.querySelector('#gemini-auto-copy-images-cb');
                 if (autoCopyImagesCheckbox) {
                     autoCopyImagesCheckbox.checked = GM_getValue(AUTO_COPY_IMAGES_TOGGLE_KEY, true);
                     autoCopyImagesCheckbox.onchange = () => GM_setValue(AUTO_COPY_IMAGES_TOGGLE_KEY, autoCopyImagesCheckbox.checked);
                 }
 
                 // Bind Execute Button
-                const execBtn = panel.querySelector('#gemini-btn-one-turn-exec');
+                const execBtn = panelShell.querySelector('#gemini-btn-one-turn-exec');
                 const updateBtnText = () => {
                     if (execBtn && deleteCheckbox) {
                         setExecBtnContent(execBtn, deleteCheckbox.checked ? 'Export & Delete' : 'Export');
@@ -700,9 +724,12 @@
                     };
                 }
 
+                // Minimizable Logic
+                window.geminiSetupMinimizablePanel(panelShell, 'ge2d-minimized', dragHandle, false);
+
                 const checkDep = (id, scriptName) => {
                     window.geminiCheckTargetUserscript(scriptName, 1000).then(res => {
-                        const el = panel.querySelector('#' + id);
+                        const el = panelShell.querySelector('#' + id);
                         if (el) {
                             const vSpan = el.querySelector('.dep-version');
                             if (res) {
@@ -723,7 +750,7 @@
                     checkDep('ge2d-dep-turn-counter', 'Gemini Turn Counter');
                 }, 500);
 
-                return panel;
+                return panelShell;
             }
 
             /**
