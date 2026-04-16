@@ -20,7 +20,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
-// @history       0.4.67 非対象の会話でもパネルを完全に消さず、最小化表示するように変更。対象の会話に戻った際はユーザーの以前の開閉状態を復元するように改善。
+// @history       0.4.67 条件を満たさない会話時にパネルを完全に非表示にするのではなく、最小化状態で待機するように変更。条件成立時の手動での開閉設定を尊重するように改善。
 // @history       0.4.66 ヘッダー右側のバージョン表示を廃止
 // @history       0.4.65 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
 // @history       0.4.64 UI改善: シングルクリックでの開閉に対応し、タイトルとバージョンの表示形式を [絵文字] [名称] v[バージョン] に統一
@@ -392,6 +392,7 @@
 
             let autoExportTriggered = false;
             let autoExportTimerId = null;
+            let oneTurnPanelControls = null;
 
             function extractUrls(elOrText) {
                 if (!elOrText) return [];
@@ -435,9 +436,6 @@
                 return match ? match[1] : null;
             }
 
-            let isContextActive = true; // Default to active, will be updated immediately
-            let panelControls = null; // Defined here to be accessible by updateOneTurnVisibility
-
             function updateOneTurnVisibility() {
                 const turns = document.querySelectorAll(SELECTORS.aiTurnContainer);
                 // Note: Gemini UI can be slow to update styles/classes.
@@ -453,15 +451,19 @@
                 }
 
                 if (isOneTurn) {
-                    // Transition to Active if it was inactive
-                    if (!isContextActive) {
-                        isContextActive = true;
-                        panel.classList.remove('gus-context-inactive');
-                        console.log('[Gemini 1-Turn] Context became active. Restoring user display preference.');
-                        // Restore state from storage without manual override
-                        const saved = localStorage.getItem('ge2d-minimized');
-                        if (saved !== null && panelControls) {
-                            panelControls.setMinimized(saved === 'true');
+                    panel.classList.remove('ge2d-disabled');
+                    
+                    // --- Restore user preferred state ---
+                    if (oneTurnPanelControls) {
+                        try {
+                            const savedMinimized = localStorage.getItem('ge2d-minimized');
+                            if (savedMinimized !== null) {
+                                oneTurnPanelControls.setMinimized(savedMinimized === 'true');
+                            } else {
+                                oneTurnPanelControls.setMinimized(false);
+                            }
+                        } catch {
+                            oneTurnPanelControls.setMinimized(false);
                         }
                     }
 
@@ -571,14 +573,10 @@
                             console.error('[Gemini 1-Turn Auto] Error matching URLs:', e);
                         }
                     }
-                } else {
-                    // Transition to Inactive if it was active
-                    if (isContextActive) {
-                        isContextActive = false;
-                        panel.classList.add('gus-context-inactive');
-                        console.log('[Gemini 1-Turn] Context became inactive. Forcing minimization.');
-                        // Force minimize visually without overwriting the "Active" preference in localStorage
-                        panel.classList.add('gus-minimized');
+                } else if (panel) {
+                    panel.classList.add('ge2d-disabled');
+                    if (oneTurnPanelControls) {
+                        oneTurnPanelControls.setMinimized(true);
                     }
                     autoExportTriggered = false; // Reset trigger state if UI is closed (e.g., user started a new topic or more turns added)
                     if (autoExportTimerId) {
@@ -750,12 +748,12 @@
                 }
 
                 // Minimizable Logic
-                panelControls = window.geminiSetupMinimizablePanel(panelShell, 'ge2d-minimized', dragHandle, false);
+                oneTurnPanelControls = window.geminiSetupMinimizablePanel(panelShell, 'ge2d-minimized', dragHandle, false);
 
-                // Add a capture phase listener to block expansion when context is inactive
-                panelShell.addEventListener('click', (e) => {
-                    if (panelShell.classList.contains('gus-context-inactive')) {
-                        console.log('[Gemini 1-Turn] Click blocked: Panel is in inactive context.');
+                // Add a capture phase listener to block expansion when disabled
+                inactiveHandle.addEventListener('click', (e) => {
+                    if (panelShell.classList.contains('ge2d-disabled')) {
+                        console.debug('[Gemini Export to Docs] Not a 1-turn conversation. Ignoring expand request.');
                         e.stopPropagation();
                     }
                 }, true);
