@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini History Loader
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.32
+// @version      0.1.33
 // @lastModified 2026-04-16
 // @description  A utility script that forces Gemini to load the entire chat history by programmatically scrolling to the top. Features a compact floating UI that expands when loading history.
 // @author       Takashi Sasaki
@@ -19,6 +19,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @noframes
+// @history       0.1.33 UI表示の不具合を修正。ページ読み込み完了後に実行された場合でも即座にUIを生成し、正規表現を改善してトップページ（/app）でも表示されるように修正。
 // @history       0.1.32 共通ライブラリの更新により、パネル最小化時でもドラッグ移動が可能になるように改善。
 // @history       0.1.31 パネル本体内の不要なバージョン表示（プレースホルダー）を削除
 // @history       0.1.30 最小化解除時のヘッダーにおけるバージョンの重複表示を解消（右側を非表示に設定）
@@ -280,23 +281,23 @@
             }
         }
 
-        // Auto-create UI on load so users see it's installed
-        window.addEventListener('load', () => {
-            if (/^\/(app|gem)\//.test(location.pathname)) {
-                setTimeout(createUI, 1000);
+        function checkAndCreateUI() {
+            if (/^\/(app|gem)(?:\/|$)/.test(location.pathname)) {
+                if (!uiPanel) setTimeout(createUI, 1000);
+            } else {
+                if (uiPanel) {
+                    uiPanel.remove();
+                    uiPanel = null;
+                }
             }
-        });
+        }
+
+        // Auto-create UI immediately (delayed)
+        checkAndCreateUI();
 
         if (window.navigation) {
             window.navigation.addEventListener('navigatesuccess', () => {
-                if (/^\/(app|gem)\//.test(location.pathname)) {
-                    if (!uiPanel) setTimeout(createUI, 1000);
-                } else {
-                    if (uiPanel) {
-                        uiPanel.remove();
-                        uiPanel = null;
-                    }
-                }
+                checkAndCreateUI();
             });
         }
 
