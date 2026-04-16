@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.45
+// @version      0.4.46
 // @lastModified 2026-04-16
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
@@ -21,6 +21,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @noframes
+// @history       0.4.46 パネルの幅を固定 (320px) から可変 (fit-content) に変更し、ボタンがはみ出して見えなくなる問題を修正。
 // @history       0.4.45 「Rescan Chat」ボタンの視認性（コントラスト）を向上させるため、セカンダリボタンのスタイルを修正。
 // @history       0.4.44 UIの「Rescan Chat History」ボタンがパネルからはみ出す問題を修正するため、ボタンラベルを短縮（"Scan Sidebar", "Scan Chat" 等）。
 // @history       0.4.43 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
