@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.43
+// @version      0.4.44
 // @lastModified 2026-04-16
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
@@ -21,6 +21,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @noframes
+// @history       0.4.44 UIの「Rescan Chat History」ボタンがパネルからはみ出す問題を修正するため、ボタンラベルを短縮（"Scan Sidebar", "Scan Chat" 等）。
 // @history       0.4.43 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
 // @history       0.4.42 共通テンプレートの更新（アイコンとバージョンの分離）を反映。
 // @history       0.4.41 アーティファクト非検出時にパネルを非表示にするのではなく最小化状態に連動（Activity-Linked Panel State）
@@ -196,23 +197,23 @@
 
                 if (isStarting) {
                     if (scanBtn) {
-                        scanBtn.textContent = mode === 'scan' ? 'Scanning Sidebar...' : 'Scan Sidebar Menu';
+                        scanBtn.textContent = mode === 'scan' ? 'Scanning Sidebar' : 'Scan Sidebar';
                         scanBtn.style.pointerEvents = 'none';
                         scanBtn.style.opacity = mode === 'scan' ? '0.7' : '0.5';
                     }
                     if (deepScanBtn) {
-                        deepScanBtn.textContent = mode === 'deep' ? 'Scanning Chat...' : 'Scan Chat History';
+                        deepScanBtn.textContent = mode === 'deep' ? 'Scanning Chat' : 'Scan Chat';
                         deepScanBtn.style.pointerEvents = 'none';
                         deepScanBtn.style.opacity = mode === 'deep' ? '0.7' : '0.5';
                     }
                 } else {
                     if (scanBtn) {
-                        scanBtn.textContent = 'Rescan Sidebar Menu';
+                        scanBtn.textContent = 'Rescan Sidebar';
                         scanBtn.style.pointerEvents = 'auto';
                         scanBtn.style.opacity = '1';
                     }
                     if (deepScanBtn) {
-                        deepScanBtn.textContent = 'Rescan Chat History';
+                        deepScanBtn.textContent = 'Rescan Chat';
                         deepScanBtn.style.pointerEvents = 'auto';
                         deepScanBtn.style.opacity = '1';
                     }
@@ -260,7 +261,7 @@
             async function scanArtifacts() {
                 const scanBtn = document.getElementById('gemini-btn-scan');
                 if (scanBtn) {
-                    scanBtn.textContent = 'Scanning Sidebar...';
+                    scanBtn.textContent = 'Scanning Sidebar';
                     scanBtn.style.pointerEvents = 'none';
                     scanBtn.style.opacity = '0.7';
                 }
@@ -270,7 +271,7 @@
                 if (!isConversationPage()) {
                     log('Abort: Not on a conversation page.');
                     if (scanBtn) {
-                        scanBtn.textContent = 'Scan Sidebar Menu';
+                        scanBtn.textContent = 'Scan Sidebar';
                         scanBtn.style.pointerEvents = 'auto';
                         scanBtn.style.opacity = '1';
                     }
