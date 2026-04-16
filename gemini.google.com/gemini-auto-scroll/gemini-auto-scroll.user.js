@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.58
+// @version      0.2.59
 // @lastModified 2026-04-16
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
@@ -11,6 +11,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
+// @resource     gusCommonHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.html
 // @resource     geminiAutoScrollCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.css
 // @resource     geminiAutoScrollHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
@@ -20,6 +21,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.2.59 UI共通化: パネルの外枠を gemini-common.html に統合、ストレージを GM_setValue に移行
 // @history       0.2.58 リソース化リファクタリング: UIテンプレート(HTML)を外部ファイルに分離
 // @history       0.2.56 リソースファイル (style.css) をスクリプト名と同じステムに改名
 // @history       0.2.54 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
@@ -73,12 +75,12 @@
         // --- State Management ---
 
         function isAutoScrollEnabled() {
-            return localStorage.getItem(CONSTANTS.STORAGE_KEY) === 'true';
+            return GM_getValue(CONSTANTS.STORAGE_KEY, false);
         }
 
         function toggleAutoScroll() {
             const newState = !isAutoScrollEnabled();
-            localStorage.setItem(CONSTANTS.STORAGE_KEY, newState);
+            GM_setValue(CONSTANTS.STORAGE_KEY, newState);
             updatePanelUI();
 
             if (newState) {
@@ -205,48 +207,55 @@
             }
         }
 
-        async function createDraggablePanel() {
+        async function createAutoScrollPanel() {
             if (document.getElementById('gemini-auto-scroll-panel')) return;
 
             injectStyles();
 
-            const template = GM_getResourceText('geminiAutoScrollHTML');
-            if (!template) {
-                console.error('[GeminiAutoScroll] Template not found');
+            const templateHTML = GM_getResourceText('geminiAutoScrollHTML');
+            const commonHTMLStr = GM_getResourceText('gusCommonHTML');
+            if (!templateHTML || !commonHTMLStr) {
+                console.error('[GeminiAutoScroll] Resources not found');
                 return;
             }
 
-            const panel = document.createElement('div');
-            panel.id = 'gemini-auto-scroll-panel';
-            panel.className = 'gus-panel';
+            const scriptVersion = GM_info.script.version;
 
-            window.geminiSetInnerHTML(panel, template, policy);
+            // Create inner content wrapper
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'auto-scroll-inner';
+            window.geminiSetInnerHTML(contentDiv, templateHTML, policy);
 
-            // Populate dynamic content
-            const versionElements = panel.querySelectorAll('.gus-version');
-            versionElements.forEach(el => {
-                el.textContent += `${GM_info.script.version} ${gusEmoji}`;
+            // Assemble panel shell
+            const panelShell = window.geminiCreateCommonPanel({
+                htmlString: commonHTMLStr,
+                policy: policy,
+                title: `📜 ${scriptVersion} ${gusEmoji}`,
+                icon: `📜 ${scriptVersion} ${gusEmoji}`,
+                contentElement: contentDiv
             });
 
-            document.body.appendChild(panel);
+            panelShell.id = 'gemini-auto-scroll-panel';
+            document.body.appendChild(panelShell);
 
-            panel.querySelector('.auto-scroll-btn').addEventListener('click', (e) => {
+            panelShell.querySelector('.auto-scroll-btn').addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 toggleAutoScroll();
             });
 
-            const handleActive = panel.querySelector('.version-badge');
-            if (handleActive) {
-                window.geminiSetupDraggablePanel(panel, handleActive, CONSTANTS.PANEL_POSITION_KEY, { top: '20px', right: '20px', left: 'auto' });
-            }
-            const handleInactive = panel.querySelector('.version-badge-inactive');
-            if (handleInactive) {
-                window.geminiSetupDraggablePanel(panel, handleInactive, CONSTANTS.PANEL_POSITION_KEY, { top: '20px', right: '20px', left: 'auto' });
-            }
-            panel.classList.add('ready');
+            // Set up dragging logic
+            const dragHandle = panelShell.querySelector('.gus-panel-header');
+            const inactiveHandle = panelShell.querySelector('.gus-inactive-content');
+            if (dragHandle) window.geminiSetupDraggablePanel(panelShell, dragHandle, CONSTANTS.PANEL_POSITION_KEY, { top: '20px', right: '20px', left: 'auto' });
+            if (inactiveHandle) window.geminiSetupDraggablePanel(panelShell, inactiveHandle, CONSTANTS.PANEL_POSITION_KEY, { top: '20px', right: '20px', left: 'auto' });
 
+            // Minimizable Logic
+            window.geminiSetupMinimizablePanel(panelShell, 'gas-minimized', dragHandle, false);
+
+            panelShell.classList.add('ready');
             updatePanelUI();
+            return panelShell;
         }
 
         // --- Utility Functions ---
@@ -383,7 +392,7 @@
         let _debounceTimer;
 
         uiObserver = new MutationObserver(() => {
-            createDraggablePanel();
+            createAutoScrollPanel();
 
             if (_debounceTimer) clearTimeout(_debounceTimer);
             _debounceTimer = setTimeout(() => {
@@ -408,7 +417,7 @@
             }, 1000);
 
             setTimeout(() => {
-                createDraggablePanel();
+                createAutoScrollPanel();
                 attemptScrollToConversation();
             }, 2500);
         }

@@ -1,103 +1,95 @@
+/* Gemini Auto-Scroll Styles */
+
 #gemini-auto-scroll-panel {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 10000;
-    padding: 4px;
-    display: none; /* Initially hidden */
-    flex-direction: row;
-    align-items: center;
-    gap: 4px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: move;
-}
-#gemini-auto-scroll-panel:hover {
-    background: rgb(255, 182, 193);
-}
-#gemini-auto-scroll-panel.ready {
-    display: flex;
+    /* Main container is now .gus-panel-shell */
+    width: 280px;
 }
 
-.panel-info {
+.auto-scroll-inner {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    padding: 0 4px;
-    cursor: move;
-    line-height: 1.2;
-}
-.widget-header h1 {
-    font-size: 13px;
-    font-weight: 600;
-    margin: 0;
-    color: #333;
-    letter-spacing: 0.3px;
+    padding: 0 12px 12px 12px;
 }
 
-/* Styles handled by .gus-version */
+.auto-scroll-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
 
-.gtc-badge {
-    font-size: 11px;
-    color: #1a73e8;
-    font-weight: 600;
+.auto-scroll-actions {
+    display: flex;
+    flex-direction: column;
 }
 
 .auto-scroll-btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    padding: 4px 8px;
-    border: none;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: inherit;
+    gap: 8px;
 }
+
 .auto-scroll-btn.stopped {
-    background: #ffffff;
-    color: #3c4043;
-    border: 1px solid #dadce0;
+    background-color: #1a73e8;
+    color: white;
 }
+
 .auto-scroll-btn.stopped:hover {
-    background: #f8f9fa;
-    transform: translateY(-1px);
+    background-color: #1b66c9;
 }
+
 .auto-scroll-btn.running {
-    background: #e6f4ea;
-    color: #137333;
-    border: 1px solid #ceead6;
+    background-color: #ea4335;
+    color: white;
 }
+
 .auto-scroll-btn.running:hover {
-    background: #d2e3d8;
-    transform: translateY(-1px);
+    background-color: #d33828;
 }
+
 .auto-scroll-btn.processing {
-    animation: gtc-pulse 1.5s infinite ease-in-out;
+    background-color: #34a853;
 }
 
-@keyframes gtc-pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(0.98); } 100% { opacity: 1; transform: scale(1); } }
+.auto-scroll-status {
+    display: flex;
+    justify-content: center;
+    padding-top: 4px;
+}
 
+.gtc-badge {
+    background-color: var(--gus-panel-border);
+    color: var(--gus-panel-text);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* Sidebar context indicator badge for list items */
 .gtc-conversation-index {
     position: absolute;
-    top: 6px;
-    left: 6px;
-    background-color: rgba(26, 115, 232, 0.85);
-    color: #fff;
+    top: 50%;
+    right: 32px;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.05);
+    color: #666;
+    padding: 2px 6px;
+    border-radius: 4px;
     font-size: 10px;
-    padding: 1px 5px;
-    border-radius: 6px;
-    z-index: 10;
     pointer-events: none;
-    font-family: 'Outfit', monospace;
-    font-weight: 600;
+    z-index: 10;
 }
 
-/* --- Custom Scrollbar Styles --- */
-::-webkit-scrollbar { width: 14px !important; height: 14px !important; background-color: transparent; display: block !important; }
-::-webkit-scrollbar-track { background: rgba(0,0,0,0.03); border-radius: 10px; }
-::-webkit-scrollbar-thumb { background-color: #4e95ff; border-radius: 10px; border: 3px solid rgba(255,255,255,0.8); }
-::-webkit-scrollbar-thumb:hover { background-color: #3b82f6; }
-conversations-list, .conversations-list, infinite-scroller { scrollbar-color: #4e95ff transparent !important; scrollbar-width: thin !important; }
+[data-theme='dark'] .gtc-conversation-index {
+    background: rgba(255, 255, 255, 0.1);
+    color: #aaa;
+}
