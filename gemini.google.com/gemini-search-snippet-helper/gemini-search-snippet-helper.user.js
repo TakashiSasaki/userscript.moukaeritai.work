@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Search Snippet Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.23
+// @version      0.1.24
 // @lastModified 2026-04-16
 // @description  Add sequential numbers to Gemini search result conversation titles.
 // @author       Takashi Sasaki
@@ -12,8 +12,10 @@
 // @grant        GM_addStyle
 // @resource     geminiSearchSnippetHelperHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-search-snippet-helper/gemini-search-snippet-helper.html
 // @resource     geminiSearchSnippetHelperCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-search-snippet-helper/gemini-search-snippet-helper.css
+// @resource     gusCommonHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @noframes
+// @history       0.1.24 UI共通化: パネルの外枠を gemini-common.html に統合し、ステータスインジケーターとして表示
 // @history       0.1.23 リソース化リファクタリング: UIテンプレート(HTML/CSS)を外部ファイルに分離
 // @history       0.1.20 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // ==/UserScript==
@@ -35,11 +37,10 @@
         return;
     }
 
-    // Reserve a load-order slot (no gus-version badge in this script)
-    registerGeminiUserscript(GM_info.script.name, GM_info.script.version);
-
     const initUserScript = () => {
+        const { emoji: gusEmoji } = registerGeminiUserscript(GM_info.script.name, GM_info.script.version);
         const policy = window.geminiCreateTrustedHTMLPolicy('geminiSearchSnippet');
+        const PANEL_POSITION_KEY = 'gemini-search-snippet-panel-pos';
 
         const SNIPPET_SELECTOR = 'search-snippet';
         const TITLE_SELECTOR = '.title';
@@ -88,9 +89,53 @@
             });
         }
 
+        function createStatusPanel() {
+            if (document.getElementById('gemini-search-snippet-panel')) return document.getElementById('gemini-search-snippet-panel');
+
+            const commonHTMLStr = GM_getResourceText('gusCommonHTML');
+            if (!commonHTMLStr) {
+                console.error('[Gemini Search Snippet Helper] Common HTML resource not found');
+                return null;
+            }
+
+            const scriptVersion = GM_info.script.version;
+
+            // Create an empty div for content as this script currently requires no manual UI controls
+            const contentDiv = document.createElement('div');
+            contentDiv.style.padding = '0 12px 8px 12px';
+
+            const panelShell = window.geminiCreateCommonPanel({
+                htmlString: commonHTMLStr,
+                policy: policy,
+                title: `🔢 ${scriptVersion} ${gusEmoji}`,
+                icon: `🔢 ${scriptVersion} ${gusEmoji}`,
+                contentElement: contentDiv
+            });
+
+            panelShell.id = 'gemini-search-snippet-panel';
+            document.body.appendChild(panelShell);
+
+            // Set up dragging and minimization support
+            const dragHandle = panelShell.querySelector('.gus-panel-header');
+            const inactiveHandle = panelShell.querySelector('.gus-inactive-content');
+            if (dragHandle) window.geminiSetupDraggablePanel(panelShell, dragHandle, PANEL_POSITION_KEY, { right: '20px', bottom: '20px' });
+            if (inactiveHandle) window.geminiSetupDraggablePanel(panelShell, inactiveHandle, PANEL_POSITION_KEY, { right: '20px', bottom: '20px' });
+
+            window.geminiSetupMinimizablePanel(panelShell, 'gssh-minimized', dragHandle, false);
+
+            return panelShell;
+        }
+
         function checkAndApply() {
-            if (isSearchPage()) {
+            const isSearch = isSearchPage();
+            let panel = document.getElementById('gemini-search-snippet-panel');
+
+            if (isSearch) {
+                if (!panel) panel = createStatusPanel();
+                if (panel) panel.style.display = 'flex';
                 addNumbers();
+            } else if (panel) {
+                panel.style.display = 'none';
             }
         }
 
