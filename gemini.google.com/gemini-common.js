@@ -320,9 +320,16 @@
         handle.style.cursor = 'grab';
         
         // Expose drag state to allow other listeners (like click) to check it
-        handle._isGusDragging = false;
+        panel._isGusDragging = false;
         
         handle.addEventListener('mousedown', dragMouseDown);
+
+        // Also bind to the minimized/inactive content handle if it exists
+        const inactiveContent = panel.querySelector('.gus-inactive-content');
+        if (inactiveContent) {
+            inactiveContent.style.cursor = 'grab';
+            inactiveContent.addEventListener('mousedown', dragMouseDown);
+        }
         
         function dragMouseDown(e) {
             e = e || window.event;
@@ -337,7 +344,7 @@
             pos4 = e.clientY;
             startX = e.clientX;
             startY = e.clientY;
-            handle._isGusDragging = false;
+            panel._isGusDragging = false;
             
             // Convert relative positioning to absolute before dragging, using getBoundingClientRect for reliability
             if (panel.style.right && panel.style.right !== 'auto' || panel.style.bottom && panel.style.bottom !== 'auto') {
@@ -360,14 +367,14 @@
             e = e || window.event;
             
             // Check threshold
-            if (!handle._isGusDragging) {
+            if (!panel._isGusDragging) {
                 const dist = Math.sqrt(Math.pow(e.clientX - startX, 2) + Math.pow(e.clientY - startY, 2));
                 if (dist > dragThreshold) {
-                    handle._isGusDragging = true;
+                    panel._isGusDragging = true;
                 }
             }
             
-            if (handle._isGusDragging) {
+            if (panel._isGusDragging) {
                 e.preventDefault();
                 pos1 = pos3 - e.clientX;
                 pos2 = pos4 - e.clientY;
@@ -488,7 +495,7 @@
         if (inactiveContent) {
             const expandHandler = (e) => {
                 // Prevent toggling if dragging
-                if (inactiveContent._isGusDragging) return;
+                if (panel._isGusDragging) return;
                 applyState(false);
                 e.stopPropagation();
             };
@@ -499,7 +506,7 @@
         if (activeHeader) {
             activeHeader.addEventListener('click', (e) => {
                 // Prevent toggling if dragging
-                if (activeHeader._isGusDragging) return;
+                if (panel._isGusDragging) return;
                 applyState(true);
                 e.stopPropagation();
             });
