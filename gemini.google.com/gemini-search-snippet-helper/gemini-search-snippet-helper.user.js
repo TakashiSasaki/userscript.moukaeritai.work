@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Search Snippet Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.28
+// @version      0.1.29
 // @lastModified 2026-04-16
 // @description  Add sequential numbers to Gemini search result conversation titles.
 // @author       Takashi Sasaki
@@ -15,6 +15,7 @@
 // @resource     gusCommonHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @noframes
+// @history       0.1.29 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
 // @history       0.1.28 共通テンプレートの更新（アイコンとバージョンの分離）を反映。
 // @history       0.1.27 ヘッダー右側のバージョン表示を廃止
 // @history       0.1.26 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除

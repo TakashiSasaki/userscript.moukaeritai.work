@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.42
+// @version      0.4.43
 // @lastModified 2026-04-16
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
@@ -21,6 +21,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @noframes
+// @history       0.4.43 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
 // @history       0.4.42 共通テンプレートの更新（アイコンとバージョンの分離）を反映。
 // @history       0.4.41 アーティファクト非検出時にパネルを非表示にするのではなく最小化状態に連動（Activity-Linked Panel State）
 // @history       0.4.40 ヘッダー右側のバージョン表示を廃止

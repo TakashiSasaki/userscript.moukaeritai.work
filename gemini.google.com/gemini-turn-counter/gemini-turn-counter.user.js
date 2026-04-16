@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.62
+// @version      0.4.63
 // @lastModified 2026-04-16
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
@@ -19,6 +19,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.4.63 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
 // @history       0.4.62 共通テンプレートの更新（アイコンとバージョンの分離）を反映。
 // @history       0.4.61 ヘッダー右側のバージョン表示を廃止
 // @history       0.4.60 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除

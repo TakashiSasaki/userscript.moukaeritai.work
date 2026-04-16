@@ -555,9 +555,10 @@
             el.textContent = options.version ? `v${options.version}` : '';
         });
         
+        const displayName = (options.name || options.title || '').replace(/^Gemini\s+/, '');
         const panelNames = shell.querySelectorAll('.gus-panel-name');
         panelNames.forEach(el => {
-            el.textContent = options.name || options.title || '';
+            el.textContent = displayName;
         });
 
         const activeVersion = shell.querySelector('.gus-panel-version');

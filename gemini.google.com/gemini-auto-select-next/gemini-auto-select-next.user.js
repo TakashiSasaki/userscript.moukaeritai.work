@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.64
+// @version      0.2.65
 // @lastModified 2026-04-16
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
@@ -21,6 +21,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.2.65 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
 // @history       0.2.64 UI デザイン方針の統一に伴い、個別スタイルでのフォントサイズ・オーバーライドを解除。共通基盤の 13px を継承するように改善。
 // @history       0.2.63 共通テンプレートの更新（アイコンとバージョンの分離）を反映。
 // @history       0.2.60 CSSに `visibility: hidden` が残存し幽霊枠となっていた致命的バグを修正
