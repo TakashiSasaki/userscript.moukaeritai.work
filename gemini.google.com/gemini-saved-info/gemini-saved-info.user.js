@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.31
+// @version      0.2.32
 // @lastModified 2026-04-16
 // @description  Adds serial numbers and copy buttons to custom instructions on Gemini.
 // @author       Takashi Sasaki
@@ -12,6 +12,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
+// @resource     gusCommonHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.html
 // @resource     geminiSavedInfoCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.css
 // @resource     geminiSavedInfoHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
@@ -19,6 +20,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js
 // @noframes
+// @history       0.2.32 UI共通化: パネルの外枠を gemini-common.html に統合し、ダブルクリックで開閉するように変更
 // @history       0.2.31 リソース化リファクタリング: UIテンプレート(HTML)を外部ファイルに分離
 // @history       0.2.29 リソースファイル (style.css) をスクリプト名と同じステムに改名
 // @history       0.2.27 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
@@ -223,26 +225,46 @@
 
             let badge = document.getElementById('gsi-version-indicator');
             if (!badge) {
-                badge = document.createElement('div');
-                badge.id = 'gsi-version-indicator';
-                badge.className = 'gus-panel';
-                document.body.appendChild(badge);
+                const commonHTMLStr = GM_getResourceText('gusCommonHTML');
+                if (!commonHTMLStr) return;
+
+                const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '';
+
+                // Create empty content div (this script mostly uses the badge as a status indicator)
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'gsi-content-status';
+                contentDiv.style.padding = '0 8px 8px 8px';
+                contentDiv.style.fontSize = '12px';
+                contentDiv.style.color = '#5f6368';
+                contentDiv.textContent = 'Active on Saved Info page.';
+
+                // Assemble panel shell
+                const panelShell = window.geminiCreateCommonPanel({
+                    htmlString: commonHTMLStr,
+                    policy: policy,
+                    title: `🏷️ ${scriptVersion} ${gusEmoji}`,
+                    icon: `🏷️ ${scriptVersion} ${gusEmoji}`,
+                    contentElement: contentDiv
+                });
+
+                panelShell.id = 'gsi-version-indicator';
+                document.body.appendChild(panelShell);
+                badge = panelShell;
+
+                const dragHandle = badge.querySelector('.gus-panel-header');
+                const inactiveHandle = badge.querySelector('.gus-inactive-content');
+                if (inactiveHandle) {
+                    window.geminiSetupDraggablePanel(badge, inactiveHandle, 'gus-pos-gemini-saved-info', { right: '20px', bottom: '60px' });
+                }
+                if (dragHandle) {
+                    window.geminiSetupDraggablePanel(badge, dragHandle, 'gus-pos-gemini-saved-info', { right: '20px', bottom: '60px' });
+                }
+
+                // Set up minimizable panel
+                window.geminiSetupMinimizablePanel(badge, 'gsi-minimized', dragHandle, true);
             }
 
-            const fragment = getTemplateFragment('gsi-template-badge');
-            if (!fragment) return;
-
-            const vSpan = fragment.querySelector('.gus-version');
-            vSpan.textContent += `${GM_info.script.version} ${gusEmoji}`;
-
-            window.geminiSetInnerHTML(badge, '', policy); // Clear previous content securely
-            badge.appendChild(fragment);
-
-            badge.title = 'Gemini Saved Info Helper';
-
-            if (window.geminiSetupDraggablePanel) {
-                window.geminiSetupDraggablePanel(badge, badge.querySelector('.gus-version'), 'gus-pos-gemini-saved-info');
-            }
+            badge.style.display = isActive ? 'block' : 'none';
         }
 
         function checkAndApply() {

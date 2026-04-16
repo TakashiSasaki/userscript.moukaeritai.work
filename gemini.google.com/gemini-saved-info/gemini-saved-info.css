@@ -1,42 +1,36 @@
-/* Gemini Saved Info Helper Styles */
-
+/* Toast Notification */
 .userscript-gemini-saved-info-toast {
-    /* Base styles now handled by .gus-panel */
     position: fixed;
     bottom: 20px;
     left: 50%;
-    transform: translateX(-50%);
-    padding: 10px 20px;
+    transform: translateX(-50%) translateY(100px);
+    background-color: #323232;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 4px;
     z-index: 10000;
-    opacity: 0;
-    transition: opacity 0.5s ease, bottom 0.5s ease;
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 .userscript-gemini-saved-info-toast.visible {
-    opacity: 1;
-    bottom: 30px;
+    transform: translateX(-50%) translateY(0);
 }
 
-#userscript-gemini-saved-info-copy-all-button {
-    margin-left: 8px;
-    color: var(--mat-outlined-button-label-text-color, #1a73e8) !important;
-}
-
+/* Page UI Enhancements */
 .userscript-gemini-saved-info-number {
     font-weight: bold;
+    color: #4285f4;
     margin-right: 4px;
 }
 
 .userscript-gemini-saved-info-copy-button {
-    margin-left: 4px;
+    margin-right: 8px;
 }
 
-#gsi-version-indicator {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 999999;
-    padding: 4px 8px;
-    cursor: default;
-    font-size: 10px;
+/* Header container adjustment */
+.action-buttons-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }

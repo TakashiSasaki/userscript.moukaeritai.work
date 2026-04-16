@@ -1,26 +1,19 @@
-<!-- Fragments for Gemini Saved Info Helper -->
+<!-- Gemini Saved Info Helper Templates -->
 
-<!-- Version Badge Fragment -->
-<template id="gsi-template-badge">
-    <span class="gus-version">📋 </span>
+<template id="gsi-template-toast">
+    <div class="userscript-gemini-saved-info-toast"></div>
 </template>
 
-<!-- Copy All Button Fragment -->
 <template id="gsi-template-copy-all">
-    <button id="userscript-gemini-saved-info-copy-all-button" class="mdc-button mat-mdc-button-base mat-mdc-outlined-button">
-        <mat-icon class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">library_books</mat-icon>
+    <button id="userscript-gemini-saved-info-copy-all-button" class="mdc-button mdc-button--outlined mat-mdc-outlined-button mat-unthemed mat-mdc-button-base" mat-ripple-loader-uninitialized="">
+        <span class="mat-mdc-button-touch-target"></span>
         <span class="mdc-button__label">Copy all</span>
     </button>
 </template>
 
-<!-- Item Copy Button Fragment -->
 <template id="gsi-template-copy-item">
-    <button class="userscript-gemini-saved-info-copy-button mdc-icon-button mat-mdc-icon-button mat-mdc-button-base" aria-label="Copy instruction">
-        <mat-icon class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true" fonticon="content_copy">content_copy</mat-icon>
+    <button class="userscript-gemini-saved-info-copy-button mat-mdc-icon-button mat-unthemed mat-mdc-button-base" mat-ripple-loader-uninitialized="" title="Copy this instruction">
+        <span class="mat-mdc-button-touch-target"></span>
+        <mat-icon role="img" class="mat-icon notranslate material-icons mat-ligature-font mat-icon-no-color" aria-hidden="true" data-mat-icon-type="font">content_copy</mat-icon>
     </button>
-</template>
-
-<!-- Toast Fragment -->
-<template id="gsi-template-toast">
-    <div class="userscript-gemini-saved-info-toast gus-panel"></div>
 </template>
