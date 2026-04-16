@@ -114,10 +114,7 @@ span.gus-version:active {
 }
 
 .gus-panel-version {
-    font-size: 0.85em;
-    opacity: 0.8;
-    margin-left: 6px;
-    font-weight: normal;
+    display: none !important;
 }
 
 .gus-panel-body {
