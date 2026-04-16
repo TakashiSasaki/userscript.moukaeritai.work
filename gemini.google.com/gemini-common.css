@@ -37,6 +37,7 @@ span.gus-version {
     padding: var(--gus-version-padding) !important;
     border-radius: var(--gus-version-radius) !important;
     display: inline-block !important;
+    margin-left: 4px !important;
     transition: font-size 0.2s ease, padding 0.2s ease !important;
 }
 

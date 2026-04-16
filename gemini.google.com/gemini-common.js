@@ -547,12 +547,12 @@
         
         const icons = shell.querySelectorAll('.gus-panel-icon');
         icons.forEach(el => {
-            // Priority: Name + Version (New format) > Icon (Legacy)
-            if (options.name && options.version) {
-                el.textContent = `${options.icon || ''} v${options.version}`.trim();
-            } else {
-                el.textContent = options.icon || options.title || '';
-            }
+            el.textContent = options.icon || options.title || '';
+        });
+
+        const versions = shell.querySelectorAll('.gus-version');
+        versions.forEach(el => {
+            el.textContent = options.version ? `v${options.version}` : '';
         });
         
         const panelNames = shell.querySelectorAll('.gus-panel-name');
