@@ -62,7 +62,7 @@
             } else {
                 console.error('[GeminiHistoryLoader] geminiCommon CSS resource NOT found.');
             }
-[/]
+
             const css = GM_getResourceText('geminiHistoryLoaderCSS');
             if (css) {
                 const style = GM_addStyle(css);
@@ -156,8 +156,11 @@
                 policy: policy,
                 icon: gusEmoji,
                 name: GM_info.script.name,
+                version: GM_info.script.version,
+                contentElement: contentDiv
+            });
             console.log('[GeminiHistoryLoader] Panel object created.');
-[/]
+
             document.body.appendChild(uiPanel);
             console.log('[GeminiHistoryLoader] Panel appended to document.body.');
 
