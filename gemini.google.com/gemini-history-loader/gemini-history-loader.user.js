@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini History Loader
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.30
-// @lastModified 2026-04-15
+// @version      0.1.31
+// @lastModified 2026-04-16
 // @description  A utility script that forces Gemini to load the entire chat history by programmatically scrolling to the top. Features a compact floating UI that expands when loading history.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -19,6 +19,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @noframes
+// @history       0.1.31 パネル本体内の不要なバージョン表示（プレースホルダー）を削除
 // @history       0.1.30 最小化解除時のヘッダーにおけるバージョンの重複表示を解消（右側を非表示に設定）
 // @history       0.1.29 UI不可視問題の徹底調査のため、CSS注入状況とパネルのDOM座標をログ出力するように強化
 // @history       0.1.28 UIが表示されない問題の調査のため診断ログを強化
