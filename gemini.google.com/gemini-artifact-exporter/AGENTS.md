@@ -146,6 +146,28 @@ Geminiのアップデートにより、DOM内に <infinite-scroller> 要素が2�
     *   ユーザーがインストールを完了して元の `index.html` のタブに戻ってきた際、手動でページをリロードすることなく状態を反映させるため、ボタンの `click` イベントをトリガーとして**2秒間隔で計5回（10秒間）の `userscript-ping` を自動送信するポーリング処理**を実装した。
     *   これにより、別タブでのインストール完了後、非同期に Ping 応答を受け取り、即座にボタン表示を「Installed」へ更新できる。
 
+### 11. Canvas (Artifact) 内の「Google ドキュメントにエクスポート」ボタンの特定 (2026-04-16)
+
+Canvas（アーティファクト詳細）画面上部のアクションメニュー内に存在するエクスポートボタンのセレクタ特定方法について。
+
+*   **共有・エクスポートメニューの起点**:
+    *   Canvas ヘッダー右側（「作成」ボタンの左隣）にある共有アイコン。
+    *   **セレクター**: `button.share-button` または `button[aria-label="Canvas を共有・エクスポート"]`
+*   **「Google ドキュメントにエクスポート」ボタン**:
+    *   メニュー展開後に表示される `button[role="menuitem"]` 要素。
+    *   **特定方法 (推奨)**:
+        *   ボタン内のテキスト `Google ドキュメントにエクスポート` を含む `span` を探す。
+        *   または、ボタン内の `mat-icon` が持つ属性 `data-mat-icon-name="google_docs_color"` をキーにするのが最も安定している。
+*   **HTML構造例**:
+    ```html
+    <button role="menuitem" class="mat-mdc-menu-item ...">
+      <div class="mat-mdc-menu-item-text">
+        <mat-icon data-mat-icon-name="google_docs_color" ...></mat-icon>
+        <span>Google ドキュメントにエクスポート</span>
+      </div>
+    </button>
+    ```
+
 ## `index.html` のメンテナンス要件
 
 各階層（ルートディレクトリ、ドメイン別ディレクトリ、個別のスクリプトディレクトリ）の `index.html` は、最新の状態に同期して保つ必要があります。
