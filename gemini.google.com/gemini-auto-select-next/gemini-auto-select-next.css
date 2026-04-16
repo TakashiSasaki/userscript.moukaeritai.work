@@ -13,9 +13,7 @@
     max-width: calc(100vw - 40px);
     box-sizing: border-box;
     white-space: nowrap;
-    visibility: hidden;
 }
-#gemini-auto-switch-panel.ready { visibility: visible; }
 #gemini-auto-switch-panel:hover {
 }
 #gemini-auto-switch-panel .left-controls {
