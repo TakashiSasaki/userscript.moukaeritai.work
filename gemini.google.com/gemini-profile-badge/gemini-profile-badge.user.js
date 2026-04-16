@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Profile Badge
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.38
+// @version      0.1.39
 // @lastModified 2026-04-16
 // @description  Add a custom text/emoji badge to the user profile area on Gemini
 // @author       Takashi Sasaki
@@ -20,7 +20,8 @@
 // @resource     geminiProfileBadgeHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-profile-badge/gemini-profile-badge.html
 // @resource     gusCommonHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.html
 // @noframes
-// @history       0.1.38 UI共通化: パネルの外枠を gemini-common.html に統合し、パネル内でバッジを編集できるように変更
+// @history      0.1.39 共通テンプレート更新に伴う同期修正: ヘッダー表示を [絵文字][スクリプト名]v[バージョン] 形式に変更し、シングルクリック開閉に対応。
+// @history      0.1.38 UI共通化: パネルの外枠を gemini-common.html に統合し、パネル内でバッジを編集できるように変更
 // @history       0.1.37 リソース化リファクタリング: UIテンプレート(HTML)とCSSを外部ファイルに分離
 // @history       0.1.34 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // ==/UserScript==
@@ -84,8 +85,9 @@
             const panelShell = window.geminiCreateCommonPanel({
                 htmlString: commonHTMLStr,
                 policy: badgePolicy,
-                title: `🏷️ ${scriptVersion} ${gusEmoji}`,
-                icon: `🏷️ ${scriptVersion} ${gusEmoji}`,
+                name: 'Gemini Profile Badge',
+                version: scriptVersion,
+                emoji: `🏷️ ${gusEmoji}`,
                 contentElement: contentDiv
             });
 

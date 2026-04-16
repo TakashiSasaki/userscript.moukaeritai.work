@@ -106,6 +106,18 @@ span.gus-version:active {
     cursor: grabbing;
 }
 
+.gus-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.gus-panel-version {
+    opacity: 0.8;
+    font-size: 0.9em;
+}
+
 .gus-panel-body {
     padding: 12px;
 }

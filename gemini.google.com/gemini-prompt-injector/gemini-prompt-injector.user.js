@@ -213,8 +213,9 @@ const report = () => {
                 const panelShell = window.geminiCreateCommonPanel({
                     htmlString: commonHTMLStr,
                     policy: policy,
-                    title: `💉 ${scriptVersion} ${gusEmoji}`,
-                    icon: `💉 ${scriptVersion} ${gusEmoji}`,
+                    name: 'Gemini Prompt Injector',
+                    version: scriptVersion,
+                    emoji: `💉 ${gusEmoji}`,
                     contentElement: contentDiv
                 });
 

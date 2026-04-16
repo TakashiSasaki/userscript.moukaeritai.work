@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.32
+// @version      0.2.33
 // @lastModified 2026-04-16
 // @description  Adds serial numbers and copy buttons to custom instructions on Gemini.
 // @author       Takashi Sasaki
@@ -20,7 +20,8 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js
 // @noframes
-// @history       0.2.32 UI共通化: パネルの外枠を gemini-common.html に統合し、ダブルクリックで開閉するように変更
+// @history      0.2.33 共通テンプレート更新に伴う同期修正: ヘッダー表示を [絵文字][スクリプト名]v[バージョン] 形式に変更し、シングルクリック開閉に対応。
+// @history      0.2.32 UI共通化: パネルの外枠を gemini-common.html に統合し、ダブルクリックで開閉するように変更。ポータルアイコン(🏷️ + ロード順絵文字)を採用。
 // @history       0.2.31 リソース化リファクタリング: UIテンプレート(HTML)を外部ファイルに分離
 // @history       0.2.29 リソースファイル (style.css) をスクリプト名と同じステムに改名
 // @history       0.2.27 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
@@ -242,8 +243,9 @@
                 const panelShell = window.geminiCreateCommonPanel({
                     htmlString: commonHTMLStr,
                     policy: policy,
-                    title: `🏷️ ${scriptVersion} ${gusEmoji}`,
-                    icon: `🏷️ ${scriptVersion} ${gusEmoji}`,
+                    name: 'Gemini Saved Info Helper',
+                    version: scriptVersion,
+                    emoji: `🏷️ ${gusEmoji}`,
                     contentElement: contentDiv
                 });
 
