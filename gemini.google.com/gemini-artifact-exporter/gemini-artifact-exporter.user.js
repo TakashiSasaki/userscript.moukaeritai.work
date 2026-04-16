@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.40
+// @version      0.4.41
 // @lastModified 2026-04-16
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
@@ -21,6 +21,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @noframes
+// @history       0.4.41 アーティファクト非検出時にパネルを非表示にするのではなく最小化状態に連動（Activity-Linked Panel State）
 // @history       0.4.40 ヘッダー右側のバージョン表示を廃止
 // @history       0.4.39 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
 // @history       0.4.38 UI改善: シングルクリックでの開閉に対応し、タイトルとバージョンの表示形式を [絵文字] [名称] v[バージョン] に統一
@@ -688,18 +689,19 @@
                     if (!panel) return;
                 }
 
-                // The panel shell should be visible if we are on a conversation page.
-                // However, the common library handles minimized/active states.
-                // If there are NO artifacts, we typically want to hide the panel entirely.
-                panel.style.display = shouldActive ? 'flex' : 'none';
+                // The panel shell should ALWAYS be visible if we are on a conversation page.
+                panel.style.display = 'flex';
 
                 if (shouldActive) {
+                    panel.classList.remove('gus-minimized');
                     // Automatic Sidebar Scan Trigger
                     if (!hasAutoScanned && !isExporting && !isScanning) {
                         hasAutoScanned = true;
                         log('Triggering automatic sidebar scan...');
                         scanArtifacts();
                     }
+                } else {
+                    panel.classList.add('gus-minimized');
                 }
             }
 
