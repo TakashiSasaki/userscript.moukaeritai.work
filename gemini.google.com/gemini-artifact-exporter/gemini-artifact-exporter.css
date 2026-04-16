@@ -50,13 +50,13 @@
 }
 
 .gae-button.secondary {
-    background-color: #f1f3f4;
-    color: #3c4043;
-    border: none;
+    background-color: rgba(255, 255, 255, 0.4);
+    color: var(--gus-panel-color);
+    border: 1px solid var(--gus-panel-border);
 }
 
 .gae-button.secondary:hover {
-    background-color: #e8eaed;
+    background-color: rgba(255, 255, 255, 0.6);
 }
 
 .gae-list-container {
