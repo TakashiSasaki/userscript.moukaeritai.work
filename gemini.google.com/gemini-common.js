@@ -538,16 +538,6 @@
         // Apply classes and content
         shell.className = 'gus-panel-shell gus-draggable-panel';
         
-        const inactiveContent = shell.querySelector('.gus-inactive-content');
-        if (inactiveContent) {
-            inactiveContent.title = options.name || options.title || '';
-        }
-
-        const activeHeader = shell.querySelector('.gus-panel-header');
-        if (activeHeader) {
-            activeHeader.title = options.name || options.title || '';
-        }
-
         const icons = shell.querySelectorAll('.gus-panel-icon');
         icons.forEach(el => {
             // Priority: Name + Version (New format) > Icon (Legacy)
