@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.20
+// @version      0.2.21
 // @description  Injects a prompt into Gemini via an external custom event.
 // @lastModified 2026-04-16
 // @author       Takashi Sasaki
@@ -21,6 +21,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @noframes
+// @history       0.2.21 位置管理を geminiSetupDraggablePanel に完全委譲し、重複する手動位置ロジックを削除
 // @history       0.2.20 UI共通化: パネルの外枠を gemini-common.html に統合し、ダブルクリックで開閉するように変更
 // @history       0.2.19 UI構築ロジックを外部HTMLテンプレート (@resource) に移行し、コードの保守性を向上
 // @history       0.2.18 UIパネルの最小化・復元をバージョン表示部分のダブルクリックで行うように変更（専用ボタンを削除）
@@ -218,23 +219,6 @@ const report = () => {
                 });
 
                 panelShell.id = 'gpi-test-ui';
-                
-                // Position logic
-                let gpiSavedX = GM_getValue('gpi_ui_x', window.innerWidth - 320);
-                let gpiSavedY = GM_getValue('gpi_ui_y', window.innerHeight - 320);
-
-                const uiWidth = 300;
-                const uiHeight = 250;
-                if (gpiSavedX < 0) gpiSavedX = 0;
-                if (gpiSavedY < 0) gpiSavedY = 0;
-                if (gpiSavedX + uiWidth > window.innerWidth) gpiSavedX = window.innerWidth - uiWidth;
-                if (gpiSavedY + uiHeight > window.innerHeight) gpiSavedY = window.innerHeight - uiHeight;
-
-                panelShell.style.left = `${gpiSavedX}px`;
-                panelShell.style.top = `${gpiSavedY}px`;
-                panelShell.style.right = 'auto';
-                panelShell.style.bottom = 'auto';
-
                 document.body.appendChild(panelShell);
 
                 // Setup unified UI behaviors
@@ -297,32 +281,6 @@ const report = () => {
                     };
                 }
 
-                // Re-adjust position on window resize
-                window.addEventListener('resize', () => {
-                    let currentX = uiContainer.offsetLeft;
-                    let currentY = uiContainer.offsetTop;
-                    const width = uiContainer.offsetWidth;
-                    const height = uiContainer.offsetHeight;
-
-                    let adjusted = false;
-                    if (currentX + width > window.innerWidth) {
-                        currentX = window.innerWidth - width;
-                        adjusted = true;
-                    }
-                    if (currentY + height > window.innerHeight) {
-                        currentY = window.innerHeight - height;
-                        adjusted = true;
-                    }
-                    if (currentX < 0) { currentX = 0; adjusted = true; }
-                    if (currentY < 0) { currentY = 0; adjusted = true; }
-
-                    if (adjusted) {
-                        uiContainer.style.left = `${currentX}px`;
-                        uiContainer.style.top = `${currentY}px`;
-                        GM_setValue('gpi_ui_x', currentX);
-                        GM_setValue('gpi_ui_y', currentY);
-                    }
-                });
             }
 
             function init() {
