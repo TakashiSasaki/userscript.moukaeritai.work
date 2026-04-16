@@ -558,10 +558,10 @@
             }
         }
         
-        const activeName = shell.querySelector('.gus-panel-name');
-        if (activeName) {
-            activeName.textContent = options.name || options.title || '';
-        }
+        const panelNames = shell.querySelectorAll('.gus-panel-name');
+        panelNames.forEach(el => {
+            el.textContent = options.name || options.title || '';
+        });
 
         const activeVersion = shell.querySelector('.gus-panel-version');
         if (activeVersion) {

@@ -124,9 +124,21 @@ span.gus-version:active {
     padding: 12px;
 }
 
-.gus-active-content, .gus-inactive-content {
+.gus-active-content {
     display: flex;
     flex-direction: column;
+}
+
+.gus-inactive-content {
+    display: none;
+    flex-direction: row;
+    align-items: center;
+}
+
+.gus-inactive-content .gus-panel-name {
+    margin-left: 8px;
+    font-size: 0.9em;
+    font-weight: 500;
 }
 
 .gus-inactive-content {
