@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.54
+// @version      0.2.56
 // @lastModified 2026-04-16
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
@@ -20,6 +20,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.2.56 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
 // @history       0.2.54 リソース化リファクタリング: UIテンプレート(HTML)を外部ファイルに分離
 // @history       0.2.52 リソースファイル (style.css) をスクリプト名と同じステムに改名
 // @history       0.2.50 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
@@ -176,25 +177,31 @@
 
             injectStyles();
 
-            const template = GM_getResourceText('geminiAutoSelectNextHTML');
-            if (!template) {
-                console.error('[GeminiAutoSelectNext] Template not found');
+            const commonHTMLStr = GM_getResourceText('gusCommonHTML');
+            const innerHTMLStr = GM_getResourceText('geminiAutoSelectNextHTML');
+            if (!commonHTMLStr || !innerHTMLStr) {
+                console.error('[GeminiAutoSelectNext] Templates not found');
                 return;
             }
 
-            const panel = document.createElement('div');
+            const contentDiv = document.createElement('div');
+            window.geminiSetInnerHTML(contentDiv, innerHTMLStr, policy);
+
+            const panel = window.geminiCreateCommonPanel({
+                htmlString: commonHTMLStr,
+                policy: policy,
+                icon: gusEmoji,
+                name: GM_info.script.name,
+                version: GM_info.script.version,
+                contentElement: contentDiv
+            });
+
             panel.id = 'gemini-auto-switch-panel';
-            panel.className = 'gus-panel';
-
-            window.geminiSetInnerHTML(panel, template, policy);
-
-            // Populate dynamic content
-            const versionElement = panel.querySelector('.gus-version');
-            if (versionElement) {
-                versionElement.textContent += `${GM_info.script.version} ${gusEmoji}`;
-            }
-
             document.body.appendChild(panel);
+
+            const handle = panel.querySelector('.gus-panel-header') || panel;
+            window.geminiSetupDraggablePanel(panel, handle, CONSTANTS.PANEL_POSITION_KEY, { top: '80px', right: '20px' });
+            window.geminiSetupMinimizablePanel(panel, CONSTANTS.STORAGE_KEY_MINIMIZED, handle, false);
 
             const checkbox = panel.querySelector('.auto-switch-checkbox');
             if (checkbox) {
@@ -210,15 +217,6 @@
                     e.stopPropagation();
                     selectNextConversation(0, true);
                 });
-            }
-
-            requestAnimationFrame(() => {
-                panel.classList.add('ready');
-            });
-
-            const handle = panel.querySelector('.version-badge');
-            if (handle) {
-                window.geminiSetupDraggablePanel(panel, handle, CONSTANTS.PANEL_POSITION_KEY, { top: '80px', right: '20px' });
             }
 
             updatePanelUI();

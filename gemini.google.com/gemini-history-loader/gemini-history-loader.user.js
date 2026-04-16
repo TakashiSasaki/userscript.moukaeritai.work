@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini History Loader
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.24
+// @version      0.1.25
 // @lastModified 2026-04-15
 // @description  A utility script that forces Gemini to load the entire chat history by programmatically scrolling to the top. Features a compact floating UI that expands when loading history.
 // @author       Takashi Sasaki
@@ -12,12 +12,14 @@
 // @grant        GM_addStyle
 // @grant        GM_getResourceText
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
+// @resource     gusCommonHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.html
 // @resource     geminiHistoryLoaderCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.css
 // @resource     geminiHistoryLoaderHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @noframes
+// @history       0.1.25 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
 // @history       0.1.23 リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名
 // @history       0.1.21 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // ==/UserScript==
@@ -41,26 +43,22 @@ const report = () => {
     const { emoji: gusEmoji } = registerGeminiUserscript(GM_info.script.name, GM_info.script.version);
 
     const initUserScript = () => {
+        const policy = window.geminiCreateTrustedHTMLPolicy('geminiHistoryLoader');
 
-        const initUserScript = () => {
-
-            const policy = window.geminiCreateTrustedHTMLPolicy('geminiHistoryLoader');
-
-            if (typeof GM_addStyle !== 'undefined' && typeof GM_getResourceText !== 'undefined') {
-                // Inject shared common styles
-                const commonCSS = GM_getResourceText('geminiCommon');
-                if (commonCSS && !document.getElementById('gemini-common-styles')) {
-                    const commonStyle = document.createElement('style');
-                    commonStyle.textContent = commonCSS;
-                    commonStyle.id = 'common-styles';
-                    document.head.appendChild(commonStyle);
-                }
-
-                const css = GM_getResourceText('geminiHistoryLoaderCSS');
-                if (css) {
-                    GM_addStyle(css);
-                }
+        if (typeof GM_addStyle !== 'undefined' && typeof GM_getResourceText !== 'undefined') {
+            const commonCSS = GM_getResourceText('geminiCommon');
+            if (commonCSS && !document.getElementById('gemini-common-styles')) {
+                const commonStyle = document.createElement('style');
+                commonStyle.textContent = commonCSS;
+                commonStyle.id = 'gemini-common-styles';
+                document.head.appendChild(commonStyle);
             }
+
+            const css = GM_getResourceText('geminiHistoryLoaderCSS');
+            if (css) {
+                GM_addStyle(css);
+            }
+        }
 
             // --- Trusted Types ---
 
@@ -125,25 +123,34 @@ const report = () => {
             let progressTextEl = null;
             let statusTextEl = null;
 
-            function createUI() {
-                if (uiPanel) return;
+        function createUI() {
+            if (uiPanel) return;
 
-                uiPanel = document.createElement('div');
-                uiPanel.id = 'gemini-history-loader-panel';
-                uiPanel.className = 'gus-panel';
+            const commonHTMLStr = GM_getResourceText('gusCommonHTML');
+            const innerHTMLStr = GM_getResourceText('geminiHistoryLoaderHTML');
+            if (!commonHTMLStr || !innerHTMLStr) return;
 
-                const templateStr = GM_getResourceText('geminiHistoryLoaderHTML').replace(/{{scriptVersion}}/g, `🔄 ${GM_info.script.version} ${gusEmoji}`);
-                window.geminiSetInnerHTML(uiPanel, templateStr, policy);
-                document.body.appendChild(uiPanel);
+            const contentDiv = document.createElement('div');
+            window.geminiSetInnerHTML(contentDiv, innerHTMLStr, policy);
 
-                progressTextEl = uiPanel.querySelector('#ghl-progress-text');
-                statusTextEl = uiPanel.querySelector('#ghl-status-text');
+            uiPanel = window.geminiCreateCommonPanel({
+                htmlString: commonHTMLStr,
+                policy: policy,
+                icon: gusEmoji,
+                name: GM_info.script.name,
+                version: GM_info.script.version,
+                contentElement: contentDiv
+            });
 
-                const versionHandle = uiPanel.querySelector('.ghl-script-version');
-                if (versionHandle) {
-                    window.geminiSetupDraggablePanel(uiPanel, versionHandle, PANEL_POSITION_KEY, { right: '20px', top: '100px' });
-                }
-            }
+            document.body.appendChild(uiPanel);
+
+            progressTextEl = uiPanel.querySelector('#ghl-progress-text');
+            statusTextEl = uiPanel.querySelector('#ghl-status-text');
+
+            const handle = uiPanel.querySelector('.gus-panel-header') || uiPanel;
+            window.geminiSetupDraggablePanel(uiPanel, handle, PANEL_POSITION_KEY, { right: '20px', top: '100px' });
+            window.geminiSetupMinimizablePanel(uiPanel, 'gemini-history-loader-minimized', handle, false);
+        }
 
 
 
@@ -281,18 +288,10 @@ const report = () => {
                 });
             }
 
-            document.addEventListener('gemini-history-loader:request', (e) => {
-                const reqId = e.detail && e.detail.reqId ? e.detail.reqId : `req_${Date.now()}`;
-                loadChatHistory(reqId);
-            });
-
-        };
-
-        if (document.readyState === 'complete') {
-            initUserScript();
-        } else {
-            window.addEventListener('load', initUserScript);
-        }
+        document.addEventListener('gemini-history-loader:request', (e) => {
+            const reqId = e.detail && e.detail.reqId ? e.detail.reqId : `req_${Date.now()}`;
+            loadChatHistory(reqId);
+        });
     };
 
     if (document.readyState === 'complete') {

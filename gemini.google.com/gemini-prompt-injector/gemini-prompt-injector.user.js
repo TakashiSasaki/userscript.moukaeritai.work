@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.22
+// @version      0.2.23
 // @description  Injects a prompt into Gemini via an external custom event.
 // @lastModified 2026-04-16
 // @author       Takashi Sasaki
@@ -21,6 +21,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @noframes
+// @history       0.2.23 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
 // @history       0.2.22 クリーンアップ: 不要になった古いUI用のCSSセレクタを削除し、共通テンプレートへの適合を強化
 // @history       0.2.21 位置管理を geminiSetupDraggablePanel に完全委譲し、重複する手動位置ロジックを削除
 // @history       0.2.19 UI構築ロジックを外部HTMLテンプレート (@resource) に移行し、コードの保守性を向上
@@ -213,8 +214,9 @@ const report = () => {
                 const panelShell = window.geminiCreateCommonPanel({
                     htmlString: commonHTMLStr,
                     policy: policy,
-                    title: `💉 ${scriptVersion} ${gusEmoji}`,
-                    icon: `💉 ${scriptVersion} ${gusEmoji}`,
+                    icon: gusEmoji,
+                    name: GM_info.script.name,
+                    version: GM_info.script.version,
                     contentElement: contentDiv
                 });
 
