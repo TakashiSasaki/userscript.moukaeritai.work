@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.37
+// @version      0.2.38
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
-// @lastModified 2026-04-16
+// @lastModified 2026-04-17
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://gemini.google.com/*
@@ -22,6 +22,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @noframes
+// @history       0.2.38 Canvasエディタ内のエクスポートボタン特定ロジックを強化（data-mat-icon-nameセレクタを追加）。
 // @history       0.2.37 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
 // @history       0.2.36 共通テンプレートの更新（アイコンとバージョンの分離）を反映。
 // @history       0.2.35 パネルのドラッグハンドルをパネル全体に拡張し、最小化状態でも移動可能に修正。不要な関数宣言の二重定義を修正。
@@ -112,7 +113,7 @@ const report = () => {
                 SIDEBAR_CHIP: 'button.container:has(mat-icon[fonticon="article"])',
                 CHIP_TITLE: 'div:nth-child(2) > div:first-child',
                 SHARE_BUTTON: 'extended-response-panel share-button button, extended-response-panel button:has(mat-icon[fonticon="share"]), button.export-menu-button',
-                EXPORT_BUTTON: 'button[data-test-id="export-to-docs-button"], .mat-mdc-menu-item:has(mat-icon[fonticon="docs"]), button[aria-label*="Google ドキュメントにエクスポート"], button[aria-label*="Export to Google Docs"]',
+                EXPORT_BUTTON: 'button[data-test-id="export-to-docs-button"], .mat-mdc-menu-item:has(mat-icon[fonticon="docs"]), button[role="menuitem"]:has(mat-icon[data-mat-icon-name="google_docs_color"]), button[aria-label*="Google ドキュメントにエクスポート"], button[aria-label*="Export to Google Docs"]',
                 MENU_PANEL: '.mat-mdc-menu-panel, mat-menu-panel',
                 CANVAS_CLOSE_BUTTON: 'button[data-test-id="close-button"], button.close-button',
                 CHAT_ARTIFACT_CONTAINER: 'div.container.clickable:has([data-test-id="artifact-text"]), deep-research-entry-chip-content',
