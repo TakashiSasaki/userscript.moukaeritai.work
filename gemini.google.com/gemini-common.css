@@ -80,6 +80,7 @@ span.gus-version:active {
     border-radius: var(--gus-panel-radius) !important;
     border: var(--gus-panel-border) !important;
     font-family: var(--gus-panel-font) !important;
+    font-size: 13px !important;
     color: var(--gus-panel-color) !important;
     user-select: none !important;
     position: fixed;

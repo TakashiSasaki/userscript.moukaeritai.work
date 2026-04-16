@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.67
+// @version      0.4.68
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-16
 // @author       Takashi Sasaki
@@ -20,6 +20,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.4.68 共通スタイルの更新により、パネルのベースフォントサイズを 13px に統一。
 // @history       0.4.67 条件を満たさない会話時にパネルを完全に非表示にするのではなく、最小化状態で待機するように変更。条件成立時の手動での開閉設定を尊重するように改善。
 // @history       0.4.66 ヘッダー右側のバージョン表示を廃止
 // @history       0.4.65 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
