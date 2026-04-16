@@ -548,15 +548,15 @@
             activeHeader.title = options.name || options.title || '';
         }
 
-        const inactiveIcon = shell.querySelector('.gus-panel-icon');
-        if (inactiveIcon) {
+        const icons = shell.querySelectorAll('.gus-panel-icon');
+        icons.forEach(el => {
             // Priority: Name + Version (New format) > Icon (Legacy)
             if (options.name && options.version) {
-                inactiveIcon.textContent = `${options.icon || ''} v${options.version}`.trim();
+                el.textContent = `${options.icon || ''} v${options.version}`.trim();
             } else {
-                inactiveIcon.textContent = options.icon || options.title || '';
+                el.textContent = options.icon || options.title || '';
             }
-        }
+        });
         
         const panelNames = shell.querySelectorAll('.gus-panel-name');
         panelNames.forEach(el => {
