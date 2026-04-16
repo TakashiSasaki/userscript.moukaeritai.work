@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.66
+// @version      0.4.67
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-16
 // @author       Takashi Sasaki
@@ -20,6 +20,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.4.67 非対象の会話でもパネルを完全に消さず、最小化表示するように変更。対象の会話に戻った際はユーザーの以前の開閉状態を復元するように改善。
 // @history       0.4.66 ヘッダー右側のバージョン表示を廃止
 // @history       0.4.65 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
 // @history       0.4.64 UI改善: シングルクリックでの開閉に対応し、タイトルとバージョンの表示形式を [絵文字] [名称] v[バージョン] に統一
@@ -434,6 +435,9 @@
                 return match ? match[1] : null;
             }
 
+            let isContextActive = true; // Default to active, will be updated immediately
+            let panelControls = null; // Defined here to be accessible by updateOneTurnVisibility
+
             function updateOneTurnVisibility() {
                 const turns = document.querySelectorAll(SELECTORS.aiTurnContainer);
                 // Note: Gemini UI can be slow to update styles/classes.
@@ -449,8 +453,17 @@
                 }
 
                 if (isOneTurn) {
-                    // Update: Managing visibility via shell element
-                    panel.style.display = 'flex';
+                    // Transition to Active if it was inactive
+                    if (!isContextActive) {
+                        isContextActive = true;
+                        panel.classList.remove('gus-context-inactive');
+                        console.log('[Gemini 1-Turn] Context became active. Restoring user display preference.');
+                        // Restore state from storage without manual override
+                        const saved = localStorage.getItem('ge2d-minimized');
+                        if (saved !== null && panelControls) {
+                            panelControls.setMinimized(saved === 'true');
+                        }
+                    }
 
                     // --- Auto URL Export Logic ---
                     if (!autoExportTriggered && GM_getValue(AUTO_URL_TOGGLE_KEY, false)) {
@@ -558,8 +571,15 @@
                             console.error('[Gemini 1-Turn Auto] Error matching URLs:', e);
                         }
                     }
-                } else if (panel) {
-                    panel.style.display = 'none';
+                } else {
+                    // Transition to Inactive if it was active
+                    if (isContextActive) {
+                        isContextActive = false;
+                        panel.classList.add('gus-context-inactive');
+                        console.log('[Gemini 1-Turn] Context became inactive. Forcing minimization.');
+                        // Force minimize visually without overwriting the "Active" preference in localStorage
+                        panel.classList.add('gus-minimized');
+                    }
                     autoExportTriggered = false; // Reset trigger state if UI is closed (e.g., user started a new topic or more turns added)
                     if (autoExportTimerId) {
                         clearInterval(autoExportTimerId);
@@ -730,7 +750,15 @@
                 }
 
                 // Minimizable Logic
-                window.geminiSetupMinimizablePanel(panelShell, 'ge2d-minimized', dragHandle, false);
+                panelControls = window.geminiSetupMinimizablePanel(panelShell, 'ge2d-minimized', dragHandle, false);
+
+                // Add a capture phase listener to block expansion when context is inactive
+                panelShell.addEventListener('click', (e) => {
+                    if (panelShell.classList.contains('gus-context-inactive')) {
+                        console.log('[Gemini 1-Turn] Click blocked: Panel is in inactive context.');
+                        e.stopPropagation();
+                    }
+                }, true);
 
                 const checkDep = (id, scriptName) => {
                     window.geminiCheckTargetUserscript(scriptName, 1000).then(res => {
