@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.31
+// @version      0.2.32
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @lastModified 2026-04-15
 // @author       Takashi Sasaki
@@ -15,12 +15,15 @@
 // @grant        GM_deleteValue
 // @grant        GM_getResourceText
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
+// @resource     gusCommonHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.html
 // @resource     geminiArtifactExporterWorkerCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.css
 // @resource     geminiArtifactExporterWorkerHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @noframes
+// @history       0.2.32 共通テンプレート (geminiCreateCommonPanel) への移行とUI標準化
+// @history       0.2.31 共通ライブラリの更新に伴う未使用変数の削除
 // @history       0.2.30 リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名
 // @history       0.2.29 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)
 // ==/UserScript==
@@ -99,46 +102,6 @@ const report = () => {
 
 
 
-            // UI Helper for displaying status
-            function showTargetScriptStatus(targetName, statusDetail) {
-                const uiId = 'userscript-target-status-ui';
-                let ui = document.getElementById(uiId);
-
-                if (!ui) {
-                    const template = document.getElementById('tpl-target-status-ui');
-                    if (template) {
-                        const clone = template.content.cloneNode(true);
-                        ui = clone.querySelector('#userscript-target-status-ui');
-                        ui.className += ' gus-panel';
-                        document.body.appendChild(clone);
-                    } else {
-                        console.error('[Gemini Artifact Exporter Worker] Fatal Error: tpl-target-status-ui not found. Status indicator cannot be displayed.');
-                        return;
-                    }
-
-                    // Position is managed entirely by geminiSetupDraggablePanel
-
-                    // Make draggable
-                    window.geminiSetupDraggablePanel(ui, ui, 'userscript-status-ui-pos', { right: '20px', top: '100px' });
-                }
-
-                const statusText = statusDetail
-                    ? `✅ ${targetName} (v${statusDetail.version})`
-                    : `❌ ${targetName} Not Found`;
-
-                const titleDiv = ui.querySelector('.target-status-title');
-                const statusDiv = ui.querySelector('.target-status-text') || ui;
-
-                if (titleDiv) titleDiv.textContent = 'Script Status:';
-                statusDiv.textContent = statusText;
-
-                // Auto hide after 5 seconds if successful, keep if failed
-                if (statusDetail) {
-                    setTimeout(() => {
-                        if (ui && ui.parentNode) ui.parentNode.removeChild(ui);
-                    }, 5000);
-                }
-            }
 
 
             const SELECTORS = {
@@ -237,19 +200,19 @@ const report = () => {
                                 document.addEventListener('EmulateDocsPasteSuccess', handler);
                             });
 
-                            window.geminiCheckTargetUserscript('Auto Paste in New Tab').then((installed) => { showTargetScriptStatus('Auto Paste in New Tab', installed); document.dispatchEvent(new CustomEvent('EmulateDocsPaste')); });
+                            window.geminiCheckTargetUserscript('Auto Paste in New Tab').then((installed) => { window.geminiShowTargetScriptStatus('gemini-worker-export-status', 'Auto Paste in New Tab', installed); document.dispatchEvent(new CustomEvent('EmulateDocsPaste')); });
 
                             // Wait for the completion event (or timeout) instead of a fixed 5 seconds
                             await pasteCompletionPromise;
 
                             log('Dispatching gemini-docs-closer-force-close to close tab.');
-                            window.geminiCheckTargetUserscript('Gemini Exported Docs Auto-Closer').then((installed) => { showTargetScriptStatus('Gemini Exported Docs Auto-Closer', installed); document.dispatchEvent(new CustomEvent('gemini-docs-closer-force-close')); });
+                            window.geminiCheckTargetUserscript('Gemini Exported Docs Auto-Closer').then((installed) => { window.geminiShowTargetScriptStatus('gemini-worker-export-status', 'Gemini Exported Docs Auto-Closer', installed); document.dispatchEvent(new CustomEvent('gemini-docs-closer-force-close')); });
                         } else {
                             log('No valid images copied or data was stale. Proceeding as normal without pasting.');
                             // Close the tab anyway
                             await window.geminiSleep(2000);
                             log('Dispatching gemini-docs-closer-force-close to close tab.');
-                            window.geminiCheckTargetUserscript('Gemini Exported Docs Auto-Closer').then((installed) => { showTargetScriptStatus('Gemini Exported Docs Auto-Closer', installed); document.dispatchEvent(new CustomEvent('gemini-docs-closer-force-close')); });
+                            window.geminiCheckTargetUserscript('Gemini Exported Docs Auto-Closer').then((installed) => { window.geminiShowTargetScriptStatus('gemini-worker-export-status', 'Gemini Exported Docs Auto-Closer', installed); document.dispatchEvent(new CustomEvent('gemini-docs-closer-force-close')); });
                         }
                     }, 500); // Start checking earlier, as we now wait for the element
                 }
@@ -351,43 +314,47 @@ const report = () => {
             }
 
 
-            // --- UI Indicator ---
-
+            let workerPanel = null;
+            let statusContainer = null;
             let hideTimeoutId = null;
 
             function getOrCreateIndicator() {
-                let indicator = document.getElementById('gemini-worker-export-indicator');
-                if (!indicator) {
-                    const template = document.getElementById('tpl-worker-indicator');
-                    if (template) {
-                        const clone = template.content.cloneNode(true);
-                        indicator = clone.querySelector('#gemini-worker-export-indicator');
-                        indicator.className += ' gus-panel';
-                        document.body.appendChild(clone);
-                    } else {
-                        console.error('[Gemini Artifact Exporter Worker] Fatal Error: tpl-worker-indicator not found. Worker indicator cannot be displayed.');
-                        return null;
-                    }
+                if (workerPanel) return workerPanel;
 
-                    // Position is managed entirely by geminiSetupDraggablePanel
+                const commonHTMLStr = GM_getResourceText('gusCommonHTML');
+                if (!commonHTMLStr) return null;
 
-                    const handle = indicator.querySelector('.worker-indicator-handle');
-                    if (handle) {
-                        const versionDiv = handle.querySelector('.worker-indicator-version');
-                        if (versionDiv) versionDiv.textContent = `⚙️ ${GM_info.script.version} ${gusEmoji}`;
-                        handle.title = GM_info.script.name;
+                const contentDiv = document.createElement('div');
+                contentDiv.id = 'gemini-worker-export-status';
 
-                        // Make draggable
-                        window.geminiSetupDraggablePanel(indicator, handle, 'gemini-worker-export-indicator-pos', { right: '20px', bottom: '20px' });
-                    }
-                }
-                return indicator;
+                workerPanel = window.geminiCreateCommonPanel({
+                    htmlString: commonHTMLStr,
+                    policy: policy,
+                    icon: gusEmoji,
+                    name: GM_info.script.name,
+                    version: GM_info.script.version,
+                    contentElement: contentDiv
+                });
+
+                document.body.appendChild(workerPanel);
+
+                // Setup drag and minimization
+                const handle = workerPanel.querySelector('.gus-panel-header') || workerPanel;
+                window.geminiSetupDraggablePanel(workerPanel, handle, 'gemini-worker-export-indicator-pos', { right: '20px', bottom: '20px' });
+                window.geminiSetupMinimizablePanel(workerPanel, 'gemini-worker-minimized', handle, false);
+
+                statusContainer = contentDiv;
+                return workerPanel;
             }
 
             function showIndicator(message, isSuccess = false, isError = false) {
                 getOrCreateIndicator(); // Ensure UI exists
-                const statusContainer = document.getElementById('gemini-worker-export-status');
                 if (!statusContainer) return;
+
+                // Auto-expand if a new message comes in (optional UX preference)
+                if (workerPanel && workerPanel.classList.contains('gus-minimized')) {
+                   workerPanel.classList.remove('gus-minimized');
+                }
 
                 if (hideTimeoutId) {
                     clearTimeout(hideTimeoutId);
@@ -729,7 +696,7 @@ const report = () => {
                     });
 
                     log('Dispatching gemini-turn-counter-copy-images event...');
-                    window.geminiCheckTargetUserscript('Gemini Turn Counter').then((installed) => { showTargetScriptStatus('Gemini Turn Counter', installed); document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images', { detail: { target: 'all' } })); });
+                    window.geminiCheckTargetUserscript('Gemini Turn Counter').then((installed) => { window.geminiShowTargetScriptStatus('gemini-worker-export-status', 'Gemini Turn Counter', installed); document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images', { detail: { target: 'all' } })); });
 
                     const copyResult = await imageCopyResultPromise;
 
