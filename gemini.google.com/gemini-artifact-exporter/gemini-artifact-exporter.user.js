@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.36
-// @lastModified 2026-04-15
+// @version      0.4.37
+// @lastModified 2026-04-16
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -14,12 +14,14 @@
 // @grant        GM_addStyle
 // @grant        GM_getResourceText
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
+// @resource     gusCommonHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.html
 // @resource     geminiArtifactExporterCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.css
 // @resource     geminiArtifactExporterHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @noframes
+// @history       0.4.37 UI共通化: パネルの外枠を gemini-common.html に統合し、ダブルクリックで開閉するように変更
 // @history       0.4.35 リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名
 // @history       0.4.34 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)
 // ==/UserScript==
@@ -605,95 +607,89 @@
 
                 log('Creating Artifact Exporter panel UI.');
 
+                const templateHTML = GM_getResourceText('geminiArtifactExporterHTML');
+                const commonHTMLStr = GM_getResourceText('gusCommonHTML');
+                if (!templateHTML || !commonHTMLStr) {
+                    console.error('[Gemini Artifact Exporter] Resource not found');
+                    return;
+                }
 
+                const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '';
 
-                const panel = document.createElement('div');
-                panel.id = 'gemini-batch-export-panel';
-                panel.className = 'gus-panel';
-                panel.style.display = 'flex'; // Always visible (minimal state)
+                // Create inner content wrapper
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'gae-content';
+                window.geminiSetInnerHTML(contentDiv, templateHTML, policy);
 
-                const templateStr = GM_getResourceText('geminiArtifactExporterHTML').replace(/📦 {{scriptVersion}}/g, `📦 ${GM_info.script.version} ${gusEmoji}`);
-                window.geminiSetInnerHTML(panel, templateStr, policy);
-                document.body.appendChild(panel);
+                // Assemble panel shell
+                const panelShell = window.geminiCreateCommonPanel({
+                    htmlString: commonHTMLStr,
+                    policy: policy,
+                    title: `📦 ${scriptVersion} ${gusEmoji}`,
+                    icon: `📦 ${scriptVersion} ${gusEmoji}`,
+                    contentElement: contentDiv
+                });
+
+                panelShell.id = 'gemini-batch-export-panel';
+                document.body.appendChild(panelShell);
+
                 log('Artifact Exporter panel attached to document body.');
 
-                // Check dependencies for persistent UI indicators
-
                 // Bind events
-                const scanBtn = panel.querySelector('#gemini-btn-scan');
+                const scanBtn = panelShell.querySelector('#gemini-btn-scan');
                 if (scanBtn) scanBtn.onclick = () => scanArtifacts();
 
-                const deepScanBtn = panel.querySelector('#gemini-btn-deep-scan');
+                const deepScanBtn = panelShell.querySelector('#gemini-btn-deep-scan');
                 if (deepScanBtn) deepScanBtn.onclick = () => deepScanArtifacts();
 
-                const exportBtn = panel.querySelector('#gemini-btn-export');
+                const exportBtn = panelShell.querySelector('#gemini-btn-export');
                 if (exportBtn) exportBtn.onclick = () => runBatchExport();
 
-                const autoDeleteCb = panel.querySelector('#gae-auto-delete-cb');
+                const autoDeleteCb = panelShell.querySelector('#gae-auto-delete-cb');
                 if (autoDeleteCb) {
                     autoDeleteCb.checked = GM_getValue(AUTO_DELETE_KEY, false);
                     autoDeleteCb.onchange = (e) => GM_setValue(AUTO_DELETE_KEY, e.target.checked);
                 }
 
-                const versionHandle = panel.querySelector('.gae-version-handle');
-                if (versionHandle) {
-                    window.geminiSetupDraggablePanel(panel, versionHandle, PANEL_POSITION_KEY, { right: '20px', bottom: '20px' });
+                const dragHandle = panelShell.querySelector('.gus-panel-header');
+                const inactiveHandle = panelShell.querySelector('.gus-inactive-content');
+                if (inactiveHandle) {
+                    window.geminiSetupDraggablePanel(panelShell, inactiveHandle, PANEL_POSITION_KEY, { right: '20px', bottom: '20px' });
                 }
+                if (dragHandle) {
+                    window.geminiSetupDraggablePanel(panelShell, dragHandle, PANEL_POSITION_KEY, { right: '20px', bottom: '20px' });
+                }
+
+                // Set up minimizable panel
+                window.geminiSetupMinimizablePanel(panelShell, 'gae-minimized', dragHandle, false);
             }
 
             function updateButtonVisibility() {
-                // Required element for this script to work
-                const actionsMenuExists = document.querySelector(SELECTORS.ACTIONS_MENU_BUTTON) !== null;
+                // Check for conversation page
+                if (!isConversationPage()) {
+                    const panel = document.getElementById('gemini-batch-export-panel');
+                    if (panel) panel.style.display = 'none';
+                    return;
+                }
 
-                // Check if there are any article artifacts actually present in the chat stream
-                // This is the trigger to show/hide the UI.
+                // Required elements for full UI
+                const actionsMenuExists = document.querySelector(SELECTORS.ACTIONS_MENU_BUTTON) !== null;
                 const hasArtifacts = document.querySelector('mat-icon[fonticon="article"], .mat-icon[fonticon="article"]') !== null;
 
-                // If the essential element is missing or no artifacts are found, we hide the panel
-                const shouldActive = isConversationPage() && actionsMenuExists && hasArtifacts;
+                const shouldActive = actionsMenuExists && hasArtifacts;
 
                 let panel = document.getElementById('gemini-batch-export-panel');
                 if (!panel) {
-                    if (!isConversationPage()) return; // Don't even create it if not on chat page
                     log(`Creating panel (url=${window.location.href}).`);
                     createTriggerButtons();
                     panel = document.getElementById('gemini-batch-export-panel');
                     if (!panel) return;
                 }
 
-                // Hide entire panel if not on a conversation page
-                if (!isConversationPage()) {
-                    panel.style.display = 'none';
-                    return;
-                }
-
-                // The panel wrapper itself is always visible in its minimal state in chat
-                panel.style.display = 'flex';
-
-                const mainContent = panel.querySelector('#gae-main-content');
-                if (mainContent) {
-                    const wasHidden = mainContent.style.display === 'none';
-                    // Explicitly set the display property based on shouldActive
-                    mainContent.style.display = shouldActive ? 'flex' : 'none';
-
-                    if (shouldActive && wasHidden) {
-                        log('Visibility check passed. Showing main panel contents.');
-                    } else if (!shouldActive && !wasHidden) {
-                        log(`Visibility check failed. Hiding main panel contents (conversation=${isConversationPage()}, actionsMenu=${actionsMenuExists}, hasArtifacts=${hasArtifacts}).`);
-                    }
-                }
-
-                // Adjust panel styling based on minimized state
-                if (shouldActive) {
-                    panel.style.backgroundColor = 'var(--gus-panel-bg)';
-                    panel.style.border = 'var(--gus-panel-border)';
-                    panel.style.boxShadow = 'var(--gus-panel-shadow)';
-                } else {
-                    panel.style.backgroundColor = 'transparent';
-                    panel.style.border = 'none';
-                    panel.style.boxShadow = 'none';
-                }
-                panel.style.zIndex = '10000';
+                // The panel shell should be visible if we are on a conversation page.
+                // However, the common library handles minimized/active states.
+                // If there are NO artifacts, we typically want to hide the panel entirely.
+                panel.style.display = shouldActive ? 'flex' : 'none';
 
                 if (shouldActive) {
                     // Automatic Sidebar Scan Trigger

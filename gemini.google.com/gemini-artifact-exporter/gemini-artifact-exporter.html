@@ -1,19 +1,25 @@
-<div id="gae-script-status-container"></div>
-<div id="gae-main-content" class="gae-main-content">
-    <div class="gae-button-container">
-        <div class="gae-scan-buttons-container">
-            <button id="gemini-btn-scan" class="gae-scan-btn" title="右サイドバーにある「このチャット内のファイル一覧」を展開してスキャンします。">Scan Sidebar</button>
-            <button id="gemini-btn-deep-scan" class="gae-deep-scan-btn" title="メイン会話履歴を上部までスクロールしながら、履歴に埋まっているアーティファクトをすべて検出します。数秒かかります。">Scan Chat History</button>
+<div class="gae-exporter-container">
+    <div id="gae-script-status-container" class="gus-script-status-container"></div>
+    <div id="gae-main-content" style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+        <div class="gae-button-group">
+            <button id="gemini-btn-scan" class="gae-button">Scan Artifacts</button>
+            <button id="gemini-btn-deep-scan" class="gae-button secondary">Deep Scan</button>
         </div>
-        <div id="gemini-artifact-list-container"></div>
-        <div class="gae-export-row">
-            <button id="gemini-btn-export" class="gae-export-btn" title="選択したアーティファクトをGoogle Docsにエクスポートします。">Export Selected</button>
-            <label class="gae-checkbox-container" title="Export後に自動でチャットを削除します">
-                <input type="checkbox" class="gae-checkbox" id="gae-auto-delete-cb"> Auto-Delete
+
+        <div id="gemini-artifact-list-container" class="gae-list-container" style="display: none;">
+            <!-- Rendered by JS -->
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button id="gemini-btn-export" class="gae-button primary" style="display: none; flex: 1;">Export Selected</button>
+            <span id="gemini-batch-export-progress" style="font-size: 12px; color: var(--gus-panel-text); min-width: 40px; text-align: center;"></span>
+        </div>
+
+        <div class="gae-options">
+            <label class="gae-checkbox-label">
+                <input type="checkbox" id="gae-auto-delete-cb">
+                Auto-delete conversation after export
             </label>
         </div>
-        <div id="gemini-batch-export-progress"></div>
     </div>
 </div>
-<!-- Dependencies and Version -->
-<span id="gae-version-handle" class="gae-version-handle gus-version" title="Gemini Artifact Exporter">📦 {{scriptVersion}}</span>

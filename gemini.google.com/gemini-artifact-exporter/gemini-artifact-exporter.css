@@ -1,198 +1,136 @@
-#gemini-artifact-list-container {
-    display: none;
-    flex-direction: column;
-    padding: 4px;
-    background: rgba(0,0,0,0.2);
-    border-radius: 6px;
-    border: 1px solid rgba(255,255,255,0.1);
-}
-.gae-select-all-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: bold;
-    color: white;
-    margin-bottom: 2px;
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    padding-bottom: 2px;
-    cursor: pointer;
-}
-.gae-scroll-area {
-    max-height: 120px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding-right: 2px;
-}
-.gae-artifact-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: rgba(255,255,255,0.8);
-    cursor: pointer;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex-shrink: 0;
-}
+/* Gemini Artifact Exporter Styles */
+
 #gemini-batch-export-panel {
-    position: fixed;
-    z-index: 9999;
+    /* Main container is now .gus-panel-shell */
+    width: 320px;
+    max-height: 80vh;
+}
+
+.gae-content {
     display: flex;
     flex-direction: column;
-    padding: 6px;
-    gap: 4px;
+    height: 100%;
+    padding: 0 12px 12px 12px;
 }
-.gae-main-content {
+
+.gae-button-group {
     display: flex;
-    flex-direction: column;
-}
-.gae-button-container {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-.gae-scan-btn {
-    padding: 6px 8px;
-    background-color: #3c4043;
-    color: white;
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 16px;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    transition: background-color 0.2s;
-    flex: 1;
-    font-size: 11px;
-}
-.gae-scan-btn:hover { background-color: #5f6368; }
-.gae-deep-scan-btn {
-    padding: 6px 8px;
-    background-color: #5bb974;
-    color: #202124;
-    border: none;
-    border-radius: 16px;
-    cursor: pointer;
-    font-weight: bold;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    transition: background-color 0.2s;
-    flex: 1;
-    font-size: 11px;
-}
-.gae-deep-scan-btn:hover { background-color: #4ca163; }
-.gae-scan-buttons-container {
-    display: flex;
-    flex-direction: row;
-    gap: 4px;
-    width: 100%;
-}
-.gae-export-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 6px;
-}
-.gae-export-btn {
-    padding: 6px 12px;
-    background-color: #1a73e8;
-    color: white;
-    border: none;
-    border-radius: 16px;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    transition: background-color 0.2s;
-    flex: 1;
-    font-size: 11px;
-    display: none;
-}
-.gae-export-btn:hover { background-color: #1b66c9; }
-.gae-checkbox-container {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    cursor: pointer;
-    font-family: 'Google Sans', sans-serif;
-    font-size: 11px;
-    color: #333;
-    white-space: nowrap;
-}
-.gae-checkbox {
-    width: 12px;
-    height: 12px;
-    cursor: pointer;
-    accent-color: #1a73e8;
-    margin: 0;
-}
-#gemini-batch-export-progress {
-    text-align: center;
-    font-size: 10px;
-    color: #444;
-    height: 1.2em;
-    margin-top: 2px;
-}
-#gae-script-status-container {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-.gae-status-item {
-    font-size: 10px;
-    padding: 4px 6px;
-    border-radius: 4px;
-    color: white;
-    font-family: 'Google Sans', sans-serif;
-    text-align: center;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    animation: fadein 0.3s;
-}
-.gae-status-success {
-    background-color: rgba(46, 160, 67, 0.4);
-    border: 1px solid rgba(46, 160, 67, 0.5);
-}
-.gae-status-error {
-    background-color: rgba(248, 81, 73, 0.4);
-    border: 1px solid rgba(248, 81, 73, 0.5);
-}
-@keyframes fadein {
-    from { opacity: 0; transform: translateY(-4px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-.gae-bottom-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     gap: 8px;
 }
 
-/* Add a border and margin only when the main content is visible above it */
-.gae-main-content[style*="display: flex"] + .gae-bottom-bar,
-.gae-main-content:not([style*="display: none"]) + .gae-bottom-bar {
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    padding-top: 4px;
-    margin-top: 2px;
+.gae-button {
+    background-color: var(--gus-panel-bg);
+    color: var(--gus-panel-text);
+    border: 1px solid var(--gus-panel-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    flex: 1;
+    transition: all 0.2s ease;
 }
-.gae-deps-row {
+
+.gae-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.gae-button.primary {
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+}
+
+.gae-button.primary:hover {
+    background-color: #1b66c9;
+}
+
+.gae-button.secondary {
+    background-color: #f1f3f4;
+    color: #3c4043;
+    border: none;
+}
+
+.gae-button.secondary:hover {
+    background-color: #e8eaed;
+}
+
+.gae-list-container {
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid var(--gus-panel-border);
+    border-radius: 8px;
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.gae-scroll-area {
+    max-height: 200px;
+    overflow-y: auto;
     display: flex;
-    gap: 6px;
-    font-size: 10px;
-    opacity: 0.8;
+    flex-direction: column;
+    gap: 4px;
 }
-.gae-dependency-icon {
-    cursor: help;
-    opacity: 0.65;
-    transition: opacity 0.2s;
+
+.gae-artifact-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--gus-panel-text);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-.gae-dependency-icon.installed {
-    opacity: 1;
+
+.gae-artifact-label:hover {
+    background-color: rgba(255, 255, 255, 0.05);
 }
-.gae-dependency-icon .dep-version {
-    font-size: 9px;
-    opacity: 0.8;
-    margin-left: 1px;
+
+.gae-select-all-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--gus-panel-text);
+    cursor: pointer;
+    border-bottom: 1px solid var(--gus-panel-border);
+    padding-bottom: 4px;
+    margin-bottom: 4px;
 }
-.gae-version-handle {
-    padding: 2px 4px;
+
+.gae-options {
+    border-top: 1px solid var(--gus-panel-border);
+    padding-top: 8px;
+}
+
+.gae-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--gus-panel-text);
+    cursor: pointer;
+}
+
+/* Scrollbar styles for the internal list */
+.gae-scroll-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.gae-scroll-area::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.gae-scroll-area::-webkit-scrollbar-thumb {
+    background: #5f6368;
+    border-radius: 3px;
+}
+
+.gae-scroll-area::-webkit-scrollbar-thumb:hover {
+    background: #80868b;
 }
