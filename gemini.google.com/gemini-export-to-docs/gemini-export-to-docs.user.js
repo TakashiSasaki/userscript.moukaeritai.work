@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.70
+// @version      0.4.71
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
-// @lastModified 2026-04-16
+// @lastModified 2026-04-17
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
@@ -20,9 +20,9 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.4.71 自動URLエクスポート開始時に、パネルが最小化されていれば一時的に展開し、処理完了後またはキャンセル後に元の最小化状態を復元するように改善。
+// @history       0.4.70 条件を満たした際にパネルを自動展開するロジックを最適化。
 // @history       0.4.69 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
-// @history       0.4.68 共通スタイルの更新により、パネルのベースフォントサイズを 13px に統一。
-// @history       0.4.67 条件を満たさない会話時にパネルを完全に非表示にするのではなく、最小化状態で待機するように変更。条件成立時の手動での開閉設定を尊重するように改善。
 // @history       0.4.66 ヘッダー右側のバージョン表示を廃止
 // @history       0.4.65 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
 // @history       0.4.64 UI改善: シングルクリックでの開閉に対応し、タイトルとバージョンの表示形式を [絵文字] [名称] v[バージョン] に統一
@@ -393,6 +393,7 @@
             const debouncedProcessNodes = debounce(processNodes, 500);
 
             let autoExportTriggered = false;
+            let wasMinimizedBeforeAuto = false;
             let autoExportTimerId = null;
             let oneTurnPanelControls = null;
 
@@ -507,6 +508,15 @@
                                         autoExportTriggered = true;
                                         console.log(`[Gemini 1-Turn Auto] Match concluded. Prompt had 1 URL matched in response.`);
 
+                                        // --- Auto-expand if currently minimized ---
+                                        if (panel.classList.contains('ge2d-minimized')) {
+                                            wasMinimizedBeforeAuto = true;
+                                            if (oneTurnPanelControls) {
+                                                console.log('[Gemini 1-Turn Auto] Temporarily expanding panel for countdown.');
+                                                oneTurnPanelControls.setMinimized(false);
+                                            }
+                                        }
+
                                         let countdown = 4; // Hardcoded default duration
 
                                         const execBtn = document.getElementById('gemini-btn-one-turn-exec');
@@ -518,6 +528,13 @@
                                                 autoExportTimerId = null;
                                                 execBtn.style.backgroundColor = '';
                                                 execBtn.style.color = '';
+
+                                                // Restore minimized state if we expanded it automatically
+                                                if (wasMinimizedBeforeAuto && oneTurnPanelControls) {
+                                                    console.log('[Gemini 1-Turn Auto] Restoring minimized state after cancellation.');
+                                                    oneTurnPanelControls.setMinimized(true);
+                                                }
+                                                wasMinimizedBeforeAuto = false;
 
                                                 const deleteCheckbox = document.getElementById('gemini-delete-checkbox');
                                                 const willDelete = deleteCheckbox ? deleteCheckbox.checked : GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
@@ -575,6 +592,7 @@
                         oneTurnPanelControls.setMinimized(true);
                     }
                     autoExportTriggered = false; // Reset trigger state if UI is closed (e.g., user started a new topic or more turns added)
+                    wasMinimizedBeforeAuto = false;
                     if (autoExportTimerId) {
                         clearInterval(autoExportTimerId);
                         autoExportTimerId = null;
@@ -644,6 +662,14 @@
                     if (!isAutoRun) alert('Process failed. See console.');
                 } finally {
                     hideOverlay();
+
+                    // Restore minimized state if this was an auto-run that triggered expansion
+                    if (isAutoRun && wasMinimizedBeforeAuto && oneTurnPanelControls) {
+                        console.log('[Gemini 1-Turn Export] Restoration: re-minimizing panel after auto-export completion.');
+                        oneTurnPanelControls.setMinimized(true);
+                    }
+                    wasMinimizedBeforeAuto = false;
+
                     if (execBtn) {
                         execBtn.disabled = false;
                         execBtn.style.backgroundColor = ''; // Reset custom colors
@@ -892,6 +918,7 @@
                 if (oneTurnPanel) oneTurnPanel.remove();
 
                 autoExportTriggered = false; // Reset trigger so it fires again on new URLs
+                wasMinimizedBeforeAuto = false;
                 lastIsOneTurn = false;
                 if (autoExportTimerId) {
                     clearInterval(autoExportTimerId);
