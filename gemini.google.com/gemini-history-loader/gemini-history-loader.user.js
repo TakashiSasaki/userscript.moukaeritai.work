@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini History Loader
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.27
+// @version      0.1.28
 // @lastModified 2026-04-15
 // @description  A utility script that forces Gemini to load the entire chat history by programmatically scrolling to the top. Features a compact floating UI that expands when loading history.
 // @author       Takashi Sasaki
@@ -19,6 +19,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @noframes
+// @history       0.1.28 UIが表示されない問題の調査のため診断ログを強化
 // @history       0.1.27 ロード直後のデフォルトを最小化に変更し、ロード開始/終了時に自動展開/最小化するように連動
 // @history       0.1.26 インデントの微修正とパッチバンプ
 // @history       0.1.25 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
@@ -128,10 +129,14 @@
 
         function createUI() {
             if (uiPanel) return;
+            console.log('[GeminiHistoryLoader] createUI called');
 
             const commonHTMLStr = GM_getResourceText('gusCommonHTML');
             const innerHTMLStr = GM_getResourceText('geminiHistoryLoaderHTML');
-            if (!commonHTMLStr || !innerHTMLStr) return;
+            if (!commonHTMLStr || !innerHTMLStr) {
+                console.error(`[GeminiHistoryLoader] Templates not found. gusCommonHTML: ${!!commonHTMLStr}, geminiHistoryLoaderHTML: ${!!innerHTMLStr}`);
+                return;
+            }
 
             const contentDiv = document.createElement('div');
             window.geminiSetInnerHTML(contentDiv, innerHTMLStr, policy);
@@ -144,6 +149,7 @@
                 version: GM_info.script.version,
                 contentElement: contentDiv
             });
+            console.log('[GeminiHistoryLoader] Panel created successfully');
 
             document.body.appendChild(uiPanel);
 
