@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.23
+// @version      0.2.24
 // @description  Injects a prompt into Gemini via an external custom event.
 // @lastModified 2026-04-16
 // @author       Takashi Sasaki
@@ -21,6 +21,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @noframes
+// @history       0.2.24 不要な最小化ボタンが表示される問題に対処するため、最新版への更新を強制
 // @history       0.2.23 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
 // @history       0.2.22 クリーンアップ: 不要になった古いUI用のCSSセレクタを削除し、共通テンプレートへの適合を強化
 // @history       0.2.21 位置管理を geminiSetupDraggablePanel に完全委譲し、重複する手動位置ロジックを削除
