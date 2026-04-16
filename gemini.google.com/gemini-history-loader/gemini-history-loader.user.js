@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini History Loader
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.26
+// @version      0.1.27
 // @lastModified 2026-04-15
 // @description  A utility script that forces Gemini to load the entire chat history by programmatically scrolling to the top. Features a compact floating UI that expands when loading history.
 // @author       Takashi Sasaki
@@ -19,6 +19,8 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @noframes
+// @history       0.1.27 ロード直後のデフォルトを最小化に変更し、ロード開始/終了時に自動展開/最小化するように連動
+// @history       0.1.26 インデントの微修正とパッチバンプ
 // @history       0.1.25 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
 // @history       0.1.23 リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名
 // @history       0.1.21 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
@@ -120,6 +122,7 @@
 
         const PANEL_POSITION_KEY = 'gemini-history-loader-pos';
         let uiPanel = null;
+        let panelControls = null;
         let progressTextEl = null;
         let statusTextEl = null;
 
@@ -149,7 +152,7 @@
 
             const handle = uiPanel.querySelector('.gus-panel-header') || uiPanel;
             window.geminiSetupDraggablePanel(uiPanel, handle, PANEL_POSITION_KEY, { right: '20px', top: '100px' });
-            window.geminiSetupMinimizablePanel(uiPanel, 'gemini-history-loader-minimized', handle, false);
+            panelControls = window.geminiSetupMinimizablePanel(uiPanel, 'gemini-history-loader-minimized', handle, true);
         }
 
 
@@ -164,8 +167,10 @@
             if (!uiPanel) return;
             if (isExpanded) {
                 uiPanel.classList.add('ghl-expanded');
+                if (panelControls) panelControls.setMinimized(false);
             } else {
                 uiPanel.classList.remove('ghl-expanded');
+                if (panelControls) panelControls.setMinimized(true);
                 updateProgressUI('Idle', ''); // Reset
             }
         }
