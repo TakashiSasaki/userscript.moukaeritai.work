@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.69
+// @version      0.4.70
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-16
 // @author       Takashi Sasaki
@@ -455,16 +455,10 @@
                 if (isOneTurn) {
                     panel.classList.remove('ge2d-disabled');
                     
-                    // --- Restore user preferred state ---
-                    if (oneTurnPanelControls) {
-                        try {
-                            const savedMinimized = localStorage.getItem('ge2d-minimized');
-                            if (savedMinimized !== null) {
-                                oneTurnPanelControls.setMinimized(savedMinimized === 'true');
-                            } else {
-                                oneTurnPanelControls.setMinimized(false);
-                            }
-                        } catch {
+                    // --- Auto-expand on transition to active state ---
+                    if (!lastIsOneTurn) {
+                        console.log('[Gemini 1-Turn] Condition met, expanding UI.');
+                        if (oneTurnPanelControls) {
                             oneTurnPanelControls.setMinimized(false);
                         }
                     }
@@ -586,6 +580,7 @@
                         autoExportTimerId = null;
                     }
                 }
+                lastIsOneTurn = isOneTurn;
             }
 
             /**
@@ -835,6 +830,7 @@
             let styleElement = null;
             let isInitialized = false;
             let countdownPaused = false;
+            let lastIsOneTurn = false;
 
             /**
              * Main initialization for the script's features.
@@ -896,6 +892,7 @@
                 if (oneTurnPanel) oneTurnPanel.remove();
 
                 autoExportTriggered = false; // Reset trigger so it fires again on new URLs
+                lastIsOneTurn = false;
                 if (autoExportTimerId) {
                     clearInterval(autoExportTimerId);
                     autoExportTimerId = null;
