@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini History Loader
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.28
+// @version      0.1.29
 // @lastModified 2026-04-15
 // @description  A utility script that forces Gemini to load the entire chat history by programmatically scrolling to the top. Features a compact floating UI that expands when loading history.
 // @author       Takashi Sasaki
@@ -19,6 +19,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @noframes
+// @history       0.1.29 UI不可視問題の徹底調査のため、CSS注入状況とパネルのDOM座標をログ出力するように強化
 // @history       0.1.28 UIが表示されない問題の調査のため診断ログを強化
 // @history       0.1.27 ロード直後のデフォルトを最小化に変更し、ロード開始/終了時に自動展開/最小化するように連動
 // @history       0.1.26 インデントの微修正とパッチバンプ
@@ -50,16 +51,25 @@
 
         if (typeof GM_addStyle !== 'undefined' && typeof GM_getResourceText !== 'undefined') {
             const commonCSS = GM_getResourceText('geminiCommon');
-            if (commonCSS && !document.getElementById('gemini-common-styles')) {
-                const commonStyle = document.createElement('style');
-                commonStyle.textContent = commonCSS;
-                commonStyle.id = 'gemini-common-styles';
-                document.head.appendChild(commonStyle);
+            if (commonCSS) {
+                if (!document.getElementById('gemini-common-styles')) {
+                    const commonStyle = document.createElement('style');
+                    commonStyle.textContent = commonCSS;
+                    commonStyle.id = 'gemini-common-styles';
+                    document.head.appendChild(commonStyle);
+                    console.log('[GeminiHistoryLoader] Common CSS injected.');
+                }
+            } else {
+                console.error('[GeminiHistoryLoader] geminiCommon CSS resource NOT found.');
             }
-
+[/]
             const css = GM_getResourceText('geminiHistoryLoaderCSS');
             if (css) {
-                GM_addStyle(css);
+                const style = GM_addStyle(css);
+                if (style) style.id = 'gemini-history-loader-styles';
+                console.log('[GeminiHistoryLoader] Script-specific CSS injected.');
+            } else {
+                console.error('[GeminiHistoryLoader] geminiHistoryLoaderCSS resource NOT found.');
             }
         }
 
@@ -146,12 +156,14 @@
                 policy: policy,
                 icon: gusEmoji,
                 name: GM_info.script.name,
-                version: GM_info.script.version,
-                contentElement: contentDiv
-            });
-            console.log('[GeminiHistoryLoader] Panel created successfully');
-
+            console.log('[GeminiHistoryLoader] Panel object created.');
+[/]
             document.body.appendChild(uiPanel);
+            console.log('[GeminiHistoryLoader] Panel appended to document.body.');
+
+            const rect = uiPanel.getBoundingClientRect();
+            console.log(`[GeminiHistoryLoader] Initial Panel Rect: top=${rect.top}, left=${rect.left}, width=${rect.width}, height=${rect.height}`);
+            console.log(`[GeminiHistoryLoader] Visibility state: display=${getComputedStyle(uiPanel).display}, zIndex=${getComputedStyle(uiPanel).zIndex}`);
 
             progressTextEl = uiPanel.querySelector('#ghl-progress-text');
             statusTextEl = uiPanel.querySelector('#ghl-status-text');
