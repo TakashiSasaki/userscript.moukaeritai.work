@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.57
+// @version      0.4.58
 // @lastModified 2026-04-16
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
@@ -10,6 +10,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
+// @resource     gusCommonHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.html
 // @resource     geminiTurnCounterCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.css
 // @resource     geminiTurnCounterHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
@@ -18,6 +19,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.4.58 UI共通化: パネルの外枠を gemini-common.html に統合し、ダブルクリックで開閉するように変更
 // @history       0.4.56 リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名
 // @history       0.4.54 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // ==/UserScript==
@@ -335,7 +337,7 @@ const report = () => {
 
                     if (!contentDiv.hasAttribute('data-gtc-initialized')) {
                         const template = GM_getResourceText('geminiTurnCounterHTML');
-                        window.geminiSetInnerHTML(contentDiv, template.replace('{{scriptVersion}}', `📊 ${scriptVersion} ${gusEmoji}`), policy);
+                        window.geminiSetInnerHTML(contentDiv, template, policy);
                         contentDiv.setAttribute('data-gtc-initialized', 'true');
 
                         // --- Initial Event Binding (Only Once) ---
@@ -639,35 +641,47 @@ const report = () => {
 
                 addStyles();
 
-                // Create UI container
-                const container = document.createElement('div');
-                container.id = 'gemini-turn-counter-ui';
-                container.className = 'gus-panel';
+                const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '0.4.50';
 
-                window.geminiSetInnerHTML(container, `
-                    <span class="gtc-icon gus-version">Loading...</span>
-                    <div class="gtc-content">Loading...</div>
-                `, policy);
-                document.body.appendChild(container);
-                uiContainer = container; // Store reference
+                // Create inner content wrapper
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'gtc-content';
+                contentDiv.textContent = 'Loading...';
+
+                // Assemble panel shell
+                const commonHTMLStr = GM_getResourceText('gusCommonHTML');
+                const panelShell = window.geminiCreateCommonPanel({
+                    htmlString: commonHTMLStr,
+                    policy: policy,
+                    title: `📊 ${scriptVersion} ${gusEmoji}`,
+                    icon: `📊 ${scriptVersion} ${gusEmoji}`,
+                    contentElement: contentDiv
+                });
+
+                panelShell.id = 'gemini-turn-counter-ui';
+                document.body.appendChild(panelShell);
+                uiContainer = panelShell; // Store reference
 
                 // UI Events
-                const dragHandle = container.querySelector('span.gus-version');
+                const dragHandle = panelShell.querySelector('.gus-panel-header');
+                const inactiveHandle = panelShell.querySelector('.gus-inactive-content');
+                if (inactiveHandle) {
+                    window.geminiSetupDraggablePanel(panelShell, inactiveHandle, 'gtc-pos-ui', { right: '20px', top: '160px', left: 'auto' });
+                }
                 if (dragHandle) {
-                    window.geminiSetupDraggablePanel(container, dragHandle, 'gtc-pos-ui', { right: '20px', top: '160px', left: 'auto' });
+                    window.geminiSetupDraggablePanel(panelShell, dragHandle, 'gtc-pos-ui', { right: '20px', top: '160px', left: 'auto' });
                 }
 
-                // Set up minimizable panel
-                const minimizeBtn = container.querySelector('#gtc-minimize-btn');
-                window.geminiSetupMinimizablePanel(container, 'gtc-minimized', minimizeBtn, true);
+                // Set up minimizable panel using double-click on title
+                window.geminiSetupMinimizablePanel(panelShell, 'gtc-minimized', dragHandle, true);
 
                 // Restore state (position)
                 const savedX = localStorage.getItem('gtc-pos-x');
                 const savedY = localStorage.getItem('gtc-pos-y');
                 if (savedX && savedY) {
-                    container.style.right = 'auto';
-                    container.style.left = savedX;
-                    container.style.top = savedY;
+                    panelShell.style.right = 'auto';
+                    panelShell.style.left = savedX;
+                    panelShell.style.top = savedY;
                 }
 
                 // Initial run

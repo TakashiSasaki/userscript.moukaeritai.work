@@ -10,28 +10,8 @@
 }
 
 #gpi-test-ui {
-    /* Base styles now handled by .gus-panel */
-    position: fixed;
-    z-index: 999999;
+    /* Base styles now handled by .gus-panel-shell */
     width: 300px;
-    height: auto;
-    overflow: hidden;
-}
-
-
-
-.gpi-header {
-    padding: 4px 8px;
-    background-color: rgba(255, 255, 255, 0.3);
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.gpi-content {
-    padding: 4px 8px 8px 8px;
 }
 
 .gpi-group {
@@ -78,7 +58,6 @@
     border: 1px solid rgba(0,0,0,0.1);
     border-radius: 4px;
 }
-
 
 .gpi-status-container {
     margin-top: 8px;

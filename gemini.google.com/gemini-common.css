@@ -72,3 +72,63 @@ span.gus-version:active {
 .gus-panel.gus-minimized .gus-inactive-content {
     display: flex !important;
 }
+
+/* === Standard Panel Shell Styles (v0.2.x Architecture) === */
+.gus-panel-shell {
+    background-color: var(--gus-panel-bg) !important;
+    border-radius: var(--gus-panel-radius) !important;
+    border: var(--gus-panel-border) !important;
+    font-family: var(--gus-panel-font) !important;
+    color: var(--gus-panel-color) !important;
+    user-select: none !important;
+    position: fixed;
+    z-index: 10000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: opacity 0.2s ease, padding 0.2s ease, width 0.2s ease, height 0.2s ease;
+    overflow: hidden;
+}
+
+.gus-panel-shell.gus-minimized {
+    padding: 6px 12px;
+}
+
+.gus-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 8px 12px;
+    margin: 0;
+    cursor: grab;
+}
+
+.gus-panel-header:active {
+    cursor: grabbing;
+}
+
+.gus-panel-body {
+    padding: 12px;
+}
+
+.gus-active-content, .gus-inactive-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.gus-inactive-content {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+}
+.gus-inactive-content:active {
+    cursor: grabbing;
+}
+
+.gus-panel-shell.gus-minimized .gus-active-content {
+    display: none !important;
+}
+
+.gus-panel-shell.gus-minimized .gus-inactive-content {
+    display: flex !important;
+}

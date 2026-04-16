@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.19
+// @version      0.2.20
 // @description  Injects a prompt into Gemini via an external custom event.
 // @lastModified 2026-04-16
 // @author       Takashi Sasaki
@@ -15,11 +15,13 @@
 // @resource     geminiCommon https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.css
 // @resource     geminiPromptInjectorCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.css
 // @resource     geminiPromptInjectorHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.html
+// @resource     gusCommonHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @homepageURL  https://x.com/TakashiSasaki
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @noframes
+// @history       0.2.20 UI共通化: パネルの外枠を gemini-common.html に統合し、ダブルクリックで開閉するように変更
 // @history       0.2.19 UI構築ロジックを外部HTMLテンプレート (@resource) に移行し、コードの保守性を向上
 // @history       0.2.18 UIパネルの最小化・復元をバージョン表示部分のダブルクリックで行うように変更（専用ボタンを削除）
 // @history       0.2.17 外部CSS/JSファイルへの分離とコードの整理、リソースファイルの改名、デザインの大幅刷新。
@@ -196,44 +198,58 @@ const report = () => {
                 if (document.getElementById('gpi-test-ui')) return;
 
                 const templateHTML = GM_getResourceText('geminiPromptInjectorHTML');
-                if (!templateHTML) return;
+                const commonHTMLStr = GM_getResourceText('gusCommonHTML');
+                if (!templateHTML || !commonHTMLStr) return;
 
-                // Retrieve saved state
-                let isGpiUIMinimized = GM_getValue('gpi_ui_minimized', false);
+                const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '';
+
+                // Create inner content wrapper
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'gpi-content';
+                window.geminiSetInnerHTML(contentDiv, templateHTML, policy);
+
+                // Assemble panel shell
+                const panelShell = window.geminiCreateCommonPanel({
+                    htmlString: commonHTMLStr,
+                    policy: policy,
+                    title: `💉 ${scriptVersion} ${gusEmoji}`,
+                    icon: `💉 ${scriptVersion} ${gusEmoji}`,
+                    contentElement: contentDiv
+                });
+
+                panelShell.id = 'gpi-test-ui';
+                
+                // Position logic
                 let gpiSavedX = GM_getValue('gpi_ui_x', window.innerWidth - 320);
                 let gpiSavedY = GM_getValue('gpi_ui_y', window.innerHeight - 320);
 
-                const uiContainer = document.createElement('div');
-                uiContainer.id = 'gpi-test-ui';
-                uiContainer.className = 'gus-panel';
-                if (isGpiUIMinimized) uiContainer.classList.add('minimized');
-
-                // Inject template
-                window.geminiSetInnerHTML(uiContainer, templateHTML, policy);
-
-                // Initialize state dependent elements
-                const content = uiContainer.querySelector('#gpi-content');
-                const title = uiContainer.querySelector('#gpi-version-display');
-                if (content) content.style.display = isGpiUIMinimized ? 'none' : 'block';
-
-                // Set version and area
-                const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '';
-                if (title) {
-                    title.textContent = scriptVersion ? `💉 ${scriptVersion} ${gusEmoji}` : 'Prompt Injector';
-                }
-
-                // Adjust position
-                const uiWidth = isGpiUIMinimized ? 50 : 300;
-                const uiHeight = isGpiUIMinimized ? 30 : 250;
+                const uiWidth = 300;
+                const uiHeight = 250;
                 if (gpiSavedX < 0) gpiSavedX = 0;
                 if (gpiSavedY < 0) gpiSavedY = 0;
                 if (gpiSavedX + uiWidth > window.innerWidth) gpiSavedX = window.innerWidth - uiWidth;
                 if (gpiSavedY + uiHeight > window.innerHeight) gpiSavedY = window.innerHeight - uiHeight;
 
-                uiContainer.style.left = `${gpiSavedX}px`;
-                uiContainer.style.top = `${gpiSavedY}px`;
+                panelShell.style.left = `${gpiSavedX}px`;
+                panelShell.style.top = `${gpiSavedY}px`;
+                panelShell.style.right = 'auto';
+                panelShell.style.bottom = 'auto';
 
-                document.body.appendChild(uiContainer);
+                document.body.appendChild(panelShell);
+
+                // Setup unified UI behaviors
+                const dragHandle = panelShell.querySelector('.gus-panel-header');
+                const inactiveHandle = panelShell.querySelector('.gus-inactive-content');
+                if (inactiveHandle) {
+                    window.geminiSetupDraggablePanel(panelShell, inactiveHandle, 'gpi_ui_pos', { right: '20px', bottom: '180px' });
+                }
+                if (dragHandle) {
+                    window.geminiSetupDraggablePanel(panelShell, dragHandle, 'gpi_ui_pos', { right: '20px', bottom: '180px' });
+                }
+
+                window.geminiSetupMinimizablePanel(panelShell, 'gpi_ui_minimized', dragHandle, false);
+
+                const uiContainer = panelShell;
 
                 // Event Listeners
                 const textarea = uiContainer.querySelector('#gpi-textarea');
@@ -279,35 +295,6 @@ const report = () => {
                             document.dispatchEvent(new CustomEvent('gemini-enable-canvas'));
                         });
                     };
-                }
-
-                if (title) {
-                    // Toggle size on double-click
-                    title.ondblclick = () => {
-                        isGpiUIMinimized = !isGpiUIMinimized;
-                        if (content) content.style.display = isGpiUIMinimized ? 'none' : 'block';
-                        if (isGpiUIMinimized) uiContainer.classList.add('minimized');
-                        else uiContainer.classList.remove('minimized');
-
-                        GM_setValue('gpi_ui_minimized', isGpiUIMinimized);
-
-                        // Re-adjust position after resize
-                        let currentX = uiContainer.offsetLeft;
-                        let currentY = uiContainer.offsetTop;
-                        const width = uiContainer.offsetWidth;
-                        const height = uiContainer.offsetHeight;
-
-                        if (currentX + width > window.innerWidth) {
-                            uiContainer.style.left = `${window.innerWidth - width}px`;
-                            GM_setValue('gpi_ui_x', window.innerWidth - width);
-                        }
-                        if (currentY + height > window.innerHeight) {
-                            uiContainer.style.top = `${window.innerHeight - height}px`;
-                            GM_setValue('gpi_ui_y', window.innerHeight - height);
-                        }
-                    };
-                    // Drag functionality
-                    window.geminiSetupDraggablePanel(uiContainer, title, 'gpi_ui_pos', { right: '20px', bottom: '180px' });
                 }
 
                 // Re-adjust position on window resize

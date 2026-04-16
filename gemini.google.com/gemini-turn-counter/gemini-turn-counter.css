@@ -1,54 +1,10 @@
-#gemini-turn-counter-ui {
-    position: fixed;
-    top: 60px;
-    right: 20px;
-    z-index: 9999;
-    font-size: 13px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    width: auto;
-    height: 32px;
-    padding: 0 12px;
-    font-weight: 500;
-    white-space: nowrap;
-}
-#gemini-turn-counter-ui.expanded {
-    background-color: rgb(255, 182, 193); /* LightPink expanded */
-    color: #333;
-    border: 1px solid rgb(255, 182, 193);
-    width: auto;
-    height: auto;
-    min-width: 180px;
-    padding: 12px;
-    display: block;
-    cursor: default;
-    font-weight: normal;
-    font-size: 14px;
-}
-#gemini-turn-counter-ui .gtc-icon {
-    /* cursor handled by gus-version */
-}
-#gemini-turn-counter-ui .gtc-icon:active {
-    cursor: grabbing;
-}
-#gemini-turn-counter-ui.expanded .gtc-icon {
-    display: none;
-}
-#gemini-turn-counter-ui .gtc-content {
-    display: none;
-}
-#gemini-turn-counter-ui.expanded .gtc-content {
-    display: block;
-}
 .gtc-row {
     display: flex;
     justify-content: space-between;
     gap: 15px;
     white-space: nowrap;
     margin-bottom: 4px;
+    font-size: 13px;
 }
 .gtc-row:last-child {
     margin-bottom: 0;
@@ -64,7 +20,7 @@
     gap: 2px;
     margin-top: 8px;
     padding-top: 8px;
-    border-top: 1px solid #444746;
+    border-top: 1px solid rgba(0,0,0,0.2);
     max-width: 220px; /* Limit width to enforce wrapping */
 }
 .gtc-thumbnail {
@@ -72,7 +28,7 @@
     height: 20px;
     object-fit: cover;
     border-radius: 2px;
-    border: 1px solid #444746;
+    border: 1px solid rgba(0,0,0,0.2);
     cursor: copy;
     transition: all 0.2s ease;
 }
@@ -101,17 +57,4 @@
     border-radius: 2px;
     font-size: 11px;
     text-align: right;
-}
-.gtc-minimize-btn {
-    cursor: pointer;
-    padding: 0 6px;
-    border-radius: 4px;
-    user-select: none;
-    transition: background 0.2s;
-    font-size: 14px;
-    line-height: 1;
-    color: #333;
-}
-.gtc-minimize-btn:hover {
-    background: rgba(0,0,0,0.1);
 }

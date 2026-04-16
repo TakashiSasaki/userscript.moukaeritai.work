@@ -1,0 +1,19 @@
+<!-- === Gemini Userscript Common HTML Templates === -->
+<!-- Loaded via @resource gusCommonHTML by scripts that use common panels -->
+
+<template id="gus-common-panel">
+    <!-- Intentionally no surrounding .gus-draggable-panel div here, 
+         to allow scripts more control over the root element if needed,
+         but standard usage is to wrap this in a container div. -->
+    <div class="gus-inactive-content" title="Expand (Double-click to expand)">
+        <span class="gus-panel-icon gus-version"></span>
+    </div>
+    <div class="gus-active-content">
+        <div class="gus-panel-header" title="Double-click to minimize">
+            <span class="gus-panel-title gus-version"></span>
+        </div>
+        <div class="gus-panel-body">
+            <!-- Script-specific content injected here -->
+        </div>
+    </div>
+</template>

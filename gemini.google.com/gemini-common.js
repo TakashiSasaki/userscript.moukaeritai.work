@@ -428,10 +428,10 @@
      *
      * @param {HTMLElement} panel - The main panel element.
      * @param {string} storageKey - A unique string key for localStorage (e.g., 'gus-minimized-scriptname').
-     * @param {HTMLElement} [minimizeBtn=null] - Optional button inside the active content to trigger minimization.
+     * @param {HTMLElement} [activeHeader=null] - Optional header element inside the active content to trigger minimization on double-click.
      * @param {boolean} [defaultMinimized=false] - Default state if no saved state exists.
      */
-    window.geminiSetupMinimizablePanel = function (panel, storageKey, minimizeBtn = null, defaultMinimized = false) {
+    window.geminiSetupMinimizablePanel = function (panel, storageKey, activeHeader = null, defaultMinimized = false) {
         if (!panel || !storageKey) return;
 
         // 1. Restore state from LocalStorage
@@ -462,20 +462,23 @@
         applyState(isMinimized);
 
         // 2. Setup Toggle Logic
-        // Allow clicking the inactive content area to expand
+        // Allow clicking/double-clicking the inactive content area to expand
         const inactiveContent = panel.querySelector('.gus-inactive-content');
         if (inactiveContent) {
-            inactiveContent.addEventListener('click', (e) => {
-                // Prevent toggling if dragging or clicking a specific child (like a close button if added later)
+            const expandHandler = (e) => {
+                // Prevent toggling if dragging
                 if (inactiveContent.style.cursor === 'grabbing') return;
                 applyState(false);
-                e.stopPropagation(); // Prevent drag mousedown from firing if it's the same area
-            });
+                e.stopPropagation();
+            };
+            // Support both single and double click for expanding, usually single click is better for small icons
+            inactiveContent.addEventListener('dblclick', expandHandler);
+            inactiveContent.addEventListener('click', expandHandler);
         }
 
-        // Allow clicking a specific minimize button to collapse
-        if (minimizeBtn) {
-            minimizeBtn.addEventListener('click', (e) => {
+        // Allow double-clicking a specific active header to collapse
+        if (activeHeader) {
+            activeHeader.addEventListener('dblclick', (e) => {
                 applyState(true);
                 e.stopPropagation();
             });
@@ -486,6 +489,49 @@
             setMinimized: (state) => applyState(state),
             isMinimized: () => panel.classList.contains('gus-minimized')
         };
+    };
+
+    /**
+     * Creates a standard minimizable, draggable floating panel shell using the gemini-common.html template.
+     * @param {Object} options
+     * @param {string} options.htmlString - The content of gemini-common.html loaded via GM_getResourceText.
+     * @param {TrustedTypePolicy} [options.policy] - Trusted types policy to use.
+     * @param {string} options.title - Full title (e.g., "Gemini Turn Counter v1.0.0").
+     * @param {string} options.icon - Icon/Short string for inactive state (e.g., "📋 v1.0.0" or "📋").
+     * @param {HTMLElement} options.contentElement - The body content wrapper to insert.
+     * @returns {HTMLElement} The constructed panel shell element.
+     */
+    window.geminiCreateCommonPanel = function(options) {
+        const temp = document.createElement('div');
+        window.geminiSetInnerHTML(temp, options.htmlString, options.policy);
+        
+        const template = temp.querySelector('#gus-common-panel');
+        if (!template) {
+            console.error("[GUS] Common panel template '#gus-common-panel' not found in provided HTML.");
+            return temp; 
+        }
+
+        const shell = document.createElement('div');
+        shell.appendChild(template.content.cloneNode(true));
+        
+        // Since template content was appended as children to 'shell', 
+        // the children itself are the template output. Usually we wrap it here.
+        // Wait, the template has two children directly: .gus-inactive-content and .gus-active-content.
+        // So shell acts as the container. Let's add the standard class:
+        shell.className = 'gus-panel-shell gus-draggable-panel';
+        
+        const inactiveIcon = shell.querySelector('.gus-panel-icon');
+        if (inactiveIcon) inactiveIcon.textContent = options.icon;
+        
+        const activeTitle = shell.querySelector('.gus-panel-title');
+        if (activeTitle) activeTitle.textContent = options.title;
+
+        const body = shell.querySelector('.gus-panel-body');
+        if (body && options.contentElement) {
+            body.appendChild(options.contentElement);
+        }
+
+        return shell;
     };
 
 })();
