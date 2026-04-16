@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Profile Badge
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.41
+// @version      0.1.42
 // @lastModified 2026-04-16
 // @description  Add a custom text/emoji badge to the user profile area on Gemini
 // @author       Takashi Sasaki
@@ -20,6 +20,7 @@
 // @resource     geminiProfileBadgeHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-profile-badge/gemini-profile-badge.html
 // @resource     gusCommonHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.html
 // @noframes
+// @history       0.1.42 共通テンプレートの更新（アイコンとバージョンの分離）を反映。
 // @history       0.1.41 ヘッダー右側のバージョン表示を廃止
 // @history       0.1.40 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
 // @history       0.1.39 UI改善: シングルクリックでの開閉に対応し、タイトルとバージョンの表示形式を [絵文字] [名称] v[バージョン] に統一

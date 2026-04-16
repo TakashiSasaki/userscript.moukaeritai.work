@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.35
+// @version      0.2.36
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @lastModified 2026-04-16
 // @author       Takashi Sasaki
@@ -22,6 +22,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @noframes
+// @history       0.2.36 共通テンプレートの更新（アイコンとバージョンの分離）を反映。
 // @history       0.2.35 パネルのドラッグハンドルをパネル全体に拡張し、最小化状態でも移動可能に修正。不要な関数宣言の二重定義を修正。
 // @history       0.2.34 ヘッダー右側のバージョン表示を廃止
 // @history       0.2.33 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除

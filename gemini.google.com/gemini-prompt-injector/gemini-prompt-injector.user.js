@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.24
+// @version      0.2.25
 // @description  Injects a prompt into Gemini via an external custom event.
 // @lastModified 2026-04-16
 // @author       Takashi Sasaki
@@ -21,6 +21,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @noframes
+// @history       0.2.25 共通テンプレートの更新（アイコンとバージョンの分離）を反映。
 // @history       0.2.24 不要な最小化ボタンが表示される問題に対処するため、最新版への更新を強制
 // @history       0.2.23 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
 // @history       0.2.22 クリーンアップ: 不要になった古いUI用のCSSセレクタを削除し、共通テンプレートへの適合を強化
@@ -204,7 +205,6 @@ const report = () => {
                 const commonHTMLStr = GM_getResourceText('gusCommonHTML');
                 if (!templateHTML || !commonHTMLStr) return;
 
-                const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '';
 
                 // Create inner content wrapper
                 const contentDiv = document.createElement('div');
