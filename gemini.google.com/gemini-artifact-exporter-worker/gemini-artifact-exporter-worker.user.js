@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.34
+// @version      0.2.35
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
 // @lastModified 2026-04-16
 // @author       Takashi Sasaki
@@ -22,6 +22,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @noframes
+// @history       0.2.35 パネルのドラッグハンドルをパネル全体に拡張し、最小化状態でも移動可能に修正。不要な関数宣言の二重定義を修正。
 // @history       0.2.34 ヘッダー右側のバージョン表示を廃止
 // @history       0.2.33 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
 // @history       0.2.32 共通テンプレート (geminiCreateCommonPanel) への移行とUI標準化
@@ -50,10 +51,7 @@ const report = () => {
     const { emoji: gusEmoji } = window.registerGeminiUserscript ? registerGeminiUserscript(GM_info.script.name, GM_info.script.version) : { emoji: '' };
 
     const initUserScript = () => {
-
-        const initUserScript = () => {
-
-            const policy = window.geminiCreateTrustedHTMLPolicy('geminiArtifactExporterWorker');
+        const policy = window.geminiCreateTrustedHTMLPolicy('geminiArtifactExporterWorker');
 
             // Trusted Types Policy Creation for Gemini CSP
 
@@ -342,9 +340,9 @@ const report = () => {
                 workerPanel.id = 'gemini-worker-export-indicator';
 
                 // Setup drag and minimization
-                const handle = workerPanel.querySelector('.gus-panel-header') || workerPanel;
-                window.geminiSetupDraggablePanel(workerPanel, handle, 'gemini-worker-export-indicator-pos', { right: '20px', bottom: '20px' });
-                window.geminiSetupMinimizablePanel(workerPanel, 'gemini-worker-minimized', handle, false);
+                // Use the panel itself as the handle to ensure it remains draggable when minimized
+                window.geminiSetupDraggablePanel(workerPanel, workerPanel, 'gemini-worker-export-indicator-pos', { right: '20px', bottom: '20px' });
+                window.geminiSetupMinimizablePanel(workerPanel, 'gemini-worker-minimized', workerPanel, false);
 
                 statusContainer = contentDiv;
                 return workerPanel;
@@ -784,7 +782,6 @@ const report = () => {
             if (_isGeminiChatPage || _isDocsPage) {
                 getOrCreateIndicator();
             }
-
         };
 
         if (document.readyState === 'complete') {
@@ -792,11 +789,4 @@ const report = () => {
         } else {
             window.addEventListener('load', initUserScript);
         }
-    };
-
-    if (document.readyState === 'complete') {
-        initUserScript();
-    } else {
-        window.addEventListener('load', initUserScript);
-    }
-})();
+    })();
