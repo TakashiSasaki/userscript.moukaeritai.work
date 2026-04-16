@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Profile Badge
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.37
+// @version      0.1.38
 // @lastModified 2026-04-16
 // @description  Add a custom text/emoji badge to the user profile area on Gemini
 // @author       Takashi Sasaki
@@ -10,7 +10,6 @@
 // @match        https://userscript.moukaeritai.work/*
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @grant        GM_registerMenuCommand
 // @grant        GM_info
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
@@ -19,7 +18,9 @@
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @resource     geminiProfileBadgeCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-profile-badge/gemini-profile-badge.css
 // @resource     geminiProfileBadgeHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-profile-badge/gemini-profile-badge.html
+// @resource     gusCommonHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.html
 // @noframes
+// @history       0.1.38 UI共通化: パネルの外枠を gemini-common.html に統合し、パネル内でバッジを編集できるように変更
 // @history       0.1.37 リソース化リファクタリング: UIテンプレート(HTML)とCSSを外部ファイルに分離
 // @history       0.1.34 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // ==/UserScript==
@@ -41,14 +42,13 @@
         return;
     }
 
-    // Reserve a load-order slot
-    registerGeminiUserscript(GM_info.script.name, GM_info.script.version);
+    const { emoji: gusEmoji } = registerGeminiUserscript(GM_info.script.name, GM_info.script.version);
 
     const initUserScript = () => {
         // Constants
         const BADGE_STORAGE_KEY = 'gemini_profile_badge_text';
         const BADGE_DEFAULT_TEXT = '';
-        const BADGE_CLASS = 'gemini-custom-profile-badge';
+        const PANEL_POSITION_KEY = 'gemini_profile_badge_panel_pos';
 
         // Initialize Trusted Types Policy
         const badgePolicy = window.geminiCreateTrustedHTMLPolicy('gemini-profile-badge-policy');
@@ -61,97 +61,75 @@
         }
 
         /**
-         * Finds the target element to inject the badge.
-         * Toolbar selector: top-bar-actions
-         * Target container: The .right-section inside the toolbar.
+         * Creates the badge panel using the common panel template.
          */
-        function findTargetContainer() {
-            const toolbar = document.querySelector('top-bar-actions');
-            if (!toolbar) return null;
-            return toolbar.querySelector('.right-section');
-        }
+        function createBadgePanel() {
+            if (document.getElementById('gemini-profile-badge-panel')) return document.getElementById('gemini-profile-badge-panel');
 
-        /**
-         * Creates or updates the badge element using the HTML template.
-         */
-        function renderBadge() {
-            const badgeText = GM_getValue(BADGE_STORAGE_KEY, BADGE_DEFAULT_TEXT);
-
-            // Remove existing badge if text is empty or to update it
-            removeBadge();
-
-            if (!badgeText) return;
-
-            const targetContainer = findTargetContainer();
-            if (!targetContainer) return;
-
-            // Prevent duplicate injection
-            if (targetContainer.querySelector('.' + BADGE_CLASS)) return;
-
-            // Load Template
-            const htmlTemplate = GM_getResourceText('geminiProfileBadgeHTML');
-            if (!htmlTemplate) {
-                console.error('Gemini Profile Badge: Template not found');
-                return;
+            const templateHTML = GM_getResourceText('geminiProfileBadgeHTML');
+            const commonHTMLStr = GM_getResourceText('gusCommonHTML');
+            if (!templateHTML || !commonHTMLStr) {
+                console.error('[Gemini Profile Badge] Resources not found');
+                return null;
             }
 
-            // Create temporary container for injection
-            const tempDiv = document.createElement('div');
-            window.geminiSetInnerHTML(tempDiv, htmlTemplate, badgePolicy);
+            const scriptVersion = GM_info.script.version;
 
-            const badgeElement = tempDiv.firstElementChild;
-            if (badgeElement) {
-                badgeElement.textContent = badgeText;
-                // Insert at the beginning of right-section
-                targetContainer.insertBefore(badgeElement, targetContainer.firstChild);
-            }
-        }
+            // Create inner content wrapper
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'gpb-panel-inner';
+            window.geminiSetInnerHTML(contentDiv, templateHTML, badgePolicy);
 
-        function removeBadge() {
-            const existingBadges = document.querySelectorAll('.' + BADGE_CLASS);
-            existingBadges.forEach(el => el.remove());
-        }
-
-        // Settings
-        function setupMenu() {
-            GM_registerMenuCommand("Set Badge Text", () => {
-                const currentText = GM_getValue(BADGE_STORAGE_KEY, BADGE_DEFAULT_TEXT);
-                const newText = prompt("Enter text or emoji for the Gemini profile badge:", currentText);
-
-                if (newText !== null) {
-                    GM_setValue(BADGE_STORAGE_KEY, newText);
-                    renderBadge(); // Re-render immediately
-                }
+            // Assemble panel shell
+            const panelShell = window.geminiCreateCommonPanel({
+                htmlString: commonHTMLStr,
+                policy: badgePolicy,
+                title: `🏷️ ${scriptVersion} ${gusEmoji}`,
+                icon: `🏷️ ${scriptVersion} ${gusEmoji}`,
+                contentElement: contentDiv
             });
-        }
 
-        // Observer to handle SPA navigation and dynamic loading
-        function startObserver() {
-            const observer = new MutationObserver(() => {
+            panelShell.id = 'gemini-profile-badge-panel';
+            document.body.appendChild(panelShell);
+
+            const displayEl = panelShell.querySelector('.gpb-badge-preview');
+            const editBtn = panelShell.querySelector('.gpb-edit-btn');
+
+            const updateDisplay = () => {
                 const badgeText = GM_getValue(BADGE_STORAGE_KEY, BADGE_DEFAULT_TEXT);
-                if (badgeText) {
-                    const target = findTargetContainer();
-                    if (target && !target.querySelector('.' + BADGE_CLASS)) {
-                        renderBadge();
-                    }
+                if (displayEl) {
+                    displayEl.textContent = badgeText || '(Not set)';
+                    displayEl.style.fontStyle = badgeText ? 'normal' : 'italic';
+                    displayEl.style.opacity = badgeText ? '1' : '0.5';
                 }
-            });
+            };
 
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
+            if (editBtn) {
+                editBtn.onclick = () => {
+                    const currentText = GM_getValue(BADGE_STORAGE_KEY, BADGE_DEFAULT_TEXT);
+                    const newText = prompt("Enter text or emoji for the Gemini profile badge:", currentText);
+                    if (newText !== null) {
+                        GM_setValue(BADGE_STORAGE_KEY, newText);
+                        updateDisplay();
+                    }
+                };
+            }
+
+            // Set up dragging logic
+            const dragHandle = panelShell.querySelector('.gus-panel-header');
+            const inactiveHandle = panelShell.querySelector('.gus-inactive-content');
+            if (dragHandle) window.geminiSetupDraggablePanel(panelShell, dragHandle, PANEL_POSITION_KEY, { top: '80px', right: '20px', left: 'auto' });
+            if (inactiveHandle) window.geminiSetupDraggablePanel(panelShell, inactiveHandle, PANEL_POSITION_KEY, { top: '80px', right: '20px', left: 'auto' });
+
+            // Minimizable Logic
+            window.geminiSetupMinimizablePanel(panelShell, 'gpb-minimized', dragHandle, false);
+
+            updateDisplay();
+            return panelShell;
         }
 
         // Initialize
-        function init() {
-            console.log('Gemini Profile Badge: Initialized');
-            setupMenu();
-            renderBadge();
-            startObserver();
-        }
-
-        init();
+        createBadgePanel();
     };
 
     if (document.readyState === 'loading') {
