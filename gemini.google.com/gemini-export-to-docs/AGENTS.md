@@ -14,6 +14,10 @@ gemini.google.com ドメインに特有の指示は [AGENTS.md](/gemini.google.c
 - **Performance**: The main DOM scanning function (`processNodes`) is debounced by 500ms to prevent high CPU usage during AI response streaming.
 - **Inter-script Communication**: Dispatches a `gemini-one-click-delete:request-delete` CustomEvent to trigger conversation deletion.
 
+### Metadata & Context
+- **@noframes**: This script MUST include the `@noframes` directive. Without it, the script runs in both the top-level window and any internal iframes (e.g., help widgets) on `gemini.google.com`, causing duplicate button injections and multiple instances appearing in Tampermonkey.
+
+
 ### Horizontal 1-Turn Action Bar
 AI側が1ターンしか返答を行っていない「初期回答」の時のみ画面の右下に自動的にポップアップするコントロールパネルを実装しています。
 
