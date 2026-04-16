@@ -90,6 +90,8 @@ span.gus-version:active {
 
 .gus-panel-shell.gus-minimized {
     padding: 6px 12px;
+    width: fit-content !important;
+    min-width: unset !important;
 }
 
 .gus-panel-header {

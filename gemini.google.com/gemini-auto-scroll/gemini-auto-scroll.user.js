@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.62
+// @version      0.2.63
 // @lastModified 2026-04-16
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
@@ -21,6 +21,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.2.63 共通ライブラリの更新により、パネル最小化時にサイズが内容に合わせて適切にシュリンクされるように改善。
 // @history       0.2.62 ヘッダー右側のバージョン表示を廃止
 // @history       0.2.61 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
 // @history       0.2.60 UI改善: シングルクリックでの開閉に対応し、タイトルとバージョンの表示形式を [絵文字] [名称] v[バージョン] に統一
