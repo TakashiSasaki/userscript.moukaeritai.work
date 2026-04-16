@@ -1,0 +1,4 @@
+﻿fix(gemini): bump gemini-auto-select-next and enhance diagnostic logs
+
+- Bumped gemini-auto-select-next to 0.2.57 to force resource refresh.
+- Enhanced "Templates not found" error log with detailed resource availability status.

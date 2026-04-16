@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.56
+// @version      0.2.57
 // @lastModified 2026-04-16
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
@@ -21,6 +21,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.2.57 テンプレート読み込みエラーの診断ログを強化
 // @history       0.2.56 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
 // @history       0.2.54 リソース化リファクタリング: UIテンプレート(HTML)を外部ファイルに分離
 // @history       0.2.52 リソースファイル (style.css) をスクリプト名と同じステムに改名
@@ -181,7 +182,7 @@
             const commonHTMLStr = GM_getResourceText('gusCommonHTML');
             const innerHTMLStr = GM_getResourceText('geminiAutoSelectNextHTML');
             if (!commonHTMLStr || !innerHTMLStr) {
-                console.error('[GeminiAutoSelectNext] Templates not found');
+                console.error(`[GeminiAutoSelectNext] Templates not found. gusCommonHTML: ${!!commonHTMLStr}, geminiAutoSelectNextHTML: ${!!innerHTMLStr}`);
                 return;
             }
 
