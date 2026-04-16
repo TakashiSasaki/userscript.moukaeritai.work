@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.14
-// @description  Adds a persistent floating UI to scan and export all artifact blocks from a Gemini conversation as files.
+// @version      0.4.38
 // @lastModified 2026-04-16
+// @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://gemini.google.com/*
@@ -21,10 +21,9 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @noframes
-// @history      0.2.14 共通テンプレート更新に伴う同期修正: ヘッダー表示を [絵文字][スクリプト名]v[バージョン] 形式に変更し、シングルクリック開閉に対応。
-// @history      0.4.37 UI共通化: パネルの外枠を gemini-common.html に統合し、ダブルクリックで開閉するように変更
-// @history      0.4.35 リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名
-// @history      0.4.34 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)
+// @history       0.4.38 UI改善: シングルクリックでの開閉に対応し、タイトルとバージョンの表示形式を [絵文字] [名称] v[バージョン] に統一
+// @history       0.4.37 UI共通化: パネルの外枠を gemini-common.html に統合し、ダブルクリックで開閉するように変更
+// @history       0.4.34 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)
 // ==/UserScript==
 
 (function () {
@@ -615,7 +614,6 @@
                     return;
                 }
 
-                const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '';
 
                 // Create inner content wrapper
                 const contentDiv = document.createElement('div');
@@ -626,9 +624,9 @@
                 const panelShell = window.geminiCreateCommonPanel({
                     htmlString: commonHTMLStr,
                     policy: policy,
-                    name: 'Gemini Artifact Exporter',
-                    version: scriptVersion,
-                    emoji: `📦 ${gusEmoji}`,
+                    icon: gusEmoji,
+                    name: GM_info.script.name,
+                    version: GM_info.script.version,
                     contentElement: contentDiv
                 });
 

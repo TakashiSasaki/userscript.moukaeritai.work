@@ -139,16 +139,19 @@
                 ui.style.opacity = '0';
                 setTimeout(() => { if (ui && ui.parentNode) ui.parentNode.removeChild(ui); }, 300);
             }
-        }, statusDetail ? 4000 :    /**
+        }, statusDetail ? 4000 : 7000); // Keep errors slightly longer
+    };
+
+    /**
      * Makes a panel element draggable and persists its position using localStorage.
-     * Includes a mechanism to detect significant dragging vs simple clicking.
+     * Eliminates the need for GM_setValue/GM_getValue dependencies for panel positioning.
      *
      * @param {HTMLElement} panel - The panel element to be moved.
      * @param {HTMLElement} handle - The handle element used for dragging (e.g., version badge).
      * @param {string} storageKey - A unique string key for localStorage (e.g., 'gus-pos-scriptname').
      * @param {Object} [defaultPos={ right: '20px', bottom: '20px' }] - Default CSS position if no saved state exists.
      */
-    window.geminiSetupDraggablePanel = function (panel, handle, storageKey, defaultPos = { right: '20px', bottom: '20px' }) {
+        window.geminiSetupDraggablePanel = function (panel, handle, storageKey, defaultPos = { right: '20px', bottom: '20px' }) {
         if (!panel || !handle || !storageKey) return;
 
         // Add a common class to identify these panels for collision detection
@@ -311,28 +314,31 @@
         // 2. Setup Drag Logic
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
         let startX = 0, startY = 0;
-        const dragThreshold = 5; // Pixels to move before it's considered a drag
-
+        const dragThreshold = 5; // pixels
+        
         // Use grab cursor by default
         handle.style.cursor = 'grab';
-
+        
+        // Expose drag state to allow other listeners (like click) to check it
+        handle._isGusDragging = false;
+        
         handle.addEventListener('mousedown', dragMouseDown);
-
+        
         function dragMouseDown(e) {
             e = e || window.event;
             // Ignore if clicking on interactive child elements within the handle
             if (e.target.closest('input, textarea, button, select, a')) {
                 return;
             }
-            // e.preventDefault(); // Breaking single clicks? Let's be careful.
+            // Do NOT preventDefault here, otherwise click events won't fire
+            // e.preventDefault(); 
             
             pos3 = e.clientX;
             pos4 = e.clientY;
             startX = e.clientX;
             startY = e.clientY;
-
-            panel.dataset.isDragged = 'false'; // Reset drag state on each click
-
+            handle._isGusDragging = false;
+            
             // Convert relative positioning to absolute before dragging, using getBoundingClientRect for reliability
             if (panel.style.right && panel.style.right !== 'auto' || panel.style.bottom && panel.style.bottom !== 'auto') {
                 const rect = panel.getBoundingClientRect();
@@ -341,41 +347,44 @@
                 panel.style.right = 'auto';
                 panel.style.bottom = 'auto';
             }
-
+            
             document.addEventListener('mouseup', closeDragElement);
             document.addEventListener('mousemove', elementDrag);
-
+            
             // Visual feedback
             handle.style.cursor = 'grabbing';
             panel.style.transition = 'none'; // Disable smooth transitions during drag
         }
-
+        
         function elementDrag(e) {
             e = e || window.event;
-            e.preventDefault();
-
-            // Calculate movement distance to distinguish from click
-            const deltaX = Math.abs(e.clientX - startX);
-            const deltaY = Math.abs(e.clientY - startY);
-            if (deltaX > dragThreshold || deltaY > dragThreshold) {
-                panel.dataset.isDragged = 'true';
+            
+            // Check threshold
+            if (!handle._isGusDragging) {
+                const dist = Math.sqrt(Math.pow(e.clientX - startX, 2) + Math.pow(e.clientY - startY, 2));
+                if (dist > dragThreshold) {
+                    handle._isGusDragging = true;
+                }
             }
-
-            pos1 = pos3 - e.clientX;
-            pos2 = pos4 - e.clientY;
-            pos3 = e.clientX;
-            pos4 = e.clientY;
-
-            // Using offsetTop/Left is fine here since we just set top/left explicitly to pixels above
-            let newTop = panel.offsetTop - pos2;
-            let newLeft = panel.offsetLeft - pos1;
-
-            // Basic window boundary constraints
-            newTop = Math.max(0, Math.min(newTop, window.innerHeight - panel.offsetHeight));
-            newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - panel.offsetWidth));
-
-            panel.style.top = newTop + "px";
-            panel.style.left = newLeft + "px";
+            
+            if (handle._isGusDragging) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                
+                // Using offsetTop/Left is fine here since we just set top/left explicitly to pixels above
+                let newTop = panel.offsetTop - pos2;
+                let newLeft = panel.offsetLeft - pos1;
+                
+                // Basic window boundary constraints
+                newTop = Math.max(0, Math.min(newTop, window.innerHeight - panel.offsetHeight));
+                newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - panel.offsetWidth));
+                
+                panel.style.top = newTop + "px";
+                panel.style.left = newLeft + "px";
+            }
         }
 
         function closeDragElement() {
@@ -399,7 +408,7 @@
         }
     };
 
-    /**
+/**
      * Creates a Trusted Types policy for inserting HTML safely.
      * @param {string} policyName - A unique name for the policy.
      * @returns {TrustedTypePolicy|null} - The created policy or null if TrustedTypes is not supported.
@@ -437,11 +446,10 @@
     /**
      * Sets up a panel to be minimizable, toggling the 'gus-minimized' class and persisting state.
      * Requires the panel to have '.gus-active-content' and '.gus-inactive-content' child elements.
-     * Minimization is triggered by a single click on the header, unless dragging.
      *
      * @param {HTMLElement} panel - The main panel element.
      * @param {string} storageKey - A unique string key for localStorage (e.g., 'gus-minimized-scriptname').
-     * @param {HTMLElement} [activeHeader=null] - Optional header element inside the active content to trigger minimization.
+     * @param {HTMLElement} [activeHeader=null] - Optional header element inside the active content to trigger minimization on double-click.
      * @param {boolean} [defaultMinimized=false] - Default state if no saved state exists.
      */
     window.geminiSetupMinimizablePanel = function (panel, storageKey, activeHeader = null, defaultMinimized = false) {
@@ -475,25 +483,29 @@
         applyState(isMinimized);
 
         // 2. Setup Toggle Logic
-        // Expand on single click of inactive content
+        // Allow clicking the inactive content area to expand
         const inactiveContent = panel.querySelector('.gus-inactive-content');
         if (inactiveContent) {
-            inactiveContent.addEventListener('click', (e) => {
-                if (panel.dataset.isDragged === 'true') return;
+            const expandHandler = (e) => {
+                // Prevent toggling if dragging
+                if (inactiveContent._isGusDragging) return;
                 applyState(false);
                 e.stopPropagation();
-            });
+            };
+            inactiveContent.addEventListener('click', expandHandler);
         }
 
-        // Collapse on single click of active header
+        // Allow clicking a specific active header to collapse
         if (activeHeader) {
             activeHeader.addEventListener('click', (e) => {
-                if (panel.dataset.isDragged === 'true') return;
+                // Prevent toggling if dragging
+                if (activeHeader._isGusDragging) return;
                 applyState(true);
                 e.stopPropagation();
             });
         }
 
+        // Return a function to programmatically set the state if needed
         return {
             setMinimized: (state) => applyState(state),
             isMinimized: () => panel.classList.contains('gus-minimized')
@@ -502,16 +514,11 @@
 
     /**
      * Creates a standard minimizable, draggable floating panel shell using the gemini-common.html template.
-     * Supports both old 'title' param and new 'name' + 'version' + 'emoji' format.
-     *
      * @param {Object} options
      * @param {string} options.htmlString - The content of gemini-common.html loaded via GM_getResourceText.
      * @param {TrustedTypePolicy} [options.policy] - Trusted types policy to use.
-     * @param {string} [options.title] - Legacy full title (e.g., "❶ Name v0.1.0").
-     * @param {string} [options.name] - New: Script name only (e.g., "Gemini Turn Counter").
-     * @param {string} [options.version] - New: Version string (e.g., "0.1.0").
-     * @param {string} [options.emoji] - New: Order emoji (e.g., "❶").
-     * @param {string} [options.icon] - Icon/Short string for inactive state (e.g., "📋 v0.1.0").
+     * @param {string} options.title - Full title (e.g., "Gemini Turn Counter v1.0.0").
+     * @param {string} options.icon - Icon/Short string for inactive state (e.g., "📋 v1.0.0" or "📋").
      * @param {HTMLElement} options.contentElement - The body content wrapper to insert.
      * @returns {HTMLElement} The constructed panel shell element.
      */
@@ -527,44 +534,33 @@
 
         const shell = document.createElement('div');
         shell.appendChild(template.content.cloneNode(true));
+        
+        // Apply classes and content
         shell.className = 'gus-panel-shell gus-draggable-panel';
         
-        // Setup Icon (Inactive content)
         const inactiveIcon = shell.querySelector('.gus-panel-icon');
         if (inactiveIcon) {
-            if (options.icon) {
-                inactiveIcon.textContent = options.icon;
-            } else if (options.emoji && options.version) {
-                 inactiveIcon.textContent = `${options.emoji} v${options.version}`;
+            // Priority: Name + Version (New format) > Icon (Legacy)
+            if (options.name && options.version) {
+                inactiveIcon.textContent = `${options.icon || ''} v${options.version}`.trim();
+            } else {
+                inactiveIcon.textContent = options.icon || options.title || '';
             }
         }
         
-        // Setup Title (Active content)
-        const titleContainer = shell.querySelector('.gus-panel-title');
-        const nameSpan = shell.querySelector('.gus-panel-name');
-        const versionSpan = shell.querySelector('.gus-panel-version');
+        const activeName = shell.querySelector('.gus-panel-name');
+        if (activeName) {
+            activeName.textContent = options.name || options.title || '';
+        }
 
-        if (nameSpan && versionSpan) {
-            if (options.name && options.version && options.emoji) {
-                // New format: [Emoji] [Name] v[Version]
-                nameSpan.textContent = `${options.emoji} ${options.name}`;
-                versionSpan.textContent = `v${options.version}`;
-            } else if (options.title) {
-                // Legacy fallback
-                nameSpan.textContent = options.title;
-            }
-        } else if (titleContainer && options.title) {
-            // Extreme legacy fallback
-            titleContainer.textContent = options.title;
+        const activeVersion = shell.querySelector('.gus-panel-version');
+        if (activeVersion) {
+            activeVersion.textContent = options.version ? `v${options.version}` : '';
         }
 
         const body = shell.querySelector('.gus-panel-body');
         if (body && options.contentElement) {
             body.appendChild(options.contentElement);
-        }
-
-        return shell;
-    };entElement);
         }
 
         return shell;

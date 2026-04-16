@@ -353,7 +353,6 @@ const report = () => {
 
             // --- UI Indicator ---
 
-            const VERSION = GM_info.script.version;
             let hideTimeoutId = null;
 
             function getOrCreateIndicator() {

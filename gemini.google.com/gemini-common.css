@@ -106,16 +106,18 @@ span.gus-version:active {
     cursor: grabbing;
 }
 
-.gus-panel-title {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+.gus-panel-name {
+    font-weight: 600;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .gus-panel-version {
+    font-size: 0.85em;
     opacity: 0.8;
-    font-size: 0.9em;
+    margin-left: 6px;
+    font-weight: normal;
 }
 
 .gus-panel-body {

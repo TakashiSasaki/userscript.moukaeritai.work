@@ -20,7 +20,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
-// @history       0.4.64 共通テンプレート更新に伴う同期修正: ヘッダー表示を [絵文字][スクリプト名]v[バージョン] 形式に変更し、シングルクリック開閉に対応。
+// @history       0.4.64 UI改善: シングルクリックでの開閉に対応し、タイトルとバージョンの表示形式を [絵文字] [名称] v[バージョン] に統一
 // @history       0.4.63 iframe 内での重複実行を防止するため @noframes を追加
 // @history       0.4.62 UI共通化: パネルの外枠を gemini-common.html に統合し、ダブルクリックで開閉するように変更
 // @history       0.4.60 リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名
@@ -653,7 +653,6 @@
                     return null;
                 }
 
-                const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : '';
 
                 // Create inner content wrapper
                 const contentDiv = document.createElement('div');
@@ -669,9 +668,9 @@
                 const panelShell = window.geminiCreateCommonPanel({
                     htmlString: commonHTMLStr,
                     policy: policy,
-                    name: 'Gemini Export to Docs',
-                    version: scriptVersion,
-                    emoji: `📦 ${gusEmoji}`,
+                    icon: gusEmoji,
+                    name: GM_info.script.name,
+                    version: GM_info.script.version,
                     contentElement: contentDiv
                 });
 
