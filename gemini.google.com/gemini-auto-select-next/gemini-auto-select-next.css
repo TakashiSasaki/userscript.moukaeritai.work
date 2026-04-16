@@ -1,14 +1,8 @@
 #gemini-auto-switch-panel {
-    position: fixed;
-    top: 80px;
-    right: 20px;
-    z-index: 10000;
-    font-size: 12px;
     display: inline-flex;
     align-items: center;
     flex-wrap: nowrap;
     gap: 6px;
-    padding: 4px 8px;
     width: fit-content;
     max-width: calc(100vw - 40px);
     box-sizing: border-box;
