@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.94
+// @version      0.4.95
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -46,10 +46,7 @@
 
         // --- Selectors (based on provided samples) ---
         const SELECTORS = {
-            // Turn selectors
-            turnContainer: 'model-response, response-container, .response-container', // Broad container to watch
             aiTurnContainer: 'model-response', // Specifically AI response tags
-            presentedContainer: '.presented-response-container, message-content, .message-content', // Most stable selector for the model's response wrapper
             moreMenuButton: 'button[data-test-id="more-menu-button"]', // The trigger "..."
             exportToDocsButton: 'button[data-test-id="export-to-docs-button"]', // The target in the menu
             exportIntermediateButton: 'button[data-test-id="export-button"]' // Mobile "Export to..." button
@@ -142,51 +139,6 @@
         function hideOverlay() {
             const overlay = document.getElementById('gemini-export-overlay');
             if (overlay) overlay.classList.remove('visible');
-        }
-
-        /**
-         * Create the export button
-         */
-        /**
-         * Helper: Mark a button as exported/success
-         */
-        function markAsExported(btn) {
-            if (btn.classList.contains('exported')) return;
-
-            btn.classList.add('exported');
-            btn.title = 'Exported!';
-
-            // Update Icon
-            const iconContainer = btn.querySelector('span');
-            if (iconContainer) {
-                while (iconContainer.firstChild) {
-                    iconContainer.removeChild(iconContainer.firstChild);
-                }
-                const checkIcon = getIcon('check');
-                if (checkIcon) iconContainer.appendChild(checkIcon);
-            }
-        }
-
-        /**
-         * Create the export button
-         */
-        function createExportButton(onClick, positionClass = null) {
-            const tpl = getTemplate('tpl-export-button');
-            const btn = tpl ? tpl.firstElementChild : document.createElement('button');
-            if (positionClass) btn.classList.add(positionClass);
-
-            btn.onclick = async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (btn.classList.contains('exported')) return; // Already done
-
-                await executeManualTurnExport(btn, {
-                    runExport: onClick,
-                    errorPrefix: 'Export failed:',
-                    alertMessage: 'Export failed. See console for details.'
-                });
-            };
-            return btn;
         }
 
         /**
@@ -304,72 +256,10 @@
             if (closeBackdrop) simulateClick(closeBackdrop);
         }
 
-        async function executeManualTurnExport(triggerBtn, options = {}) {
-            if (!triggerBtn) return;
-
-            const {
-                runExport = () => handleTurnExport(triggerBtn),
-                errorPrefix = 'Export failed:',
-                alertMessage = 'Export failed. See console for details.'
-            } = options;
-
-            showOverlay();
-            try {
-                await runExport();
-
-                const container = triggerBtn.closest(SELECTORS.turnContainer);
-                if (container) {
-                    const allBtns = container.querySelectorAll('.gemini-quick-export-btn');
-                    allBtns.forEach(btn => markAsExported(btn));
-                } else {
-                    markAsExported(triggerBtn);
-                }
-            } catch (err) {
-                console.error(errorPrefix, err);
-                alert(alertMessage);
-            } finally {
-                hideOverlay();
-            }
-        }
-
-        function syncTurnExportButtonsForMoreButton(moreBtn) {
-            const root = moreBtn.closest(SELECTORS.turnContainer);
-            if (!root) return;
-
-            const presentedContainer = root.querySelector(SELECTORS.presentedContainer);
-            if (presentedContainer) {
-                if (getComputedStyle(presentedContainer).position === 'static') {
-                    presentedContainer.style.position = 'relative';
-                }
-
-                if (!presentedContainer.querySelector('.gemini-quick-export-btn.top-right')) {
-                    const topBtn = createExportButton(() => handleTurnExport(moreBtn), 'top-right');
-                    presentedContainer.appendChild(topBtn);
-                }
-                if (!presentedContainer.querySelector('.gemini-quick-export-btn.bottom-right')) {
-                    const bottomBtn = createExportButton(() => handleTurnExport(moreBtn), 'bottom-right');
-                    presentedContainer.appendChild(bottomBtn);
-                }
-                return;
-            }
-
-            const container = moreBtn.parentElement;
-            if (container && !container.querySelector('.gemini-quick-export-btn')) {
-                const btn = createExportButton(() => handleTurnExport(moreBtn));
-                container.appendChild(btn);
-            }
-        }
-
-        function syncTurnExportButtons() {
-            const moreButtons = document.querySelectorAll(SELECTORS.moreMenuButton);
-            moreButtons.forEach(syncTurnExportButtonsForMoreButton);
-        }
-
         /**
          * Main logic to inject buttons
          */
         function processNodes() {
-            syncTurnExportButtons();
             updateOneTurnVisibility();
         }
 
@@ -1111,37 +1001,8 @@
             return panelShell;
         }
 
-        /**
-         * Handle Keyboard Shortcut (Ctrl+E)
-         */
-        async function handleKeyboardShortcut(e) {
-            // Only trigger on Ctrl + E
-            if (!(e.ctrlKey && (e.key === 'e' || e.key === 'E'))) return;
-
-            // Ignore if user is typing in an input
-            const activeTag = document.activeElement.tagName.toLowerCase();
-            if (activeTag === 'input' || activeTag === 'textarea' || document.activeElement.isContentEditable) {
-                return;
-            }
-
-            e.preventDefault();
-            console.log('Ctrl+E detected: Triggering first response export...');
-
-            // Find the FIRST response container's "More" button
-            const firstMoreBtn = document.querySelector(SELECTORS.moreMenuButton);
-            if (firstMoreBtn) {
-                await executeManualTurnExport(firstMoreBtn, {
-                    errorPrefix: 'Shortcut Export failed:',
-                    alertMessage: 'Shortcut Export failed. See console.'
-                });
-            } else {
-                console.warn('No conversation turns found to export.');
-            }
-        }
-
         // --- State Management ---
         let mainObserver = null;
-        let keydownListener = null;
         let isInitialized = false;
         let countdownPaused = false;
         /**
@@ -1171,9 +1032,6 @@
             mainObserver = new MutationObserver(debouncedProcessNodes);
             mainObserver.observe(document.body, { childList: true, subtree: true });
 
-            keydownListener = handleKeyboardShortcut;
-            document.addEventListener('keydown', keydownListener);
-
             isInitialized = true;
         }
 
@@ -1189,11 +1047,6 @@
                 mainObserver.disconnect();
                 mainObserver = null;
             }
-            if (keydownListener) {
-                document.removeEventListener('keydown', keydownListener);
-                keydownListener = null;
-            }
-            document.querySelectorAll('.gemini-quick-export-btn').forEach(btn => btn.remove());
             const overlay = document.getElementById('gemini-export-overlay');
             if (overlay) overlay.remove();
 

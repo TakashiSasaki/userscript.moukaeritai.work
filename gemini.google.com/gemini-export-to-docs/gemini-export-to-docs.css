@@ -112,48 +112,6 @@
     white-space: nowrap;
 }
 
-/* Quick Export Buttons in Chat Stream */
-.gemini-quick-export-btn {
-    position: absolute;
-    z-index: 10;
-    background-color: var(--gus-panel-bg);
-    color: var(--gus-panel-text);
-    border: 1px solid var(--gus-panel-border);
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    opacity: 0.2;
-    transition: all 0.2s ease;
-}
-
-.gemini-quick-export-btn:hover {
-    opacity: 1;
-    background-color: #1a73e8;
-    color: white;
-    transform: scale(1.1);
-}
-
-.gemini-quick-export-btn.top-right {
-    top: 8px;
-    right: 8px;
-}
-
-.gemini-quick-export-btn.bottom-right {
-    bottom: 8px;
-    right: 8px;
-}
-
-.gemini-quick-export-btn.exported {
-    background-color: #34a853;
-    color: white;
-    opacity: 0.8;
-}
-
 /* Overlay Styles */
 .gemini-export-overlay {
     position: fixed;
