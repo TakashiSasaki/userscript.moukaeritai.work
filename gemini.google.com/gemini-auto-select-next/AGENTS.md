@@ -20,7 +20,16 @@ This project follows the agent development guidelines outlined in the root [AGEN
 ### 4. Persistence
 - Uses `GM_setValue`/`GM_getValue` to remember the enable/disable state and the floating pill's position.
 
-### 5. Installation Check
+### 5. Custom Event Interface
+- Listens for the `gemini-auto-select-next:request-next` event on `window`.
+- On receipt, it calls `selectNextConversation(0, true)` and attempts to move to the next conversation even if the Auto checkbox is off.
+- Example sender code:
+
+```javascript
+window.dispatchEvent(new CustomEvent('gemini-auto-select-next:request-next'));
+```
+
+### 6. Installation Check
 - Uses a strict hostname check (`installCheckHosts`) restricted to `userscript.moukaeritai.work` and `127.0.0.1`.
 - `installCheckSuffixes` (e.g., for GitHub Codespaces) has been removed for simplicity.
 
