@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.87
+// @version      0.4.88
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -977,6 +977,17 @@
             return panelShell;
         }
 
+        function bindStoredCheckbox(panelShell, selector, storageKey, defaultValue) {
+            if (!panelShell) return null;
+
+            const checkbox = panelShell.querySelector(selector);
+            if (!checkbox) return null;
+
+            checkbox.checked = GM_getValue(storageKey, defaultValue);
+            checkbox.onchange = () => GM_setValue(storageKey, checkbox.checked);
+            return checkbox;
+        }
+
         function bindOneTurnPanelControls(panelShell) {
             if (!panelShell) return;
 
@@ -996,23 +1007,9 @@
                 deleteCheckbox.checked = GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
             }
 
-            const autoEnableCheckbox = panelShell.querySelector('#gemini-auto-url-cb');
-            if (autoEnableCheckbox) {
-                autoEnableCheckbox.checked = GM_getValue(AUTO_URL_TOGGLE_KEY, false);
-                autoEnableCheckbox.onchange = () => GM_setValue(AUTO_URL_TOGGLE_KEY, autoEnableCheckbox.checked);
-            }
-
-            const autoCopyImagesCheckbox = panelShell.querySelector('#gemini-auto-copy-images-cb');
-            if (autoCopyImagesCheckbox) {
-                autoCopyImagesCheckbox.checked = GM_getValue(AUTO_COPY_IMAGES_TOGGLE_KEY, true);
-                autoCopyImagesCheckbox.onchange = () => GM_setValue(AUTO_COPY_IMAGES_TOGGLE_KEY, autoCopyImagesCheckbox.checked);
-            }
-
-            const autoSkipNonMatchCheckbox = panelShell.querySelector('#gemini-auto-skip-nonmatch-cb');
-            if (autoSkipNonMatchCheckbox) {
-                autoSkipNonMatchCheckbox.checked = GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false);
-                autoSkipNonMatchCheckbox.onchange = () => GM_setValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, autoSkipNonMatchCheckbox.checked);
-            }
+            bindStoredCheckbox(panelShell, '#gemini-auto-url-cb', AUTO_URL_TOGGLE_KEY, false);
+            bindStoredCheckbox(panelShell, '#gemini-auto-copy-images-cb', AUTO_COPY_IMAGES_TOGGLE_KEY, true);
+            bindStoredCheckbox(panelShell, '#gemini-auto-skip-nonmatch-cb', AUTO_SKIP_NONMATCH_TOGGLE_KEY, false);
 
             // Bind Execute Button
             const execBtn = panelShell.querySelector('#gemini-btn-one-turn-exec');
