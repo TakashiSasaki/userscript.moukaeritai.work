@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.89
+// @version      0.4.90
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -180,25 +180,11 @@
                 e.stopPropagation();
                 if (btn.classList.contains('exported')) return; // Already done
 
-                showOverlay();
-                try {
-                    await onClick();
-
-                    // Success State - Sync across same container
-                    const container = btn.closest(SELECTORS.turnContainer);
-                    if (container) {
-                        const allBtns = container.querySelectorAll('.gemini-quick-export-btn');
-                        allBtns.forEach(b => markAsExported(b));
-                    } else {
-                        markAsExported(btn);
-                    }
-
-                } catch (err) {
-                    console.error('Export failed:', err);
-                    alert('Export failed. See console for details.');
-                } finally {
-                    hideOverlay();
-                }
+                await executeManualTurnExport(btn, {
+                    runExport: onClick,
+                    errorPrefix: 'Export failed:',
+                    alertMessage: 'Export failed. See console for details.'
+                });
             };
             return btn;
         }
@@ -316,6 +302,34 @@
             await window.geminiSleep(100);
             const closeBackdrop = document.querySelector('.cdk-overlay-backdrop');
             if (closeBackdrop) simulateClick(closeBackdrop);
+        }
+
+        async function executeManualTurnExport(triggerBtn, options = {}) {
+            if (!triggerBtn) return;
+
+            const {
+                runExport = () => handleTurnExport(triggerBtn),
+                errorPrefix = 'Export failed:',
+                alertMessage = 'Export failed. See console for details.'
+            } = options;
+
+            showOverlay();
+            try {
+                await runExport();
+
+                const container = triggerBtn.closest(SELECTORS.turnContainer);
+                if (container) {
+                    const allBtns = container.querySelectorAll('.gemini-quick-export-btn');
+                    allBtns.forEach(btn => markAsExported(btn));
+                } else {
+                    markAsExported(triggerBtn);
+                }
+            } catch (err) {
+                console.error(errorPrefix, err);
+                alert(alertMessage);
+            } finally {
+                hideOverlay();
+            }
         }
 
         /**
@@ -1099,25 +1113,10 @@
             // Find the FIRST response container's "More" button
             const firstMoreBtn = document.querySelector(SELECTORS.moreMenuButton);
             if (firstMoreBtn) {
-                // Visualize the action (optional: highlight the button temporarily?)
-
-                // Re-use existing export logic
-                showOverlay();
-                try {
-                    await handleTurnExport(firstMoreBtn);
-
-                    // Mark success on UI
-                    const container = firstMoreBtn.closest(SELECTORS.turnContainer);
-                    if (container) {
-                        const allBtns = container.querySelectorAll('.gemini-quick-export-btn');
-                        allBtns.forEach(b => markAsExported(b));
-                    }
-                } catch (err) {
-                    console.error('Shortcut Export failed:', err);
-                    alert('Shortcut Export failed. See console.');
-                } finally {
-                    hideOverlay();
-                }
+                await executeManualTurnExport(firstMoreBtn, {
+                    errorPrefix: 'Shortcut Export failed:',
+                    alertMessage: 'Shortcut Export failed. See console.'
+                });
             } else {
                 console.warn('No conversation turns found to export.');
             }
