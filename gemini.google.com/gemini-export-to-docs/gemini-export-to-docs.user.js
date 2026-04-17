@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.86
+// @version      0.4.87
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -943,16 +943,13 @@
             }
         }
 
-        function createOneTurnPanel() {
-            if (document.getElementById('gemini-one-turn-panel')) return document.getElementById('gemini-one-turn-panel');
-
+        function createOneTurnPanelShell() {
             const templateHTML = GM_getResourceText('geminiExportToDocsHTML');
             const commonHTMLStr = GM_getResourceText('gusCommonHTML');
             if (!templateHTML || !commonHTMLStr) {
                 console.error('[Gemini 1-Click Export to Docs] Resource not found');
                 return null;
             }
-
 
             // Create inner content wrapper
             const contentDiv = document.createElement('div');
@@ -976,6 +973,12 @@
 
             panelShell.id = 'gemini-one-turn-panel';
             document.body.appendChild(panelShell);
+
+            return panelShell;
+        }
+
+        function bindOneTurnPanelControls(panelShell) {
+            if (!panelShell) return;
 
             // Bind Dragging Logic
             const dragHandle = panelShell.querySelector('.gus-panel-header');
@@ -1035,7 +1038,10 @@
 
             // Minimizable Logic
             window.geminiSetupMinimizablePanel(panelShell, 'ge2d-minimized', dragHandle, false);
+        }
 
+        function bindOneTurnPanelDependencies(panelShell) {
+            if (!panelShell) return;
             const checkDep = (id, scriptName) => {
                 window.geminiCheckTargetUserscript(scriptName, 1000).then(res => {
                     const el = panelShell.querySelector('#' + id);
@@ -1058,7 +1064,14 @@
                 checkDep('ge2d-dep-1click-del', 'Gemini 1-Click Delete Conversation');
                 checkDep('ge2d-dep-turn-counter', 'Gemini Turn Counter');
             }, 500);
+        }
 
+        function createOneTurnPanel() {
+            if (document.getElementById('gemini-one-turn-panel')) return document.getElementById('gemini-one-turn-panel');
+
+            const panelShell = createOneTurnPanelShell();
+            bindOneTurnPanelControls(panelShell);
+            bindOneTurnPanelDependencies(panelShell);
             return panelShell;
         }
 
