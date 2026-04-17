@@ -29,6 +29,53 @@
     gap: 6px;
 }
 
+.one-turn-eligibility {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.eligibility-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 2px 7px;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.eligibility-badge.eligibility-match {
+    background: rgba(24, 128, 56, 0.18);
+    color: #188038;
+}
+
+.eligibility-badge.eligibility-pending {
+    background: rgba(251, 188, 4, 0.2);
+    color: #b06000;
+}
+
+.eligibility-badge.eligibility-nonmatch {
+    background: rgba(217, 48, 37, 0.16);
+    color: #d93025;
+}
+
+.eligibility-badge.eligibility-not-one-turn {
+    background: rgba(95, 99, 104, 0.18);
+    color: #5f6368;
+}
+
+.eligibility-reason {
+    min-width: 0;
+    font-size: 11px;
+    line-height: 1.3;
+    color: var(--gus-panel-text);
+    opacity: 0.9;
+}
+
 .one-turn-exec-btn {
     color: white;
     border: none;

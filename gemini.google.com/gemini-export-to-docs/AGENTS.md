@@ -23,9 +23,10 @@ gemini.google.com ドメインに特有の指示は [AGENTS.md](/gemini.google.c
 AI側が1ターンしか返答を行っていない「初期回答」の時のみ画面の右下に自動的にポップアップするコントロールパネルを実装しています。
 
 1.  **Auto Export Toggle**: `Auto Export: Off/On` の単一ボタンで、URL一致の自動判定と自動エクスポート処理の開始・停止を切り替えます。
-2.  **Auto Delete Control**: エクスポート完了後にチャット履歴からスレッドを削除する `1-Click Delete Conversation` スクリプトを呼び出すかを選択するチェックボックス。
-3.  **Skip Non-Matching Conversations Control**: 1ターン会話でURL一致条件を満たさなかった場合に `gemini-auto-select-next:request-next` を送信して次の会話へ移動するかを選択するチェックボックス。
-4.  **Draggable Handle**: ユーザーは左端の `⠿` ハンドラをドラッグして好きな場所にパネルを移動できます（状態は localStorage の `gemini-export-panel-pos` に保存）。
+2.  **Eligibility Indicator**: 現在表示中の会話が auto-export 条件を満たしているかを、`Matched / Waiting / Not Matched / Not 1-Turn` の状態と短い理由文で表示します。トグルの On/Off に関係なく更新されます。
+3.  **Auto Delete Control**: エクスポート完了後にチャット履歴からスレッドを削除する `1-Click Delete Conversation` スクリプトを呼び出すかを選択するチェックボックス。
+4.  **Skip Non-Matching Conversations Control**: 1ターン会話でURL一致条件を満たさなかった場合に `gemini-auto-select-next:request-next` を送信して次の会話へ移動するかを選択するチェックボックス。
+5.  **Draggable Handle**: ユーザーは左端の `⠿` ハンドラをドラッグして好きな場所にパネルを移動できます（状態は localStorage の `gemini-export-panel-pos` に保存）。
 - **Manual Expansion**: 条件不適合で `ge2d-disabled` が付いている間も、共通の最小化トグルによりユーザーは手動でパネルを展開できます。
 - **Auto(URL) Detection**: 
   - Extracts URLs from `<user-query>` and `<message-content>` tags via regex `/(https?:\/\/[^\s"'<>()]+)/g`.

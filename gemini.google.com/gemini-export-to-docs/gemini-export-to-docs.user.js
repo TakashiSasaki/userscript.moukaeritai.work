@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.99
+// @version      0.4.100
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -111,6 +111,18 @@
             btn.classList.remove('auto-export-off', 'auto-export-on');
             btn.classList.add(state === 'on' ? 'auto-export-on' : 'auto-export-off');
             setExecBtnContent(btn, text);
+        }
+
+        function setEligibilityIndicatorState(panel, state, label, reason) {
+            if (!panel) return;
+            const badge = panel.querySelector('#gemini-auto-eligibility-badge');
+            const text = panel.querySelector('#gemini-auto-eligibility-reason');
+            if (!badge || !text) return;
+
+            badge.classList.remove('eligibility-match', 'eligibility-pending', 'eligibility-nonmatch', 'eligibility-not-one-turn');
+            badge.classList.add(`eligibility-${state}`);
+            badge.textContent = label;
+            text.textContent = reason;
         }
 
         /**
@@ -281,6 +293,11 @@
             }
         }
 
+        function maybeLogAutoSkip(shouldLog, message, details) {
+            if (!shouldLog) return;
+            logAutoSkip(message, details);
+        }
+
         function getAutoExportToggleLabel() {
             return GM_getValue(AUTO_URL_TOGGLE_KEY, false) ? 'Stop Auto Export' : 'Start Auto Export';
         }
@@ -442,11 +459,11 @@
             return match ? match[1] : null;
         }
 
-        function findResponseUrlMatchDecision(userUrls, botUrls, exportMenuButtonExists, conversationId) {
+        function findResponseUrlMatchDecision(userUrls, botUrls, exportMenuButtonExists, conversationId, shouldLog = true) {
             const userYtId = extractYoutubeVideoId(userUrls[0]);
             for (const botUrl of botUrls) {
                 if (userUrls[0].toLowerCase() === botUrl.toLowerCase()) {
-                    logAutoSkip('Exact URL match found.', {
+                    maybeLogAutoSkip(shouldLog, 'Exact URL match found.', {
                         conversationId,
                         matchedUrl: botUrl,
                         hasExportMenuButton: exportMenuButtonExists
@@ -460,7 +477,7 @@
                     };
                 }
                 if (botUrl.toLowerCase().includes(userUrls[0].toLowerCase())) {
-                    logAutoSkip('Inclusive URL match found.', {
+                    maybeLogAutoSkip(shouldLog, 'Inclusive URL match found.', {
                         conversationId,
                         sourceUrl: userUrls[0],
                         matchedUrl: botUrl,
@@ -477,7 +494,7 @@
                 if (userYtId) {
                     const botYtId = extractYoutubeVideoId(botUrl);
                     if (botYtId && userYtId === botYtId) {
-                        logAutoSkip('YouTube video id match found.', {
+                        maybeLogAutoSkip(shouldLog, 'YouTube video id match found.', {
                             conversationId,
                             youtubeVideoId: userYtId,
                             matchedUrl: botUrl,
@@ -496,9 +513,9 @@
             return null;
         }
 
-        function evaluateAutoUrlCondition(snapshot = collectCurrentConversationSnapshot()) {
+        function evaluateAutoUrlCondition(snapshot = collectCurrentConversationSnapshot(), { shouldLog = true } = {}) {
             const { conversationId, userQueryEl, messageContentEl, exportMenuButton } = snapshot;
-            logAutoSkip('Evaluating auto URL condition.', {
+            maybeLogAutoSkip(shouldLog, 'Evaluating auto URL condition.', {
                 conversationId,
                 hasUserQuery: !!userQueryEl,
                 hasMessageContent: !!messageContentEl,
@@ -510,7 +527,7 @@
                 autoDecisionConversationId
             });
             if (!userQueryEl || !messageContentEl) {
-                logAutoSkip('Deferring decision because required turn DOM is not ready.', {
+                maybeLogAutoSkip(shouldLog, 'Deferring decision because required turn DOM is not ready.', {
                     conversationId
                 });
                 return { status: 'pending', reason: 'waiting-for-turn-dom' };
@@ -519,7 +536,7 @@
             const userUrls = extractUrls(userQueryEl);
             const botUrls = extractUrls(messageContentEl);
 
-            logAutoSkip('Collected URLs for auto decision.', {
+            maybeLogAutoSkip(shouldLog, 'Collected URLs for auto decision.', {
                 conversationId,
                 userUrls,
                 botUrls,
@@ -527,7 +544,7 @@
             });
 
             if (userUrls.length !== 1) {
-                logAutoSkip('Prompt URL count is not exactly 1, treating conversation as non-match.', {
+                maybeLogAutoSkip(shouldLog, 'Prompt URL count is not exactly 1, treating conversation as non-match.', {
                     conversationId,
                     userUrls,
                     botUrls
@@ -542,7 +559,7 @@
             }
 
             if (!botUrls.length && !exportMenuButton) {
-                logAutoSkip('Deferring decision because response URLs are empty and the export menu is not available yet.', {
+                maybeLogAutoSkip(shouldLog, 'Deferring decision because response URLs are empty and the export menu is not available yet.', {
                     conversationId,
                     userUrls,
                     botUrls
@@ -556,12 +573,12 @@
                 };
             }
 
-            const matchDecision = findResponseUrlMatchDecision(userUrls, botUrls, !!exportMenuButton, conversationId);
+            const matchDecision = findResponseUrlMatchDecision(userUrls, botUrls, !!exportMenuButton, conversationId, shouldLog);
             if (matchDecision) {
                 return matchDecision;
             }
 
-            logAutoSkip('No URL match found in the response.', {
+            maybeLogAutoSkip(shouldLog, 'No URL match found in the response.', {
                 conversationId,
                 userUrls,
                 botUrls,
@@ -574,6 +591,65 @@
                 botUrls,
                 exportMenuButtonExists: !!exportMenuButton
             };
+        }
+
+        function formatEligibilityReason(reason) {
+            if (reason === 'exact-url-match' || reason === 'included-url-match' || reason === 'youtube-id-match') {
+                return 'URL matched';
+            }
+            if (reason === 'waiting-for-turn-dom') {
+                return 'Waiting for conversation DOM';
+            }
+            if (reason === 'waiting-for-response-actions' || reason === 'waiting-for-export-button') {
+                return 'Waiting for export actions';
+            }
+            if (reason === 'response-url-mismatch') {
+                return 'Response URL did not match';
+            }
+            if (reason === 'prompt-url-count-0') {
+                return 'Prompt URL not found';
+            }
+            if (reason.startsWith('prompt-url-count-')) {
+                return 'Prompt must contain exactly one URL';
+            }
+            return reason.replace(/-/g, ' ');
+        }
+
+        function getAutoExportEligibilityIndicatorState(snapshot) {
+            if (!snapshot.isOneTurn) {
+                return {
+                    state: 'not-one-turn',
+                    label: 'Not 1-Turn',
+                    reason: 'Not a 1-turn conversation'
+                };
+            }
+
+            const decision = evaluateAutoUrlCondition(snapshot, { shouldLog: false });
+            if (decision.status === 'match') {
+                return {
+                    state: 'match',
+                    label: 'Matched',
+                    reason: formatEligibilityReason(decision.reason)
+                };
+            }
+            if (decision.status === 'pending') {
+                return {
+                    state: 'pending',
+                    label: 'Waiting',
+                    reason: formatEligibilityReason(decision.reason)
+                };
+            }
+            return {
+                state: 'nonmatch',
+                label: 'Not Matched',
+                reason: formatEligibilityReason(decision.reason)
+            };
+        }
+
+        function refreshEligibilityIndicator(panel, snapshot) {
+            if (!panel) return;
+            const indicator = getAutoExportEligibilityIndicatorState(snapshot);
+            setEligibilityIndicatorState(panel, indicator.state, indicator.label, indicator.reason);
         }
 
         function triggerAutoExportForDecision(currentConversationId, decision) {
@@ -781,6 +857,8 @@
             if (!panel) {
                 panel = createOneTurnPanel();
             }
+
+            refreshEligibilityIndicator(panel, snapshot);
 
             if (isOneTurn) {
                 setOneTurnPanelVisibility(true);
