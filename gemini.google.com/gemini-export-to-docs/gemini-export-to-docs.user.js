@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.77
+// @version      0.4.78
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -91,11 +91,16 @@
                     document.head.appendChild(commonStyle);
                 }
 
+                const existingStyle = document.getElementById('gemini-export-to-docs-styles');
+                if (existingStyle) return existingStyle;
+
                 const css = GM_getResourceText('geminiExportToDocsCSS');
-                GM_addStyle(css);
-                // GM_addStyle returns the style element or undefined depending on TM version
-                // Try to find it if we need to remove it later, or just let it be.
-                return document.querySelector('style:last-of-type');
+                const style = GM_addStyle(css);
+                if (style) {
+                    style.id = 'gemini-export-to-docs-styles';
+                    return style;
+                }
+                return document.getElementById('gemini-export-to-docs-styles');
             }
 
             let templatesContainer = null;
@@ -389,6 +394,7 @@
 
             function forceOpenPanelForMatchingCondition(panel) {
                 if (!panel) return;
+                panel.style.display = '';
                 if (panel.classList.contains('gus-minimized')) {
                     panel.classList.remove('gus-minimized');
                 }
@@ -397,6 +403,12 @@
                 } catch (e) {
                     console.warn('[Gemini 1-Turn] Failed to clear saved minimized state.', e);
                 }
+            }
+
+            function setOneTurnPanelVisibility(visible) {
+                const panel = document.getElementById('gemini-one-turn-panel');
+                if (!panel) return;
+                panel.style.display = visible ? '' : 'none';
             }
 
             function requestNextConversationAfterNonMatch() {
@@ -467,6 +479,7 @@
                 }
 
                 if (isOneTurn) {
+                    setOneTurnPanelVisibility(true);
                     panel.classList.remove('ge2d-disabled');
                     forceOpenPanelForMatchingCondition(panel);
 
@@ -585,6 +598,7 @@
                         }
                     }
                 } else if (panel) {
+                    setOneTurnPanelVisibility(true);
                     panel.classList.add('ge2d-disabled');
                     autoExportTriggered = false; // Reset trigger state if UI is closed (e.g., user started a new topic or more turns added)
                     autoSkipTriggered = false;
@@ -838,7 +852,6 @@
             // --- State Management ---
             let mainObserver = null;
             let keydownListener = null;
-            let styleElement = null;
             let isInitialized = false;
             let countdownPaused = false;
             /**
@@ -848,7 +861,7 @@
                 if (isInitialized) return;
                 console.log('[Gemini 1-Click Export to Docs] Initializing...');
 
-                styleElement = addStyles(); // addStyles() needs to return the style element
+                addStyles();
 
                 // Initial run - robust polling to wait for Gemini's asynchronous rendering
                 let attempts = 0;
@@ -877,8 +890,9 @@
             /**
              * Cleans up all injected elements, observers, and listeners.
              */
-            function cleanup() {
+            function cleanup(options = {}) {
                 if (!isInitialized) return;
+                const { hidePanel = false } = options;
                 console.log('[Gemini 1-Click Export to Docs] Cleaning up...');
 
                 if (mainObserver) {
@@ -889,16 +903,13 @@
                     document.removeEventListener('keydown', keydownListener);
                     keydownListener = null;
                 }
-                if (styleElement) {
-                    styleElement.remove();
-                    styleElement = null;
-                }
                 document.querySelectorAll('.gemini-quick-export-btn').forEach(btn => btn.remove());
                 const overlay = document.getElementById('gemini-export-overlay');
                 if (overlay) overlay.remove();
 
-                const oneTurnPanel = document.getElementById('gemini-one-turn-panel');
-                if (oneTurnPanel) oneTurnPanel.remove();
+                if (hidePanel) {
+                    setOneTurnPanelVisibility(false);
+                }
 
                 autoExportTriggered = false; // Reset trigger so it fires again on new URLs
                 autoSkipTriggered = false;
@@ -919,13 +930,13 @@
                 // Force a UI reset if transitioning between different pages (to clear "Deleting..." states etc.)
                 if (prevUrl && currentUrl && prevUrl !== currentUrl && isInitialized) {
                     console.log('[Gemini 1-Click Export to Docs] URL changed, forcing UI reset.');
-                    cleanup();
+                    cleanup({ hidePanel: false });
                 }
 
                 if (isChatPage) {
                     initMainFunctionality();
                 } else {
-                    cleanup();
+                    cleanup({ hidePanel: true });
                 }
             }
 
