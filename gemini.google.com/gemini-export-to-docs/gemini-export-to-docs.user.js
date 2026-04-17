@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.98
+// @version      0.4.99
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -104,6 +104,13 @@
         function setExecBtnContent(btn, text) {
             if (!btn) return;
             btn.textContent = text;
+        }
+
+        function setExecBtnState(btn, state, text) {
+            if (!btn) return;
+            btn.classList.remove('auto-export-off', 'auto-export-on');
+            btn.classList.add(state === 'on' ? 'auto-export-on' : 'auto-export-off');
+            setExecBtnContent(btn, text);
         }
 
         /**
@@ -275,14 +282,12 @@
         }
 
         function getAutoExportToggleLabel() {
-            return GM_getValue(AUTO_URL_TOGGLE_KEY, false) ? 'Auto Export: On' : 'Auto Export: Off';
+            return GM_getValue(AUTO_URL_TOGGLE_KEY, false) ? 'Stop Auto Export' : 'Start Auto Export';
         }
 
         function refreshAutoExportToggleButton(button = document.getElementById('gemini-btn-one-turn-exec')) {
             if (!button || autoExportTimerId || button.disabled) return;
-            button.style.backgroundColor = '';
-            button.style.color = '';
-            setExecBtnContent(button, getAutoExportToggleLabel());
+            setExecBtnState(button, GM_getValue(AUTO_URL_TOGGLE_KEY, false) ? 'on' : 'off', getAutoExportToggleLabel());
         }
 
         function resetAutoDecisionState() {
@@ -585,9 +590,11 @@
             const execBtn = document.getElementById('gemini-btn-one-turn-exec');
             if (execBtn) {
                 const updateButtonUI = () => {
-                    execBtn.style.backgroundColor = '#fbbc04'; // yellow
-                    execBtn.style.color = '#333';
-                    execBtn.textContent = countdownPaused ? `Auto Paused (${countdown}s)` : `Stop Auto (${countdown}s)`;
+                    setExecBtnState(
+                        execBtn,
+                        'on',
+                        countdownPaused ? `Stop Auto Export (Paused ${countdown}s)` : `Stop Auto Export (${countdown}s)`
+                    );
                 };
 
                 autoExportTimerId = setInterval(() => {

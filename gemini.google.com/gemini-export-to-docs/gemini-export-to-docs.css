@@ -30,7 +30,6 @@
 }
 
 .one-turn-exec-btn {
-    background-color: #1a73e8;
     color: white;
     border: none;
     border-radius: 8px;
@@ -45,8 +44,20 @@
     transition: background-color 0.2s;
 }
 
-.one-turn-exec-btn:hover:not(:disabled) {
+.one-turn-exec-btn.auto-export-off {
+    background-color: #1a73e8;
+}
+
+.one-turn-exec-btn.auto-export-off:hover:not(:disabled) {
     background-color: #1b66c9;
+}
+
+.one-turn-exec-btn.auto-export-on {
+    background-color: #188038;
+}
+
+.one-turn-exec-btn.auto-export-on:hover:not(:disabled) {
+    background-color: #137333;
 }
 
 .one-turn-exec-btn:disabled {
