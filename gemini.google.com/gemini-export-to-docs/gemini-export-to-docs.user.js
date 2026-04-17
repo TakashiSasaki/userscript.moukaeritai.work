@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.81
+// @version      0.4.82
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -705,6 +705,26 @@
                         conversationId: currentConversationId,
                         reason
                     });
+                    return;
+                }
+
+                const turns = document.querySelectorAll(SELECTORS.aiTurnContainer);
+                if (turns.length !== 1) {
+                    autoDecisionConversationId = currentConversationId;
+                    logAutoSkip('Conversation does not have exactly one AI turn at the skip deadline.', {
+                        conversationId: currentConversationId,
+                        triggerReason: reason,
+                        turnCount: turns.length
+                    });
+                    if (!autoSkipTriggered && GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)) {
+                        requestNextConversationAfterNonMatch();
+                    } else {
+                        logAutoSkip('Auto-skip is disabled or already triggered, staying on current conversation.', {
+                            conversationId: currentConversationId,
+                            autoSkipTriggered,
+                            autoSkipEnabled: GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)
+                        });
+                    }
                     return;
                 }
 
