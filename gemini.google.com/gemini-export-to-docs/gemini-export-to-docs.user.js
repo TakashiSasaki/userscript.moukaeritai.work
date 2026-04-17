@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.72
+// @version      0.4.73
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -800,14 +800,6 @@
 
                 // Minimizable Logic
                 oneTurnPanelControls = window.geminiSetupMinimizablePanel(panelShell, 'ge2d-minimized', dragHandle, false);
-
-                // Add a capture phase listener to block expansion when disabled
-                inactiveHandle.addEventListener('click', (e) => {
-                    if (panelShell.classList.contains('ge2d-disabled')) {
-                        console.debug('[Gemini Export to Docs] Not a 1-turn conversation. Ignoring expand request.');
-                        e.stopPropagation();
-                    }
-                }, true);
 
                 const checkDep = (id, scriptName) => {
                     window.geminiCheckTargetUserscript(scriptName, 1000).then(res => {
