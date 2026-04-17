@@ -96,6 +96,7 @@
             <ul>
                 <li><strong>機能</strong>: 会話が1ターン（プロンプト1回、回答1回）のみの場合に、画面右下に専用のパネルを表示します。</li>
                 <li><strong>自動削除連動</strong>: エクスポート完了後、指定した秒数が経過すると会話を自動的に削除します。</li>
+                <li><strong>自動スキップ連動</strong>: URL一致条件を満たさなかった会話では、設定に応じて <code>Gemini Auto-Select Next</code> にイベントを送って次の会話へ移動できます。</li>
             </ul>
 
             <h2>連携スクリプト</h2>
@@ -105,7 +106,7 @@
             <ul>
                 <li><strong>Turn Counter</strong>: 画像コピー処理を依頼。</li>
                 <li><strong>One Click Delete</strong>: エクスポート完了後に会話を自動削除。</li>
-                <li><strong>Auto-Select Next</strong>: 次のアイテムを自動選択。</li>
+                <li><strong>Auto-Select Next</strong>: URL一致条件を満たさなかった1ターン会話で <code>gemini-auto-select-next:request-next</code> を送信し、次のアイテム選択を依頼。</li>
             </ul>
 
             <h2>更新履歴</h2>

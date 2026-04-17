@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.71
+// @version      0.4.72
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -379,6 +379,7 @@
             const AUTO_URL_TOGGLE_KEY = 'gemini-export-auto-url-toggle';
             const AUTO_DELETE_TOGGLE_KEY = 'gemini-export-auto-delete-toggle';
             const AUTO_COPY_IMAGES_TOGGLE_KEY = 'gemini-export-auto-copy-images-toggle';
+            const AUTO_SKIP_NONMATCH_TOGGLE_KEY = 'gemini-export-auto-skip-nonmatch-toggle';
 
             // Simple debounce function to reduce polling frequency on DOM mutations
             function debounce(func, wait) {
@@ -393,9 +394,21 @@
             const debouncedProcessNodes = debounce(processNodes, 500);
 
             let autoExportTriggered = false;
+            let autoSkipTriggered = false;
             let wasMinimizedBeforeAuto = false;
             let autoExportTimerId = null;
             let oneTurnPanelControls = null;
+
+            function requestNextConversationAfterNonMatch() {
+                console.log('[Gemini 1-Turn Auto] Requesting next conversation because the current conversation did not match the auto-export condition.');
+                autoSkipTriggered = true;
+                window.geminiCheckTargetUserscript('Gemini Auto-Select Next', 1000).then((res) => {
+                    if (!res) {
+                        console.warn('[Gemini 1-Turn Auto] Gemini Auto-Select Next was not detected. Dispatching request-next event anyway.');
+                    }
+                    window.dispatchEvent(new CustomEvent('gemini-auto-select-next:request-next'));
+                });
+            }
 
             function extractUrls(elOrText) {
                 if (!elOrText) return [];
@@ -469,8 +482,11 @@
                         try {
                             const userQueryEl = document.querySelector('user-query');
                             const messageContentEl = document.querySelector('message-content');
+                            const exportMenuButton = document.querySelector(SELECTORS.moreMenuButton);
 
-                            if (userQueryEl && messageContentEl) {
+                            if (!exportMenuButton) {
+                                console.log('[Gemini 1-Turn Auto] Waiting for the response actions to appear before evaluating auto-export conditions.');
+                            } else if (userQueryEl && messageContentEl) {
                                 const userUrls = extractUrls(userQueryEl);
                                 const botUrls = extractUrls(messageContentEl);
 
@@ -578,7 +594,12 @@
                                             }, countdown * 1000);
                                         }
                                     } else {
-                                        console.log(`[Gemini 1-Turn Auto] No match found. Staying on current conversation.`);
+                                        console.log('[Gemini 1-Turn Auto] No match found for the current conversation.');
+                                        if (!autoSkipTriggered && GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)) {
+                                            requestNextConversationAfterNonMatch();
+                                        } else {
+                                            console.log('[Gemini 1-Turn Auto] Staying on current conversation.');
+                                        }
                                     }
                                 }
                             }
@@ -592,6 +613,7 @@
                         oneTurnPanelControls.setMinimized(true);
                     }
                     autoExportTriggered = false; // Reset trigger state if UI is closed (e.g., user started a new topic or more turns added)
+                    autoSkipTriggered = false;
                     wasMinimizedBeforeAuto = false;
                     if (autoExportTimerId) {
                         clearInterval(autoExportTimerId);
@@ -746,6 +768,12 @@
                 if (autoCopyImagesCheckbox) {
                     autoCopyImagesCheckbox.checked = GM_getValue(AUTO_COPY_IMAGES_TOGGLE_KEY, true);
                     autoCopyImagesCheckbox.onchange = () => GM_setValue(AUTO_COPY_IMAGES_TOGGLE_KEY, autoCopyImagesCheckbox.checked);
+                }
+
+                const autoSkipNonMatchCheckbox = panelShell.querySelector('#gemini-auto-skip-nonmatch-cb');
+                if (autoSkipNonMatchCheckbox) {
+                    autoSkipNonMatchCheckbox.checked = GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false);
+                    autoSkipNonMatchCheckbox.onchange = () => GM_setValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, autoSkipNonMatchCheckbox.checked);
                 }
 
                 // Bind Execute Button
@@ -918,6 +946,7 @@
                 if (oneTurnPanel) oneTurnPanel.remove();
 
                 autoExportTriggered = false; // Reset trigger so it fires again on new URLs
+                autoSkipTriggered = false;
                 wasMinimizedBeforeAuto = false;
                 lastIsOneTurn = false;
                 if (autoExportTimerId) {
