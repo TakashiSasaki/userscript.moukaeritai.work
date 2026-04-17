@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.78
+// @version      0.4.79
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -391,6 +391,7 @@
             let autoExportTriggered = false;
             let autoSkipTriggered = false;
             let autoExportTimerId = null;
+            let autoDecisionConversationId = null;
 
             function forceOpenPanelForMatchingCondition(panel) {
                 if (!panel) return;
@@ -420,6 +421,11 @@
                     }
                     window.dispatchEvent(new CustomEvent('gemini-auto-select-next:request-next'));
                 });
+            }
+
+            function getCurrentConversationId() {
+                const match = window.location.pathname.match(/\/(?:app|gem)\/(?:[a-f0-9]+\/)?([a-f0-9]{16})/i);
+                return match ? match[1].toLowerCase() : window.location.pathname;
             }
 
             function extractUrls(elOrText) {
@@ -464,6 +470,85 @@
                 return match ? match[1] : null;
             }
 
+            function evaluateAutoUrlCondition() {
+                const userQueryEl = document.querySelector('user-query');
+                const messageContentEl = document.querySelector('message-content');
+                if (!userQueryEl || !messageContentEl) {
+                    return { status: 'pending', reason: 'waiting-for-turn-dom' };
+                }
+
+                const userUrls = extractUrls(userQueryEl);
+                const botUrls = extractUrls(messageContentEl);
+                const exportMenuButton = document.querySelector(SELECTORS.moreMenuButton);
+
+                console.log('[Gemini 1-Turn] Extracted Prompt URLs:', userUrls);
+                console.log('[Gemini 1-Turn] Extracted Response URLs:', botUrls);
+
+                if (userUrls.length !== 1) {
+                    return {
+                        status: 'nonmatch',
+                        reason: `prompt-url-count-${userUrls.length}`,
+                        userUrls,
+                        botUrls,
+                        exportMenuButtonExists: !!exportMenuButton
+                    };
+                }
+
+                if (!botUrls.length && !exportMenuButton) {
+                    return {
+                        status: 'pending',
+                        reason: 'waiting-for-response-actions',
+                        userUrls,
+                        botUrls,
+                        exportMenuButtonExists: false
+                    };
+                }
+
+                const userYtId = extractYoutubeVideoId(userUrls[0]);
+                for (const botUrl of botUrls) {
+                    if (userUrls[0].toLowerCase() === botUrl.toLowerCase()) {
+                        return {
+                            status: exportMenuButton ? 'match' : 'pending',
+                            reason: exportMenuButton ? 'exact-url-match' : 'waiting-for-export-button',
+                            userUrls,
+                            botUrls,
+                            exportMenuButtonExists: !!exportMenuButton
+                        };
+                    }
+                    if (botUrl.toLowerCase().includes(userUrls[0].toLowerCase())) {
+                        console.log(`[Gemini 1-Turn Auto] Match found via inclusion: ${userUrls[0]}`);
+                        return {
+                            status: exportMenuButton ? 'match' : 'pending',
+                            reason: exportMenuButton ? 'included-url-match' : 'waiting-for-export-button',
+                            userUrls,
+                            botUrls,
+                            exportMenuButtonExists: !!exportMenuButton
+                        };
+                    }
+                    if (userYtId) {
+                        const botYtId = extractYoutubeVideoId(botUrl);
+                        if (botYtId && userYtId === botYtId) {
+                            console.log(`[Gemini 1-Turn Auto] Match found via YouTube Video ID: ${userYtId}`);
+                            return {
+                                status: exportMenuButton ? 'match' : 'pending',
+                                reason: exportMenuButton ? 'youtube-id-match' : 'waiting-for-export-button',
+                                userUrls,
+                                botUrls,
+                                exportMenuButtonExists: !!exportMenuButton
+                            };
+                        }
+                    }
+                }
+
+                return {
+                    status: 'nonmatch',
+                    reason: 'response-url-mismatch',
+                    userUrls,
+                    botUrls,
+                    exportMenuButtonExists: !!exportMenuButton
+                };
+            }
+
             function updateOneTurnVisibility() {
                 const turns = document.querySelectorAll(SELECTORS.aiTurnContainer);
                 // Note: Gemini UI can be slow to update styles/classes.
@@ -486,111 +571,78 @@
                     // --- Auto URL Export Logic ---
                     if (!autoExportTriggered && GM_getValue(AUTO_URL_TOGGLE_KEY, false)) {
                         try {
-                            const userQueryEl = document.querySelector('user-query');
-                            const messageContentEl = document.querySelector('message-content');
-                            const exportMenuButton = document.querySelector(SELECTORS.moreMenuButton);
+                            const currentConversationId = getCurrentConversationId();
+                            const decision = evaluateAutoUrlCondition();
 
-                            if (!exportMenuButton) {
-                                console.log('[Gemini 1-Turn Auto] Waiting for the response actions to appear before evaluating auto-export conditions.');
-                            } else if (userQueryEl && messageContentEl) {
-                                const userUrls = extractUrls(userQueryEl);
-                                const botUrls = extractUrls(messageContentEl);
+                            if (decision.status === 'pending') {
+                                console.log(`[Gemini 1-Turn Auto] Waiting before auto decision: ${decision.reason}`);
+                            } else if (autoDecisionConversationId === currentConversationId) {
+                                console.log(`[Gemini 1-Turn Auto] Conversation ${currentConversationId} already evaluated (${decision.reason}).`);
+                            } else if (decision.status === 'match') {
+                                autoDecisionConversationId = currentConversationId;
+                                autoExportTriggered = true;
+                                console.log(`[Gemini 1-Turn Auto] Match concluded for conversation ${currentConversationId}.`);
 
-                                console.log(`[Gemini 1-Turn] Extracted Prompt URLs:`, userUrls);
-                                console.log(`[Gemini 1-Turn] Extracted Response URLs:`, botUrls);
+                                let countdown = 4; // Hardcoded default duration
 
-                                if (userUrls.length === 1) {
-                                    const userYtId = extractYoutubeVideoId(userUrls[0]);
-                                    let matchFound = false;
+                                const execBtn = document.getElementById('gemini-btn-one-turn-exec');
+                                if (execBtn) {
+                                    const originalOnClick = execBtn.onclick;
 
-                                    for (const botUrl of botUrls) {
-                                        // Comparison (Case-insensitive to handle Https:// vs https://)
-                                        if (userUrls[0].toLowerCase() === botUrl.toLowerCase()) {
-                                            matchFound = true;
-                                            break;
-                                        }
-                                        // Flexible comparison: If the response URL starts with or contains the prompt URL
-                                        // This handles cases where our truncation might have been slightly different
-                                        if (botUrl.toLowerCase().includes(userUrls[0].toLowerCase())) {
-                                            matchFound = true;
-                                            console.log(`[Gemini 1-Turn Auto] Match found via inclusion: ${userUrls[0]}`);
-                                            break;
-                                        }
-                                        if (userYtId) {
-                                            const botYtId = extractYoutubeVideoId(botUrl);
-                                            if (botYtId && userYtId === botYtId) {
-                                                matchFound = true;
-                                                console.log(`[Gemini 1-Turn Auto] Match found via YouTube Video ID: ${userYtId}`);
-                                                break;
-                                            }
-                                        }
-                                    }
+                                    const cancelAuto = () => {
+                                        if (autoExportTimerId) clearInterval(autoExportTimerId);
+                                        autoExportTimerId = null;
+                                        execBtn.style.backgroundColor = '';
+                                        execBtn.style.color = '';
 
-                                    if (matchFound) {
-                                        autoExportTriggered = true;
-                                        console.log(`[Gemini 1-Turn Auto] Match concluded. Prompt had 1 URL matched in response.`);
+                                        const deleteCheckbox = document.getElementById('gemini-delete-checkbox');
+                                        const willDelete = deleteCheckbox ? deleteCheckbox.checked : GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
 
-                                        let countdown = 4; // Hardcoded default duration
+                                        setExecBtnContent(execBtn, willDelete ? 'Export & Delete' : 'Export');
 
-                                        const execBtn = document.getElementById('gemini-btn-one-turn-exec');
-                                        if (execBtn) {
-                                            const originalOnClick = execBtn.onclick;
+                                        execBtn.onclick = originalOnClick;
+                                        console.log('[Gemini 1-Turn Auto] Auto-export cancelled by user.');
+                                    };
 
-                                            const cancelAuto = () => {
-                                                if (autoExportTimerId) clearInterval(autoExportTimerId);
-                                                autoExportTimerId = null;
-                                                execBtn.style.backgroundColor = '';
-                                                execBtn.style.color = '';
+                                    execBtn.onclick = (e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        cancelAuto();
+                                    };
 
-                                                const deleteCheckbox = document.getElementById('gemini-delete-checkbox');
-                                                const willDelete = deleteCheckbox ? deleteCheckbox.checked : GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
+                                    const updateButtonUI = () => {
+                                        execBtn.style.backgroundColor = '#fbbc04'; // yellow
+                                        execBtn.style.color = '#333';
+                                        execBtn.textContent = countdownPaused ? `Auto Paused (${countdown}s)` : `Cancel Auto (${countdown}s)`;
+                                    };
 
-                                                setExecBtnContent(execBtn, willDelete ? 'Export & Delete' : 'Export');
+                                    autoExportTimerId = setInterval(() => {
+                                        if (countdownPaused) return; // Requirement: Hover pause
 
-                                                execBtn.onclick = originalOnClick;
-                                                console.log('[Gemini 1-Turn Auto] Auto-export cancelled by user.');
-                                            };
-
-                                            execBtn.onclick = (e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                cancelAuto();
-                                            };
-
-                                            const updateButtonUI = () => {
-                                                execBtn.style.backgroundColor = '#fbbc04'; // yellow
-                                                execBtn.style.color = '#333';
-                                                execBtn.textContent = countdownPaused ? `Auto Paused (${countdown}s)` : `Cancel Auto (${countdown}s)`;
-                                            };
-
-                                            autoExportTimerId = setInterval(() => {
-                                                if (countdownPaused) return; // Requirement: Hover pause
-
-                                                countdown--;
-                                                if (countdown <= 0) {
-                                                    if (autoExportTimerId) clearInterval(autoExportTimerId);
-                                                    autoExportTimerId = null;
-                                                    execBtn.onclick = originalOnClick;
-                                                    runExportProcess(true);
-                                                } else {
-                                                    updateButtonUI();
-                                                }
-                                            }, 1000);
-                                            updateButtonUI(); // Initial call
+                                        countdown--;
+                                        if (countdown <= 0) {
+                                            if (autoExportTimerId) clearInterval(autoExportTimerId);
+                                            autoExportTimerId = null;
+                                            execBtn.onclick = originalOnClick;
+                                            runExportProcess(true);
                                         } else {
-                                            autoExportTimerId = setTimeout(() => {
-                                                autoExportTimerId = null;
-                                                runExportProcess(true);
-                                            }, countdown * 1000);
+                                            updateButtonUI();
                                         }
-                                    } else {
-                                        console.log('[Gemini 1-Turn Auto] No match found for the current conversation.');
-                                        if (!autoSkipTriggered && GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)) {
-                                            requestNextConversationAfterNonMatch();
-                                        } else {
-                                            console.log('[Gemini 1-Turn Auto] Staying on current conversation.');
-                                        }
-                                    }
+                                    }, 1000);
+                                    updateButtonUI(); // Initial call
+                                } else {
+                                    autoExportTimerId = setTimeout(() => {
+                                        autoExportTimerId = null;
+                                        runExportProcess(true);
+                                    }, countdown * 1000);
+                                }
+                            } else if (decision.status === 'nonmatch') {
+                                autoDecisionConversationId = currentConversationId;
+                                console.log(`[Gemini 1-Turn Auto] No match found for conversation ${currentConversationId}: ${decision.reason}`);
+                                if (!autoSkipTriggered && GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)) {
+                                    requestNextConversationAfterNonMatch();
+                                } else {
+                                    console.log('[Gemini 1-Turn Auto] Staying on current conversation.');
                                 }
                             }
                         } catch (e) {
@@ -602,6 +654,7 @@
                     panel.classList.add('ge2d-disabled');
                     autoExportTriggered = false; // Reset trigger state if UI is closed (e.g., user started a new topic or more turns added)
                     autoSkipTriggered = false;
+                    autoDecisionConversationId = null;
                     if (autoExportTimerId) {
                         clearInterval(autoExportTimerId);
                         autoExportTimerId = null;
@@ -913,6 +966,7 @@
 
                 autoExportTriggered = false; // Reset trigger so it fires again on new URLs
                 autoSkipTriggered = false;
+                autoDecisionConversationId = null;
                 if (autoExportTimerId) {
                     clearInterval(autoExportTimerId);
                     autoExportTimerId = null;

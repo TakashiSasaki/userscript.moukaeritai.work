@@ -33,8 +33,8 @@ AI側が1ターンしか返答を行っていない「初期回答」の時の�
 - **Auto(URL) Detection**: 
   - Extracts URLs from `<user-query>` and `<message-content>` tags via regex `/(https?:\/\/[^\s"'<>()]+)/g`.
   - If enabled via `gemini-export-auto-url-toggle`, and the user query contains exactly ONE URL, and the model response contains that same URL, it triggers `runExportProcess` with forced deletion after a configurable delay (`gemini-export-auto-url-delay`).
-  - If the URL match fails and `gemini-export-auto-skip-nonmatch-toggle` is enabled, it dispatches `gemini-auto-select-next:request-next` once for that conversation after the response action menu becomes available.
-  - An `autoExportTriggered` lock prevents infinite trigger loops while tracking the same conversation state.
+  - If the URL match fails and `gemini-export-auto-skip-nonmatch-toggle` is enabled, it dispatches `gemini-auto-select-next:request-next` once for that conversation after `user-query` and `message-content` are available, without waiting for the export menu button.
+  - Conversation-scoped decision state prevents repeated auto-export or auto-skip triggers while the same conversation remains active.
 - **Initial Positioning**: On load, it checks for `gemini-export-panel-pos` and applies it to the panel's style. Defaults to `bottom: 20px; right: 20px;`.
 
 Please refer to the root `AGENTS.md` for all operational procedures, including Git practices, documentation structure, and HTML sample preprocessing.
