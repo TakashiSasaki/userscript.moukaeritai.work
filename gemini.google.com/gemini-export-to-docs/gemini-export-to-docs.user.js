@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.90
+// @version      0.4.91
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -522,6 +522,60 @@
             return match ? match[1] : null;
         }
 
+        function findResponseUrlMatchDecision(userUrls, botUrls, exportMenuButtonExists, conversationId) {
+            const userYtId = extractYoutubeVideoId(userUrls[0]);
+            for (const botUrl of botUrls) {
+                if (userUrls[0].toLowerCase() === botUrl.toLowerCase()) {
+                    logAutoSkip('Exact URL match found.', {
+                        conversationId,
+                        matchedUrl: botUrl,
+                        hasExportMenuButton: exportMenuButtonExists
+                    });
+                    return {
+                        status: exportMenuButtonExists ? 'match' : 'pending',
+                        reason: exportMenuButtonExists ? 'exact-url-match' : 'waiting-for-export-button',
+                        userUrls,
+                        botUrls,
+                        exportMenuButtonExists
+                    };
+                }
+                if (botUrl.toLowerCase().includes(userUrls[0].toLowerCase())) {
+                    logAutoSkip('Inclusive URL match found.', {
+                        conversationId,
+                        sourceUrl: userUrls[0],
+                        matchedUrl: botUrl,
+                        hasExportMenuButton: exportMenuButtonExists
+                    });
+                    return {
+                        status: exportMenuButtonExists ? 'match' : 'pending',
+                        reason: exportMenuButtonExists ? 'included-url-match' : 'waiting-for-export-button',
+                        userUrls,
+                        botUrls,
+                        exportMenuButtonExists
+                    };
+                }
+                if (userYtId) {
+                    const botYtId = extractYoutubeVideoId(botUrl);
+                    if (botYtId && userYtId === botYtId) {
+                        logAutoSkip('YouTube video id match found.', {
+                            conversationId,
+                            youtubeVideoId: userYtId,
+                            matchedUrl: botUrl,
+                            hasExportMenuButton: exportMenuButtonExists
+                        });
+                        return {
+                            status: exportMenuButtonExists ? 'match' : 'pending',
+                            reason: exportMenuButtonExists ? 'youtube-id-match' : 'waiting-for-export-button',
+                            userUrls,
+                            botUrls,
+                            exportMenuButtonExists
+                        };
+                    }
+                }
+            }
+            return null;
+        }
+
         function evaluateAutoUrlCondition(snapshot = collectCurrentConversationSnapshot()) {
             const { conversationId, userQueryEl, messageContentEl, exportMenuButton } = snapshot;
             logAutoSkip('Evaluating auto URL condition.', {
@@ -582,55 +636,9 @@
                 };
             }
 
-            const userYtId = extractYoutubeVideoId(userUrls[0]);
-            for (const botUrl of botUrls) {
-                if (userUrls[0].toLowerCase() === botUrl.toLowerCase()) {
-                    logAutoSkip('Exact URL match found.', {
-                        conversationId,
-                        matchedUrl: botUrl,
-                        hasExportMenuButton: !!exportMenuButton
-                    });
-                    return {
-                        status: exportMenuButton ? 'match' : 'pending',
-                        reason: exportMenuButton ? 'exact-url-match' : 'waiting-for-export-button',
-                        userUrls,
-                        botUrls,
-                        exportMenuButtonExists: !!exportMenuButton
-                    };
-                }
-                if (botUrl.toLowerCase().includes(userUrls[0].toLowerCase())) {
-                    logAutoSkip('Inclusive URL match found.', {
-                        conversationId,
-                        sourceUrl: userUrls[0],
-                        matchedUrl: botUrl,
-                        hasExportMenuButton: !!exportMenuButton
-                    });
-                    return {
-                        status: exportMenuButton ? 'match' : 'pending',
-                        reason: exportMenuButton ? 'included-url-match' : 'waiting-for-export-button',
-                        userUrls,
-                        botUrls,
-                        exportMenuButtonExists: !!exportMenuButton
-                    };
-                }
-                if (userYtId) {
-                const botYtId = extractYoutubeVideoId(botUrl);
-                if (botYtId && userYtId === botYtId) {
-                    logAutoSkip('YouTube video id match found.', {
-                        conversationId,
-                        youtubeVideoId: userYtId,
-                        matchedUrl: botUrl,
-                        hasExportMenuButton: !!exportMenuButton
-                        });
-                        return {
-                            status: exportMenuButton ? 'match' : 'pending',
-                            reason: exportMenuButton ? 'youtube-id-match' : 'waiting-for-export-button',
-                            userUrls,
-                            botUrls,
-                            exportMenuButtonExists: !!exportMenuButton
-                        };
-                    }
-                }
+            const matchDecision = findResponseUrlMatchDecision(userUrls, botUrls, !!exportMenuButton, conversationId);
+            if (matchDecision) {
+                return matchDecision;
             }
 
             logAutoSkip('No URL match found in the response.', {
