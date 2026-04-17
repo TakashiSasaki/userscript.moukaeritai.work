@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.82
+// @version      0.4.83
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -796,6 +796,47 @@
                 }, AUTO_SKIP_DECISION_DELAY_MS);
             }
 
+            function handleAutoDecisionForCurrentConversation() {
+                // --- Auto URL Export Logic ---
+                if (!autoExportTriggered && GM_getValue(AUTO_URL_TOGGLE_KEY, false)) {
+                    try {
+                        const currentConversationId = getCurrentConversationId();
+                        const decision = evaluateAutoUrlCondition();
+                        logAutoSkip('Auto decision evaluated.', {
+                            conversationId: currentConversationId,
+                            decisionStatus: decision.status,
+                            reason: decision.reason,
+                            autoDecisionConversationId,
+                            autoExportTriggered,
+                            autoSkipTriggered
+                        });
+
+                        if (decision.status === 'pending') {
+                            logAutoSkip('Waiting before auto decision is finalized.', {
+                                conversationId: currentConversationId,
+                                reason: decision.reason
+                            });
+                        } else if (autoDecisionConversationId === currentConversationId) {
+                            logAutoSkip('Conversation already evaluated, skipping repeated action.', {
+                                conversationId: currentConversationId,
+                                reason: decision.reason
+                            });
+                        } else if (decision.status === 'match') {
+                            triggerAutoExportForDecision(currentConversationId, decision);
+                        } else if (decision.status === 'nonmatch') {
+                            logAutoSkip('Non-match detected before the skip deadline, waiting for delayed final decision.', {
+                                conversationId: currentConversationId,
+                                reason: decision.reason,
+                                delayMs: AUTO_SKIP_DECISION_DELAY_MS,
+                                autoSkipEnabled: GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)
+                            });
+                        }
+                    } catch (e) {
+                        console.error('[Gemini 1-Turn Auto] Error matching URLs:', e);
+                    }
+                }
+            }
+
             function updateOneTurnVisibility() {
                 const turns = document.querySelectorAll(SELECTORS.aiTurnContainer);
                 // Note: Gemini UI can be slow to update styles/classes.
@@ -816,45 +857,7 @@
                     setOneTurnPanelVisibility(true);
                     panel.classList.remove('ge2d-disabled');
                     forceOpenPanelForMatchingCondition(panel);
-
-                    // --- Auto URL Export Logic ---
-                    if (!autoExportTriggered && GM_getValue(AUTO_URL_TOGGLE_KEY, false)) {
-                        try {
-                            const currentConversationId = getCurrentConversationId();
-                            const decision = evaluateAutoUrlCondition();
-                            logAutoSkip('Auto decision evaluated.', {
-                                conversationId: currentConversationId,
-                                decisionStatus: decision.status,
-                                reason: decision.reason,
-                                autoDecisionConversationId,
-                                autoExportTriggered,
-                                autoSkipTriggered
-                            });
-
-                            if (decision.status === 'pending') {
-                                logAutoSkip('Waiting before auto decision is finalized.', {
-                                    conversationId: currentConversationId,
-                                    reason: decision.reason
-                                });
-                            } else if (autoDecisionConversationId === currentConversationId) {
-                                logAutoSkip('Conversation already evaluated, skipping repeated action.', {
-                                    conversationId: currentConversationId,
-                                    reason: decision.reason
-                                });
-                            } else if (decision.status === 'match') {
-                                triggerAutoExportForDecision(currentConversationId, decision);
-                            } else if (decision.status === 'nonmatch') {
-                                logAutoSkip('Non-match detected before the skip deadline, waiting for delayed final decision.', {
-                                    conversationId: currentConversationId,
-                                    reason: decision.reason,
-                                    delayMs: AUTO_SKIP_DECISION_DELAY_MS,
-                                    autoSkipEnabled: GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)
-                                });
-                            }
-                        } catch (e) {
-                            console.error('[Gemini 1-Turn Auto] Error matching URLs:', e);
-                        }
-                    }
+                    handleAutoDecisionForCurrentConversation();
                 } else if (panel) {
                     setOneTurnPanelVisibility(true);
                     panel.classList.add('ge2d-disabled');
