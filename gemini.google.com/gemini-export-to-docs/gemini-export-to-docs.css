@@ -9,7 +9,7 @@
 .ge2d-panel-content {
     display: flex;
     flex-direction: column;
-    padding: 0 12px 12px 12px;
+    padding: 0 8px 8px 8px;
 }
 
 .one-turn-content {
@@ -20,13 +20,13 @@
 .one-turn-body {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
 }
 
 .one-turn-actions {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .one-turn-exec-btn {
@@ -34,7 +34,7 @@
     color: white;
     border: none;
     border-radius: 8px;
-    padding: 10px;
+    padding: 8px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -57,54 +57,17 @@
 .one-turn-options {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: 4px;
+    gap: 4px;
+    padding: 2px 0 0 0;
 }
 
 .one-turn-checkbox-label {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     font-size: 12px;
     color: var(--gus-panel-text);
     cursor: pointer;
-}
-
-.one-turn-footer {
-    border-top: 1px solid var(--gus-panel-border);
-    margin-top: 12px;
-    padding-top: 8px;
-}
-
-.dep-indicators {
-    display: flex;
-    justify-content: space-around;
-    gap: 8px;
-}
-
-.dep-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    opacity: 0.4;
-    filter: grayscale(1);
-    transition: all 0.3s ease;
-}
-
-.dep-item.installed {
-    opacity: 1;
-    filter: grayscale(0);
-}
-
-.dep-icon {
-    font-size: 16px;
-}
-
-.dep-version {
-    font-size: 9px;
-    color: var(--gus-panel-text);
-    white-space: nowrap;
 }
 
 /* Overlay Styles */

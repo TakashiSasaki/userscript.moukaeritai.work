@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.97
+// @version      0.4.98
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -371,22 +371,10 @@
                 autoDecisionConversationId
             });
             autoSkipTriggered = true;
-            window.geminiCheckTargetUserscript('Gemini Auto-Select Next', 1000).then((res) => {
-                if (!res) {
-                    console.warn(`${AUTO_SKIP_LOG_PREFIX} Gemini Auto-Select Next was not detected. Dispatching request-next event anyway.`, {
-                        conversationId: currentConversationId
-                    });
-                } else {
-                    logAutoSkip('Gemini Auto-Select Next detected before dispatch.', {
-                        conversationId: currentConversationId,
-                        detectedVersion: res.version
-                    });
-                }
-                logAutoSkip('Dispatching gemini-auto-select-next:request-next.', {
-                    conversationId: currentConversationId
-                });
-                window.dispatchEvent(new CustomEvent('gemini-auto-select-next:request-next'));
+            logAutoSkip('Dispatching gemini-auto-select-next:request-next.', {
+                conversationId: currentConversationId
             });
+            window.dispatchEvent(new CustomEvent('gemini-auto-select-next:request-next'));
         }
 
         function getCurrentConversationId() {
@@ -812,9 +800,7 @@
 
         function requestConversationDeletion() {
             console.log('[Gemini 1-Turn Export] Requesting conversation deletion.');
-            window.geminiCheckTargetUserscript('Gemini 1-Click Delete Conversation').then(() => {
-                window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete'));
-            });
+            window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete'));
         }
 
         /**
@@ -948,37 +934,11 @@
             window.geminiSetupMinimizablePanel(panelShell, 'ge2d-minimized', dragHandle, false);
         }
 
-        function bindOneTurnPanelDependencies(panelShell) {
-            if (!panelShell) return;
-            const checkDep = (id, scriptName) => {
-                window.geminiCheckTargetUserscript(scriptName, 1000).then(res => {
-                    const el = panelShell.querySelector('#' + id);
-                    if (el) {
-                        const vSpan = el.querySelector('.dep-version');
-                        if (res) {
-                            el.classList.add('installed');
-                            el.title = `${scriptName} (v${res.version}) - OK`;
-                            if (vSpan) vSpan.textContent = `v${res.version}`;
-                        } else {
-                            el.classList.remove('installed');
-                            el.title = `${scriptName} - Not Found`;
-                            if (vSpan) vSpan.textContent = `Not Found`;
-                        }
-                    }
-                });
-            };
-            setTimeout(() => {
-                checkDep('ge2d-dep-auto-select', 'Gemini Auto-Select Next');
-                checkDep('ge2d-dep-1click-del', 'Gemini 1-Click Delete Conversation');
-            }, 500);
-        }
-
         function createOneTurnPanel() {
             if (document.getElementById('gemini-one-turn-panel')) return document.getElementById('gemini-one-turn-panel');
 
             const panelShell = createOneTurnPanelShell();
             bindOneTurnPanelControls(panelShell);
-            bindOneTurnPanelDependencies(panelShell);
             return panelShell;
         }
 

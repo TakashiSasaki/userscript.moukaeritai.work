@@ -26,7 +26,6 @@ AI側が1ターンしか返答を行っていない「初期回答」の時の�
 2.  **Auto Delete Control**: エクスポート完了後にチャット履歴からスレッドを削除する `1-Click Delete Conversation` スクリプトを呼び出すかを選択するチェックボックス。
 3.  **Skip Non-Matching Conversations Control**: 1ターン会話でURL一致条件を満たさなかった場合に `gemini-auto-select-next:request-next` を送信して次の会話へ移動するかを選択するチェックボックス。
 4.  **Draggable Handle**: ユーザーは左端の `⠿` ハンドラをドラッグして好きな場所にパネルを移動できます（状態は localStorage の `gemini-export-panel-pos` に保存）。
-5.  **Dependency Checking**: `Auto-Select Next`, `1-Click Delete Conversation` がインストールされているかを自動判別し、各種アイコンを表示する機能。
 - **Manual Expansion**: 条件不適合で `ge2d-disabled` が付いている間も、共通の最小化トグルによりユーザーは手動でパネルを展開できます。
 - **Auto(URL) Detection**: 
   - Extracts URLs from `<user-query>` and `<message-content>` tags via regex `/(https?:\/\/[^\s"'<>()]+)/g`.
@@ -50,8 +49,5 @@ Please refer to the root `AGENTS.md` for all operational procedures, including G
    - インラインスクリプトによってボタン全体のDOM（アイコン等）が上書きされないように、テキスト書き換え対象の要素（例: `<span class="button-text">`）のみを操作するようにしてください。
    - 新規タブでインストールした後にUIを自動更新するため、メインのインストールボタンおよび依存関係カードのインストールボタン（`.dep-install-btn`）のクリック時に `userscript-ping` を2秒間隔で計5回（10秒間）送信するポーリング処理が実装されています。これにより利用者はページをリロードすることなく「Installed」への変化を確認できます。
 
-2. **依存関係の動的ステータス明記**:
-   - このスクリプトが依存する他のユーザースクリプトがある場合、`index.html` 上に最新バージョン（`fetch`で取得）とインストール済みバージョン（`userscript-check-installed` イベントで取得）が表示される動的なカードリスト構造（`<div class="dep-card">`等）を維持し、ユーザーが依存元のバージョン情報をひと目で確認できるようにしてください。
-
-3. **ドキュメントの網羅性**:
+2. **ドキュメントの網羅性**:
    - 新しいスクリプト（システムローダーなどの裏側で動くスクリプトを含む）を追加した場合は、必ず該当するドメインの `index.html` およびルートの `index.html` の一覧にも漏れなく追加してください。
