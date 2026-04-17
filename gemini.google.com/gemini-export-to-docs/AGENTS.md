@@ -15,7 +15,7 @@ gemini.google.com ドメインに特有の指示は [AGENTS.md](/gemini.google.c
 - **Inter-script Communication**: Dispatches a `gemini-one-click-delete:request-delete` CustomEvent to trigger conversation deletion, and can dispatch `gemini-auto-select-next:request-next` when a 1-turn conversation does not satisfy the auto-export URL match rule.
 
 ### Metadata & Context
-- **@noframes**: This script MUST include the `@noframes` directive. Without it, the script runs in both the top-level window and any internal iframes (e.g., help widgets) on `gemini.google.com`, causing duplicate button injections and multiple instances appearing in Tampermonkey.
+- **@noframes**: This script MUST include the `@noframes` directive. Without it, the script runs in both the top-level window and any internal iframes (e.g., help widgets) on `gemini.google.com`, causing duplicate initialization and multiple instances appearing in Tampermonkey.
 - **No `@history` metadata**: Remove any existing `@history` metadata entries from this userscript and do not add new ones. Versioning is tracked via `@version` and Git history, so inline history metadata is unnecessary.
 
 

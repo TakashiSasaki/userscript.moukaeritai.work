@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.95
+// @version      0.4.96
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -101,9 +101,8 @@
             return tpl.content.cloneNode(true);
         }
 
-        function getIcon(type) {
-            const id = type === 'check' ? 'tpl-check-icon' : 'tpl-docs-icon';
-            const tpl = getTemplate(id);
+        function getIcon() {
+            const tpl = getTemplate('tpl-docs-icon');
             return tpl ? tpl.firstElementChild : null;
         }
 
@@ -115,7 +114,7 @@
             btn.textContent = ''; // Clear existing
             const iconSpan = document.createElement('span');
             iconSpan.className = 'export-btn-icon';
-            const icon = getIcon('docs');
+            const icon = getIcon();
             if (icon) iconSpan.appendChild(icon);
             btn.appendChild(iconSpan);
             btn.appendChild(document.createTextNode(text));
@@ -142,7 +141,7 @@
         }
 
         /**
-         * Flow: Export a specific turn
+         * Flow: export the current conversation via its more menu
          * 1. Click "More" (three dots)
          * 2. Wait for menu
          * 3. Click "Export to Docs" (or "Export to..." -> "Export to Docs" on mobile)
@@ -182,7 +181,7 @@
         }
 
         /**
-         * Flow: Export a specific turn
+         * Flow: export the current conversation via its more menu
          * 1. Click "More" (three dots)
          * 2. Wait for ANY menu to appear
          * 3. Look for "Export to Docs" globally
@@ -256,13 +255,6 @@
             if (closeBackdrop) simulateClick(closeBackdrop);
         }
 
-        /**
-         * Main logic to inject buttons
-         */
-        function processNodes() {
-            updateOneTurnVisibility();
-        }
-
         const AUTO_URL_TOGGLE_KEY = 'gemini-export-auto-url-toggle';
         const AUTO_DELETE_TOGGLE_KEY = 'gemini-export-auto-delete-toggle';
         const AUTO_SKIP_NONMATCH_TOGGLE_KEY = 'gemini-export-auto-skip-nonmatch-toggle';
@@ -277,7 +269,7 @@
             };
         }
 
-        const debouncedProcessNodes = debounce(processNodes, 500);
+        const debouncedUpdateOneTurnVisibility = debounce(updateOneTurnVisibility, 500);
 
         let autoExportTriggered = false;
         let autoSkipTriggered = false;
@@ -1024,12 +1016,12 @@
                 if (hasTurns || attempts >= maxAttempts) {
                     clearInterval(checkInterval);
                     console.log(`[Gemini 1-Click Export] Running initial scan after ${attempts * 0.5}s... (Found: ${!!hasTurns})`);
-                    processNodes(); // Run the scan now that DOM is likely ready, or we timed out
+                    updateOneTurnVisibility(); // Run the scan now that DOM is likely ready, or we timed out
                 }
             }, 500);
 
             // Future updates - use debounced version to handle streaming content/DOM changes efficiently
-            mainObserver = new MutationObserver(debouncedProcessNodes);
+            mainObserver = new MutationObserver(debouncedUpdateOneTurnVisibility);
             mainObserver.observe(document.body, { childList: true, subtree: true });
 
             isInitialized = true;
