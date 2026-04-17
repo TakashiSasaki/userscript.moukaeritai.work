@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.91
+// @version      0.4.92
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -332,45 +332,44 @@
             }
         }
 
+        function syncTurnExportButtonsForMoreButton(moreBtn) {
+            const root = moreBtn.closest(SELECTORS.turnContainer);
+            if (!root) return;
+
+            const presentedContainer = root.querySelector(SELECTORS.presentedContainer);
+            if (presentedContainer) {
+                if (getComputedStyle(presentedContainer).position === 'static') {
+                    presentedContainer.style.position = 'relative';
+                }
+
+                if (!presentedContainer.querySelector('.gemini-quick-export-btn.top-right')) {
+                    const topBtn = createExportButton(() => handleTurnExport(moreBtn), 'top-right');
+                    presentedContainer.appendChild(topBtn);
+                }
+                if (!presentedContainer.querySelector('.gemini-quick-export-btn.bottom-right')) {
+                    const bottomBtn = createExportButton(() => handleTurnExport(moreBtn), 'bottom-right');
+                    presentedContainer.appendChild(bottomBtn);
+                }
+                return;
+            }
+
+            const container = moreBtn.parentElement;
+            if (container && !container.querySelector('.gemini-quick-export-btn')) {
+                const btn = createExportButton(() => handleTurnExport(moreBtn));
+                container.appendChild(btn);
+            }
+        }
+
+        function syncTurnExportButtons() {
+            const moreButtons = document.querySelectorAll(SELECTORS.moreMenuButton);
+            moreButtons.forEach(syncTurnExportButtonsForMoreButton);
+        }
+
         /**
          * Main logic to inject buttons
          */
         function processNodes() {
-            // A. Handle Turn Buttons
-            // Find all "More" buttons to know what to click
-            const moreButtons = document.querySelectorAll(SELECTORS.moreMenuButton);
-            moreButtons.forEach(moreBtn => {
-                // Find the stable model response container
-                const root = moreBtn.closest(SELECTORS.turnContainer);
-                if (!root) return;
-
-                const presentedContainer = root.querySelector(SELECTORS.presentedContainer);
-                if (presentedContainer) {
-                    // Ensure the container is positioned relatively so absolute buttons adhere to it
-                    if (getComputedStyle(presentedContainer).position === 'static') {
-                        presentedContainer.style.position = 'relative';
-                    }
-
-                    // Check if we already injected into this container
-                    if (!presentedContainer.querySelector('.gemini-quick-export-btn.top-right')) {
-                        const topBtn = createExportButton(() => handleTurnExport(moreBtn), 'top-right');
-                        presentedContainer.appendChild(topBtn);
-                    }
-                    if (!presentedContainer.querySelector('.gemini-quick-export-btn.bottom-right')) {
-                        const bottomBtn = createExportButton(() => handleTurnExport(moreBtn), 'bottom-right');
-                        presentedContainer.appendChild(bottomBtn);
-                    }
-                } else {
-                    // Fallback to original injection if presentedContainer is not found
-                    const container = moreBtn.parentElement;
-                    if (container && !container.querySelector('.gemini-quick-export-btn')) {
-                        const btn = createExportButton(() => handleTurnExport(moreBtn));
-                        container.appendChild(btn);
-                    }
-                }
-            });
-
-            // B. Handle 1-Turn Panel Visibility
+            syncTurnExportButtons();
             updateOneTurnVisibility();
         }
 
