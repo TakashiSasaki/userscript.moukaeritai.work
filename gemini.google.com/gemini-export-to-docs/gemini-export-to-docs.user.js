@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.84
+// @version      0.4.85
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -453,6 +453,20 @@
             return match ? match[1].toLowerCase() : window.location.pathname;
         }
 
+        function collectCurrentConversationSnapshot() {
+            const turns = document.querySelectorAll(SELECTORS.aiTurnContainer);
+            const turnCount = turns.length;
+            return {
+                conversationId: getCurrentConversationId(),
+                turns,
+                turnCount,
+                isOneTurn: turnCount === 1,
+                userQueryEl: document.querySelector('user-query'),
+                messageContentEl: document.querySelector('message-content'),
+                exportMenuButton: document.querySelector(SELECTORS.moreMenuButton)
+            };
+        }
+
         function extractUrls(elOrText) {
             if (!elOrText) return [];
             const text = typeof elOrText === 'string' ? elOrText : (elOrText.textContent || '');
@@ -495,12 +509,10 @@
             return match ? match[1] : null;
         }
 
-        function evaluateAutoUrlCondition() {
-            const userQueryEl = document.querySelector('user-query');
-            const messageContentEl = document.querySelector('message-content');
-            const exportMenuButton = document.querySelector(SELECTORS.moreMenuButton);
+        function evaluateAutoUrlCondition(snapshot = collectCurrentConversationSnapshot()) {
+            const { conversationId, userQueryEl, messageContentEl, exportMenuButton } = snapshot;
             logAutoSkip('Evaluating auto URL condition.', {
-                conversationId: getCurrentConversationId(),
+                conversationId,
                 hasUserQuery: !!userQueryEl,
                 hasMessageContent: !!messageContentEl,
                 hasExportMenuButton: !!exportMenuButton,
@@ -512,7 +524,7 @@
             });
             if (!userQueryEl || !messageContentEl) {
                 logAutoSkip('Deferring decision because required turn DOM is not ready.', {
-                    conversationId: getCurrentConversationId()
+                    conversationId
                 });
                 return { status: 'pending', reason: 'waiting-for-turn-dom' };
             }
@@ -521,7 +533,7 @@
             const botUrls = extractUrls(messageContentEl);
 
             logAutoSkip('Collected URLs for auto decision.', {
-                conversationId: getCurrentConversationId(),
+                conversationId,
                 userUrls,
                 botUrls,
                 hasExportMenuButton: !!exportMenuButton
@@ -529,7 +541,7 @@
 
             if (userUrls.length !== 1) {
                 logAutoSkip('Prompt URL count is not exactly 1, treating conversation as non-match.', {
-                    conversationId: getCurrentConversationId(),
+                    conversationId,
                     userUrls,
                     botUrls
                 });
@@ -544,7 +556,7 @@
 
             if (!botUrls.length && !exportMenuButton) {
                 logAutoSkip('Deferring decision because response URLs are empty and the export menu is not available yet.', {
-                    conversationId: getCurrentConversationId(),
+                    conversationId,
                     userUrls,
                     botUrls
                 });
@@ -589,13 +601,13 @@
                     };
                 }
                 if (userYtId) {
-                    const botYtId = extractYoutubeVideoId(botUrl);
-                    if (botYtId && userYtId === botYtId) {
-                        logAutoSkip('YouTube video id match found.', {
-                            conversationId: getCurrentConversationId(),
-                            youtubeVideoId: userYtId,
-                            matchedUrl: botUrl,
-                            hasExportMenuButton: !!exportMenuButton
+                const botYtId = extractYoutubeVideoId(botUrl);
+                if (botYtId && userYtId === botYtId) {
+                    logAutoSkip('YouTube video id match found.', {
+                        conversationId,
+                        youtubeVideoId: userYtId,
+                        matchedUrl: botUrl,
+                        hasExportMenuButton: !!exportMenuButton
                         });
                         return {
                             status: exportMenuButton ? 'match' : 'pending',
@@ -609,7 +621,7 @@
             }
 
             logAutoSkip('No URL match found in the response.', {
-                conversationId: getCurrentConversationId(),
+                conversationId,
                 userUrls,
                 botUrls,
                 hasExportMenuButton: !!exportMenuButton
@@ -688,7 +700,8 @@
         }
 
         function finalizeAutoDecision(reason) {
-            const currentConversationId = getCurrentConversationId();
+            const snapshot = collectCurrentConversationSnapshot();
+            const currentConversationId = snapshot.conversationId;
             if (autoDecisionConversationId === currentConversationId) {
                 logAutoSkip('Conversation already evaluated before deadline finalization.', {
                     conversationId: currentConversationId,
@@ -697,13 +710,12 @@
                 return;
             }
 
-            const turns = document.querySelectorAll(SELECTORS.aiTurnContainer);
-            if (turns.length !== 1) {
+            if (snapshot.turnCount !== 1) {
                 autoDecisionConversationId = currentConversationId;
                 logAutoSkip('Conversation does not have exactly one AI turn at the skip deadline.', {
                     conversationId: currentConversationId,
                     triggerReason: reason,
-                    turnCount: turns.length
+                    turnCount: snapshot.turnCount
                 });
                 if (!autoSkipTriggered && GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)) {
                     requestNextConversationAfterNonMatch();
@@ -717,7 +729,7 @@
                 return;
             }
 
-            const decision = evaluateAutoUrlCondition();
+            const decision = evaluateAutoUrlCondition(snapshot);
             logAutoSkip('Finalizing auto decision after delay.', {
                 conversationId: currentConversationId,
                 triggerReason: reason,
@@ -789,8 +801,9 @@
             // --- Auto URL Export Logic ---
             if (!autoExportTriggered && GM_getValue(AUTO_URL_TOGGLE_KEY, false)) {
                 try {
-                    const currentConversationId = getCurrentConversationId();
-                    const decision = evaluateAutoUrlCondition();
+                    const snapshot = collectCurrentConversationSnapshot();
+                    const currentConversationId = snapshot.conversationId;
+                    const decision = evaluateAutoUrlCondition(snapshot);
                     logAutoSkip('Auto decision evaluated.', {
                         conversationId: currentConversationId,
                         decisionStatus: decision.status,
@@ -827,15 +840,15 @@
         }
 
         function updateOneTurnVisibility() {
-            const turns = document.querySelectorAll(SELECTORS.aiTurnContainer);
+            const snapshot = collectCurrentConversationSnapshot();
             // Note: Gemini UI can be slow to update styles/classes.
             // We'll count anything that looks like a model response.
-            console.log(`[Gemini 1-Turn] Found ${turns.length} active AI turns using ${SELECTORS.aiTurnContainer}`);
+            console.log(`[Gemini 1-Turn] Found ${snapshot.turnCount} active AI turns using ${SELECTORS.aiTurnContainer}`);
 
             ensureAutoDecisionDeadline();
 
             // A 1-turn conversation usually has exactly 1 model-response
-            const isOneTurn = turns.length === 1;
+            const isOneTurn = snapshot.isOneTurn;
 
             let panel = document.getElementById('gemini-one-turn-panel');
             if (!panel) {
