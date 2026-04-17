@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.76
+// @version      0.4.77
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -20,16 +20,6 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
-// @history       0.4.71 自動URLエクスポート開始時に、パネルが最小化されていれば一時的に展開し、処理完了後またはキャンセル後に元の最小化状態を復元するように改善。
-// @history       0.4.70 条件を満たした際にパネルを自動展開するロジックを最適化。
-// @history       0.4.69 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
-// @history       0.4.66 ヘッダー右側のバージョン表示を廃止
-// @history       0.4.65 共通ライブラリの更新に伴うUI標準化とツールチップの完全削除
-// @history       0.4.64 UI改善: シングルクリックでの開閉に対応し、タイトルとバージョンの表示形式を [絵文字] [名称] v[バージョン] に統一
-// @history       0.4.63 iframe 内での重複実行を防止するため @noframes を追加
-// @history       0.4.62 UI共通化: パネルの外枠を gemini-common.html に統合し、ダブルクリックで開閉するように変更
-// @history       0.4.60 リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名
-// @history       0.4.58 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // ==/UserScript==
 
 (function () {
