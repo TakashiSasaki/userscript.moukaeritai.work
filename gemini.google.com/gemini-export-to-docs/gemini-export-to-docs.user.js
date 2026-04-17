@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.96
+// @version      0.4.97
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -101,23 +101,9 @@
             return tpl.content.cloneNode(true);
         }
 
-        function getIcon() {
-            const tpl = getTemplate('tpl-docs-icon');
-            return tpl ? tpl.firstElementChild : null;
-        }
-
-        /**
-         * Helper: Sets the content of the execute button (icon + text)
-         */
         function setExecBtnContent(btn, text) {
             if (!btn) return;
-            btn.textContent = ''; // Clear existing
-            const iconSpan = document.createElement('span');
-            iconSpan.className = 'export-btn-icon';
-            const icon = getIcon();
-            if (icon) iconSpan.appendChild(icon);
-            btn.appendChild(iconSpan);
-            btn.appendChild(document.createTextNode(text));
+            btn.textContent = text;
         }
 
         /**
@@ -286,6 +272,47 @@
             } else {
                 console.log(`${AUTO_SKIP_LOG_PREFIX} ${message}`);
             }
+        }
+
+        function getAutoExportToggleLabel() {
+            return GM_getValue(AUTO_URL_TOGGLE_KEY, false) ? 'Auto Export: On' : 'Auto Export: Off';
+        }
+
+        function refreshAutoExportToggleButton(button = document.getElementById('gemini-btn-one-turn-exec')) {
+            if (!button || autoExportTimerId || button.disabled) return;
+            button.style.backgroundColor = '';
+            button.style.color = '';
+            setExecBtnContent(button, getAutoExportToggleLabel());
+        }
+
+        function resetAutoDecisionState() {
+            autoExportTriggered = false;
+            autoSkipTriggered = false;
+            autoDecisionConversationId = null;
+            clearAutoDecisionDeadlineTimer();
+        }
+
+        function stopAutoExportMode() {
+            GM_setValue(AUTO_URL_TOGGLE_KEY, false);
+            if (autoExportTimerId) {
+                clearInterval(autoExportTimerId);
+                autoExportTimerId = null;
+            }
+            resetAutoDecisionState();
+            refreshAutoExportToggleButton();
+            console.log('[Gemini 1-Turn Auto] Auto-export stopped by user.');
+        }
+
+        function handleAutoExportToggleClick() {
+            if (GM_getValue(AUTO_URL_TOGGLE_KEY, false) || autoExportTimerId) {
+                stopAutoExportMode();
+                return;
+            }
+
+            GM_setValue(AUTO_URL_TOGGLE_KEY, true);
+            resetAutoDecisionState();
+            refreshAutoExportToggleButton();
+            updateOneTurnVisibility();
         }
 
         function forceOpenPanelForMatchingCondition(panel) {
@@ -569,33 +596,10 @@
 
             const execBtn = document.getElementById('gemini-btn-one-turn-exec');
             if (execBtn) {
-                const originalOnClick = execBtn.onclick;
-
-                const cancelAuto = () => {
-                    if (autoExportTimerId) clearInterval(autoExportTimerId);
-                    autoExportTimerId = null;
-                    execBtn.style.backgroundColor = '';
-                    execBtn.style.color = '';
-
-                    const deleteCheckbox = document.getElementById('gemini-delete-checkbox');
-                    const willDelete = deleteCheckbox ? deleteCheckbox.checked : GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
-
-                    setExecBtnContent(execBtn, willDelete ? 'Export & Delete' : 'Export');
-
-                    execBtn.onclick = originalOnClick;
-                    console.log('[Gemini 1-Turn Auto] Auto-export cancelled by user.');
-                };
-
-                execBtn.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    cancelAuto();
-                };
-
                 const updateButtonUI = () => {
                     execBtn.style.backgroundColor = '#fbbc04'; // yellow
                     execBtn.style.color = '#333';
-                    execBtn.textContent = countdownPaused ? `Auto Paused (${countdown}s)` : `Cancel Auto (${countdown}s)`;
+                    execBtn.textContent = countdownPaused ? `Auto Paused (${countdown}s)` : `Stop Auto (${countdown}s)`;
                 };
 
                 autoExportTimerId = setInterval(() => {
@@ -605,7 +609,6 @@
                     if (countdown <= 0) {
                         if (autoExportTimerId) clearInterval(autoExportTimerId);
                         autoExportTimerId = null;
-                        execBtn.onclick = originalOnClick;
                         runExportProcess(true);
                     } else {
                         updateButtonUI();
@@ -854,14 +857,7 @@
                     execBtn.disabled = false;
                     execBtn.style.backgroundColor = ''; // Reset custom colors
                     execBtn.style.color = '';
-
-                    // Need to re-read the exact active state instead of hardcoded
-                    const deleteCheckbox = document.getElementById('gemini-auto-delete-cb');
-                    if (deleteCheckbox) {
-                        setExecBtnContent(execBtn, deleteCheckbox.checked ? 'Export & Delete' : 'Export');
-                    } else {
-                        execBtn.textContent = 'Export';
-                    }
+                    refreshAutoExportToggleButton(execBtn);
                 }
             }
         }
@@ -930,28 +926,21 @@
                 deleteCheckbox.checked = GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
             }
 
-            bindStoredCheckbox(panelShell, '#gemini-auto-url-cb', AUTO_URL_TOGGLE_KEY, false);
             bindStoredCheckbox(panelShell, '#gemini-auto-skip-nonmatch-cb', AUTO_SKIP_NONMATCH_TOGGLE_KEY, false);
 
-            // Bind Execute Button
+            // Bind Auto Export Toggle Button
             const execBtn = panelShell.querySelector('#gemini-btn-one-turn-exec');
-            const updateBtnText = () => {
-                if (execBtn && deleteCheckbox) {
-                    setExecBtnContent(execBtn, deleteCheckbox.checked ? 'Export & Delete' : 'Export');
-                }
-            };
-            updateBtnText();
+            refreshAutoExportToggleButton(execBtn);
 
             if (deleteCheckbox) {
                 deleteCheckbox.onchange = () => {
                     GM_setValue(AUTO_DELETE_TOGGLE_KEY, deleteCheckbox.checked);
-                    updateBtnText();
                 };
             }
 
             if (execBtn) {
                 execBtn.onclick = () => {
-                    runExportProcess(false);
+                    handleAutoExportToggleClick();
                 };
             }
 
@@ -1046,10 +1035,7 @@
                 setOneTurnPanelVisibility(false);
             }
 
-            autoExportTriggered = false; // Reset trigger so it fires again on new URLs
-            autoSkipTriggered = false;
-            autoDecisionConversationId = null;
-            clearAutoDecisionDeadlineTimer();
+            resetAutoDecisionState();
             if (autoExportTimerId) {
                 clearInterval(autoExportTimerId);
                 autoExportTimerId = null;

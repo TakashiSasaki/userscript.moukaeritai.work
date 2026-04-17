@@ -54,11 +54,6 @@
     cursor: not-allowed;
 }
 
-.export-btn-icon {
-    display: flex;
-    align-items: center;
-}
-
 .one-turn-options {
     display: flex;
     flex-direction: column;

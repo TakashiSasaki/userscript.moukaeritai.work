@@ -1,9 +1,3 @@
-<template id="tpl-docs-icon">
-    <svg viewBox="0 0 24 24" width="20" height="20">
-        <path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M13,9V3.5L18.5,9H13Z" />
-    </svg>
-</template>
-
 <template id="tpl-export-overlay">
     <div id="gemini-export-overlay" class="gemini-export-overlay">
         <div class="export-spinner"></div>
@@ -17,16 +11,12 @@
             <div id="ge2d-script-status-container" class="gus-script-status-container"></div>
             <div class="one-turn-actions">
                 <button id="gemini-btn-one-turn-exec" class="one-turn-exec-btn">
-                    Export to Docs
+                    Auto Export: Off
                 </button>
                 <div class="one-turn-options">
                     <label class="one-turn-checkbox-label" title="Export and then delete the conversation">
                         <input type="checkbox" id="gemini-auto-delete-cb">
                         Auto-delete after export
-                    </label>
-                    <label class="one-turn-checkbox-label" title="Export immediately if matched URL found">
-                        <input type="checkbox" id="gemini-auto-url-cb">
-                        Auto-export matched URL
                     </label>
                     <label class="one-turn-checkbox-label" title="Move to the next conversation when the current one does not match the auto-export condition">
                         <input type="checkbox" id="gemini-auto-skip-nonmatch-cb">

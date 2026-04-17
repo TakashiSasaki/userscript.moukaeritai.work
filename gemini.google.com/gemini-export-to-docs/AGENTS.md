@@ -22,16 +22,15 @@ gemini.google.com ドメインに特有の指示は [AGENTS.md](/gemini.google.c
 ### Horizontal 1-Turn Action Bar
 AI側が1ターンしか返答を行っていない「初期回答」の時のみ画面の右下に自動的にポップアップするコントロールパネルを実装しています。
 
-1.  **Auto-Export (URL) Control**: プロンプトと回答の中に1つだけURLが含まれており、それらが一致する場合に自動的にエクスポート処理をキックする `Enable` チェックボックスを管理します。
+1.  **Auto Export Toggle**: `Auto Export: Off/On` の単一ボタンで、URL一致の自動判定と自動エクスポート処理の開始・停止を切り替えます。
 2.  **Auto Delete Control**: エクスポート完了後にチャット履歴からスレッドを削除する `1-Click Delete Conversation` スクリプトを呼び出すかを選択するチェックボックス。
 3.  **Skip Non-Matching Conversations Control**: 1ターン会話でURL一致条件を満たさなかった場合に `gemini-auto-select-next:request-next` を送信して次の会話へ移動するかを選択するチェックボックス。
-4.  **Export/Delete Exec Button**: 手動で上記の設定を基にエクスポート＆削除処理を開始するボタン。
-5.  **Draggable Handle**: ユーザーは左端の `⠿` ハンドラをドラッグして好きな場所にパネルを移動できます（状態は localStorage の `gemini-export-panel-pos` に保存）。
-6.  **Dependency Checking**: `Auto-Select Next`, `1-Click Delete Conversation` がインストールされているかを自動判別し、各種アイコンを表示する機能。
+4.  **Draggable Handle**: ユーザーは左端の `⠿` ハンドラをドラッグして好きな場所にパネルを移動できます（状態は localStorage の `gemini-export-panel-pos` に保存）。
+5.  **Dependency Checking**: `Auto-Select Next`, `1-Click Delete Conversation` がインストールされているかを自動判別し、各種アイコンを表示する機能。
 - **Manual Expansion**: 条件不適合で `ge2d-disabled` が付いている間も、共通の最小化トグルによりユーザーは手動でパネルを展開できます。
 - **Auto(URL) Detection**: 
   - Extracts URLs from `<user-query>` and `<message-content>` tags via regex `/(https?:\/\/[^\s"'<>()]+)/g`.
-  - If enabled via `gemini-export-auto-url-toggle`, and the user query contains exactly ONE URL, and the model response contains that same URL, it triggers `runExportProcess` with forced deletion after a configurable delay (`gemini-export-auto-url-delay`).
+  - If auto export is toggled on via `gemini-export-auto-url-toggle`, and the user query contains exactly ONE URL, and the model response contains that same URL, it triggers `runExportProcess(true)` after a short countdown.
   - If the URL match fails and `gemini-export-auto-skip-nonmatch-toggle` is enabled, it dispatches `gemini-auto-select-next:request-next` once for that conversation after `user-query` and `message-content` are available, without waiting for the export menu button.
   - Conversation-scoped decision state prevents repeated auto-export or auto-skip triggers while the same conversation remains active.
 - **Initial Positioning**: On load, it checks for `gemini-export-panel-pos` and applies it to the panel's style. Defaults to `bottom: 20px; right: 20px;`.

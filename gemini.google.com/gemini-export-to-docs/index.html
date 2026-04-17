@@ -23,7 +23,7 @@
     <div class="container">
         <header>
             <h1>Gemini 1-Click Export to Docs</h1>
-            <p class="header-desc">Geminiのウェブアプリケーション（SPA）において、会話の特定のターンまたはキャンバスをGoogle Docsにエクスポートする操作を簡略化するユーザースクリプトです。</p>
+            <p class="header-desc">Geminiの1ターン会話を対象に、URL一致による自動エクスポートと削除・次会話移動をまとめて扱いやすくするユーザースクリプトです。</p>
         </header>
 
         <div style="text-align: center; margin-bottom: 3rem;">
@@ -56,13 +56,10 @@
                 <li style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
                     <strong><a href="../gemini-one-click-delete/index.html">Gemini 1-Click Delete</a></strong>
                 </li>
-                <li style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
-                    <strong><a href="../gemini-turn-counter/index.html">Gemini Turn Counter</a></strong>
-                </li>
             </ul>
 
             <h2>目的</h2>
-            <p>標準機能では複数回のクリック（メニュー展開など）が必要ですが、これを「1クリック」または「キーボードショートカット」で実行できる機能を追加します。<br>
+            <p>標準機能では複数回のクリックが必要な Google Docs へのエクスポートを、1ターン会話向けの専用パネルと自動判定で扱いやすくします。<br>
                 本ユーザースクリプトはTampermonkeyでの利用を想定し、ファイル名は <code>gemini-export-to-docs.user.js</code> とします。</p>
 
             <h2>経緯</h2>
@@ -76,26 +73,11 @@
 
             <h2>機能概要</h2>
 
-            <h3>1. 1クリックボタン（UI注入）</h3>
+            <h3>1. 1ターン専用オートエクスポートパネル</h3>
             <ul>
-                <li><strong>配置</strong>:
-                    <ul>
-                        <li>各レスポンスの下部（フッター）にある「︙」メニューボタンの隣。</li>
-                        <li>各レスポンスの上部（ヘッダー）にあるコントロールエリア。</li>
-                        <li>キャンバスの「Open」チップの隣。</li>
-                    </ul>
-                </li>
-            </ul>
-
-            <h3>2. キーボードショートカット (<code>Ctrl + E</code>)</h3>
-            <ul>
-                <li><strong>機能</strong>: ページ内で <strong>最初に見つかった</strong> 会話のレスポンス（通常は最初のターン）を対象にエクスポートを実行する。</li>
-            </ul>
-
-            <h3>3. 1ターン専用オートエクスポート＆削除</h3>
-            <ul>
-                <li><strong>機能</strong>: 会話が1ターン（プロンプト1回、回答1回）のみの場合に、画面右下に専用のパネルを表示します。</li>
-                <li><strong>自動削除連動</strong>: エクスポート完了後、指定した秒数が経過すると会話を自動的に削除します。</li>
+                <li><strong>表示条件</strong>: 会話が1ターン（プロンプト1回、回答1回）のみの場合に、画面右下へ専用パネルを表示します。</li>
+                <li><strong>Auto Export Toggle</strong>: <code>Auto Export: Off/On</code> ボタンで URL一致の自動判定と自動エクスポートを開始・停止できます。</li>
+                <li><strong>自動削除連動</strong>: エクスポート完了後、設定に応じて会話を自動的に削除します。</li>
                 <li><strong>自動スキップ連動</strong>: URL一致条件を満たさなかった会話では、設定に応じて <code>Gemini Auto-Select Next</code> にイベントを送って次の会話へ移動できます。</li>
             </ul>
 
@@ -104,7 +86,6 @@
 
             <h3>送信（使う側）</h3>
             <ul>
-                <li><strong>Turn Counter</strong>: 画像コピー処理を依頼。</li>
                 <li><strong>One Click Delete</strong>: エクスポート完了後に会話を自動削除。</li>
                 <li><strong>Auto-Select Next</strong>: URL一致条件を満たさなかった1ターン会話で <code>gemini-auto-select-next:request-next</code> を送信し、次のアイテム選択を依頼。</li>
             </ul>
