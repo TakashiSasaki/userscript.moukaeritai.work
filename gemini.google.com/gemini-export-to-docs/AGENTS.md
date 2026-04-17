@@ -16,6 +16,7 @@ gemini.google.com ドメインに特有の指示は [AGENTS.md](/gemini.google.c
 
 ### Metadata & Context
 - **@noframes**: This script MUST include the `@noframes` directive. Without it, the script runs in both the top-level window and any internal iframes (e.g., help widgets) on `gemini.google.com`, causing duplicate button injections and multiple instances appearing in Tampermonkey.
+- **No `@history` metadata**: Do not add `@history` metadata entries to this userscript. Versioning is tracked via `@version` and Git history, so inline history metadata is unnecessary.
 
 
 ### Horizontal 1-Turn Action Bar
