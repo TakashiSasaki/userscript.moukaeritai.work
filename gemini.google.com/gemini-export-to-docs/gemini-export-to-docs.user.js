@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.80
+// @version      0.4.81
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -392,7 +392,10 @@
             let autoSkipTriggered = false;
             let autoExportTimerId = null;
             let autoDecisionConversationId = null;
+            let autoDecisionDeadlineTimerId = null;
+            let autoDecisionPendingConversationId = null;
             const AUTO_SKIP_LOG_PREFIX = '[Gemini 1-Turn Auto][Skip]';
+            const AUTO_SKIP_DECISION_DELAY_MS = 2000;
 
             function logAutoSkip(message, details) {
                 if (details !== undefined) {
@@ -421,8 +424,17 @@
                 panel.style.display = visible ? '' : 'none';
             }
 
+            function clearAutoDecisionDeadlineTimer() {
+                if (autoDecisionDeadlineTimerId) {
+                    clearTimeout(autoDecisionDeadlineTimerId);
+                    autoDecisionDeadlineTimerId = null;
+                }
+                autoDecisionPendingConversationId = null;
+            }
+
             function requestNextConversationAfterNonMatch() {
                 const currentConversationId = getCurrentConversationId();
+                clearAutoDecisionDeadlineTimer();
                 logAutoSkip('Requesting next conversation because the current conversation did not match the auto-export condition.', {
                     conversationId: currentConversationId,
                     autoSkipTriggered,
@@ -622,11 +634,155 @@
                 };
             }
 
+            function triggerAutoExportForDecision(currentConversationId, decision) {
+                clearAutoDecisionDeadlineTimer();
+                autoDecisionConversationId = currentConversationId;
+                autoExportTriggered = true;
+                logAutoSkip('Match concluded for conversation, starting auto-export flow.', {
+                    conversationId: currentConversationId,
+                    reason: decision.reason
+                });
+
+                let countdown = 4; // Hardcoded default duration
+
+                const execBtn = document.getElementById('gemini-btn-one-turn-exec');
+                if (execBtn) {
+                    const originalOnClick = execBtn.onclick;
+
+                    const cancelAuto = () => {
+                        if (autoExportTimerId) clearInterval(autoExportTimerId);
+                        autoExportTimerId = null;
+                        execBtn.style.backgroundColor = '';
+                        execBtn.style.color = '';
+
+                        const deleteCheckbox = document.getElementById('gemini-delete-checkbox');
+                        const willDelete = deleteCheckbox ? deleteCheckbox.checked : GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
+
+                        setExecBtnContent(execBtn, willDelete ? 'Export & Delete' : 'Export');
+
+                        execBtn.onclick = originalOnClick;
+                        console.log('[Gemini 1-Turn Auto] Auto-export cancelled by user.');
+                    };
+
+                    execBtn.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        cancelAuto();
+                    };
+
+                    const updateButtonUI = () => {
+                        execBtn.style.backgroundColor = '#fbbc04'; // yellow
+                        execBtn.style.color = '#333';
+                        execBtn.textContent = countdownPaused ? `Auto Paused (${countdown}s)` : `Cancel Auto (${countdown}s)`;
+                    };
+
+                    autoExportTimerId = setInterval(() => {
+                        if (countdownPaused) return; // Requirement: Hover pause
+
+                        countdown--;
+                        if (countdown <= 0) {
+                            if (autoExportTimerId) clearInterval(autoExportTimerId);
+                            autoExportTimerId = null;
+                            execBtn.onclick = originalOnClick;
+                            runExportProcess(true);
+                        } else {
+                            updateButtonUI();
+                        }
+                    }, 1000);
+                    updateButtonUI(); // Initial call
+                } else {
+                    autoExportTimerId = setTimeout(() => {
+                        autoExportTimerId = null;
+                        runExportProcess(true);
+                    }, countdown * 1000);
+                }
+            }
+
+            function finalizeAutoDecision(reason) {
+                const currentConversationId = getCurrentConversationId();
+                if (autoDecisionConversationId === currentConversationId) {
+                    logAutoSkip('Conversation already evaluated before deadline finalization.', {
+                        conversationId: currentConversationId,
+                        reason
+                    });
+                    return;
+                }
+
+                const decision = evaluateAutoUrlCondition();
+                logAutoSkip('Finalizing auto decision after delay.', {
+                    conversationId: currentConversationId,
+                    triggerReason: reason,
+                    decisionStatus: decision.status,
+                    reasonDetail: decision.reason
+                });
+
+                if (decision.status === 'match') {
+                    triggerAutoExportForDecision(currentConversationId, decision);
+                    return;
+                }
+
+                autoDecisionConversationId = currentConversationId;
+                logAutoSkip('Conversation did not satisfy export conditions before the skip deadline.', {
+                    conversationId: currentConversationId,
+                    triggerReason: reason,
+                    decisionStatus: decision.status,
+                    reasonDetail: decision.reason
+                });
+                if (!autoSkipTriggered && GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)) {
+                    requestNextConversationAfterNonMatch();
+                } else {
+                    logAutoSkip('Auto-skip is disabled or already triggered, staying on current conversation.', {
+                        conversationId: currentConversationId,
+                        autoSkipTriggered,
+                        autoSkipEnabled: GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)
+                    });
+                }
+            }
+
+            function ensureAutoDecisionDeadline() {
+                const currentConversationId = getCurrentConversationId();
+                const autoUrlEnabled = GM_getValue(AUTO_URL_TOGGLE_KEY, false);
+                const autoSkipEnabled = GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false);
+
+                if (!autoUrlEnabled || !autoSkipEnabled) {
+                    clearAutoDecisionDeadlineTimer();
+                    return;
+                }
+                if (autoDecisionConversationId === currentConversationId || autoExportTriggered || autoSkipTriggered) {
+                    return;
+                }
+                if (autoDecisionDeadlineTimerId && autoDecisionPendingConversationId === currentConversationId) {
+                    return;
+                }
+
+                clearAutoDecisionDeadlineTimer();
+                autoDecisionPendingConversationId = currentConversationId;
+                logAutoSkip('Scheduling delayed auto-skip decision after conversation change.', {
+                    conversationId: currentConversationId,
+                    delayMs: AUTO_SKIP_DECISION_DELAY_MS
+                });
+                autoDecisionDeadlineTimerId = setTimeout(() => {
+                    const pendingConversationId = autoDecisionPendingConversationId;
+                    autoDecisionDeadlineTimerId = null;
+                    autoDecisionPendingConversationId = null;
+                    if (pendingConversationId !== getCurrentConversationId()) {
+                        logAutoSkip('Skipping delayed auto-decision because the conversation changed again.', {
+                            pendingConversationId,
+                            currentConversationId: getCurrentConversationId()
+                        });
+                        return;
+                    }
+                    finalizeAutoDecision('deadline-expired');
+                }, AUTO_SKIP_DECISION_DELAY_MS);
+            }
+
             function updateOneTurnVisibility() {
                 const turns = document.querySelectorAll(SELECTORS.aiTurnContainer);
                 // Note: Gemini UI can be slow to update styles/classes.
                 // We'll count anything that looks like a model response.
                 console.log(`[Gemini 1-Turn] Found ${turns.length} active AI turns using ${SELECTORS.aiTurnContainer}`);
+
+                ensureAutoDecisionDeadline();
 
                 // A 1-turn conversation usually has exactly 1 model-response
                 const isOneTurn = turns.length === 1;
@@ -666,82 +822,14 @@
                                     reason: decision.reason
                                 });
                             } else if (decision.status === 'match') {
-                                autoDecisionConversationId = currentConversationId;
-                                autoExportTriggered = true;
-                                logAutoSkip('Match concluded for conversation, starting auto-export flow.', {
-                                    conversationId: currentConversationId,
-                                    reason: decision.reason
-                                });
-
-                                let countdown = 4; // Hardcoded default duration
-
-                                const execBtn = document.getElementById('gemini-btn-one-turn-exec');
-                                if (execBtn) {
-                                    const originalOnClick = execBtn.onclick;
-
-                                    const cancelAuto = () => {
-                                        if (autoExportTimerId) clearInterval(autoExportTimerId);
-                                        autoExportTimerId = null;
-                                        execBtn.style.backgroundColor = '';
-                                        execBtn.style.color = '';
-
-                                        const deleteCheckbox = document.getElementById('gemini-delete-checkbox');
-                                        const willDelete = deleteCheckbox ? deleteCheckbox.checked : GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
-
-                                        setExecBtnContent(execBtn, willDelete ? 'Export & Delete' : 'Export');
-
-                                        execBtn.onclick = originalOnClick;
-                                        console.log('[Gemini 1-Turn Auto] Auto-export cancelled by user.');
-                                    };
-
-                                    execBtn.onclick = (e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        cancelAuto();
-                                    };
-
-                                    const updateButtonUI = () => {
-                                        execBtn.style.backgroundColor = '#fbbc04'; // yellow
-                                        execBtn.style.color = '#333';
-                                        execBtn.textContent = countdownPaused ? `Auto Paused (${countdown}s)` : `Cancel Auto (${countdown}s)`;
-                                    };
-
-                                    autoExportTimerId = setInterval(() => {
-                                        if (countdownPaused) return; // Requirement: Hover pause
-
-                                        countdown--;
-                                        if (countdown <= 0) {
-                                            if (autoExportTimerId) clearInterval(autoExportTimerId);
-                                            autoExportTimerId = null;
-                                            execBtn.onclick = originalOnClick;
-                                            runExportProcess(true);
-                                        } else {
-                                            updateButtonUI();
-                                        }
-                                    }, 1000);
-                                    updateButtonUI(); // Initial call
-                                } else {
-                                    autoExportTimerId = setTimeout(() => {
-                                        autoExportTimerId = null;
-                                        runExportProcess(true);
-                                    }, countdown * 1000);
-                                }
+                                triggerAutoExportForDecision(currentConversationId, decision);
                             } else if (decision.status === 'nonmatch') {
-                                autoDecisionConversationId = currentConversationId;
-                                logAutoSkip('Non-match concluded for conversation.', {
+                                logAutoSkip('Non-match detected before the skip deadline, waiting for delayed final decision.', {
                                     conversationId: currentConversationId,
                                     reason: decision.reason,
+                                    delayMs: AUTO_SKIP_DECISION_DELAY_MS,
                                     autoSkipEnabled: GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)
                                 });
-                                if (!autoSkipTriggered && GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)) {
-                                    requestNextConversationAfterNonMatch();
-                                } else {
-                                    logAutoSkip('Auto-skip is disabled or already triggered, staying on current conversation.', {
-                                        conversationId: currentConversationId,
-                                        autoSkipTriggered,
-                                        autoSkipEnabled: GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)
-                                    });
-                                }
                             }
                         } catch (e) {
                             console.error('[Gemini 1-Turn Auto] Error matching URLs:', e);
@@ -750,13 +838,6 @@
                 } else if (panel) {
                     setOneTurnPanelVisibility(true);
                     panel.classList.add('ge2d-disabled');
-                    autoExportTriggered = false; // Reset trigger state if UI is closed (e.g., user started a new topic or more turns added)
-                    autoSkipTriggered = false;
-                    autoDecisionConversationId = null;
-                    if (autoExportTimerId) {
-                        clearInterval(autoExportTimerId);
-                        autoExportTimerId = null;
-                    }
                 }
             }
 
@@ -1065,6 +1146,7 @@
                 autoExportTriggered = false; // Reset trigger so it fires again on new URLs
                 autoSkipTriggered = false;
                 autoDecisionConversationId = null;
+                clearAutoDecisionDeadlineTimer();
                 if (autoExportTimerId) {
                     clearInterval(autoExportTimerId);
                     autoExportTimerId = null;
