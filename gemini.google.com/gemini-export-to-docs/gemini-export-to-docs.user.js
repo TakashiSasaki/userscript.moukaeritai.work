@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.75
+// @version      0.4.76
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -397,6 +397,18 @@
             let autoSkipTriggered = false;
             let autoExportTimerId = null;
 
+            function forceOpenPanelForMatchingCondition(panel) {
+                if (!panel) return;
+                if (panel.classList.contains('gus-minimized')) {
+                    panel.classList.remove('gus-minimized');
+                }
+                try {
+                    localStorage.removeItem('ge2d-minimized');
+                } catch (e) {
+                    console.warn('[Gemini 1-Turn] Failed to clear saved minimized state.', e);
+                }
+            }
+
             function requestNextConversationAfterNonMatch() {
                 console.log('[Gemini 1-Turn Auto] Requesting next conversation because the current conversation did not match the auto-export condition.');
                 autoSkipTriggered = true;
@@ -466,6 +478,7 @@
 
                 if (isOneTurn) {
                     panel.classList.remove('ge2d-disabled');
+                    forceOpenPanelForMatchingCondition(panel);
 
                     // --- Auto URL Export Logic ---
                     if (!autoExportTriggered && GM_getValue(AUTO_URL_TOGGLE_KEY, false)) {
