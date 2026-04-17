@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.88
+// @version      0.4.89
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -865,6 +865,38 @@
             }
         }
 
+        function performAutoCopyImagesIfNeeded() {
+            const autoCopyEnabled = GM_getValue(AUTO_COPY_IMAGES_TOGGLE_KEY, true);
+            if (!autoCopyEnabled) return;
+
+            const turnContainer = document.querySelector(SELECTORS.aiTurnContainer);
+            if (turnContainer && turnContainer.querySelectorAll('img').length > 0) {
+                console.log('[Gemini 1-Turn Export] Auto-copying images because images were found.');
+                document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images', {
+                    detail: { target: 'all' }
+                }));
+            }
+        }
+
+        async function performDeleteCountdown(execBtn, isAutoRun, delay = 5) {
+            for (let i = delay; i > 0; i--) {
+                if (execBtn) {
+                    execBtn.textContent = isAutoRun ? `Auto Delete in ${i}s...` : `Deleting in ${i}s...`;
+                    execBtn.style.backgroundColor = '#e53935'; // Red deleting warning
+                    execBtn.style.color = 'white';
+                }
+                await window.geminiSleep(1000);
+            }
+            if (execBtn) execBtn.textContent = 'Deleting...';
+        }
+
+        function requestConversationDeletion() {
+            console.log('[Gemini 1-Turn Export] Requesting conversation deletion.');
+            window.geminiCheckTargetUserscript('Gemini 1-Click Delete Conversation').then(() => {
+                window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete'));
+            });
+        }
+
         /**
          * Reusable async extraction of the full execution flow (Clicking, Countdown, Deleting)
          */
@@ -883,38 +915,14 @@
             showOverlay();
 
             try {
-                // Auto Copy Images Check
-                const autoCopyEnabled = GM_getValue(AUTO_COPY_IMAGES_TOGGLE_KEY, true);
-                if (autoCopyEnabled) {
-                    const turnContainer = document.querySelector(SELECTORS.aiTurnContainer);
-                    if (turnContainer && turnContainer.querySelectorAll('img').length > 0) {
-                        console.log('[Gemini 1-Turn Export] Auto-copying images because images were found.');
-                        document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images', {
-                            detail: { target: 'all' }
-                        }));
-                    }
-                }
+                performAutoCopyImagesIfNeeded();
 
                 // 1. Export
                 await handleTurnExport(moreBtn);
 
                 if (willDelete) {
-                    // 2. Countdown & Wait
-                    let delay = 5; // Hardcoded default duration
-
-                    for (let i = delay; i > 0; i--) {
-                        if (execBtn) {
-                            execBtn.textContent = isAutoRun ? `Auto Delete in ${i}s...` : `Deleting in ${i}s...`;
-                            execBtn.style.backgroundColor = '#e53935'; // Red deleting warning
-                            execBtn.style.color = 'white';
-                        }
-                        await window.geminiSleep(1000);
-                    }
-                    if (execBtn) execBtn.textContent = 'Deleting...';
-
-                    // 3. Dispatch Delete Event
-                    console.log('[Gemini 1-Turn Export] Requesting conversation deletion.');
-                    window.geminiCheckTargetUserscript('Gemini 1-Click Delete Conversation').then(() => { window.dispatchEvent(new CustomEvent('gemini-one-click-delete:request-delete')); });
+                    await performDeleteCountdown(execBtn, isAutoRun);
+                    requestConversationDeletion();
                 } else {
                     console.log('[Gemini 1-Turn Export] Auto-delete skipped based on setting.');
                     if (execBtn) execBtn.textContent = 'Done!';
