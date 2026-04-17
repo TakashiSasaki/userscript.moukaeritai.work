@@ -34,6 +34,24 @@ Learnings from implementing features like Auto-Scroll and Conversation Managemen
 3. **ドキュメントの網羅性**:
    - 新しいスクリプト（システムローダーなどの裏側で動くスクリプトを含む）を追加した場合は、必ず該当するドメインの `index.html` およびルートの `index.html` の一覧にも漏れなく追加してください。
 
+4. **インストールボタンの `href` は必ず GitHub Raw URL を使用すること（重要）**:
+   - `index.html` 内の `.install-button` の `href` 属性には、**必ず**以下の形式の GitHub Raw URL を設定してください:
+     ```
+     https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/SCRIPT_NAME/SCRIPT_NAME.user.js
+     ```
+   - **ローカル相対パスを使用してはいけません**（例: `gemini-history-loader/gemini-history-loader.user.js`）。`domain-landing.js` の `fetchVersion()` はこの `href` を使って GitHub から `@version` を取得するため、ローカルパスでは CORS エラーが発生しバージョン取得に失敗します。
+   - **ハードコードされたバージョン文字列をボタンテキストに含めてはいけません**（例: `Install (v0.4.57)`）。バージョン表示は `domain-landing.js` が GitHub から動的に取得して注入するため、ハードコードすると古いバージョンが表示され続けます。
+   - **正しい構造例**:
+     ```html
+     <a class="install-button"
+        data-script-name="Gemini Example Script"
+        href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-example/gemini-example.user.js"
+        target="_blank">
+       <span>Install</span>
+     </a>
+     ```
+
+
 ## UI デザインと一貫性 (UI Design & Consistency)
 
 Gemini 向けの全ユーザースクリプトで一貫したユーザー体験を提供するため、以下のデザイン方針を遵守してください：
