@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.79
+// @version      0.4.80
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -392,6 +392,15 @@
             let autoSkipTriggered = false;
             let autoExportTimerId = null;
             let autoDecisionConversationId = null;
+            const AUTO_SKIP_LOG_PREFIX = '[Gemini 1-Turn Auto][Skip]';
+
+            function logAutoSkip(message, details) {
+                if (details !== undefined) {
+                    console.log(`${AUTO_SKIP_LOG_PREFIX} ${message}`, details);
+                } else {
+                    console.log(`${AUTO_SKIP_LOG_PREFIX} ${message}`);
+                }
+            }
 
             function forceOpenPanelForMatchingCondition(panel) {
                 if (!panel) return;
@@ -413,12 +422,27 @@
             }
 
             function requestNextConversationAfterNonMatch() {
-                console.log('[Gemini 1-Turn Auto] Requesting next conversation because the current conversation did not match the auto-export condition.');
+                const currentConversationId = getCurrentConversationId();
+                logAutoSkip('Requesting next conversation because the current conversation did not match the auto-export condition.', {
+                    conversationId: currentConversationId,
+                    autoSkipTriggered,
+                    autoDecisionConversationId
+                });
                 autoSkipTriggered = true;
                 window.geminiCheckTargetUserscript('Gemini Auto-Select Next', 1000).then((res) => {
                     if (!res) {
-                        console.warn('[Gemini 1-Turn Auto] Gemini Auto-Select Next was not detected. Dispatching request-next event anyway.');
+                        console.warn(`${AUTO_SKIP_LOG_PREFIX} Gemini Auto-Select Next was not detected. Dispatching request-next event anyway.`, {
+                            conversationId: currentConversationId
+                        });
+                    } else {
+                        logAutoSkip('Gemini Auto-Select Next detected before dispatch.', {
+                            conversationId: currentConversationId,
+                            detectedVersion: res.version
+                        });
                     }
+                    logAutoSkip('Dispatching gemini-auto-select-next:request-next.', {
+                        conversationId: currentConversationId
+                    });
                     window.dispatchEvent(new CustomEvent('gemini-auto-select-next:request-next'));
                 });
             }
@@ -473,18 +497,41 @@
             function evaluateAutoUrlCondition() {
                 const userQueryEl = document.querySelector('user-query');
                 const messageContentEl = document.querySelector('message-content');
+                const exportMenuButton = document.querySelector(SELECTORS.moreMenuButton);
+                logAutoSkip('Evaluating auto URL condition.', {
+                    conversationId: getCurrentConversationId(),
+                    hasUserQuery: !!userQueryEl,
+                    hasMessageContent: !!messageContentEl,
+                    hasExportMenuButton: !!exportMenuButton,
+                    autoUrlEnabled: GM_getValue(AUTO_URL_TOGGLE_KEY, false),
+                    autoSkipEnabled: GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false),
+                    autoExportTriggered,
+                    autoSkipTriggered,
+                    autoDecisionConversationId
+                });
                 if (!userQueryEl || !messageContentEl) {
+                    logAutoSkip('Deferring decision because required turn DOM is not ready.', {
+                        conversationId: getCurrentConversationId()
+                    });
                     return { status: 'pending', reason: 'waiting-for-turn-dom' };
                 }
 
                 const userUrls = extractUrls(userQueryEl);
                 const botUrls = extractUrls(messageContentEl);
-                const exportMenuButton = document.querySelector(SELECTORS.moreMenuButton);
 
-                console.log('[Gemini 1-Turn] Extracted Prompt URLs:', userUrls);
-                console.log('[Gemini 1-Turn] Extracted Response URLs:', botUrls);
+                logAutoSkip('Collected URLs for auto decision.', {
+                    conversationId: getCurrentConversationId(),
+                    userUrls,
+                    botUrls,
+                    hasExportMenuButton: !!exportMenuButton
+                });
 
                 if (userUrls.length !== 1) {
+                    logAutoSkip('Prompt URL count is not exactly 1, treating conversation as non-match.', {
+                        conversationId: getCurrentConversationId(),
+                        userUrls,
+                        botUrls
+                    });
                     return {
                         status: 'nonmatch',
                         reason: `prompt-url-count-${userUrls.length}`,
@@ -495,6 +542,11 @@
                 }
 
                 if (!botUrls.length && !exportMenuButton) {
+                    logAutoSkip('Deferring decision because response URLs are empty and the export menu is not available yet.', {
+                        conversationId: getCurrentConversationId(),
+                        userUrls,
+                        botUrls
+                    });
                     return {
                         status: 'pending',
                         reason: 'waiting-for-response-actions',
@@ -507,6 +559,11 @@
                 const userYtId = extractYoutubeVideoId(userUrls[0]);
                 for (const botUrl of botUrls) {
                     if (userUrls[0].toLowerCase() === botUrl.toLowerCase()) {
+                        logAutoSkip('Exact URL match found.', {
+                            conversationId: getCurrentConversationId(),
+                            matchedUrl: botUrl,
+                            hasExportMenuButton: !!exportMenuButton
+                        });
                         return {
                             status: exportMenuButton ? 'match' : 'pending',
                             reason: exportMenuButton ? 'exact-url-match' : 'waiting-for-export-button',
@@ -516,7 +573,12 @@
                         };
                     }
                     if (botUrl.toLowerCase().includes(userUrls[0].toLowerCase())) {
-                        console.log(`[Gemini 1-Turn Auto] Match found via inclusion: ${userUrls[0]}`);
+                        logAutoSkip('Inclusive URL match found.', {
+                            conversationId: getCurrentConversationId(),
+                            sourceUrl: userUrls[0],
+                            matchedUrl: botUrl,
+                            hasExportMenuButton: !!exportMenuButton
+                        });
                         return {
                             status: exportMenuButton ? 'match' : 'pending',
                             reason: exportMenuButton ? 'included-url-match' : 'waiting-for-export-button',
@@ -528,7 +590,12 @@
                     if (userYtId) {
                         const botYtId = extractYoutubeVideoId(botUrl);
                         if (botYtId && userYtId === botYtId) {
-                            console.log(`[Gemini 1-Turn Auto] Match found via YouTube Video ID: ${userYtId}`);
+                            logAutoSkip('YouTube video id match found.', {
+                                conversationId: getCurrentConversationId(),
+                                youtubeVideoId: userYtId,
+                                matchedUrl: botUrl,
+                                hasExportMenuButton: !!exportMenuButton
+                            });
                             return {
                                 status: exportMenuButton ? 'match' : 'pending',
                                 reason: exportMenuButton ? 'youtube-id-match' : 'waiting-for-export-button',
@@ -540,6 +607,12 @@
                     }
                 }
 
+                logAutoSkip('No URL match found in the response.', {
+                    conversationId: getCurrentConversationId(),
+                    userUrls,
+                    botUrls,
+                    hasExportMenuButton: !!exportMenuButton
+                });
                 return {
                     status: 'nonmatch',
                     reason: 'response-url-mismatch',
@@ -573,15 +646,32 @@
                         try {
                             const currentConversationId = getCurrentConversationId();
                             const decision = evaluateAutoUrlCondition();
+                            logAutoSkip('Auto decision evaluated.', {
+                                conversationId: currentConversationId,
+                                decisionStatus: decision.status,
+                                reason: decision.reason,
+                                autoDecisionConversationId,
+                                autoExportTriggered,
+                                autoSkipTriggered
+                            });
 
                             if (decision.status === 'pending') {
-                                console.log(`[Gemini 1-Turn Auto] Waiting before auto decision: ${decision.reason}`);
+                                logAutoSkip('Waiting before auto decision is finalized.', {
+                                    conversationId: currentConversationId,
+                                    reason: decision.reason
+                                });
                             } else if (autoDecisionConversationId === currentConversationId) {
-                                console.log(`[Gemini 1-Turn Auto] Conversation ${currentConversationId} already evaluated (${decision.reason}).`);
+                                logAutoSkip('Conversation already evaluated, skipping repeated action.', {
+                                    conversationId: currentConversationId,
+                                    reason: decision.reason
+                                });
                             } else if (decision.status === 'match') {
                                 autoDecisionConversationId = currentConversationId;
                                 autoExportTriggered = true;
-                                console.log(`[Gemini 1-Turn Auto] Match concluded for conversation ${currentConversationId}.`);
+                                logAutoSkip('Match concluded for conversation, starting auto-export flow.', {
+                                    conversationId: currentConversationId,
+                                    reason: decision.reason
+                                });
 
                                 let countdown = 4; // Hardcoded default duration
 
@@ -638,11 +728,19 @@
                                 }
                             } else if (decision.status === 'nonmatch') {
                                 autoDecisionConversationId = currentConversationId;
-                                console.log(`[Gemini 1-Turn Auto] No match found for conversation ${currentConversationId}: ${decision.reason}`);
+                                logAutoSkip('Non-match concluded for conversation.', {
+                                    conversationId: currentConversationId,
+                                    reason: decision.reason,
+                                    autoSkipEnabled: GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)
+                                });
                                 if (!autoSkipTriggered && GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)) {
                                     requestNextConversationAfterNonMatch();
                                 } else {
-                                    console.log('[Gemini 1-Turn Auto] Staying on current conversation.');
+                                    logAutoSkip('Auto-skip is disabled or already triggered, staying on current conversation.', {
+                                        conversationId: currentConversationId,
+                                        autoSkipTriggered,
+                                        autoSkipEnabled: GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)
+                                    });
                                 }
                             }
                         } catch (e) {
