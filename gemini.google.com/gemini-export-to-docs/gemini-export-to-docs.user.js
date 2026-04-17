@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.92
+// @version      0.4.93
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -434,6 +434,26 @@
             autoDecisionPendingConversationId = null;
         }
 
+        function getAutoDecisionSettings() {
+            return {
+                autoUrlEnabled: GM_getValue(AUTO_URL_TOGGLE_KEY, false),
+                autoSkipEnabled: GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)
+            };
+        }
+
+        function collectAutoDecisionContext() {
+            const snapshot = collectCurrentConversationSnapshot();
+            return {
+                snapshot,
+                conversationId: snapshot.conversationId,
+                ...getAutoDecisionSettings()
+            };
+        }
+
+        function shouldSkipAutoDecisionForConversation(conversationId) {
+            return autoDecisionConversationId === conversationId || autoExportTriggered || autoSkipTriggered;
+        }
+
         function requestNextConversationAfterNonMatch() {
             const currentConversationId = getCurrentConversationId();
             clearAutoDecisionDeadlineTimer();
@@ -722,6 +742,7 @@
         function finalizeAutoDecision(reason) {
             const snapshot = collectCurrentConversationSnapshot();
             const currentConversationId = snapshot.conversationId;
+            const { autoSkipEnabled } = getAutoDecisionSettings();
             if (autoDecisionConversationId === currentConversationId) {
                 logAutoSkip('Conversation already evaluated before deadline finalization.', {
                     conversationId: currentConversationId,
@@ -737,13 +758,13 @@
                     triggerReason: reason,
                     turnCount: snapshot.turnCount
                 });
-                if (!autoSkipTriggered && GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)) {
+                if (!autoSkipTriggered && autoSkipEnabled) {
                     requestNextConversationAfterNonMatch();
                 } else {
                     logAutoSkip('Auto-skip is disabled or already triggered, staying on current conversation.', {
                         conversationId: currentConversationId,
                         autoSkipTriggered,
-                        autoSkipEnabled: GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)
+                        autoSkipEnabled
                     });
                 }
                 return;
@@ -769,27 +790,29 @@
                 decisionStatus: decision.status,
                 reasonDetail: decision.reason
             });
-            if (!autoSkipTriggered && GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)) {
+            if (!autoSkipTriggered && autoSkipEnabled) {
                 requestNextConversationAfterNonMatch();
             } else {
                 logAutoSkip('Auto-skip is disabled or already triggered, staying on current conversation.', {
                     conversationId: currentConversationId,
                     autoSkipTriggered,
-                    autoSkipEnabled: GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)
+                    autoSkipEnabled
                 });
             }
         }
 
         function ensureAutoDecisionDeadline() {
-            const currentConversationId = getCurrentConversationId();
-            const autoUrlEnabled = GM_getValue(AUTO_URL_TOGGLE_KEY, false);
-            const autoSkipEnabled = GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false);
+            const {
+                conversationId: currentConversationId,
+                autoUrlEnabled,
+                autoSkipEnabled
+            } = collectAutoDecisionContext();
 
             if (!autoUrlEnabled || !autoSkipEnabled) {
                 clearAutoDecisionDeadlineTimer();
                 return;
             }
-            if (autoDecisionConversationId === currentConversationId || autoExportTriggered || autoSkipTriggered) {
+            if (shouldSkipAutoDecisionForConversation(currentConversationId)) {
                 return;
             }
             if (autoDecisionDeadlineTimerId && autoDecisionPendingConversationId === currentConversationId) {
@@ -819,10 +842,15 @@
 
         function handleAutoDecisionForCurrentConversation() {
             // --- Auto URL Export Logic ---
-            if (!autoExportTriggered && GM_getValue(AUTO_URL_TOGGLE_KEY, false)) {
+            const {
+                snapshot,
+                conversationId: currentConversationId,
+                autoUrlEnabled,
+                autoSkipEnabled
+            } = collectAutoDecisionContext();
+
+            if (!autoExportTriggered && autoUrlEnabled) {
                 try {
-                    const snapshot = collectCurrentConversationSnapshot();
-                    const currentConversationId = snapshot.conversationId;
                     const decision = evaluateAutoUrlCondition(snapshot);
                     logAutoSkip('Auto decision evaluated.', {
                         conversationId: currentConversationId,
@@ -850,7 +878,7 @@
                             conversationId: currentConversationId,
                             reason: decision.reason,
                             delayMs: AUTO_SKIP_DECISION_DELAY_MS,
-                            autoSkipEnabled: GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false)
+                            autoSkipEnabled
                         });
                     }
                 } catch (e) {
