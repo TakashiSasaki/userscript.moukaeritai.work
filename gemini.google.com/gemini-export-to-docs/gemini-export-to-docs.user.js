@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.74
+// @version      0.4.75
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -395,9 +395,7 @@
 
             let autoExportTriggered = false;
             let autoSkipTriggered = false;
-            let wasMinimizedBeforeAuto = false;
             let autoExportTimerId = null;
-            let oneTurnPanelControls = null;
 
             function requestNextConversationAfterNonMatch() {
                 console.log('[Gemini 1-Turn Auto] Requesting next conversation because the current conversation did not match the auto-export condition.');
@@ -468,14 +466,6 @@
 
                 if (isOneTurn) {
                     panel.classList.remove('ge2d-disabled');
-                    
-                    // --- Auto-expand on transition to active state ---
-                    if (!lastIsOneTurn) {
-                        console.log('[Gemini 1-Turn] Condition met, expanding UI.');
-                        if (oneTurnPanelControls) {
-                            oneTurnPanelControls.setMinimized(false);
-                        }
-                    }
 
                     // --- Auto URL Export Logic ---
                     if (!autoExportTriggered && GM_getValue(AUTO_URL_TOGGLE_KEY, false)) {
@@ -524,15 +514,6 @@
                                         autoExportTriggered = true;
                                         console.log(`[Gemini 1-Turn Auto] Match concluded. Prompt had 1 URL matched in response.`);
 
-                                        // --- Auto-expand if currently minimized ---
-                                        if (panel.classList.contains('ge2d-minimized')) {
-                                            wasMinimizedBeforeAuto = true;
-                                            if (oneTurnPanelControls) {
-                                                console.log('[Gemini 1-Turn Auto] Temporarily expanding panel for countdown.');
-                                                oneTurnPanelControls.setMinimized(false);
-                                            }
-                                        }
-
                                         let countdown = 4; // Hardcoded default duration
 
                                         const execBtn = document.getElementById('gemini-btn-one-turn-exec');
@@ -544,13 +525,6 @@
                                                 autoExportTimerId = null;
                                                 execBtn.style.backgroundColor = '';
                                                 execBtn.style.color = '';
-
-                                                // Restore minimized state if we expanded it automatically
-                                                if (wasMinimizedBeforeAuto && oneTurnPanelControls) {
-                                                    console.log('[Gemini 1-Turn Auto] Restoring minimized state after cancellation.');
-                                                    oneTurnPanelControls.setMinimized(true);
-                                                }
-                                                wasMinimizedBeforeAuto = false;
 
                                                 const deleteCheckbox = document.getElementById('gemini-delete-checkbox');
                                                 const willDelete = deleteCheckbox ? deleteCheckbox.checked : GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
@@ -611,13 +585,11 @@
                     panel.classList.add('ge2d-disabled');
                     autoExportTriggered = false; // Reset trigger state if UI is closed (e.g., user started a new topic or more turns added)
                     autoSkipTriggered = false;
-                    wasMinimizedBeforeAuto = false;
                     if (autoExportTimerId) {
                         clearInterval(autoExportTimerId);
                         autoExportTimerId = null;
                     }
                 }
-                lastIsOneTurn = isOneTurn;
             }
 
             /**
@@ -681,13 +653,6 @@
                     if (!isAutoRun) alert('Process failed. See console.');
                 } finally {
                     hideOverlay();
-
-                    // Restore minimized state if this was an auto-run that triggered expansion
-                    if (isAutoRun && wasMinimizedBeforeAuto && oneTurnPanelControls) {
-                        console.log('[Gemini 1-Turn Export] Restoration: re-minimizing panel after auto-export completion.');
-                        oneTurnPanelControls.setMinimized(true);
-                    }
-                    wasMinimizedBeforeAuto = false;
 
                     if (execBtn) {
                         execBtn.disabled = false;
@@ -796,7 +761,7 @@
                 }
 
                 // Minimizable Logic
-                oneTurnPanelControls = window.geminiSetupMinimizablePanel(panelShell, 'ge2d-minimized', dragHandle, false);
+                window.geminiSetupMinimizablePanel(panelShell, 'ge2d-minimized', dragHandle, false);
 
                 const checkDep = (id, scriptName) => {
                     window.geminiCheckTargetUserscript(scriptName, 1000).then(res => {
@@ -873,8 +838,6 @@
             let styleElement = null;
             let isInitialized = false;
             let countdownPaused = false;
-            let lastIsOneTurn = false;
-
             /**
              * Main initialization for the script's features.
              */
@@ -936,8 +899,6 @@
 
                 autoExportTriggered = false; // Reset trigger so it fires again on new URLs
                 autoSkipTriggered = false;
-                wasMinimizedBeforeAuto = false;
-                lastIsOneTurn = false;
                 if (autoExportTimerId) {
                     clearInterval(autoExportTimerId);
                     autoExportTimerId = null;
