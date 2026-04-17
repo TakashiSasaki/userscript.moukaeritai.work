@@ -24,11 +24,10 @@ AI側が1ターンしか返答を行っていない「初期回答」の時の�
 
 1.  **Auto-Export (URL) Control**: プロンプトと回答の中に1つだけURLが含まれており、それらが一致する場合に自動的にエクスポート処理をキックする `Enable` チェックボックスを管理します。
 2.  **Auto Delete Control**: エクスポート完了後にチャット履歴からスレッドを削除する `1-Click Delete Conversation` スクリプトを呼び出すかを選択するチェックボックス。
-3.  **Auto-Copy Images Control**: エクスポート時に画面上に画像が含まれていれば、自動的に `gemini-turn-counter-copy-images` イベントを用いて画像をクリップボードにコピーさせるチェックボックス。
-4.  **Skip Non-Matching Conversations Control**: 1ターン会話でURL一致条件を満たさなかった場合に `gemini-auto-select-next:request-next` を送信して次の会話へ移動するかを選択するチェックボックス。
-5.  **Export/Delete Exec Button**: 手動で上記の設定を基にエクスポート＆削除処理を開始するボタン。
-6.  **Draggable Handle**: ユーザーは左端の `⠿` ハンドラをドラッグして好きな場所にパネルを移動できます（状態は localStorage の `gemini-export-panel-pos` に保存）。
-7.  **Dependency Checking**: `Auto-Select Next`, `1-Click Delete Conversation`, `Gemini Turn Counter` がインストールされているかを自動判別し、各種アイコンを表示する機能。
+3.  **Skip Non-Matching Conversations Control**: 1ターン会話でURL一致条件を満たさなかった場合に `gemini-auto-select-next:request-next` を送信して次の会話へ移動するかを選択するチェックボックス。
+4.  **Export/Delete Exec Button**: 手動で上記の設定を基にエクスポート＆削除処理を開始するボタン。
+5.  **Draggable Handle**: ユーザーは左端の `⠿` ハンドラをドラッグして好きな場所にパネルを移動できます（状態は localStorage の `gemini-export-panel-pos` に保存）。
+6.  **Dependency Checking**: `Auto-Select Next`, `1-Click Delete Conversation` がインストールされているかを自動判別し、各種アイコンを表示する機能。
 - **Manual Expansion**: 条件不適合で `ge2d-disabled` が付いている間も、共通の最小化トグルによりユーザーは手動でパネルを展開できます。
 - **Auto(URL) Detection**: 
   - Extracts URLs from `<user-query>` and `<message-content>` tags via regex `/(https?:\/\/[^\s"'<>()]+)/g`.

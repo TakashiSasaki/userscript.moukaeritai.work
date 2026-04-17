@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.93
+// @version      0.4.94
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-17
 // @author       Takashi Sasaki
@@ -375,7 +375,6 @@
 
         const AUTO_URL_TOGGLE_KEY = 'gemini-export-auto-url-toggle';
         const AUTO_DELETE_TOGGLE_KEY = 'gemini-export-auto-delete-toggle';
-        const AUTO_COPY_IMAGES_TOGGLE_KEY = 'gemini-export-auto-copy-images-toggle';
         const AUTO_SKIP_NONMATCH_TOGGLE_KEY = 'gemini-export-auto-skip-nonmatch-toggle';
 
         // Simple debounce function to reduce polling frequency on DOM mutations
@@ -914,19 +913,6 @@
             }
         }
 
-        function performAutoCopyImagesIfNeeded() {
-            const autoCopyEnabled = GM_getValue(AUTO_COPY_IMAGES_TOGGLE_KEY, true);
-            if (!autoCopyEnabled) return;
-
-            const turnContainer = document.querySelector(SELECTORS.aiTurnContainer);
-            if (turnContainer && turnContainer.querySelectorAll('img').length > 0) {
-                console.log('[Gemini 1-Turn Export] Auto-copying images because images were found.');
-                document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images', {
-                    detail: { target: 'all' }
-                }));
-            }
-        }
-
         async function performDeleteCountdown(execBtn, isAutoRun, delay = 5) {
             for (let i = delay; i > 0; i--) {
                 if (execBtn) {
@@ -964,8 +950,6 @@
             showOverlay();
 
             try {
-                performAutoCopyImagesIfNeeded();
-
                 // 1. Export
                 await handleTurnExport(moreBtn);
 
@@ -1065,7 +1049,6 @@
             }
 
             bindStoredCheckbox(panelShell, '#gemini-auto-url-cb', AUTO_URL_TOGGLE_KEY, false);
-            bindStoredCheckbox(panelShell, '#gemini-auto-copy-images-cb', AUTO_COPY_IMAGES_TOGGLE_KEY, true);
             bindStoredCheckbox(panelShell, '#gemini-auto-skip-nonmatch-cb', AUTO_SKIP_NONMATCH_TOGGLE_KEY, false);
 
             // Bind Execute Button
@@ -1116,7 +1099,6 @@
             setTimeout(() => {
                 checkDep('ge2d-dep-auto-select', 'Gemini Auto-Select Next');
                 checkDep('ge2d-dep-1click-del', 'Gemini 1-Click Delete Conversation');
-                checkDep('ge2d-dep-turn-counter', 'Gemini Turn Counter');
             }, 500);
         }
 
