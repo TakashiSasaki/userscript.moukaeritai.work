@@ -16,9 +16,18 @@ Learnings from implementing features like Auto-Scroll and Conversation Managemen
 
 3.  **Virtual Scrolling**:
     -   Gemini uses virtual scrolling. Only currently visible conversation items exist in the DOM. `document.querySelectorAll` will only return a subset (e.g., ~15 items) of the full history.
-    -   Logic that depends on "finding the current item and then finding the next one" must handle cases where the current item has been scrolled out of view and unloaded from the DOM.
+
+4.  **会話メニューと「ノートブックに追加」要素 (as of Apr 2026)**:
+    -   **メニューのトリガー**: 右上の「3つの点」アイコン（会話アクションメニュー）のセレクタは `button[aria-label="会話アクションのメニューを開く"]` です。
+    -   **動的生成**: メニュー項目（`mat-mdc-menu-item`）は、ボタンをクリックした際に初めて `cdk-overlay-container` 内に動的に生成されます。そのため、クリック後に要素が出現するのを待機する必要があります。
+    -   **「ノートブックに追加」の特定**:
+        -   **セレクタ**: `button.mat-mdc-menu-item[role="menuitem"]`
+        -   **判定基準**: 内部に `<span>ノートブックに追加</span>` というテキスト（英語設定では `Add to notebook`）を含みます。
+        -   **構造**: `button > span.mat-mdc-menu-item-text > span` の階層になっています。
+    -   **安定的な取得方法**: メニューボタンのクリック後、`MutationObserver` 等で `div.mat-mdc-menu-panel` の出現を検知し、その中の `role="menuitem"` 要素から目的のテキストを持つものを抽出するのが最も確実です。
 
 ## `gemini-common.js` が提供する共通機能
+
 
 `gemini.google.com/gemini-common.js` は、Gemini 向けユーザースクリプトで共通利用する helper を提供しています。新しい実装を書く前に、まずこのファイルに同等機能がないか確認してください。
 
