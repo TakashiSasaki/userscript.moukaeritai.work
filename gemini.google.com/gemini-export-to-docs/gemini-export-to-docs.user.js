@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.5.2
+// @version      0.5.3
 // @description  Adds 1-click automation to export Gemini responses to Google Docs and notebooks.
 // @lastModified 2026-04-18
 // @author       Takashi Sasaki
@@ -566,8 +566,7 @@
                 turnCount,
                 isOneTurn: turnCount === 1,
                 userQueryEl: document.querySelector('user-query'),
-                messageContentEl: document.querySelector('message-content'),
-                exportMenuButton: document.querySelector(SELECTORS.moreMenuButton)
+                messageContentEl: document.querySelector('message-content')
             };
         }
 
@@ -613,36 +612,32 @@
             return match ? match[1] : null;
         }
 
-        function findResponseUrlMatchDecision(userUrls, botUrls, exportMenuButtonExists, conversationId, shouldLog = true) {
+        function findResponseUrlMatchDecision(userUrls, botUrls, conversationId, shouldLog = true) {
             const userYtId = extractYoutubeVideoId(userUrls[0]);
             for (const botUrl of botUrls) {
                 if (userUrls[0].toLowerCase() === botUrl.toLowerCase()) {
                     maybeLogAutoSkip(shouldLog, 'Exact URL match found.', {
                         conversationId,
-                        matchedUrl: botUrl,
-                        hasExportMenuButton: exportMenuButtonExists
+                        matchedUrl: botUrl
                     });
                     return {
-                        status: exportMenuButtonExists ? 'match' : 'pending',
-                        reason: exportMenuButtonExists ? 'exact-url-match' : 'waiting-for-export-button',
+                        status: 'match',
+                        reason: 'exact-url-match',
                         userUrls,
-                        botUrls,
-                        exportMenuButtonExists
+                        botUrls
                     };
                 }
                 if (botUrl.toLowerCase().includes(userUrls[0].toLowerCase())) {
                     maybeLogAutoSkip(shouldLog, 'Inclusive URL match found.', {
                         conversationId,
                         sourceUrl: userUrls[0],
-                        matchedUrl: botUrl,
-                        hasExportMenuButton: exportMenuButtonExists
+                        matchedUrl: botUrl
                     });
                     return {
-                        status: exportMenuButtonExists ? 'match' : 'pending',
-                        reason: exportMenuButtonExists ? 'included-url-match' : 'waiting-for-export-button',
+                        status: 'match',
+                        reason: 'included-url-match',
                         userUrls,
-                        botUrls,
-                        exportMenuButtonExists
+                        botUrls
                     };
                 }
                 if (userYtId) {
@@ -651,15 +646,13 @@
                         maybeLogAutoSkip(shouldLog, 'YouTube video id match found.', {
                             conversationId,
                             youtubeVideoId: userYtId,
-                            matchedUrl: botUrl,
-                            hasExportMenuButton: exportMenuButtonExists
+                            matchedUrl: botUrl
                         });
                         return {
-                            status: exportMenuButtonExists ? 'match' : 'pending',
-                            reason: exportMenuButtonExists ? 'youtube-id-match' : 'waiting-for-export-button',
+                            status: 'match',
+                            reason: 'youtube-id-match',
                             userUrls,
-                            botUrls,
-                            exportMenuButtonExists
+                            botUrls
                         };
                     }
                 }
@@ -668,12 +661,11 @@
         }
 
         function evaluateAutoUrlCondition(snapshot = collectCurrentConversationSnapshot(), { shouldLog = true } = {}) {
-            const { conversationId, userQueryEl, messageContentEl, exportMenuButton } = snapshot;
+            const { conversationId, userQueryEl, messageContentEl } = snapshot;
             maybeLogAutoSkip(shouldLog, 'Evaluating auto URL condition.', {
                 conversationId,
                 hasUserQuery: !!userQueryEl,
                 hasMessageContent: !!messageContentEl,
-                hasExportMenuButton: !!exportMenuButton,
                 autoUrlEnabled: GM_getValue(AUTO_URL_TOGGLE_KEY, false),
                 autoSkipEnabled: GM_getValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false),
                 autoExportTriggered,
@@ -693,8 +685,7 @@
             maybeLogAutoSkip(shouldLog, 'Collected URLs for auto decision.', {
                 conversationId,
                 userUrls,
-                botUrls,
-                hasExportMenuButton: !!exportMenuButton
+                botUrls
             });
 
             if (userUrls.length !== 1) {
@@ -707,27 +698,25 @@
                     status: 'nonmatch',
                     reason: `prompt-url-count-${userUrls.length}`,
                     userUrls,
-                    botUrls,
-                    exportMenuButtonExists: !!exportMenuButton
+                    botUrls
                 };
             }
 
-            if (!botUrls.length && !exportMenuButton) {
-                maybeLogAutoSkip(shouldLog, 'Deferring decision because response URLs are empty and the export menu is not available yet.', {
+            if (!botUrls.length) {
+                maybeLogAutoSkip(shouldLog, 'No URLs were found in the response content.', {
                     conversationId,
                     userUrls,
                     botUrls
                 });
                 return {
-                    status: 'pending',
-                    reason: 'waiting-for-response-actions',
+                    status: 'nonmatch',
+                    reason: 'response-url-mismatch',
                     userUrls,
-                    botUrls,
-                    exportMenuButtonExists: false
+                    botUrls
                 };
             }
 
-            const matchDecision = findResponseUrlMatchDecision(userUrls, botUrls, !!exportMenuButton, conversationId, shouldLog);
+            const matchDecision = findResponseUrlMatchDecision(userUrls, botUrls, conversationId, shouldLog);
             if (matchDecision) {
                 return matchDecision;
             }
@@ -735,15 +724,13 @@
             maybeLogAutoSkip(shouldLog, 'No URL match found in the response.', {
                 conversationId,
                 userUrls,
-                botUrls,
-                hasExportMenuButton: !!exportMenuButton
+                botUrls
             });
             return {
                 status: 'nonmatch',
                 reason: 'response-url-mismatch',
                 userUrls,
-                botUrls,
-                exportMenuButtonExists: !!exportMenuButton
+                botUrls
             };
         }
 
@@ -753,9 +740,6 @@
             }
             if (reason === 'waiting-for-turn-dom') {
                 return 'Waiting for conversation DOM';
-            }
-            if (reason === 'waiting-for-response-actions' || reason === 'waiting-for-export-button') {
-                return 'Waiting for export actions';
             }
             if (reason === 'response-url-mismatch') {
                 return 'Response URL did not match';
@@ -1057,9 +1041,9 @@
             console.log('[Gemini 1-Turn Export] Starting notebook add flow.', { notebookTitle });
             await openConversationActionMenu(triggerBtn);
 
-            // Use stable data-test-id selector for the "Add to notebook" item
+            // Use stable data-test-id first, then fall back to visible menu text.
             const notebookMenuButton = await window.geminiWaitForElement(SELECTORS.addNotebookItem, document, 2000)
-                .catch(() => null);
+                .catch(() => null) || await waitForMenuItemByText(['ノートブックに追加', 'add to notebook'], 1000, document.body);
             if (!notebookMenuButton) {
                 closeBackdropIfPresent();
                 throw new Error('Add to notebook menu item not found');
