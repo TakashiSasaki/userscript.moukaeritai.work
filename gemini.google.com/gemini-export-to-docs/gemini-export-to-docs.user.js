@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.5.1
+// @version      0.5.2
 // @description  Adds 1-click automation to export Gemini responses to Google Docs and notebooks.
 // @lastModified 2026-04-18
 // @author       Takashi Sasaki
@@ -47,8 +47,10 @@
         // --- Selectors (based on provided samples) ---
         const SELECTORS = {
             aiTurnContainer: 'model-response', // Specifically AI response tags
-            moreMenuButton: 'button[data-test-id="more-menu-button"]', // The trigger "..."
-            exportToDocsButton: 'button[data-test-id="export-to-docs-button"]', // The target in the menu
+            messageMenuButton: 'button[data-test-id="more-menu-button"]', // Per-message "..." trigger (for Docs export)
+            conversationMenuButton: 'button[aria-label="会話アクションのメニューを開く"]', // Conversation-level header menu (for Notebook)
+            exportToDocsButton: 'button[data-test-id="export-to-docs-button"]', // The target in the message menu
+            addNotebookItem: 'button[data-test-id="add-to-project-button"]', // "Add to notebook" in conversation menu
             exportIntermediateButton: 'button[data-test-id="export-button"]' // Mobile "Export to..." button
         };
 
@@ -1055,7 +1057,9 @@
             console.log('[Gemini 1-Turn Export] Starting notebook add flow.', { notebookTitle });
             await openConversationActionMenu(triggerBtn);
 
-            const notebookMenuButton = await waitForMenuItemByText(['ノートブックに追加', 'add to notebook'], 2000, document.body);
+            // Use stable data-test-id selector for the "Add to notebook" item
+            const notebookMenuButton = await window.geminiWaitForElement(SELECTORS.addNotebookItem, document, 2000)
+                .catch(() => null);
             if (!notebookMenuButton) {
                 closeBackdropIfPresent();
                 throw new Error('Add to notebook menu item not found');
@@ -1143,7 +1147,7 @@
 
             try {
                 if (destinationSettings.docsEnabled) {
-                    const docsMenuButton = document.querySelector(SELECTORS.moreMenuButton);
+                    const docsMenuButton = document.querySelector(SELECTORS.messageMenuButton);
                     if (!docsMenuButton) {
                         throw new Error('Could not find export menu.');
                     }
@@ -1159,12 +1163,13 @@
                 }
 
                 if (destinationSettings.notebookEnabled) {
-                    const notebookMenuButton = document.querySelector(SELECTORS.moreMenuButton);
-                    if (!notebookMenuButton) {
-                        throw new Error('Could not find notebook menu.');
+                    // Use conversation-level menu (header), not the per-message menu
+                    const conversationMenuBtn = document.querySelector(SELECTORS.conversationMenuButton);
+                    if (!conversationMenuBtn) {
+                        throw new Error('Could not find conversation action menu button.');
                     }
                     updateOverlayStatus(`Adding to notebook: ${destinationSettings.notebookTitle}`);
-                    await handleAddToNotebook(notebookMenuButton, destinationSettings.notebookTitle);
+                    await handleAddToNotebook(conversationMenuBtn, destinationSettings.notebookTitle);
 
                     if (snackbarFailureAbortRequested) {
                         console.warn('[Gemini 1-Turn Export] Notebook flow stopped after snackbar failure was detected.');

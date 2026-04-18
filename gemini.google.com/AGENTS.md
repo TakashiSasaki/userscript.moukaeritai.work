@@ -18,13 +18,20 @@ Learnings from implementing features like Auto-Scroll and Conversation Managemen
     -   Gemini uses virtual scrolling. Only currently visible conversation items exist in the DOM. `document.querySelectorAll` will only return a subset (e.g., ~15 items) of the full history.
 
 4.  **会話メニューと「ノートブックに追加」要素 (as of Apr 2026)**:
-    -   **メニューのトリガー**: 右上の「3つの点」アイコン（会話アクションメニュー）のセレクタは `button[aria-label="会話アクションのメニューを開く"]` です。
-    -   **動的生成**: メニュー項目（`mat-mdc-menu-item`）は、ボタンをクリックした際に初めて `cdk-overlay-container` 内に動的に生成されます。そのため、クリック後に要素が出現するのを待機する必要があります。
-    -   **「ノートブックに追加」の特定**:
-        -   **セレクタ**: `button.mat-mdc-menu-item[role="menuitem"]`
-        -   **判定基準**: 内部に `<span>ノートブックに追加</span>` というテキスト（英語設定では `Add to notebook`）を含みます。
-        -   **構造**: `button > span.mat-mdc-menu-item-text > span` の階層になっています。
-    -   **安定的な取得方法**: メニューボタンのクリック後、`MutationObserver` 等で `div.mat-mdc-menu-panel` の出現を検知し、その中の `role="menuitem"` 要素から目的のテキストを持つものを抽出するのが最も確実です。
+
+    > [!IMPORTANT]
+    > Gemini の会話ページには役割の異なる「三点メニュー」が複数存在します。用途を混同しないでください。
+
+    -   **メッセージ単位のメニュー** (各 AI 回答の下部):
+        -   **トリガー**: `button[data-test-id="more-menu-button"]`
+        -   **用途**: 「Google ドキュメントにエクスポート」など、回答コンテンツへの操作。
+    -   **会話全体のアクションメニュー** (画面右上ヘッダー付近):
+        -   **トリガー**: `button[aria-label="会話アクションのメニューを開く"]`
+        -   **用途**: 「ノートブックに追加」「名前を変更」「削除」など、会話全体への操作。
+    -   **「ノートブックに追加」ボタン**:
+        -   **安定セレクタ**: `button[data-test-id="add-to-project-button"]`（会話アクションメニュー内）。
+        -   **フォールバック**: `button.mat-mdc-menu-item[role="menuitem"]` 内のテキスト `span.gds-body-m` が「ノートブックに追加」を含むもの。
+    -   **動的生成**: メニュー項目は、ボタンをクリックした際に初めて `cdk-overlay-container` 内に動的に生成されます。クリック後に要素が出現するのを待機する必要があります。
     -   **「ノートブックに移動」ダイアログ**:
         -   「ノートブックに追加」をクリックすると、`mat-dialog-container` が開きます。
         -   **リスト要素**: ダイアログ内のノートブック一覧は `mat-selection-list` で構成され、各項目は `mat-list-option` です。
@@ -35,7 +42,7 @@ Learnings from implementing features like Auto-Scroll and Conversation Managemen
         -   **通知テキスト例**: 「(ノートブック名) に追加しました」。
         -   **共通機能との連携**: `gemini-common.js` の `geminiEnsureSnackbarObserver()` を使用している場合、`gemini-snackbar:shown` イベントでこの追加完了通知を捕捉可能です。
     -   **特定のノートブック（例：「ワンショット要約」）の取得手順**:
-        -   **手順**: 1. 会話メニューを開く -> 2. 「ノートブックに追加」をクリック -> 3. ダイアログ内の `mat-list-option` たちをループし、内部テキストを照合。
+        -   **手順**: 1. `button[aria-label="会話アクションのメニューを開く"]` をクリック -> 2. `button[data-test-id="add-to-project-button"]` をクリック -> 3. ダイアログ内の `mat-list-option` たちをループし、内部テキストを照合。
         -   **JS実装例**:
           ```javascript
           const targetName = 'ワンショット要約';
@@ -46,6 +53,7 @@ Learnings from implementing features like Auto-Scroll and Conversation Managemen
           });
           if (target) window.geminiClickElement(target);
           ```
+
 
 ## `gemini-common.js` が提供する共通機能
 
