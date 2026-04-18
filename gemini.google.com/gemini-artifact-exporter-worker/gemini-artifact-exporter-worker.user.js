@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.39
+// @version      0.2.40
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
-// @lastModified 2026-04-17
+// @lastModified 2026-04-18
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://gemini.google.com/*
@@ -22,7 +22,8 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @noframes
-// @history       0.2.38 Canvasエディタ内のエクスポートボタン特定ロジックを強化（data-mat-icon-nameセレクタを追加）。
+// @history       0.2.40 共通ライブバリの更新に伴い、クリック処理を geminiClickElement に統一。
+// @history       0.2.39 Canvasエディタ内のエクスポートボタン特定ロジックを強化（data-mat-icon-nameセレクタを追加）。
 // @history       0.2.37 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
 // @history       0.2.36 共通テンプレートの更新（アイコンとバージョンの分離）を反映。
 // @history       0.2.35 パネルのドラッグハンドルをパネル全体に拡張し、最小化状態でも移動可能に修正。不要な関数宣言の二重定義を修正。
@@ -224,18 +225,6 @@ const report = () => {
 
             // --- Utility Functions ---
 
-            function robustClick(el) {
-                if (!el) return;
-                try {
-                    el.focus();
-                    el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
-                    el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
-                    el.click();
-                } catch (e) {
-                    log(`Robust click failed: ${e.message}`);
-                    el.click();
-                }
-            }
 
             function isVisible(el) {
                 if (!el || !el.isConnected) return false;
@@ -253,7 +242,7 @@ const report = () => {
 
             function dismissSnackbars() {
                 const toastBtns = document.querySelectorAll('mat-snack-bar-container button, .mat-mdc-snack-bar-container button');
-                toastBtns.forEach(btn => btn.click());
+                toastBtns.forEach(btn => window.geminiClickElement(btn));
             }
 
             async function waitForExportStart(exportBtn, menuPanel, detectTimeoutMs = 2500) {
@@ -485,7 +474,7 @@ const report = () => {
 
                     const actionMenuBtn = document.querySelector(SELECTORS.ACTIONS_MENU_BUTTON);
                     if (actionMenuBtn) {
-                        robustClick(actionMenuBtn);
+                        window.geminiClickElement(actionMenuBtn);
                         try {
                             const menu = await window.geminiWaitForElement(SELECTORS.MENU_PANEL, document, 5000);
                             let filesMenuItem = menu.querySelector(SELECTORS.FILES_MENU_ITEM);
@@ -498,7 +487,7 @@ const report = () => {
                             }
 
                             if (filesMenuItem) {
-                                robustClick(filesMenuItem);
+                                window.geminiClickElement(filesMenuItem);
                                 await window.geminiSleep(reopenDelay * 1000 + 1000);
                                 chip = await findChipByTitle(targetTitle);
                             }
@@ -519,7 +508,7 @@ const report = () => {
                 if (cancelExportRequested) return { status: 'cancelled', reason: 'user-cancelled', title: targetTitle };
 
                 log(`Clicking chip "${targetTitle}"...`);
-                chip.click();
+                window.geminiClickElement(chip);
 
                 log('Waiting for canvas to load...');
                 await window.geminiSleep(canvasInitDelay * 1000);
@@ -530,7 +519,7 @@ const report = () => {
                     log('Attempting to click Share button...');
                     const shareBtn = await window.geminiWaitForElement(SELECTORS.SHARE_BUTTON, document, 5000);
                     await window.geminiSleep(500);
-                    shareBtn.click();
+                    window.geminiClickElement(shareBtn);
                     log('Share button clicked.');
 
                     log('Waiting for Export to Docs button in menu...');
@@ -561,7 +550,7 @@ const report = () => {
                     const startPromise = waitForExportStart(exportBtn, exportMenu);
 
                     await window.geminiSleep(500);
-                    exportBtn.click();
+                    window.geminiClickElement(exportBtn);
                     log('Export to Docs button clicked. Waiting for start signal...');
 
                     const startResult = await startPromise;
@@ -588,12 +577,12 @@ const report = () => {
                     const closeBtn = document.querySelector(SELECTORS.CANVAS_CLOSE_BUTTON);
                     if (closeBtn) {
                         log(`[Verify] Canvas close button found. Clicking to close canvas...`);
-                        robustClick(closeBtn);
+                        window.geminiClickElement(closeBtn);
                         await window.geminiSleep(1000);
 
                         const sidebarToggle = document.querySelector(SELECTORS.FILES_MENU_ITEM) || document.querySelector('button[mattooltip="Files in this chat"], button[aria-label="Files in this chat"]');
                         if (sidebarToggle) {
-                            robustClick(sidebarToggle);
+                            window.geminiClickElement(sidebarToggle);
                             await window.geminiSleep(500);
                         }
 

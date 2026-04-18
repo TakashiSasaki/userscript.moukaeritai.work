@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.32
-// @lastModified 2026-04-16
+// @version      0.3.33
+// @lastModified 2026-04-18
 // @description  Adds a 1-click floating button with shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -18,6 +18,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.3.33 共通ライブラリの更新に伴い、クリック処理を geminiClickElement に統一。
 // @history       0.3.31 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
 // @history       0.3.30 共通テンプレートの更新（アイコンとバージョンの分離）を反映。
 // @history       0.3.29 ヘッダー右側のバージョン表示を廃止
@@ -67,14 +68,6 @@
         let styleElement = null;
         let isInitialized = false;
 
-        function simulateClick(element) {
-            if (!element) return;
-            element.dispatchEvent(new MouseEvent('click', {
-                view: null,
-                bubbles: true,
-                cancelable: true
-            }));
-        }
 
         function addStyles() {
             // Inject shared common styles
@@ -101,7 +94,7 @@
 
         async function handleDelete(triggerBtn) {
             console.log('Starting Delete Flow...');
-            simulateClick(triggerBtn);
+            window.geminiClickElement(triggerBtn);
 
             let menu;
             try {
@@ -128,7 +121,7 @@
 
             if (!deleteBtn) throw new Error('Delete button not found in menu.');
 
-            simulateClick(deleteBtn);
+            window.geminiClickElement(deleteBtn);
 
             let dialog;
             try {
@@ -151,7 +144,7 @@
 
             if (!confirmBtn) throw new Error('Confirm button not found in dialog.');
 
-            simulateClick(confirmBtn);
+            window.geminiClickElement(confirmBtn);
             console.log('Delete Confirmed.');
         }
 
@@ -290,7 +283,7 @@
 
             const panelBtn = document.querySelector('#gdp-global-delete-btn');
             if (panelBtn && !panelBtn.disabled) {
-                panelBtn.click();
+                window.geminiClickElement(panelBtn);
                 return;
             }
 
@@ -305,7 +298,7 @@
             const panelBtn = document.querySelector('#gdp-global-delete-btn');
             if (panelBtn && !panelBtn.disabled) {
                 console.log('[Gemini 1-Click Delete] Triggering delete via panel button.');
-                panelBtn.click();
+                window.geminiClickElement(panelBtn);
             } else {
                 console.warn('[Gemini 1-Click Delete] External request ignored: no active conversation or menu missing.');
             }

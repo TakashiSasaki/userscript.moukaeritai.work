@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini History Loader
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.36
-// @lastModified 2026-04-16
+// @version      0.1.37
+// @lastModified 2026-04-18
 // @description  A utility script that forces Gemini to load the entire chat history by programmatically scrolling to the top. Features a compact floating UI that expands when loading history.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -19,6 +19,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-history-loader/gemini-history-loader.user.js
 // @noframes
+// @history       0.1.37 共通ライブラリの更新に伴い、クリック処理を geminiClickElement に統一。
 // @history       0.1.35 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
 // @history       0.1.34 共通テンプレートの更新により、ロード順アイコンとバージョン番号を別々の要素に分離し、デザインを調整。
 // @history       0.1.33 UI表示の不具合を修正。ページ読み込み完了後に実行された場合でも即座にUIを生成し、正規表現を改善してトップページ（/app）でも表示されるように修正。
@@ -96,7 +97,7 @@
             const canvasCloseBtn = document.querySelector('button[data-test-id="close-button"]');
             if (canvasCloseBtn) {
                 log('Closing Canvas panel to enable history loading...');
-                canvasCloseBtn.click();
+                window.geminiClickElement(canvasCloseBtn);
                 await window.geminiSleep(800);
             }
 
@@ -104,7 +105,7 @@
 
             const backdrop = document.querySelector('.mat-drawer-backdrop');
             if (backdrop && isVisible(backdrop)) {
-                backdrop.click();
+                window.geminiClickElement(backdrop);
             }
             await window.geminiSleep(500);
         }

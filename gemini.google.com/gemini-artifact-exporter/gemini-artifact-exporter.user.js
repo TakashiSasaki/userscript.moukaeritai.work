@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.47
-// @lastModified 2026-04-16
+// @version      0.4.48
+// @lastModified 2026-04-18
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -21,6 +21,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @noframes
+// @history       0.4.48 共通ライブラリの更新に伴い、クリック処理を geminiClickElement に統一。
 // @history       0.4.46 パネルの幅を固定 (320px) から可変 (fit-content) に変更し、ボタンがはみ出して見えなくなる問題を修正。
 // @history       0.4.45 「Rescan Chat」ボタンの視認性（コントラスト）を向上させるため、セカンダリボタンのスタイルを修正。
 // @history       0.4.44 UIの「Rescan Chat History」ボタンがパネルからはみ出す問題を修正するため、ボタンラベルを短縮（"Scan Sidebar", "Scan Chat" 等）。
@@ -227,7 +228,7 @@
                 const canvasCloseBtn = document.querySelector('button[data-test-id="close-button"]');
                 if (canvasCloseBtn) {
                     log('Closing Canvas panel to enable history loading...');
-                    canvasCloseBtn.click();
+                    window.geminiClickElement(canvasCloseBtn);
                     await window.geminiSleep(800); // Wait for layout shift
                 }
 
@@ -237,7 +238,7 @@
                 // 3. Side drawer backdrop
                 const backdrop = document.querySelector('.mat-drawer-backdrop');
                 if (backdrop && isVisible(backdrop)) {
-                    backdrop.click();
+                    window.geminiClickElement(backdrop);
                 }
                 await window.geminiSleep(500);
             }
@@ -290,7 +291,7 @@
                     return;
                 }
 
-                actionMenuBtn.click();
+                window.geminiClickElement(actionMenuBtn);
                 let filesMenuItem;
                 try {
                     const menu = await window.geminiWaitForElement(SELECTORS.MENU_PANEL, document, 3000);
@@ -307,13 +308,13 @@
                 } catch {
                     log('ERROR: Could not find Files menu in the action list.');
                     alert('Could not open files list.');
-                    document.querySelector('.cdk-overlay-backdrop')?.click(); // close menu
+                    window.geminiClickElement(document.querySelector('.cdk-overlay-backdrop')); // close menu
                     setScanningUIState(false);
                     isScanning = false;
                     return;
                 }
 
-                filesMenuItem.click();
+                window.geminiClickElement(filesMenuItem);
 
                 log('Waiting for chips to load in panel...');
                 let initialChips = [];

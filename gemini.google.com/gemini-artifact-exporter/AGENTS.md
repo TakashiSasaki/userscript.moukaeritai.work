@@ -49,11 +49,11 @@ Gemini のサイドバーにある「記事 (Article)」タイプのアーティ
 
 ### 3. バックグラウンドタブでのスロットリング対策
 *   Google Docs が新しいタブで開かれると、Gemini のタブはバックグラウンドに回り、ブラウザによって大幅なイベントスロットリング（数秒〜十数秒単位の遅延）を受ける。
-*   単純な `el.click()` ではイベントがキューに滞留して無視されることがあるため、フォーカスを当てた上で `mousedown` -> `mouseup` -> `click` を連続で dispatch する `robustClick` ヘルパーが必須。また、UI遷移時のウェイト (`sleep`) はフォアグラウンド時の想定よりも長めに確保する必要がある。
+*   単純な `el.click()` ではイベントがキューに滞留して無視されることがあるため、フォーカスを当てた上で `mousedown` -> `mouseup` -> `click` を連続で dispatch する `window.geminiClickElement` (共通関数) が必須。また、UI遷移時のウェイト (`sleep`) はフォアグラウンド時の想定よりも長めに確保する必要がある。
 
 ### 4. `MouseEvent` の `view` プロパティ禁止 (v0.2.51)
 *   バックグラウンドタブ内で `new MouseEvent('click', { view: window })` を呼ぶと、Chromium が `window` オブジェクトのコンテキストが切り離された状態になっている場合に `Failed to read the 'view' property from 'UIEventInit'` 例外が発生する。
-*   **対策**: `robustClick` 内の `MouseEvent` コンストラクタから `view: window` を完全に削除。`bubbles: true, cancelable: true` のみで十分にイベントは伝播する。
+*   **対策**: `window.geminiClickElement` 内の `MouseEvent` コンストラクタから `view: window` を完全に削除。`bubbles: true, cancelable: true` のみで十分にイベントは伝播する。
 
 ### 5. `sleep` 関数のタイマースロットリング対策 (v0.2.53)
 *   Chromium 系ブラウザ (Edge を含む) は、バックグラウンドタブの `setTimeout` コールバックを最大1分間隔まで遅延させるか、完全にサスペンド（停止）する仕様がある。

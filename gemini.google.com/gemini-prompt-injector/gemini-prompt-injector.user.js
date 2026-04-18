@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.27
+// @version      0.2.28
 // @description  Injects a prompt into Gemini via an external custom event.
-// @lastModified 2026-04-16
+// @lastModified 2026-04-18
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
 // @match        https://gemini.google.com/*
@@ -21,6 +21,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @noframes
+// @history       0.2.28 共通ライブラリの更新に伴い、クリック処理を geminiClickElement に統一。
 // @history       0.2.26 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
 // @history       0.2.25 共通テンプレートの更新（アイコンとバージョンの分離）を反映。
 // @history       0.2.24 不要な最小化ボタンが表示される問題に対処するため、最新版への更新を強制
@@ -97,7 +98,7 @@ const report = () => {
                     setTimeout(() => {
                         const sendButton = document.querySelector('button.send-button');
                         if (sendButton && !sendButton.disabled) {
-                            sendButton.click();
+                            window.geminiClickElement(sendButton);
                         } else {
                             console.warn('[gemini-prompt-injector] Send button not found or disabled.');
                         }
@@ -122,7 +123,7 @@ const report = () => {
                 }
 
                 // Open the menu
-                menuButton.click();
+                window.geminiClickElement(menuButton);
 
                 // Wait a short amount of time for the menu to render
                 setTimeout(() => {
@@ -150,7 +151,7 @@ const report = () => {
 
                     const targetItem = menuItems.find(el => el.textContent.includes(targetText));
                     if (targetItem) {
-                        targetItem.click();
+                        window.geminiClickElement(targetItem);
                     } else {
                         console.warn(`[gemini-prompt-injector] Could not find menu item for model: ${targetModel}`);
                     }
@@ -174,14 +175,14 @@ const report = () => {
                 }
 
                 // Open the tools menu
-                toolsButton.click();
+                window.geminiClickElement(toolsButton);
 
                 // Wait for the menu to render
                 setTimeout(() => {
                     const menuItems = Array.from(document.querySelectorAll('button.toolbox-drawer-item-list-button'));
                     const targetItem = menuItems.find(el => el.textContent.includes('Canvas'));
                     if (targetItem) {
-                        targetItem.click();
+                        window.geminiClickElement(targetItem);
                     } else {
                         console.warn('[gemini-prompt-injector] Could not find Canvas menu item.');
                     }
@@ -192,7 +193,7 @@ const report = () => {
             document.addEventListener('gemini-send-prompt', () => {
                 const sendButton = document.querySelector('button.send-button');
                 if (sendButton) {
-                    sendButton.click();
+                    window.geminiClickElement(sendButton);
                 } else {
                     console.warn('[gemini-prompt-injector] Send button not found. The prompt might be empty.');
                 }

@@ -88,6 +88,24 @@
     };
 
     /**
+     * Standardized robust click emulation for Gemini UI elements.
+     * Focuses the element and dispatches mousedown, mouseup, and click events.
+     * @param {HTMLElement} element - The element to click.
+     */
+    window.geminiClickElement = function (element) {
+        if (!element) return;
+        try {
+            element.focus();
+            element.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+            element.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+            element.click();
+        } catch (e) {
+            console.warn('[GUS] Standard click fallback used:', e.message);
+            element.click();
+        }
+    };
+
+    /**
      * Checks if a target userscript is installed via a ping/pong custom event mechanism.
      * @param {string} targetName - The exact name of the target userscript to check for.
      * @param {number} timeout - The timeout in milliseconds before giving up (default 2000).

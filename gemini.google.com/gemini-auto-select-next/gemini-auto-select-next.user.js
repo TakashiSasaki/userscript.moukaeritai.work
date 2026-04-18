@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.66
-// @lastModified 2026-04-16
+// @version      0.2.67
+// @lastModified 2026-04-18
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -21,6 +21,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.2.67 共通ライブラリの更新に伴い、クリック処理を geminiClickElement に統一。
 // @history       0.2.65 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
 // @history       0.2.64 UI デザイン方針の統一に伴い、個別スタイルでのフォントサイズ・オーバーライドを解除。共通基盤の 13px を継承するように改善。
 // @history       0.2.63 共通テンプレートの更新（アイコンとバージョンの分離）を反映。
@@ -153,7 +154,7 @@
                 const target = items.find(item => getIdFromItem(item) === nextId);
                 if (target) {
                     console.log(`[GeminiAutoSelectNext] Targeted conversation found in DOM. Clicking...`);
-                    target.click();
+                    window.geminiClickElement(target);
                 } else if (retryCount < 5) {
                     console.log(`[GeminiAutoSelectNext] Target nextId not in DOM (virtual scroll?). Retrying ${retryCount + 1}/5...`);
                     setTimeout(() => selectNextConversation(retryCount + 1, force), 200);

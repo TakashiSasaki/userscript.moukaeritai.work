@@ -31,7 +31,7 @@ if (editor) {
     setTimeout(() => {
         const sendButton = document.querySelector('button.send-button');
         if (sendButton) {
-            sendButton.click();
+            window.geminiClickElement(sendButton);
         }
     }, 100);
 }
@@ -54,8 +54,8 @@ if (editor) {
 - **モデル選択ボタン**: `button.input-area-switch` — ロケール非依存で堅牢
 - **メニュー項目**: `button.bard-mode-list-button` — Gemini固有のセマンティッククラス
 - **切り替え方法**:
-  1. `document.querySelector('button.input-area-switch').click()` でメニューを開く。
-  2. 少し待機後、`document.querySelectorAll('button.bard-mode-list-button')` からテキストに「高速」「思考」「Pro」を含む要素を探し、`.click()` する。
+  1. `window.geminiClickElement(document.querySelector('button.input-area-switch'))` でメニューを開く。
+  2. 少し待機後、`document.querySelectorAll('button.bard-mode-list-button')` からテキストに「高速」「思考」「Pro」を含む要素を探し、`window.geminiClickElement(el)` する。
 
 ### 追加カスタムイベント仕様
 - イベント名: `gemini-switch-model`
@@ -74,8 +74,8 @@ Canvas機能はプロンプト入力エリア付近の「ツール」メニュ�
 - **キャンセルボタン (有効化状態)**: `button.toolbox-drawer-item-deselect-button`
 - **有効化手順**:
   1. すでに有効化されている場合（キャンセルボタンが存在し、かつ textContent に "Canvas" が含まれる場合）はクリックしない。
-  2. `document.querySelector('button.toolbox-drawer-button').click()` でツールメニューを開く。
-  3. 少し待機後、`document.querySelectorAll('button.toolbox-drawer-item-list-button')` からテキストに「Canvas」を含む要素を探し、`.click()` する。
+  2. `window.geminiClickElement(document.querySelector('button.toolbox-drawer-button'))` でツールメニューを開く。
+  3. 少し待機後、`document.querySelectorAll('button.toolbox-drawer-item-list-button')` からテキストに「Canvas」を含む要素を探し、`window.geminiClickElement(el)` する。
 
 ### 追加カスタムイベント仕様
 - イベント名: `gemini-enable-canvas`
@@ -92,7 +92,7 @@ Canvas機能はプロンプト入力エリア付近の「ツール」メニュ�
 - **送信ボタン**: `button.send-button` (または `button.submit.send-button`)
 - **特徴**: テキスト入力がない状態ではマイクボタン等になっており、テキストが存在するときのみ送信ボタンが表示（有効化）されます。クラス名が機能に直結しており、`aria-label`等（言語依存）に依存しないためグローバルに堅牢です。
 - **実行手順**:
-  `document.querySelector('button.send-button')?.click();`
+  `window.geminiClickElement(document.querySelector('button.send-button'));`
 
 ### 追加カスタムイベント仕様
 - イベント名: `gemini-send-prompt`

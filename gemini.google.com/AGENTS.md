@@ -44,7 +44,7 @@ Learnings from implementing features like Auto-Scroll and Conversation Managemen
               const span = opt.querySelector('.mdc-list-item__primary-text div > span:last-child');
               return span && span.textContent.trim() === targetName;
           });
-          if (target) target.click();
+          if (target) window.geminiClickElement(target);
           ```
 
 ## `gemini-common.js` が提供する共通機能

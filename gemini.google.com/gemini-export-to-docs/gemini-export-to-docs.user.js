@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.103
+// @version      0.4.104
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
 // @lastModified 2026-04-18
 // @author       Takashi Sasaki
@@ -196,7 +196,7 @@
             console.log('Starting Turn Export...');
 
             // 1. Click trigger
-            simulateClick(triggerBtn);
+            window.geminiClickElement(triggerBtn);
 
             // 2. Wait slightly for menu animation start
             await window.geminiSleep(200);
@@ -229,7 +229,7 @@
 
                 if (intermediateBtn) {
                     console.log('Mobile layout detected: clicking intermediate export button');
-                    simulateClick(intermediateBtn);
+                    window.geminiClickElement(intermediateBtn);
                     await window.geminiSleep(500); // Wait for submenu
 
                     // Re-try finding the final button
@@ -251,13 +251,13 @@
                 throw new Error('Export button not found in menu');
             }
 
-            simulateClick(exportBtn);
+            window.geminiClickElement(exportBtn);
             console.log('Turn Export Clicked');
 
             // Close menu if it persists (auto-closes usually)
             await window.geminiSleep(100);
             const closeBackdrop = document.querySelector('.cdk-overlay-backdrop');
-            if (closeBackdrop) simulateClick(closeBackdrop);
+            if (closeBackdrop) window.geminiClickElement(closeBackdrop);
         }
 
         const AUTO_URL_TOGGLE_KEY = 'gemini-export-auto-url-toggle';

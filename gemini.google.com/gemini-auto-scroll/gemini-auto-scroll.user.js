@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.67
+// @version      0.2.68
 // @lastModified 2026-04-18
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
@@ -21,6 +21,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.2.68 共通ライブラリの更新に伴い、クリック処理を geminiClickElement に統一。
 // @history       0.2.65 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
 // @history       0.2.64 共通テンプレートの更新（アイコンとバージョンの分離）を反映。
 // @history       0.2.63 共通ライブラリの更新により、パネル最小化時にサイズが内容に合わせて適切にシュリンクされるように改善。
@@ -93,7 +94,7 @@
                     console.debug('[GeminiAutoScroll] Sidebar is closed. Expanding sidebar...');
                     const toggle = document.querySelector(SELECTORS.SIDEBAR_TOGGLE);
                     if (toggle) {
-                        toggle.click();
+                        window.geminiClickElement(toggle);
                         setTimeout(attemptScrollToConversation, 500);
                     } else {
                         attemptScrollToConversation();
