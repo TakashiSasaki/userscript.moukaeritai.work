@@ -18,6 +18,36 @@ Learnings from implementing features like Auto-Scroll and Conversation Managemen
     -   Gemini uses virtual scrolling. Only currently visible conversation items exist in the DOM. `document.querySelectorAll` will only return a subset (e.g., ~15 items) of the full history.
     -   Logic that depends on "finding the current item and then finding the next one" must handle cases where the current item has been scrolled out of view and unloaded from the DOM.
 
+## `gemini-common.js` が提供する共通機能
+
+`gemini.google.com/gemini-common.js` は、Gemini 向けユーザースクリプトで共通利用する helper を提供しています。新しい実装を書く前に、まずこのファイルに同等機能がないか確認してください。
+
+1. **初期化と待機**
+   - `registerGeminiUserscript(scriptName, version)`: 読み込み順の絵文字付きで userscript を登録します。
+   - `geminiSleep(ms)`: 背景タブでも極端に止まりにくい sleep helper です。
+   - `geminiWaitForElement(selector, context, timeout)`: 要素出現待ちの Promise helper です。
+
+2. **インストール検知と状態表示**
+   - `geminiCheckTargetUserscript(targetName, timeout)`: `userscript-ping` / `userscript-check-installed` を使って他 userscript の存在を確認します。
+   - `geminiShowTargetScriptStatus(containerId, targetName, statusDetail)`: 対象 script の検知結果を簡易 UI として表示します。
+
+3. **Snackbar 監視**
+   - `geminiEnsureSnackbarObserver()`: Gemini 全体で 1 回だけ snackbar observer を起動し、`gemini-snackbar:shown` を発火します。
+   - `gemini-snackbar:shown`: 共通 snackbar 通知イベントです。`text`, `textNodes`, `actionLabels`, `containerId`, `kind`, `matchedRule`, `observedAt` を `detail` に含みます。
+
+4. **共通パネル UI**
+   - `geminiSetupDraggablePanel(panel, handle, storageKey, defaultPos)`: パネルのドラッグ移動と位置保存を行います。
+   - `geminiSetupMinimizablePanel(panel, storageKey, activeHeader, defaultMinimized)`: パネルの最小化状態を管理します。
+   - `geminiCreateCommonPanel(options)`: 共通ヘッダー付きパネル shell を生成します。
+
+5. **Trusted Types / HTML 注入**
+   - `geminiCreateTrustedHTMLPolicy(policyName)`: Trusted Types policy を作成します。
+   - `geminiSetInnerHTML(element, html, policy)`: Trusted Types 対応で安全に HTML を注入します。
+
+6. **設計上の注意**
+   - 長寿命の observer や全体監視は、`gemini-common.js` に singleton guard 付き helper として置けるかをまず検討してください。
+   - `gemini-common.js` にある機能を各 userscript 側で再実装しないでください。必要なら共通化してから使う方針を優先してください。
+
 
 ## `index.html` のメンテナンス要件
 
