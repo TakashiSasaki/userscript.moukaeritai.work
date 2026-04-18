@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.5.0
+// @version      0.5.1
 // @description  Adds 1-click automation to export Gemini responses to Google Docs and notebooks.
 // @lastModified 2026-04-18
 // @author       Takashi Sasaki
@@ -349,11 +349,14 @@
             logAutoSkip(message, details);
         }
 
-        function getDestinationSettings() {
+        function getDestinationSettings(panel = document.getElementById('gemini-one-turn-panel')) {
+            const docsCheckbox = panel?.querySelector('#gemini-destination-docs-cb');
+            const notebookCheckbox = panel?.querySelector('#gemini-destination-notebook-cb');
+            const notebookInput = panel?.querySelector('#gemini-notebook-title-input');
             return {
-                docsEnabled: GM_getValue(DESTINATION_DOCS_TOGGLE_KEY, true),
-                notebookEnabled: GM_getValue(DESTINATION_NOTEBOOK_TOGGLE_KEY, false),
-                notebookTitle: String(GM_getValue(NOTEBOOK_TITLE_KEY, '') || '').trim()
+                docsEnabled: docsCheckbox ? docsCheckbox.checked : GM_getValue(DESTINATION_DOCS_TOGGLE_KEY, true),
+                notebookEnabled: notebookCheckbox ? notebookCheckbox.checked : GM_getValue(DESTINATION_NOTEBOOK_TOGGLE_KEY, false),
+                notebookTitle: String(notebookInput ? notebookInput.value : (GM_getValue(NOTEBOOK_TITLE_KEY, '') || '')).trim()
             };
         }
 
@@ -382,7 +385,7 @@
             if (!panel) return true;
             const validationEl = panel.querySelector('#gemini-destination-validation');
             if (!validationEl) return true;
-            const validation = validateDestinationSettings();
+            const validation = validateDestinationSettings(getDestinationSettings(panel));
             validationEl.textContent = validation.message;
             validationEl.classList.toggle('is-valid', validation.valid);
             return validation.valid;
@@ -1120,9 +1123,10 @@
         async function runExportProcess(isAutoRun = false) {
             snackbarFailureAbortRequested = false;
             lastNotebookSuccessDetail = null;
-            const destinationSettings = getDestinationSettings();
+            const panel = document.getElementById('gemini-one-turn-panel');
+            const destinationSettings = getDestinationSettings(panel);
             const destinationValidation = validateDestinationSettings(destinationSettings);
-            renderDestinationValidation();
+            renderDestinationValidation(panel);
             if (!destinationValidation.valid) {
                 if (!isAutoRun) {
                     alert(destinationValidation.message);
