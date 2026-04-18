@@ -27,7 +27,7 @@
         </header>
 
         <div style="text-align: center; margin-bottom: 3rem;">
-            <a href="gemini-export-to-docs.user.js" class="install-button" data-script-name="Gemini 1-Click Export to Docs">
+            <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js" class="install-button" data-script-name="Gemini 1-Click Export to Docs" target="_blank">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="7 10 12 15 17 10"></polyline>
@@ -59,7 +59,7 @@
             </ul>
 
             <h2>目的</h2>
-            <p>標準機能では複数回のクリックが必要な Google Docs へのエクスポートを、1ターン会話向けの専用パネルと自動判定で扱いやすくします。<br>
+            <p>標準機能では複数回のクリックが必要な Google Docs へのエクスポートやノートブック追加を、1ターン会話向けの専用パネルと自動判定で扱いやすくします。<br>
                 本ユーザースクリプトはTampermonkeyでの利用を想定し、ファイル名は <code>gemini-export-to-docs.user.js</code> とします。</p>
 
             <h2>経緯</h2>
@@ -78,6 +78,8 @@
                 <li><strong>表示条件</strong>: 会話が1ターン（プロンプト1回、回答1回）のみの場合に、画面右下へ専用パネルを表示します。</li>
                 <li><strong>Auto Export Toggle</strong>: <code>Auto Export: Off/On</code> ボタンで URL一致の自動判定と自動エクスポートを開始・停止できます。</li>
                 <li><strong>Eligibility Indicator</strong>: トグルの On/Off に関係なく、現在表示中の会話が自動エクスポート条件に適合しているかを <code>Matched / Waiting / Not Matched</code> と短い理由文で表示します。</li>
+                <li><strong>実行先の複数選択</strong>: Google Docs と Notebook を独立して On/Off でき、両方有効な場合は <code>Docs → Notebook → Delete</code> の順で処理します。</li>
+                <li><strong>Notebook title の記憶</strong>: 追加先ノートブック名を入力欄に保存し、次回以降も再入力なしで利用できます。</li>
                 <li><strong>自動削除連動</strong>: エクスポート完了後、設定に応じて会話を自動的に削除します。</li>
                 <li><strong>自動スキップ連動</strong>: URL一致条件を満たさなかった会話では、設定に応じて <code>Gemini Auto-Select Next</code> にイベントを送って次の会話へ移動できます。</li>
                 <li><strong>安全停止</strong>: 共通 snackbar 監視で success 以外の通知を検知した場合は、自動エクスポートを停止し、削除・スキップ設定も安全側へオフに戻します。</li>
@@ -88,7 +90,7 @@
 
             <h3>送信（使う側）</h3>
             <ul>
-                <li><strong>One Click Delete</strong>: エクスポート完了後に会話を自動削除。</li>
+                <li><strong>One Click Delete</strong>: 選択した出力先への処理がすべて成功した後に会話を自動削除。</li>
                 <li><strong>Auto-Select Next</strong>: URL一致条件を満たさなかった1ターン会話で <code>gemini-auto-select-next:request-next</code> を送信し、次のアイテム選択を依頼。</li>
             </ul>
 

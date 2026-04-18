@@ -1,7 +1,7 @@
 <template id="tpl-export-overlay">
     <div id="gemini-export-overlay" class="gemini-export-overlay">
         <div class="export-spinner"></div>
-        <div class="export-status-text">Exporting to Google Docs...</div>
+        <div class="export-status-text" id="gemini-export-overlay-status">Processing conversation...</div>
     </div>
 </template>
 
@@ -10,16 +10,34 @@
         <div class="one-turn-body">
             <div class="one-turn-actions">
                 <button id="gemini-btn-one-turn-exec" class="one-turn-exec-btn auto-export-off">
-                    Start Auto Export
+                    Start Auto Action
                 </button>
                 <div class="one-turn-eligibility" id="gemini-auto-eligibility">
                     <span class="eligibility-badge eligibility-pending" id="gemini-auto-eligibility-badge">Waiting</span>
                     <span class="eligibility-reason" id="gemini-auto-eligibility-reason">Waiting for conversation DOM</span>
                 </div>
                 <div class="one-turn-options">
+                    <label class="one-turn-checkbox-label" title="Send the current conversation to Google Docs">
+                        <input type="checkbox" id="gemini-destination-docs-cb">
+                        Export to Google Docs
+                    </label>
+                    <label class="one-turn-checkbox-label" title="Add the current conversation to a notebook by title">
+                        <input type="checkbox" id="gemini-destination-notebook-cb">
+                        Add to notebook
+                    </label>
+                    <label class="one-turn-input-label" for="gemini-notebook-title-input">
+                        Notebook title
+                    </label>
+                    <input
+                        type="text"
+                        id="gemini-notebook-title-input"
+                        class="one-turn-text-input"
+                        placeholder="Enter notebook title"
+                        autocomplete="off">
+                    <div class="one-turn-validation-message" id="gemini-destination-validation" aria-live="polite"></div>
                     <label class="one-turn-checkbox-label" title="Export and then delete the conversation">
                         <input type="checkbox" id="gemini-auto-delete-cb">
-                        Auto-delete after export
+                        Auto-delete after selected actions
                     </label>
                     <label class="one-turn-checkbox-label" title="Move to the next conversation when the current one does not match the auto-export condition">
                         <input type="checkbox" id="gemini-auto-skip-nonmatch-cb">

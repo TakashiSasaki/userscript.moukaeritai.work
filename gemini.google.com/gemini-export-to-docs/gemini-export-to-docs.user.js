@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.105
-// @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
+// @version      0.5.0
+// @description  Adds 1-click automation to export Gemini responses to Google Docs and notebooks.
 // @lastModified 2026-04-18
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -51,18 +51,6 @@
             exportToDocsButton: 'button[data-test-id="export-to-docs-button"]', // The target in the menu
             exportIntermediateButton: 'button[data-test-id="export-button"]' // Mobile "Export to..." button
         };
-
-        /**
-         * Trigger a native click event
-         */
-        function simulateClick(element) {
-            if (!element) return;
-            element.dispatchEvent(new MouseEvent('click', {
-                view: null,
-                bubbles: true,
-                cancelable: true
-            }));
-        }
 
         /**
          * Styles for our custom button
@@ -128,7 +116,7 @@
         /**
          * Manage Overlay
          */
-        function showOverlay() {
+        function showOverlay(statusText = 'Processing conversation...') {
             let overlay = document.getElementById('gemini-export-overlay');
             if (!overlay) {
                 const tpl = getTemplate('tpl-export-overlay');
@@ -137,12 +125,25 @@
                     overlay = document.getElementById('gemini-export-overlay');
                 }
             }
-            if (overlay) overlay.classList.add('visible');
+            if (overlay) {
+                const statusEl = overlay.querySelector('#gemini-export-overlay-status');
+                if (statusEl) {
+                    statusEl.textContent = statusText;
+                }
+                overlay.classList.add('visible');
+            }
         }
 
         function hideOverlay() {
             const overlay = document.getElementById('gemini-export-overlay');
             if (overlay) overlay.classList.remove('visible');
+        }
+
+        function updateOverlayStatus(statusText) {
+            const statusEl = document.getElementById('gemini-export-overlay-status');
+            if (statusEl) {
+                statusEl.textContent = statusText;
+            }
         }
 
         /**
@@ -185,6 +186,54 @@
             return findExportButton(document.body);
         }
 
+        function findVisibleMenuItemByText(textNeedles, context = document) {
+            const normalizedNeedles = textNeedles.map(text => text.toLowerCase());
+            const candidates = Array.from(context.querySelectorAll('button[role="menuitem"], .mat-mdc-menu-item'));
+            return candidates.find((button) => {
+                if (!button || button.offsetParent === null) return false;
+                const text = (button.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+                return normalizedNeedles.some(needle => text.includes(needle));
+            }) || null;
+        }
+
+        async function waitForMenuItemByText(textNeedles, timeout = 2000, context = document) {
+            const start = Date.now();
+            while (Date.now() - start < timeout) {
+                const button = findVisibleMenuItemByText(textNeedles, context);
+                if (button) return button;
+                await window.geminiSleep(100);
+            }
+            return findVisibleMenuItemByText(textNeedles, context);
+        }
+
+        function closeBackdropIfPresent() {
+            const closeBackdrop = document.querySelector('.cdk-overlay-backdrop');
+            if (closeBackdrop) {
+                window.geminiClickElement(closeBackdrop);
+            }
+        }
+
+        async function openConversationActionMenu(triggerBtn) {
+            if (!triggerBtn) {
+                throw new Error('Conversation action menu button not found');
+            }
+            window.geminiClickElement(triggerBtn);
+            await window.geminiSleep(200);
+        }
+
+        async function waitForDialogContainer(timeout = 2000) {
+            const start = Date.now();
+            while (Date.now() - start < timeout) {
+                const dialog = document.querySelector('mat-dialog-container');
+                if (dialog && dialog.offsetParent !== null) {
+                    return dialog;
+                }
+                await window.geminiSleep(100);
+            }
+            const dialog = document.querySelector('mat-dialog-container');
+            return dialog && dialog.offsetParent !== null ? dialog : null;
+        }
+
         /**
          * Flow: export the current conversation via its more menu
          * 1. Click "More" (three dots)
@@ -196,10 +245,7 @@
             console.log('Starting Turn Export...');
 
             // 1. Click trigger
-            window.geminiClickElement(triggerBtn);
-
-            // 2. Wait slightly for menu animation start
-            await window.geminiSleep(200);
+            await openConversationActionMenu(triggerBtn);
 
             // 3. Try to find the button directly (Desktop case)
             let exportBtn = await waitForExportButton(1000);
@@ -256,13 +302,15 @@
 
             // Close menu if it persists (auto-closes usually)
             await window.geminiSleep(100);
-            const closeBackdrop = document.querySelector('.cdk-overlay-backdrop');
-            if (closeBackdrop) window.geminiClickElement(closeBackdrop);
+            closeBackdropIfPresent();
         }
 
         const AUTO_URL_TOGGLE_KEY = 'gemini-export-auto-url-toggle';
         const AUTO_DELETE_TOGGLE_KEY = 'gemini-export-auto-delete-toggle';
         const AUTO_SKIP_NONMATCH_TOGGLE_KEY = 'gemini-export-auto-skip-nonmatch-toggle';
+        const DESTINATION_DOCS_TOGGLE_KEY = 'gemini-export-destination-docs-toggle';
+        const DESTINATION_NOTEBOOK_TOGGLE_KEY = 'gemini-export-destination-notebook-toggle';
+        const NOTEBOOK_TITLE_KEY = 'gemini-export-notebook-title';
 
         // Simple debounce function to reduce polling frequency on DOM mutations
         function debounce(func, wait) {
@@ -284,6 +332,7 @@
         let autoDecisionPendingConversationId = null;
         let snackbarFailureAbortRequested = false;
         let snackbarListener = null;
+        let lastNotebookSuccessDetail = null;
         const AUTO_SKIP_LOG_PREFIX = '[Gemini 1-Turn Auto][Skip]';
         const AUTO_SKIP_DECISION_DELAY_MS = 2000;
 
@@ -300,8 +349,63 @@
             logAutoSkip(message, details);
         }
 
+        function getDestinationSettings() {
+            return {
+                docsEnabled: GM_getValue(DESTINATION_DOCS_TOGGLE_KEY, true),
+                notebookEnabled: GM_getValue(DESTINATION_NOTEBOOK_TOGGLE_KEY, false),
+                notebookTitle: String(GM_getValue(NOTEBOOK_TITLE_KEY, '') || '').trim()
+            };
+        }
+
+        function validateDestinationSettings(settings = getDestinationSettings()) {
+            if (!settings.docsEnabled && !settings.notebookEnabled) {
+                return {
+                    valid: false,
+                    message: 'Enable Google Docs or notebook before starting auto mode.'
+                };
+            }
+            if (settings.notebookEnabled && !settings.notebookTitle) {
+                return {
+                    valid: false,
+                    message: 'Enter a notebook title before enabling notebook mode.'
+                };
+            }
+            return {
+                valid: true,
+                message: settings.notebookEnabled
+                    ? `Notebook target: ${settings.notebookTitle}`
+                    : 'Ready'
+            };
+        }
+
+        function renderDestinationValidation(panel = document.getElementById('gemini-one-turn-panel')) {
+            if (!panel) return true;
+            const validationEl = panel.querySelector('#gemini-destination-validation');
+            if (!validationEl) return true;
+            const validation = validateDestinationSettings();
+            validationEl.textContent = validation.message;
+            validationEl.classList.toggle('is-valid', validation.valid);
+            return validation.valid;
+        }
+
+        function isNotebookSuccessSnackbar(detail) {
+            const text = String(detail?.text || '').replace(/\s+/g, ' ').trim();
+            if (!text) return false;
+            const lowerText = text.toLowerCase();
+            const settings = getDestinationSettings();
+            const titleMatches = settings.notebookTitle
+                ? text.includes(settings.notebookTitle)
+                : true;
+            const successPhrases = [
+                'に追加しました',
+                'added to',
+                'added this chat to'
+            ];
+            return titleMatches && successPhrases.some(phrase => lowerText.includes(phrase.toLowerCase()));
+        }
+
         function getAutoExportToggleLabel() {
-            return GM_getValue(AUTO_URL_TOGGLE_KEY, false) ? 'Stop Auto Export' : 'Start Auto Export';
+            return GM_getValue(AUTO_URL_TOGGLE_KEY, false) ? 'Stop Auto Action' : 'Start Auto Action';
         }
 
         function refreshAutoExportToggleButton(button = document.getElementById('gemini-btn-one-turn-exec')) {
@@ -368,6 +472,11 @@
         function handleAutoExportToggleClick() {
             if (GM_getValue(AUTO_URL_TOGGLE_KEY, false) || autoExportTimerId) {
                 stopAutoExportMode();
+                return;
+            }
+
+            if (!renderDestinationValidation()) {
+                refreshAutoExportToggleButton();
                 return;
             }
 
@@ -709,7 +818,7 @@
                     setExecBtnState(
                         execBtn,
                         'on',
-                        countdownPaused ? `Stop Auto Export (Paused ${countdown}s)` : `Stop Auto Export (${countdown}s)`
+                        countdownPaused ? `Stop Auto Action (Paused ${countdown}s)` : `Stop Auto Action (${countdown}s)`
                     );
                 };
 
@@ -899,6 +1008,7 @@
             }
 
             refreshEligibilityIndicator(panel, snapshot);
+            renderDestinationValidation(panel);
 
             if (isOneTurn) {
                 setOneTurnPanelVisibility(true);
@@ -909,6 +1019,69 @@
                 setOneTurnPanelVisibility(true);
                 panel.classList.add('ge2d-disabled');
             }
+        }
+
+        function findNotebookOptionByTitle(dialog, notebookTitle) {
+            const options = Array.from(dialog.querySelectorAll('mat-list-option'));
+            return options.find((option) => {
+                const titleEl = option.querySelector('.mdc-list-item__primary-text div > span:last-child');
+                const titleText = titleEl ? titleEl.textContent.trim() : option.textContent.trim();
+                return titleText === notebookTitle;
+            }) || null;
+        }
+
+        async function waitForNotebookSuccess(startTime, notebookTitle, timeout = 4000) {
+            const start = Date.now();
+            while (Date.now() - start < timeout) {
+                const detail = lastNotebookSuccessDetail;
+                if (detail && detail.observedAt >= startTime) {
+                    if (!notebookTitle || String(detail.text || '').includes(notebookTitle)) {
+                        return detail;
+                    }
+                }
+                await window.geminiSleep(100);
+            }
+            return null;
+        }
+
+        async function handleAddToNotebook(triggerBtn, notebookTitle) {
+            if (!notebookTitle) {
+                throw new Error('Notebook title is required when notebook destination is enabled');
+            }
+
+            console.log('[Gemini 1-Turn Export] Starting notebook add flow.', { notebookTitle });
+            await openConversationActionMenu(triggerBtn);
+
+            const notebookMenuButton = await waitForMenuItemByText(['ノートブックに追加', 'add to notebook'], 2000, document.body);
+            if (!notebookMenuButton) {
+                closeBackdropIfPresent();
+                throw new Error('Add to notebook menu item not found');
+            }
+
+            window.geminiClickElement(notebookMenuButton);
+            const dialog = await waitForDialogContainer(2500);
+            if (!dialog) {
+                throw new Error('Notebook dialog did not appear');
+            }
+
+            const notebookOption = findNotebookOptionByTitle(dialog, notebookTitle);
+            if (!notebookOption) {
+                closeBackdropIfPresent();
+                throw new Error(`Notebook not found: ${notebookTitle}`);
+            }
+
+            const waitStart = Date.now();
+            window.geminiClickElement(notebookOption);
+
+            const successDetail = await waitForNotebookSuccess(waitStart, notebookTitle, 5000);
+            if (!successDetail) {
+                throw new Error(`Notebook add success toast not observed for: ${notebookTitle}`);
+            }
+
+            console.log('[Gemini 1-Turn Export] Notebook add completed.', {
+                notebookTitle,
+                snackbarText: successDetail.text
+            });
         }
 
         async function performDeleteCountdown(execBtn, isAutoRun, delay = 5) {
@@ -946,9 +1119,14 @@
          */
         async function runExportProcess(isAutoRun = false) {
             snackbarFailureAbortRequested = false;
-            const moreBtn = document.querySelector(SELECTORS.moreMenuButton);
-            if (!moreBtn) {
-                alert('Could not find export menu.');
+            lastNotebookSuccessDetail = null;
+            const destinationSettings = getDestinationSettings();
+            const destinationValidation = validateDestinationSettings(destinationSettings);
+            renderDestinationValidation();
+            if (!destinationValidation.valid) {
+                if (!isAutoRun) {
+                    alert(destinationValidation.message);
+                }
                 return;
             }
 
@@ -957,20 +1135,43 @@
 
             const execBtn = document.getElementById('gemini-btn-one-turn-exec');
             if (execBtn) execBtn.disabled = true;
-            showOverlay();
+            showOverlay('Processing selected destinations...');
 
             try {
-                // 1. Export
-                await handleTurnExport(moreBtn);
+                if (destinationSettings.docsEnabled) {
+                    const docsMenuButton = document.querySelector(SELECTORS.moreMenuButton);
+                    if (!docsMenuButton) {
+                        throw new Error('Could not find export menu.');
+                    }
+                    updateOverlayStatus('Exporting to Google Docs...');
+                    await handleTurnExport(docsMenuButton);
 
-                if (snackbarFailureAbortRequested) {
-                    console.warn('[Gemini 1-Turn Export] Export flow stopped after snackbar failure was detected.');
-                    if (execBtn) execBtn.textContent = 'Stopped';
-                    await window.geminiSleep(1500);
-                    return;
+                    if (snackbarFailureAbortRequested) {
+                        console.warn('[Gemini 1-Turn Export] Export flow stopped after snackbar failure was detected.');
+                        if (execBtn) execBtn.textContent = 'Stopped';
+                        await window.geminiSleep(1500);
+                        return;
+                    }
+                }
+
+                if (destinationSettings.notebookEnabled) {
+                    const notebookMenuButton = document.querySelector(SELECTORS.moreMenuButton);
+                    if (!notebookMenuButton) {
+                        throw new Error('Could not find notebook menu.');
+                    }
+                    updateOverlayStatus(`Adding to notebook: ${destinationSettings.notebookTitle}`);
+                    await handleAddToNotebook(notebookMenuButton, destinationSettings.notebookTitle);
+
+                    if (snackbarFailureAbortRequested) {
+                        console.warn('[Gemini 1-Turn Export] Notebook flow stopped after snackbar failure was detected.');
+                        if (execBtn) execBtn.textContent = 'Stopped';
+                        await window.geminiSleep(1500);
+                        return;
+                    }
                 }
 
                 if (willDelete) {
+                    updateOverlayStatus('Preparing auto-delete...');
                     const countdownCompleted = await performDeleteCountdown(execBtn, isAutoRun);
                     if (!countdownCompleted || snackbarFailureAbortRequested) {
                         console.warn('[Gemini 1-Turn Export] Auto-delete cancelled because snackbar failure was detected.');
@@ -994,6 +1195,7 @@
 
             } catch (err) {
                 console.error('1-Turn process failed:', err);
+                if (execBtn) execBtn.textContent = 'Stopped';
                 if (!isAutoRun) alert('Process failed. See console.');
             } finally {
                 hideOverlay();
@@ -1070,6 +1272,9 @@
             if (deleteCheckbox) {
                 deleteCheckbox.checked = GM_getValue(AUTO_DELETE_TOGGLE_KEY, true);
             }
+            const docsCheckbox = panelShell.querySelector('#gemini-destination-docs-cb');
+            const notebookCheckbox = panelShell.querySelector('#gemini-destination-notebook-cb');
+            const notebookInput = panelShell.querySelector('#gemini-notebook-title-input');
 
             bindStoredCheckbox(panelShell, '#gemini-auto-skip-nonmatch-cb', AUTO_SKIP_NONMATCH_TOGGLE_KEY, false);
 
@@ -1083,6 +1288,35 @@
                 };
             }
 
+            if (docsCheckbox) {
+                docsCheckbox.checked = GM_getValue(DESTINATION_DOCS_TOGGLE_KEY, true);
+                docsCheckbox.onchange = () => {
+                    GM_setValue(DESTINATION_DOCS_TOGGLE_KEY, docsCheckbox.checked);
+                    renderDestinationValidation(panelShell);
+                };
+            }
+
+            if (notebookCheckbox) {
+                notebookCheckbox.checked = GM_getValue(DESTINATION_NOTEBOOK_TOGGLE_KEY, false);
+                notebookCheckbox.onchange = () => {
+                    GM_setValue(DESTINATION_NOTEBOOK_TOGGLE_KEY, notebookCheckbox.checked);
+                    renderDestinationValidation(panelShell);
+                };
+            }
+
+            if (notebookInput) {
+                notebookInput.value = String(GM_getValue(NOTEBOOK_TITLE_KEY, '') || '');
+                notebookInput.addEventListener('input', () => {
+                    GM_setValue(NOTEBOOK_TITLE_KEY, notebookInput.value);
+                    renderDestinationValidation(panelShell);
+                });
+                notebookInput.addEventListener('change', () => {
+                    notebookInput.value = notebookInput.value.trim();
+                    GM_setValue(NOTEBOOK_TITLE_KEY, notebookInput.value);
+                    renderDestinationValidation(panelShell);
+                });
+            }
+
             if (execBtn) {
                 execBtn.onclick = () => {
                     handleAutoExportToggleClick();
@@ -1091,6 +1325,7 @@
 
             // Minimizable Logic
             window.geminiSetupMinimizablePanel(panelShell, 'ge2d-minimized', dragHandle, false);
+            renderDestinationValidation(panelShell);
         }
 
         function createOneTurnPanel() {
@@ -1119,7 +1354,13 @@
             if (!snackbarListener) {
                 snackbarListener = (event) => {
                     const detail = event.detail || {};
-                    if (detail.kind === 'success') return;
+                    const isNotebookSuccess = isNotebookSuccessSnackbar(detail);
+                    if (detail.kind === 'success' || isNotebookSuccess) {
+                        if (isNotebookSuccess) {
+                            lastNotebookSuccessDetail = detail;
+                        }
+                        return;
+                    }
                     handleSnackbarFailure(detail);
                 };
                 window.addEventListener('gemini-snackbar:shown', snackbarListener);
@@ -1176,6 +1417,7 @@
                 autoExportTimerId = null;
             }
             snackbarFailureAbortRequested = false;
+            lastNotebookSuccessDetail = null;
 
             isInitialized = false;
         }
