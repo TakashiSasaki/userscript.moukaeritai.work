@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.69
+// @version      0.2.70
 // @lastModified 2026-04-18
 // @description  Automatically select the next conversation on delete while caching ordered sidebar history
 // @author       Takashi Sasaki
@@ -21,6 +21,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.2.70 Simplify attachObserver callback: drop per-mutation loop to reduce scroll-time CPU usage.
 // @history       0.2.69 Ordered conversation cache, read-only history dialog, and current-conversation API.
 // @history       0.2.67 共通ライブラリの更新に伴い、クリック処理を geminiClickElement に統一。
 // @history       0.2.65 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
@@ -60,8 +61,7 @@
 
         const SELECTORS = {
             CONVERSATION_ITEM: 'a[data-test-id="conversation"], a.conversation',
-            SIDEBAR_SCROLL_CONTAINER: 'nav infinite-scroller, bard-sidenav infinite-scroller, side-navigation-content infinite-scroller, infinite-scroller',
-            ATTACH_RELEVANT: 'a[data-test-id="conversation"], a.conversation, infinite-scroller, conversations-list, bard-sidenav, side-navigation-content'
+            SIDEBAR_SCROLL_CONTAINER: 'nav infinite-scroller, bard-sidenav infinite-scroller, side-navigation-content infinite-scroller, infinite-scroller'
         };
 
         const CONSTANTS = {
@@ -563,16 +563,6 @@
             updatePanelUI();
         }
 
-        function hasRelevantSidebarMutation(node) {
-            if (!node || node.nodeType !== Node.ELEMENT_NODE) {
-                return false;
-            }
-            return Boolean(
-                node.matches?.(SELECTORS.ATTACH_RELEVANT) ||
-                node.querySelector?.(SELECTORS.ATTACH_RELEVANT)
-            );
-        }
-
         function scheduleSidebarTargetRefresh(delay = 0) {
             if (attachRefreshTimer) {
                 clearTimeout(attachRefreshTimer);
@@ -905,34 +895,20 @@
 
             createDraggablePanel();
 
-            attachObserver = new MutationObserver((mutations) => {
+            attachObserver = new MutationObserver(() => {
                 if (!isInitialized) return;
 
-                let shouldRefreshSidebar = false;
-                for (const mutation of mutations) {
-                    for (const node of mutation.addedNodes) {
-                        if (hasRelevantSidebarMutation(node)) {
-                            shouldRefreshSidebar = true;
-                            break;
-                        }
-                    }
-                    if (shouldRefreshSidebar) break;
-                    for (const node of mutation.removedNodes) {
-                        if (hasRelevantSidebarMutation(node)) {
-                            shouldRefreshSidebar = true;
-                            break;
-                        }
-                    }
-                    if (shouldRefreshSidebar) break;
-                }
-
+                // Do not loop over mutation records here: during sidebar scrolling,
+                // hundreds of mutations can fire in rapid succession, and iterating
+                // over each record with querySelector calls is expensive.
+                // Instead, we unconditionally schedule the debounced refresh (50 ms).
+                // The debounce in scheduleSidebarTargetRefresh collapses all bursts
+                // into a single DOM scan after the storm settles.
                 if (!document.getElementById('gemini-auto-switch-panel')) {
                     createDraggablePanel();
                 }
 
-                if (shouldRefreshSidebar) {
-                    scheduleSidebarTargetRefresh(50);
-                }
+                scheduleSidebarTargetRefresh(50);
             });
             attachObserver.observe(document.body, { childList: true, subtree: true });
 
