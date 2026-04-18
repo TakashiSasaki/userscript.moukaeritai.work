@@ -48,6 +48,16 @@ Learnings from implementing features like Auto-Scroll and Conversation Managemen
    - 長寿命の observer や全体監視は、`gemini-common.js` に singleton guard 付き helper として置けるかをまず検討してください。
    - `gemini-common.js` にある機能を各 userscript 側で再実装しないでください。必要なら共通化してから使う方針を優先してください。
 
+## 共通リソース更新時の対応 (Common Resource Updates)
+
+`gemini-common.js`, `gemini-common.css`, `gemini-common.html` などの共通リソースを変更した場合は、以下の対応を必ず行ってください。
+
+1. **影響範囲の特定**: 変更したリソースを `@resource` または `@require` しているすべてのユーザースクリプトを特定します。
+2. **パッチバージョンのインクリメント**: 影響を受けるすべてのスクリプトの `@version` を必ずインクリメント（バンプアップ）してください。
+   - これにより、Tampermonkey 等のリソースキャッシュが更新され、すべてのユーザーに最新の共通リソースが適用されることが保証されます。
+   - スクリプト自体のロジックに変更がない場合でも、共通リソースの変更を反映させるためにこの手順は必須です。
+
+
 
 ## `index.html` のメンテナンス要件
 
