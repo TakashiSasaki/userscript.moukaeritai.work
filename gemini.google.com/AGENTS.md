@@ -25,6 +25,15 @@ Learnings from implementing features like Auto-Scroll and Conversation Managemen
         -   **判定基準**: 内部に `<span>ノートブックに追加</span>` というテキスト（英語設定では `Add to notebook`）を含みます。
         -   **構造**: `button > span.mat-mdc-menu-item-text > span` の階層になっています。
     -   **安定的な取得方法**: メニューボタンのクリック後、`MutationObserver` 等で `div.mat-mdc-menu-panel` の出現を検知し、その中の `role="menuitem"` 要素から目的のテキストを持つものを抽出するのが最も確実です。
+    -   **「ノートブックに移動」ダイアログ**:
+        -   「ノートブックに追加」をクリックすると、`mat-dialog-container` が開きます。
+        -   **リスト要素**: ダイアログ内のノートブック一覧は `mat-selection-list` で構成され、各項目は `mat-list-option` です。
+        -   **名前による特定**: ノートブック名は `mat-list-option .mdc-list-item__primary-text div > span:last-child` に格納されています。
+    -   **選択後の挙動とフィードバック**:
+        -   ノートブックを選択（クリック）すると、ダイアログは即座に閉じます。
+        -   **スナックバー**: 画面左下に通知ラベルが表示されます。構造は `.mat-mdc-snack-bar-container` 内の `simple-snack-bar` です。
+        -   **通知テキスト例**: 「(ノートブック名) に追加しました」。
+        -   **共通機能との連携**: `gemini-common.js` の `geminiEnsureSnackbarObserver()` を使用している場合、`gemini-snackbar:shown` イベントでこの追加完了通知を捕捉可能です。
 
 ## `gemini-common.js` が提供する共通機能
 
