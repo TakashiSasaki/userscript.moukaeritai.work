@@ -23,11 +23,11 @@
     <div class="container">
         <header>
             <h1>Gemini Auto-Select Next</h1>
-            <p class="header-desc">Geminiで会話を削除した際、自動的に次の会話を選択するユーザースクリプトです。削除のたびにトップページに戻るのを防ぎ、連続的な会話の整理を効率化します。</p>
+            <p class="header-desc">Geminiで会話を削除した際に次の会話へ移動しつつ、サイドバーで見えた会話を順序付きで保存して一覧できるユーザースクリプトです。削除のたびにトップページへ戻される煩わしさを減らし、後から履歴の流れを追いやすくします。</p>
         </header>
 
         <div style="text-align: center; margin-bottom: 3rem;">
-            <a href="gemini-auto-select-next.user.js" class="install-button" data-script-name="Gemini Auto-Select Next">
+            <a href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-auto-select-next/gemini-auto-select-next.user.js" class="install-button" data-script-name="Gemini Auto-Select Next" target="_blank">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="7 10 12 15 17 10"></polyline>
@@ -50,26 +50,32 @@
         <section>
             <h2>機能概要</h2>
             <ul>
-                <li><strong>自動選択</strong>: 現在の会話が削除または削除によってDOMから除去されたことを検知すると、自動的にリスト内の次の会話をクリックします。</li>
-                <li><strong>手動スキップ</strong>: 会話を削除せずに、パネルの「⏭️ Skip to Next」ボタンから手動で次の会話に移動することができます。</li>
-                <li><strong>フローティングパネル</strong>: 機能をON/OFFするための小さなドラッグ可能なパネルを表示します。位置は自動的に保存されます。</li>
-                <li><strong>SPA対応</strong>: Geminiの画面遷移を検知し、チャット画面でのみ動作します。</li>
+                <li><strong>自動選択</strong>: 現在の会話が削除されてGeminiが一覧から外したことを保守的に検知したときだけ、次の会話へ進みます。仮想スクロールで一時的にDOMから消えただけのケースでは誤反応しません。</li>
+                <li><strong>順序付きキャッシュ</strong>: サイドバーに現れた会話IDとタイトルを、表示順を保ったまま保存します。スクロールで新しく見えた会話はその場で追記され、既知の会話が上へ移動した場合も順序を同期します。</li>
+                <li><strong>履歴ダイアログ</strong>: パネルの <code>List</code> ボタンから、保存済み会話を読み取り専用ダイアログで一覧できます。現在開いている会話は、サイドバーに見えていなくても保存済みなら強調表示されます。</li>
+                <li><strong>フローティングパネル</strong>: <code>Auto</code> / <code>Next</code> / <code>List</code> の3操作を持つ小さなドラッグ可能パネルを表示し、位置とON/OFF状態を記憶します。</li>
+                <li><strong>SPA対応</strong>: Gemini の画面遷移やサイドバー再描画を検知し、チャット画面でのみ動作します。</li>
             </ul>
 
             <h2>連携スクリプト</h2>
             <p>他のユーザースクリプトとカスタムイベントを通じて連携します。</p>
 
             <h3>送信（使う側）</h3>
-            <p>現在、他のスクリプトに対してイベントを送信することはありません。</p>
+            <p>現在、他スクリプトへ能動的に処理要求を送ることはありません。ただし、問い合わせに対する応答イベントは送信します。</p>
+            <ul>
+                <li><strong>Current Conversation Response</strong>: <code>gemini-auto-select-next:request-current-conversation</code> を受けたとき、<code>gemini-auto-select-next:current-conversation</code> を返して現在のURL上の会話ID、保存順序、可視状態を通知します。</li>
+            </ul>
 
             <h3>受信（使われる側）</h3>
             <p>以下のスクリプトからイベントを受信し、自身の処理を実行します：</p>
             <ul>
                 <li><strong>Export to Docs</strong>: <code>gemini-auto-select-next:request-next</code> イベントを受信して会話リストの次のアイテムを選択します。</li>
+                <li><strong>将来の連携スクリプト</strong>: <code>gemini-auto-select-next:request-current-conversation</code> を受信すると、現在会話のメタデータを応答イベントで返します。</li>
             </ul>
 
             <h2>更新履歴</h2>
             <ul>
+                <li><strong>v0.2.69</strong>: サイドバー会話の順序付き保存、読み取り専用の履歴ダイアログ、現在会話問い合わせAPIを追加。</li>
                 <li><strong>v0.2.54</strong>: リソース化リファクタリング: UIテンプレート(HTML)を外部ファイルに分離し、コードの保守性を向上。</li>
                 <li><strong>v0.2.53</strong>: 外部CSS/JSファイルへの分離とコードの整理、リソースファイルの改名、デザインの大幅刷新。</li>
                 <li><strong>v0.2.52</strong>: リソースファイル (style.css) をスクリプト名と同じステムに改名</li>

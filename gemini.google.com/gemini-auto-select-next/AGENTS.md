@@ -4,58 +4,75 @@ This project follows the agent development guidelines outlined in the root [AGEN
 
 # Technical Considerations for gemini-auto-select-next.user.js
 
-### 1. Robust Selectors
-- Uses standard Gemini selectable item selectors (`a.conversation`, `a[data-test-id="conversation"]`).
-- Relies on `aria-current` or `.selected` class to identify the active conversation.
+### 1. Sidebar Selectors
+- Use Gemini conversation anchors (`a[data-test-id="conversation"]`, `a.conversation`) as the source of truth.
+- The observer target should be the sidebar scroller/list that contains those anchors, not `document.body`.
+- Active rows are identified by `aria-current="page"` or `.selected`.
 
-### 2. Selection Logic
-- Uses `MutationObserver` to detect when a conversation item is removed from the DOM.
-- When the removed item was the selected one, it immediately attempts to select the next item in the list.
-- Fallback: If the target element cannot be clicked, it navigates via URL.
+### 2. Ordered Conversation Cache
+- The script persists sidebar history in `GM_setValue` key `gemini_auto_switch_conversation_state_v1`.
+- Stored shape:
+  - `order: string[]`
+  - `itemsById: Record<string, { id, title, href, firstSeenAt, lastSeenAt }>`
+  - `lastSnapshotIds: string[]`
+  - `lastScrollTop: number | null`
+- Newly visible rows are appended/prepended/reinserted only when they actually enter the DOM. The script does not synthesize missing history.
 
-### 3. SPA Routing
-- Handles Single Page Application behavior using the Navigation API (or `setInterval` fallback) to initialize and cleanup the script state.
-- Only active on `/app/*` paths.
+### 3. Reconciliation Rules
+- Treat the currently rendered sidebar slice as one authoritative contiguous block.
+- Before reinserting the visible block, remove its IDs from the stored `order`.
+- Insertion priority:
+  1. old position of the earliest visible ID that was already known
+  2. overlap with the previous visible snapshot
+  3. scroll direction fallback (`prepend` on upward scroll, `append` on downward scroll)
+- If Gemini reorders a known conversation upward after an update, the cache must reorder without duplication.
 
-### 4. Persistence
-- Uses `GM_setValue`/`GM_getValue` to remember the enable/disable state and the floating pill's position.
+### 4. Conservative Deletion Detection
+- Do not delete cached rows merely because they disappeared from the DOM; Gemini virtualizes the sidebar.
+- Missing IDs at the leading or trailing edge of the previous visible slice are treated as scroll churn and kept.
+- Remove cached rows only when an ID disappears from the interior of the previous slice while surviving neighbors remain in the same order.
+- The current active conversation may also be removed when Gemini routes away from it after deletion and it vanished from the visible slice.
 
-### 5. Custom Event Interface
-- Listens for the `gemini-auto-select-next:request-next` event on `window`.
-- On receipt, it calls `selectNextConversation(0, true)` and attempts to move to the next conversation even if the Auto checkbox is off.
-- Example sender code:
+### 5. Selection Logic
+- Keep the existing `gemini-auto-select-next:request-next` event unchanged.
+- `selectNextConversation()` still works from the currently visible DOM list only; this script does not yet use the saved cache as navigation fallback.
+- Auto-select should only trigger after a proven deletion / deletion-like route loss, never just because the selected row scrolled out of the virtualized DOM.
 
-```javascript
-window.dispatchEvent(new CustomEvent('gemini-auto-select-next:request-next'));
-```
+### 6. Current Conversation API
+- The script listens on `window` for `gemini-auto-select-next:request-current-conversation`.
+- It responds on `window` with `gemini-auto-select-next:current-conversation`.
+- Response shape:
+  - `reqId`
+  - `conversationId`
+  - `title`
+  - `storedIndex`
+  - `isKnown`
+  - `isVisibleInSidebar`
+  - `orderedCount`
+- `conversationId` is derived from the URL first.
+- `storedIndex` is 1-based when present, otherwise `null`.
+- This is a read-only metadata API; there is no public full-list API in this phase.
 
-### 6. Installation Check
-- Uses a strict hostname check (`installCheckHosts`) restricted to `userscript.moukaeritai.work` and `127.0.0.1`.
-- `installCheckSuffixes` (e.g., for GitHub Codespaces) has been removed for simplicity.
+### 7. UI Architecture
+- The script uses external HTML/CSS resources (`gemini-auto-select-next.html`, `gemini-auto-select-next.css`) plus the shared Gemini common panel shell.
+- The panel remains compact and exposes only `Auto`, `Next`, and `List`.
+- The dialog is read-only and rendered from a `<template>` in the script HTML resource.
 
-# UI Architecture
-The script uses an external HTML template and CSS for the auto-select-next panel to maintain a clean separation of concerns and adhere to the project's resource refactoring pattern.
-
-- **Styles**: Defined in `gemini-auto-select-next.css`. Loaded via `GM_addStyle`.
-- **Template**: Defined in `gemini-auto-select-next.html`. Injected using `window.geminiSetInnerHTML`.
-- **Placeholders**: Version and emoji are populated into the `.gus-version` element after injection.
-- **Draggable Panel**: Utilizes `window.geminiSetupDraggablePanel` from `gemini-common.js` for mobility and state persistence.
-
-# Security
-All HTML injection is performed through a Trusted Types policy (`geminiAutoSwitch`) to ensure compatibility with Gemini's security requirements.
-
-
+### 8. Security
+- All HTML injection must continue to go through Trusted Types via policy `geminiAutoSwitch`.
+- Build dialog rows with DOM APIs instead of string-concatenated HTML.
 
 ## `index.html` のメンテナンス要件
 
 各階層（ルートディレクトリ、ドメイン別ディレクトリ、個別のスクリプトディレクトリ）の `index.html` は、最新の状態に同期して保つ必要があります。
 
 1. **バージョン情報の同期**:
-   - スクリプトのバージョンが更新された場合は、関連するすべての `index.html` 内にハードコードされているバージョン表記も忘れずに更新してください。
-   - インストールボタンの構造は、動的なバージョン比較機能（Github上の最新バージョンとローカルのインストール済みバージョンの比較）のために、所定のDOM構造（`<div class="version-info">` 内に `.latest-version` と `.installed-version` を含む構造）を維持してください。
+   - バージョン番号は HTML にハードコードしないでください。
+   - インストールボタンは GitHub Raw URL を指し、`data-script-name="Gemini Auto-Select Next"` を維持してください。
+   - バージョン比較用の `.version-info`, `.latest-version`, `.installed-version` 構造を崩さないでください。
 
 2. **依存関係とイベントの明記**:
-   - 複数のユーザースクリプト間で連携する機能（CustomEventを用いたメッセージの送受信など）がある場合、スクリプトの紹介カードや詳細ページには、その依存関係（「送信先」「受信元」など）を明確に記載してください。
+   - `gemini-auto-select-next:request-next` と `gemini-auto-select-next:request-current-conversation` / `gemini-auto-select-next:current-conversation` の関係を説明ページに明記してください。
 
 3. **ドキュメントの網羅性**:
-   - 新しいスクリプト（システムローダーなどの裏側で動くスクリプトを含む）を追加した場合は、必ず該当するドメインの `index.html` およびルートの `index.html` の一覧にも漏れなく追加してください。
+   - Ordered cache / history dialog を紹介する変更を加えた場合は、`gemini.google.com/index.html` のカード説明も更新してください。

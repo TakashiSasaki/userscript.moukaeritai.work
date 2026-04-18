@@ -1,8 +1,24 @@
-<div class="left-controls">
-    <label class="auto-switch-label" title="Automatically select next conversation on delete">
+<div class="gasn-controls">
+    <label class="auto-switch-label" title="Automatically select the next conversation when the current one is deleted">
         <input type="checkbox" class="auto-switch-checkbox">
-        Auto
+        <span>Auto</span>
     </label>
-    <span class="version-badge gus-version" title="Gemini Auto-Select Next">⏭️ </span>
+    <button class="manual-next-btn" type="button" title="Explicitly skip to the next visible conversation">Next</button>
+    <button class="open-history-btn" type="button" title="List the ordered conversation cache">List</button>
 </div>
-<button class="manual-next-btn" title="Explicitly skip to the next conversation">⏭️ Next</button>
+
+<template id="gasn-history-dialog-template">
+    <div class="gasn-history-dialog-backdrop">
+        <div class="gasn-history-dialog" role="dialog" aria-modal="true" aria-labelledby="gasn-history-title">
+            <div class="gasn-history-header">
+                <div class="gasn-history-header-text">
+                    <h2 id="gasn-history-title">Saved Conversations</h2>
+                    <p class="gasn-history-summary">0 saved conversations</p>
+                    <p class="gasn-current-summary">Current conversation: unavailable</p>
+                </div>
+                <button class="gasn-history-close-btn" type="button" aria-label="Close history dialog">Close</button>
+            </div>
+            <div class="gasn-history-list" role="list"></div>
+        </div>
+    </div>
+</template>
