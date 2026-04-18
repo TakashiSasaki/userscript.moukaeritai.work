@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.64
-// @lastModified 2026-04-16
+// @version      0.4.65
+// @lastModified 2026-04-18
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -30,7 +30,7 @@
 
 (function () {
     'use strict';
-const report = () => {
+    const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
                 name: GM_info.script.name,
@@ -45,42 +45,40 @@ const report = () => {
     }
     const { emoji: gusEmoji } = registerGeminiUserscript(GM_info.script.name, GM_info.script.version);
 
-    const initUserScript = () => {
+    const policy = window.geminiCreateTrustedHTMLPolicy('geminiTurnCounter');
+    const PANEL_ID = 'gemini-turn-counter-ui';
+    const CHAT_PAGE_PATTERN = /^\/(?:app|gem)(?:\/|$)/;
+    // Removed initial URL check as it will be handled dynamically
 
-        const initUserScript = () => {
+    // Settings
+    const SELECTORS = {
+        userTurn: 'user-query',
+        modelTurn: 'model-response',
+        // User image selector based on attributes, excluding profile pictures (avatars)
+        userImage: 'img[data-test-id="uploaded-img"]',
+        // Text content selectors (broad approximation, refinement needed)
+        userText: '.query-text',
+        modelText: '.model-response-text, .response-content', // Needs verification on whole-dom
+        // Code block selector (based on samples/code-block.html)
+        codeBlock: 'code-block',
+        // Table selector (based on samples/table-block.html)
+        tableBlock: 'table-block', // or 'table' inside model response
+        // Artifact selector
+        artifact: 'immersive-entry-chip, entry-chip',
+        // Product integrations and Maps (Link Cards)
+        linkCard: '.list-item-container.link, yt-core-attributed-string, [data-test-id="link-preview"], a.link[href*="google.com/maps"]',
+        // Model generated images
+        modelImage: 'button.image-button img',
+        // Thinking process blocks
+        thinkingBlock: 'thinking-block, thought-chip'
+    };
 
-            const policy = window.geminiCreateTrustedHTMLPolicy('geminiTurnCounter');
-            // Removed initial URL check as it will be handled dynamically
-
-            // Settings
-            const SELECTORS = {
-                userTurn: 'user-query',
-                modelTurn: 'model-response',
-                // User image selector based on attributes, excluding profile pictures (avatars)
-                userImage: 'img[data-test-id="uploaded-img"]',
-                // Text content selectors (broad approximation, refinement needed)
-                userText: '.query-text',
-                modelText: '.model-response-text, .response-content', // Needs verification on whole-dom
-                // Code block selector (based on samples/code-block.html)
-                codeBlock: 'code-block',
-                // Table selector (based on samples/table-block.html)
-                tableBlock: 'table-block', // or 'table' inside model response
-                // Artifact selector
-                artifact: 'immersive-entry-chip, entry-chip',
-                // Product integrations and Maps (Link Cards)
-                linkCard: '.list-item-container.link, yt-core-attributed-string, [data-test-id="link-preview"], a.link[href*="google.com/maps"]',
-                // Model generated images
-                modelImage: 'button.image-button img',
-                // Thinking process blocks
-                thinkingBlock: 'thinking-block, thought-chip'
-            };
-
-            // --- State Management ---
-            let mainObserver = null;
-            let isInitialized = false;
-            let uiContainer = null; // Store reference to the main UI container
-            let updateStatsTimeout = null;
-            let isDeepScanning = false; // Flag to pause auto-updating during manual deep scan
+    // --- State Management ---
+    let mainObserver = null;
+    let isInitialized = false;
+    let uiContainer = null; // Store reference to the main UI container
+    let updateStatsTimeout = null;
+    let isDeepScanning = false; // Flag to pause auto-updating during manual deep scan
 
             // Trusted Types Policy Creation
 
@@ -280,7 +278,7 @@ const report = () => {
                     }
 
                     // Get UI container elements
-                    const container = document.getElementById('gemini-turn-counter-ui');
+                    const container = document.getElementById(PANEL_ID);
                     if (!container) return; // Should not happen if initialized correctly
 
                     const contentDiv = container.querySelector('.gtc-content');
@@ -634,58 +632,65 @@ const report = () => {
              * Main initialization for the script's features.
              */
             function initMainFunctionality() {
-                if (isInitialized) return;
+                const existingPanel = document.getElementById(PANEL_ID);
+
+                if (isInitialized && uiContainer && uiContainer === existingPanel) {
+                    return;
+                }
                 console.log('[Gemini Turn Counter] Initializing...');
 
                 addStyles();
 
+                if (existingPanel) {
+                    uiContainer = existingPanel;
+                } else {
+                    // Create inner content wrapper
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'gtc-content';
+                    contentDiv.textContent = 'Loading...';
 
-                // Create inner content wrapper
-                const contentDiv = document.createElement('div');
-                contentDiv.className = 'gtc-content';
-                contentDiv.textContent = 'Loading...';
+                    const commonHTMLStr = GM_getResourceText('gusCommonHTML');
+                    const panelShell = window.geminiCreateCommonPanel({
+                        htmlString: commonHTMLStr,
+                        policy: policy,
+                        icon: gusEmoji,
+                        name: GM_info.script.name,
+                        version: GM_info.script.version,
+                        contentElement: contentDiv
+                    });
 
-                // Assemble panel shell
-                const commonHTMLStr = GM_getResourceText('gusCommonHTML');
-                // Assemble panel shell
-                const panelShell = window.geminiCreateCommonPanel({
-                    htmlString: commonHTMLStr,
-                    policy: policy,
-                    icon: gusEmoji,
-                    name: GM_info.script.name,
-                    version: GM_info.script.version,
-                    contentElement: contentDiv
-                });
+                    panelShell.id = PANEL_ID;
+                    document.body.appendChild(panelShell);
+                    uiContainer = panelShell;
 
-                panelShell.id = 'gemini-turn-counter-ui';
-                document.body.appendChild(panelShell);
-                uiContainer = panelShell; // Store reference
+                    const dragHandle = panelShell.querySelector('.gus-panel-header');
+                    const inactiveHandle = panelShell.querySelector('.gus-inactive-content');
+                    if (inactiveHandle) {
+                        window.geminiSetupDraggablePanel(panelShell, inactiveHandle, 'gtc-pos-ui', { right: '20px', top: '160px', left: 'auto' });
+                    }
+                    if (dragHandle) {
+                        window.geminiSetupDraggablePanel(panelShell, dragHandle, 'gtc-pos-ui', { right: '20px', top: '160px', left: 'auto' });
+                    }
 
-                // UI Events
-                const dragHandle = panelShell.querySelector('.gus-panel-header');
-                const inactiveHandle = panelShell.querySelector('.gus-inactive-content');
-                if (inactiveHandle) {
-                    window.geminiSetupDraggablePanel(panelShell, inactiveHandle, 'gtc-pos-ui', { right: '20px', top: '160px', left: 'auto' });
-                }
-                if (dragHandle) {
-                    window.geminiSetupDraggablePanel(panelShell, dragHandle, 'gtc-pos-ui', { right: '20px', top: '160px', left: 'auto' });
-                }
+                    // Set up minimizable panel using double-click on title
+                    window.geminiSetupMinimizablePanel(panelShell, 'gtc-minimized', dragHandle, true);
 
-                // Set up minimizable panel using double-click on title
-                window.geminiSetupMinimizablePanel(panelShell, 'gtc-minimized', dragHandle, true);
-
-                // Restore state (position)
-                const savedX = localStorage.getItem('gtc-pos-x');
-                const savedY = localStorage.getItem('gtc-pos-y');
-                if (savedX && savedY) {
-                    panelShell.style.right = 'auto';
-                    panelShell.style.left = savedX;
-                    panelShell.style.top = savedY;
+                    // Restore state (position)
+                    const savedX = localStorage.getItem('gtc-pos-x');
+                    const savedY = localStorage.getItem('gtc-pos-y');
+                    if (savedX && savedY) {
+                        panelShell.style.right = 'auto';
+                        panelShell.style.left = savedX;
+                        panelShell.style.top = savedY;
+                    }
                 }
 
                 // Initial run
                 setTimeout(updateStats, 500); // Wait a bit for initial load
 
+                if (mainObserver) {
+                    mainObserver.disconnect();
+                }
                 mainObserver = new MutationObserver((_mutations) => {
                     if (updateStatsTimeout) {
                         clearTimeout(updateStatsTimeout);
@@ -701,7 +706,8 @@ const report = () => {
              * Cleans up all injected elements, observers, and listeners.
              */
             function cleanup() {
-                if (!isInitialized) return;
+                const existingPanel = uiContainer || document.getElementById(PANEL_ID);
+                if (!isInitialized && !existingPanel && !mainObserver && !updateStatsTimeout) return;
                 console.log('[Gemini Turn Counter] Cleaning up...');
 
                 if (mainObserver) {
@@ -712,13 +718,11 @@ const report = () => {
                     clearTimeout(updateStatsTimeout);
                     updateStatsTimeout = null;
                 }
-                if (uiContainer) {
-                    const contentEl = uiContainer.querySelector('.gtc-content');
-                    if (contentEl) {
-                        contentEl.textContent = 'v' + GM_info.script.version;
-                    }
+                if (existingPanel) {
+                    existingPanel.remove();
                 }
-
+                uiContainer = null;
+                isDeepScanning = false;
                 isInitialized = false;
             }
 
@@ -726,7 +730,7 @@ const report = () => {
              * Checks the URL and runs init or cleanup accordingly.
              */
             function checkUrlAndManageScriptState() {
-                const isChatPage = /^\/(app|gem)\//.test(location.pathname);
+                const isChatPage = CHAT_PAGE_PATTERN.test(location.pathname);
 
                 if (isChatPage) {
                     initMainFunctionality();
@@ -762,25 +766,9 @@ const report = () => {
                 console.log('[Gemini Turn Counter] Using setInterval fallback for SPA routing.');
             }
 
-            // Initial check on load
-            if (document.body) {
-                checkUrlAndManageScriptState();
-            } else {
-                window.addEventListener('DOMContentLoaded', checkUrlAndManageScriptState);
-            }
-
-        };
-
-        if (document.readyState === 'complete') {
-            initUserScript();
-        } else {
-            window.addEventListener('load', initUserScript);
-        }
-    };
-
     if (document.readyState === 'complete') {
-        initUserScript();
+        checkUrlAndManageScriptState();
     } else {
-        window.addEventListener('load', initUserScript);
+        window.addEventListener('load', checkUrlAndManageScriptState, { once: true });
     }
 })();

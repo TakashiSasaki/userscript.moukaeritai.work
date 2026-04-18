@@ -35,6 +35,7 @@ Since Google Gemini is a complex SPA with frequently changing CSS classes, AI ag
 
 ### SPA Navigation & Routing
 Gemini is a complex SPA. Routing is managed using the modern `window.navigation` API with a lightweight `setInterval` fallback for older browsers. This ensures the script only initializes on `/app/` or `/gem/` chat pages and cleans up correctly when navigating away.
+When SPA routing re-enters a chat page, the script must reuse an existing `#gemini-turn-counter-ui` panel or remove stale instances before creating a new one, so the panel count always stays at one.
 
 ### Reactivity & Performance
 - **MutationObserver**: Used to detect real-time message generation and DOM updates. **Must** include a debounce mechanism (e.g., 300ms) to prevent performance issues during large DOM insertions.
