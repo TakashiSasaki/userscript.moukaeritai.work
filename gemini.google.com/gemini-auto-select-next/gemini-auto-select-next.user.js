@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.67
+// @version      0.2.68
 // @lastModified 2026-04-18
 // @description  Automatically select the next conversation when the current one is deleted or removed
 // @author       Takashi Sasaki

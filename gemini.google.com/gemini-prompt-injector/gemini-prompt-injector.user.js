@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.28
+// @version      0.2.29
 // @description  Injects a prompt into Gemini via an external custom event.
 // @lastModified 2026-04-18
 // @author       Takashi Sasaki
