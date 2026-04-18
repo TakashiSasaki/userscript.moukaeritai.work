@@ -34,6 +34,18 @@ Learnings from implementing features like Auto-Scroll and Conversation Managemen
         -   **スナックバー**: 画面左下に通知ラベルが表示されます。構造は `.mat-mdc-snack-bar-container` 内の `simple-snack-bar` です。
         -   **通知テキスト例**: 「(ノートブック名) に追加しました」。
         -   **共通機能との連携**: `gemini-common.js` の `geminiEnsureSnackbarObserver()` を使用している場合、`gemini-snackbar:shown` イベントでこの追加完了通知を捕捉可能です。
+    -   **特定のノートブック（例：「ワンショット要約」）の取得手順**:
+        -   **手順**: 1. 会話メニューを開く -> 2. 「ノートブックに追加」をクリック -> 3. ダイアログ内の `mat-list-option` たちをループし、内部テキストを照合。
+        -   **JS実装例**:
+          ```javascript
+          const targetName = 'ワンショット要約';
+          const options = Array.from(document.querySelectorAll('mat-list-option'));
+          const target = options.find(opt => {
+              const span = opt.querySelector('.mdc-list-item__primary-text div > span:last-child');
+              return span && span.textContent.trim() === targetName;
+          });
+          if (target) target.click();
+          ```
 
 ## `gemini-common.js` が提供する共通機能
 
