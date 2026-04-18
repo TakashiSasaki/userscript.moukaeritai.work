@@ -6,6 +6,11 @@
     /* max-height is handled by shell */
 }
 
+#gemini-one-turn-panel .gus-panel-header {
+    justify-content: flex-start;
+    gap: 6px;
+}
+
 .ge2d-panel-content {
     display: flex;
     flex-direction: column;
