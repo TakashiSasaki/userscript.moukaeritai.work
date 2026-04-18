@@ -13,6 +13,7 @@ gemini.google.com ドメインに特有の指示は [AGENTS.md](/gemini.google.c
   - User messages are identified by the `user-query` tag.
 - **Performance**: The main DOM scanning function (`processNodes`) is debounced by 500ms to prevent high CPU usage during AI response streaming.
 - **Inter-script Communication**: Dispatches a `gemini-one-click-delete:request-delete` CustomEvent to trigger conversation deletion, and can dispatch `gemini-auto-select-next:request-next` when a 1-turn conversation does not satisfy the auto-export URL match rule.
+- **Shared Snackbar Safety Stop**: Subscribes to the common `gemini-snackbar:shown` event. Any snackbar classified as non-success causes the script to stop auto export and turn off both `Auto Delete` and `Skip Non-Matching Conversations` for safety.
 
 ### Metadata & Context
 - **@noframes**: This script MUST include the `@noframes` directive. Without it, the script runs in both the top-level window and any internal iframes (e.g., help widgets) on `gemini.google.com`, causing duplicate initialization and multiple instances appearing in Tampermonkey.

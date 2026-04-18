@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.4.100
+// @version      0.4.101
 // @description  Adds a 1-click button to export Gemini responses and canvases to Google Docs.
-// @lastModified 2026-04-17
+// @lastModified 2026-04-18
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
@@ -282,6 +282,8 @@
         let autoDecisionConversationId = null;
         let autoDecisionDeadlineTimerId = null;
         let autoDecisionPendingConversationId = null;
+        let snackbarFailureAbortRequested = false;
+        let snackbarListener = null;
         const AUTO_SKIP_LOG_PREFIX = '[Gemini 1-Turn Auto][Skip]';
         const AUTO_SKIP_DECISION_DELAY_MS = 2000;
 
@@ -318,11 +320,49 @@
             GM_setValue(AUTO_URL_TOGGLE_KEY, false);
             if (autoExportTimerId) {
                 clearInterval(autoExportTimerId);
+                clearTimeout(autoExportTimerId);
                 autoExportTimerId = null;
             }
             resetAutoDecisionState();
             refreshAutoExportToggleButton();
             console.log('[Gemini 1-Turn Auto] Auto-export stopped by user.');
+        }
+
+        function disableSafetySensitiveOptions() {
+            GM_setValue(AUTO_URL_TOGGLE_KEY, false);
+            GM_setValue(AUTO_DELETE_TOGGLE_KEY, false);
+            GM_setValue(AUTO_SKIP_NONMATCH_TOGGLE_KEY, false);
+
+            const deleteCheckbox = document.getElementById('gemini-auto-delete-cb');
+            if (deleteCheckbox) {
+                deleteCheckbox.checked = false;
+            }
+            const skipCheckbox = document.getElementById('gemini-auto-skip-nonmatch-cb');
+            if (skipCheckbox) {
+                skipCheckbox.checked = false;
+            }
+            const execBtn = document.getElementById('gemini-btn-one-turn-exec');
+            if (execBtn) {
+                execBtn.style.backgroundColor = '';
+                execBtn.style.color = '';
+                setExecBtnState(execBtn, 'off', getAutoExportToggleLabel());
+            }
+        }
+
+        function handleSnackbarFailure(detail) {
+            snackbarFailureAbortRequested = true;
+            if (autoExportTimerId) {
+                clearInterval(autoExportTimerId);
+                clearTimeout(autoExportTimerId);
+                autoExportTimerId = null;
+            }
+            resetAutoDecisionState();
+            disableSafetySensitiveOptions();
+            console.warn('[Gemini 1-Turn Export] Snackbar failure detected. Stopping automation for safety.', {
+                kind: detail?.kind || 'unknown',
+                matchedRule: detail?.matchedRule || null,
+                text: detail?.text || ''
+            });
         }
 
         function handleAutoExportToggleClick() {
@@ -873,14 +913,27 @@
 
         async function performDeleteCountdown(execBtn, isAutoRun, delay = 5) {
             for (let i = delay; i > 0; i--) {
+                if (snackbarFailureAbortRequested) {
+                    if (execBtn) execBtn.textContent = 'Delete skipped';
+                    return false;
+                }
                 if (execBtn) {
                     execBtn.textContent = isAutoRun ? `Auto Delete in ${i}s...` : `Deleting in ${i}s...`;
                     execBtn.style.backgroundColor = '#e53935'; // Red deleting warning
                     execBtn.style.color = 'white';
                 }
                 await window.geminiSleep(1000);
+                if (snackbarFailureAbortRequested) {
+                    if (execBtn) execBtn.textContent = 'Delete skipped';
+                    return false;
+                }
+            }
+            if (snackbarFailureAbortRequested) {
+                if (execBtn) execBtn.textContent = 'Delete skipped';
+                return false;
             }
             if (execBtn) execBtn.textContent = 'Deleting...';
+            return true;
         }
 
         function requestConversationDeletion() {
@@ -892,6 +945,7 @@
          * Reusable async extraction of the full execution flow (Clicking, Countdown, Deleting)
          */
         async function runExportProcess(isAutoRun = false) {
+            snackbarFailureAbortRequested = false;
             const moreBtn = document.querySelector(SELECTORS.moreMenuButton);
             if (!moreBtn) {
                 alert('Could not find export menu.');
@@ -909,8 +963,28 @@
                 // 1. Export
                 await handleTurnExport(moreBtn);
 
+                if (snackbarFailureAbortRequested) {
+                    console.warn('[Gemini 1-Turn Export] Export flow stopped after snackbar failure was detected.');
+                    if (execBtn) execBtn.textContent = 'Stopped';
+                    await window.geminiSleep(1500);
+                    return;
+                }
+
                 if (willDelete) {
-                    await performDeleteCountdown(execBtn, isAutoRun);
+                    const countdownCompleted = await performDeleteCountdown(execBtn, isAutoRun);
+                    if (!countdownCompleted || snackbarFailureAbortRequested) {
+                        console.warn('[Gemini 1-Turn Export] Auto-delete cancelled because snackbar failure was detected.');
+                        if (execBtn) execBtn.textContent = 'Stopped';
+                        await window.geminiSleep(1500);
+                        return;
+                    }
+
+                    if (snackbarFailureAbortRequested) {
+                        console.warn('[Gemini 1-Turn Export] Delete request skipped because snackbar failure was detected.');
+                        if (execBtn) execBtn.textContent = 'Stopped';
+                        await window.geminiSleep(1500);
+                        return;
+                    }
                     requestConversationDeletion();
                 } else {
                     console.log('[Gemini 1-Turn Export] Auto-delete skipped based on setting.');
@@ -1039,6 +1113,17 @@
             console.log('[Gemini 1-Click Export to Docs] Initializing...');
 
             addStyles();
+            if (window.geminiEnsureSnackbarObserver) {
+                window.geminiEnsureSnackbarObserver();
+            }
+            if (!snackbarListener) {
+                snackbarListener = (event) => {
+                    const detail = event.detail || {};
+                    if (detail.kind === 'success') return;
+                    handleSnackbarFailure(detail);
+                };
+                window.addEventListener('gemini-snackbar:shown', snackbarListener);
+            }
 
             // Initial run - robust polling to wait for Gemini's asynchronous rendering
             let attempts = 0;
@@ -1073,6 +1158,10 @@
                 mainObserver.disconnect();
                 mainObserver = null;
             }
+            if (snackbarListener) {
+                window.removeEventListener('gemini-snackbar:shown', snackbarListener);
+                snackbarListener = null;
+            }
             const overlay = document.getElementById('gemini-export-overlay');
             if (overlay) overlay.remove();
 
@@ -1083,8 +1172,10 @@
             resetAutoDecisionState();
             if (autoExportTimerId) {
                 clearInterval(autoExportTimerId);
+                clearTimeout(autoExportTimerId);
                 autoExportTimerId = null;
             }
+            snackbarFailureAbortRequested = false;
 
             isInitialized = false;
         }

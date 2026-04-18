@@ -143,6 +143,141 @@
     };
 
     /**
+     * Ensures that a single shared snackbar observer is active for the page.
+     * The observer dispatches `gemini-snackbar:shown` on `window` whenever a
+     * visible snackbar with non-empty text is detected.
+     *
+     * @returns {{ observer: MutationObserver, processed: WeakSet<Element> }}
+     */
+    window.geminiEnsureSnackbarObserver = function () {
+        if (window.__geminiSnackbarObserverState) {
+            return window.__geminiSnackbarObserverState;
+        }
+
+        const SNACKBAR_SELECTOR = 'mat-snack-bar-container, .mat-mdc-snack-bar-container';
+        const processed = new WeakSet();
+
+        const normalizeText = (text) => String(text || '').replace(/\s+/g, ' ').trim();
+
+        const isVisible = (el) => {
+            if (!el || !el.isConnected) return false;
+            const style = window.getComputedStyle(el);
+            if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+                return false;
+            }
+            const rect = el.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+        };
+
+        const collectSnackbarDetail = (container) => {
+            const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+            const textNodes = [];
+            let currentNode = walker.nextNode();
+            while (currentNode) {
+                const text = normalizeText(currentNode.nodeValue);
+                if (text) {
+                    textNodes.push(text);
+                }
+                currentNode = walker.nextNode();
+            }
+
+            const actionLabels = Array.from(container.querySelectorAll('button'))
+                .map((button) => normalizeText(button.textContent))
+                .filter(Boolean);
+
+            const text = normalizeText(textNodes.join(' '));
+            return {
+                text,
+                textNodes,
+                actionLabels,
+                containerId: container.id || null
+            };
+        };
+
+        const classifySnackbar = (detail) => {
+            const haystacks = [detail.text, ...(detail.textNodes || [])].map((text) => String(text || ''));
+            const joinedLower = haystacks.join(' ').toLowerCase();
+            const errorCodePattern = /\(\d+\)/;
+            if (haystacks.some((text) => errorCodePattern.test(text))) {
+                return { kind: 'error', matchedRule: 'parenthesized-error-code' };
+            }
+
+            const errorTerms = [
+                'error', 'failed', 'couldn’t', 'couldn\'t', 'unable', 'timeout', 'retry', 'reload this page',
+                '失敗', 'エラー', 'できません', 'ませんでした', '再読み込み', '読み込めません'
+            ];
+            const successTerms = [
+                'created', 'creating', 'saved', 'copied', 'deleted', 'opened',
+                '作成しました', '作成中', '保存しました', 'コピーしました', '削除しました', '開きました'
+            ];
+
+            const matchedError = errorTerms.find((term) => joinedLower.includes(term.toLowerCase()));
+            if (matchedError) {
+                return { kind: 'error', matchedRule: `error-term:${matchedError}` };
+            }
+
+            const matchedSuccess = successTerms.find((term) => joinedLower.includes(term.toLowerCase()));
+            if (matchedSuccess) {
+                return { kind: 'success', matchedRule: `success-term:${matchedSuccess}` };
+            }
+
+            return { kind: 'unknown', matchedRule: null };
+        };
+
+        const processContainer = (container) => {
+            if (!container || processed.has(container) || !isVisible(container)) return;
+
+            const detail = collectSnackbarDetail(container);
+            if (!detail.text && !(detail.textNodes && detail.textNodes.length)) return;
+
+            processed.add(container);
+            const classification = classifySnackbar(detail);
+            window.dispatchEvent(new CustomEvent('gemini-snackbar:shown', {
+                detail: {
+                    ...detail,
+                    kind: classification.kind,
+                    matchedRule: classification.matchedRule,
+                    observedAt: Date.now()
+                }
+            }));
+        };
+
+        const scanSnackbars = () => {
+            document.querySelectorAll(SNACKBAR_SELECTOR).forEach((container) => {
+                processContainer(container);
+            });
+        };
+
+        let scanScheduled = false;
+        const scheduleScan = () => {
+            if (scanScheduled) return;
+            scanScheduled = true;
+            setTimeout(() => {
+                scanScheduled = false;
+                scanSnackbars();
+            }, 0);
+        };
+
+        const observer = new MutationObserver(() => {
+            scheduleScan();
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        const state = {
+            observer,
+            processed,
+            scanSnackbars
+        };
+        window.__geminiSnackbarObserverState = state;
+        scanSnackbars();
+        return state;
+    };
+
+    /**
      * Makes a panel element draggable and persists its position using localStorage.
      * Eliminates the need for GM_setValue/GM_getValue dependencies for panel positioning.
      *
