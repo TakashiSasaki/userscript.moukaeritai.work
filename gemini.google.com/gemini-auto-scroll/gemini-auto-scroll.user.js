@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.65
-// @lastModified 2026-04-16
+// @version      0.2.66
+// @lastModified 2026-04-18
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -58,7 +58,6 @@
             CONVERSATION_ITEM: 'a.conversation, a[data-test-id="conversation"]',
             SPINNER: 'mat-progress-spinner[data-test-id="loading-history-spinner"]',
             SCROLL_CONTAINER: 'nav infinite-scroller, infinite-scroller',
-            ERROR_SNACKBAR: 'mat-snack-bar-container',
             SIDEBAR_TOGGLE: 'button[data-test-id="side-nav-menu-button"]',
             CHAT_APP: 'chat-app'
         };
@@ -76,6 +75,7 @@
         let isInitialized = false;
         let uiObserver = null;
         let mainInterval = null;
+        let snackbarListener = null;
 
         // --- State Management ---
 
@@ -319,15 +319,25 @@
                 (style.overflowY === 'auto' || style.overflowY === 'scroll');
         }
 
-        function checkErrorState() {
-            const snackbars = document.querySelectorAll(SELECTORS.ERROR_SNACKBAR);
-            for (const sb of snackbars) {
-                if (sb.textContent.includes("Couldn’t load recent chats") ||
-                    sb.textContent.includes("Try reloading this page")) {
-                    return true;
-                }
+        function isFatalAutoScrollSnackbar(detail) {
+            const text = String(detail?.text || '');
+            return text.includes('Couldn’t load recent chats') || text.includes('Try reloading this page');
+        }
+
+        function haltAutoScrollForSnackbar() {
+            if (!isAutoScrollEnabled() && !scrollInterval && !isProcessing) return;
+
+            console.warn('[GeminiAutoScroll] Critical error detected ("Couldn\'t load"). Stopping auto-scroll.');
+            GM_setValue(CONSTANTS.STORAGE_KEY, false);
+
+            if (scrollInterval) {
+                clearInterval(scrollInterval);
+                scrollInterval = null;
             }
-            return false;
+
+            isProcessing = false;
+            updatePanelUI();
+            alert('Gemini Auto-Scroll halted: "Couldn’t load recent chats" error detected. Please reload the page.');
         }
 
         // --- Main Logic ---
@@ -355,14 +365,6 @@
                         scrollInterval = null;
                         isProcessing = false;
                         updatePanelUI();
-                        return;
-                    }
-
-                    if (checkErrorState()) {
-                        console.warn('[GeminiAutoScroll] Critical error detected ("Couldn\'t load"). Stopping auto-scroll.');
-                        toggleAutoScroll();
-                        clearInterval(scrollInterval);
-                        alert('Gemini Auto-Scroll halted: "Couldn’t load recent chats" error detected. Please reload the page.');
                         return;
                     }
 
@@ -410,6 +412,19 @@
             isInitialized = true;
             console.debug('[GeminiAutoScroll] Initializing (SPA navigated to /app).');
 
+            if (window.geminiEnsureSnackbarObserver) {
+                window.geminiEnsureSnackbarObserver();
+            }
+            if (!snackbarListener) {
+                snackbarListener = (event) => {
+                    const detail = event.detail || {};
+                    if (isFatalAutoScrollSnackbar(detail)) {
+                        haltAutoScrollForSnackbar();
+                    }
+                };
+                window.addEventListener('gemini-snackbar:shown', snackbarListener);
+            }
+
             uiObserver.observe(document.body, { childList: true, subtree: true });
 
             mainInterval = setInterval(() => {
@@ -445,6 +460,11 @@
 
             if (uiObserver) {
                 uiObserver.disconnect();
+            }
+
+            if (snackbarListener) {
+                window.removeEventListener('gemini-snackbar:shown', snackbarListener);
+                snackbarListener = null;
             }
 
             const panel = document.getElementById('gemini-auto-scroll-panel');

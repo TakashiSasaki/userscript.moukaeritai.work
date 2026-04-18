@@ -17,7 +17,7 @@ Please refer to the root `AGENTS.md` for all operational procedures, including G
 ### 2. Auto-Scroll Logic & Robustness
 - **Sidebar Visibility**: The script strictly checks `isSidebarVisible()` (checking `visibility` and `offsetWidth > 100`) before attempting to scroll. This prevents unnecessary background processing when the sidebar is collapsed.
 - **Scroll Throttling**: Resets `scrollTop` to a high value every 500ms when enabled.
-- **Critical Errors**: Monitors `mat-snack-bar-container` for loading errors. If found, it disables auto-scroll and alerts the user.
+- **Critical Errors**: Subscribes to the shared `gemini-snackbar:shown` event from `gemini-common.js`, and disables auto-scroll only when the snackbar text indicates the known recent-chats loading failure.
 
 ### 3. UI Architecture
 The script uses an external HTML template and CSS for the auto-scroll panel to maintain a clean separation of concerns and adhere to the project's resource refactoring pattern.
