@@ -119,6 +119,37 @@
     color: #5f6368;
 }
 
+.gasn-history-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.gasn-history-download-btn {
+    border: none;
+    background: rgba(26, 115, 232, 0.12);
+    color: #174ea6;
+    border-radius: 999px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.gasn-history-download-btn:hover:not(:disabled) {
+    background: rgba(26, 115, 232, 0.22);
+}
+
+.gasn-history-download-btn:active {
+    transform: scale(0.97);
+}
+
+.gasn-history-download-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
 .gasn-history-close-btn {
     border: none;
     background: rgba(60, 64, 67, 0.08);
@@ -230,6 +261,15 @@
     .gasn-history-close-btn {
         background: rgba(241, 243, 244, 0.14);
         color: #f1f3f4;
+    }
+
+    .gasn-history-download-btn {
+        background: rgba(138, 180, 248, 0.14);
+        color: #8ab4f8;
+    }
+
+    .gasn-history-download-btn:hover:not(:disabled) {
+        background: rgba(138, 180, 248, 0.24);
     }
 
     .gasn-history-close-btn:hover {

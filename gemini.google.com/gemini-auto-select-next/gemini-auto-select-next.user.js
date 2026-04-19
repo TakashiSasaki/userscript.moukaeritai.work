@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.70
+// @version      0.2.71
 // @lastModified 2026-04-18
 // @description  Automatically select the next conversation on delete while caching ordered sidebar history
 // @author       Takashi Sasaki
@@ -21,6 +21,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.2.71 Add JSON download button to the conversation history dialog.
 // @history       0.2.70 Simplify attachObserver callback: drop per-mutation loop to reduce scroll-time CPU usage.
 // @history       0.2.69 Ordered conversation cache, read-only history dialog, and current-conversation API.
 // @history       0.2.67 共通ライブラリの更新に伴い、クリック処理を geminiClickElement に統一。
@@ -678,14 +679,19 @@
             const list = historyDialog.querySelector('.gasn-history-list');
             const summary = historyDialog.querySelector('.gasn-history-summary');
             const detail = historyDialog.querySelector('.gasn-current-summary');
+            const downloadButton = historyDialog.querySelector('.gasn-history-download-btn');
             if (!list || !summary || !detail) return;
+
+            const savedCount = conversationState.order.length;
+            summary.textContent = `${savedCount} saved conversations`;
+            if (downloadButton) {
+                downloadButton.disabled = savedCount === 0;
+            }
 
             const currentUrlId = getConversationIdFromUrl();
             const currentVisibleSet = new Set(currentVisibleSnapshot.map(row => row.id));
             const currentRecord = currentUrlId ? conversationState.itemsById[currentUrlId] : null;
             const currentStoredIndex = currentUrlId ? conversationState.order.indexOf(currentUrlId) : -1;
-
-            summary.textContent = `${conversationState.order.length} saved conversations`;
 
             if (!currentUrlId) {
                 detail.textContent = 'Current conversation: unavailable on this route';
@@ -734,6 +740,26 @@
             });
         }
 
+        function downloadConversationState() {
+            const data = {
+                exportedAt: new Date().toISOString(),
+                scriptVersion: GM_info.script.version,
+                totalCount: conversationState.order.length,
+                order: conversationState.order,
+                itemsById: conversationState.itemsById
+            };
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `gemini-conversations-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
         function openHistoryDialog() {
             if (historyDialog && historyDialog.isConnected) {
                 renderHistoryDialog();
@@ -762,6 +788,13 @@
             closeButton.addEventListener('click', () => {
                 closeHistoryDialog();
             });
+
+            const downloadButton = fragment.querySelector('.gasn-history-download-btn');
+            if (downloadButton) {
+                downloadButton.addEventListener('click', () => {
+                    downloadConversationState();
+                });
+            }
 
             dialog.addEventListener('click', (event) => {
                 event.stopPropagation();
