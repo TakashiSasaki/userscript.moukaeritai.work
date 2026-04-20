@@ -66,7 +66,7 @@
             <p>このスクリプトは、以下のスクリプトにイベントを送信し、機能してもらうことを期待しています。</p>
             <ul>
                 <li><a href="../gemini-artifact-exporter-worker/index.html">Artifact Exporter Worker</a> (<code>gemini-artifact-exporter-worker:request</code>, <code>gemini-artifact-exporter-worker:cancel</code>)</li>
-                <li><a href="../gemini-history-loader/index.html">History Loader</a> (<code>gemini-history-loader:request</code>)</li>
+                <li><strong>gemini-common.js</strong> (<code>window.geminiLoadFullChatHistory()</code> - built into common library)</li>
                 <li><a href="../gemini-one-click-delete/index.html">One Click Delete</a> (<code>gemini-one-click-delete:request-delete</code>)</li>
             </ul>
 
@@ -74,14 +74,14 @@
             <p>このスクリプトは、以下のスクリプトからイベントを受信して動作します。</p>
             <ul>
                 <li><a href="../gemini-artifact-exporter-worker/index.html">Artifact Exporter Worker</a> (<code>gemini-artifact-exporter-worker:result</code>)</li>
-                <li><a href="../gemini-history-loader/index.html">History Loader</a> (<code>gemini-history-loader:complete</code>)</li>
+                <li><strong>gemini-common.js</strong> (direct async function call, no event needed)</li>
             </ul>
 
             <h2>使い方</h2>
             <p><strong>注意:</strong> このスクリプトを機能させるには、以下の2つの内部用スクリプトも同時にインストールしておく必要があります。</p>
             <ul>
                 <li><a href="../gemini-artifact-exporter-worker/index.html">gemini-artifact-exporter-worker</a> (実際のエクスポート処理を担当するワーカー)</li>
-                <li><a href="../gemini-history-loader/index.html">gemini-history-loader</a> (履歴ロード処理を担当するユーティリティ)</li>
+                <li><strong>gemini-common.js</strong> (履歴ロード処理は共通ライブラリに統合済み。別途インストール不要)</li>
             </ul>
             <ol>
                 <li><strong>インストール</strong>: 上記の依存スクリプトと共に、Tampermonkey 等のマネージャにスクリプトをインストールします。</li>

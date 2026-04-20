@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.49
+// @version      0.4.50
 // @lastModified 2026-04-18
-// @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Also uses gemini-history-loader.
+// @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Chat history loading is provided by gemini-common.js.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://gemini.google.com/*
@@ -21,6 +21,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @noframes
+// @history       0.4.50 Replaced gemini-history-loader CustomEvent dependency with direct window.geminiLoadFullChatHistory() call from gemini-common.js.
 // @history       0.4.48 共通ライブラリの更新に伴い、クリック処理を geminiClickElement に統一。
 // @history       0.4.46 パネルの幅を固定 (320px) から可変 (fit-content) に変更し、ボタンがはみ出して見えなくなる問題を修正。
 // @history       0.4.45 「Rescan Chat」ボタンの視認性（コントラスト）を向上させるため、セカンダリボタンのスタイルを修正。
@@ -383,31 +384,9 @@
                 setScanningUIState(true, 'deep');
                 artifactMap.clear();
 
-                log('Requesting gemini-history-loader to load all history...');
-                const reqId = `load_${Date.now()}`;
-
-                const loadPromise = new Promise((resolve) => {
-                    const timeoutId = setTimeout(() => {
-                        log('Warning: Timeout waiting for gemini-history-loader:complete. Proceeding anyway.');
-                        document.removeEventListener('gemini-history-loader:complete', handler);
-                        resolve({ status: 'timeout' });
-                    }, 120000); // 2-minute hard timeout for loading history
-
-                    const handler = (e) => {
-                        if (e.detail && e.detail.reqId === reqId) {
-                            clearTimeout(timeoutId);
-                            document.removeEventListener('gemini-history-loader:complete', handler);
-                            resolve(e.detail);
-                        }
-                    };
-                    document.addEventListener('gemini-history-loader:complete', handler);
-                });
-
-                window.geminiCheckTargetUserscript('Gemini History Loader').then((installed) => { window.geminiShowTargetScriptStatus('gae-script-status-container', 'Gemini History Loader', installed); document.dispatchEvent(new CustomEvent('gemini-history-loader:request', { detail: { reqId: reqId } })); });
-
-                // Wait for the loader script to scroll to the top and load the history into the DOM
-                const result = await loadPromise;
-                log(`History loader finished with status: ${result.status}`);
+                log('Loading full chat history via common library...');
+                const result = await window.geminiLoadFullChatHistory();
+                log(`History load finished: ${result.success ? 'success' : 'failed'} (${result.reason}, ${result.steps} steps)`);
 
                 // The history is now fully loaded in the DOM. We don't need to descend manually;
                 // we can simply query all the artifacts currently rendered in the infinite-scroller.

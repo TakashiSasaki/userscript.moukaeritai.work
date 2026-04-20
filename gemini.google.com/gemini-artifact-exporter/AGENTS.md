@@ -131,7 +131,7 @@ Geminiのアップデートにより、DOM内に <infinite-scroller> 要素が2�
 
 ### 9. 依存スクリプトの状態監視インジケーター (v0.4.7)
 本ユーザースクリプトは単体では動作せず、以下の3つのスクリプトに処理を強く依存している。
-1. **Gemini History Loader** (`gemini-history-loader:request`)
+1. **gemini-common.js** (`window.geminiLoadFullChatHistory()` - integrated into common library, no separate install needed)
 2. **Gemini Artifact Exporter Worker** (`gemini-artifact-exporter-worker:request` / `cancel`)
 3. **Gemini One-Click Delete Conversation** (`gemini-one-click-delete:request-delete`)
 

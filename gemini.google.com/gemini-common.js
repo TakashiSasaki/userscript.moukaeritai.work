@@ -727,4 +727,164 @@
         return shell;
     };
 
+    // ─── Chat History Loading (migrated from gemini-history-loader) ─────────
+
+    /**
+     * Locates the main scrollable element for the chat conversation area.
+     * Tries several selectors and falls back to heuristic detection.
+     * @returns {HTMLElement} The scrollable element, or document.documentElement as last resort.
+     */
+    window.geminiGetChatScroller = function () {
+        let scroller = document.querySelector('infinite-scroller.chat-history') ||
+            document.querySelector('chat-window-content infinite-scroller');
+
+        if (!scroller) {
+            const scrollers = Array.from(document.querySelectorAll('infinite-scroller'));
+            scroller = scrollers.find(el => el.clientWidth > 300);
+        }
+
+        if (!scroller) {
+            for (const el of document.querySelectorAll('*')) {
+                if (el.scrollHeight > el.clientHeight + 100 && el.clientHeight > 200 && el.clientWidth > 300) {
+                    const ov = getComputedStyle(el).overflowY;
+                    if ((ov === 'auto' || ov === 'scroll') && el.scrollHeight > 2000) {
+                        if (!scroller || el.scrollHeight > scroller.scrollHeight) scroller = el;
+                    }
+                }
+            }
+        }
+        return scroller || document.documentElement;
+    };
+
+    /**
+     * Programmatically scrolls the chat to the very top, forcing Gemini to load
+     * the entire conversation history into the DOM.
+     *
+     * @param {Object} [options]
+     * @param {function(string, string): void} [options.onProgress] - Callback receiving (status, detail) strings.
+     * @param {boolean} [options.closeOtherPanels=true] - Whether to close Canvas / side drawers first.
+     * @param {number}  [options.maxAttempts=250]       - Maximum scroll iterations.
+     * @param {number}  [options.stallThreshold=3]      - Consecutive no-change checks before declaring done.
+     * @returns {Promise<{success: boolean, steps: number, reason: string, error?: Error}>}
+     */
+    window.geminiLoadFullChatHistory = async function (options) {
+        const opts = options || {};
+        const onProgress = typeof opts.onProgress === 'function' ? opts.onProgress : null;
+        const shouldClosePanels = opts.closeOtherPanels !== false;
+        const maxAttempts = opts.maxAttempts || 250;
+        const stallThreshold = opts.stallThreshold || 3;
+
+        const isVisible = (el) => {
+            if (!el || !el.isConnected) return false;
+            const style = window.getComputedStyle(el);
+            if (style.display === 'none' || style.visibility === 'hidden') return false;
+            if (el.offsetParent !== null) return true;
+            const rect = el.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+        };
+
+        const closeAllPanels = async () => {
+            const canvasCloseBtn = document.querySelector('button[data-test-id="close-button"]');
+            if (canvasCloseBtn) {
+                if (onProgress) onProgress('Starting...', 'Closing Canvas panel...');
+                window.geminiClickElement(canvasCloseBtn);
+                await window.geminiSleep(800);
+            }
+            document.body.dispatchEvent(new KeyboardEvent('keydown', {
+                key: 'Escape', code: 'Escape', keyCode: 27, which: 27,
+                bubbles: true, cancelable: true
+            }));
+            const backdrop = document.querySelector('.mat-drawer-backdrop');
+            if (backdrop && isVisible(backdrop)) {
+                window.geminiClickElement(backdrop);
+            }
+            await window.geminiSleep(500);
+        };
+
+        let steps = 0;
+
+        try {
+            if (shouldClosePanels) {
+                if (onProgress) onProgress('Starting...', 'Closing panels...');
+                await closeAllPanels();
+            }
+
+            const scroller = window.geminiGetChatScroller();
+            if (onProgress) onProgress('Loading History...', 'Ascending...');
+
+            if (!scroller.hasAttribute('tabindex')) scroller.setAttribute('tabindex', '-1');
+            scroller.focus({ preventScroll: true });
+
+            let highestScrollHeight = scroller.scrollHeight;
+            let prevFirstTurnContent = '';
+            let stallCount = 0;
+
+            while (steps < maxAttempts) {
+                const scrollStep = Math.max(800, scroller.clientHeight * 0.8);
+                if (scroller === document.documentElement) {
+                    window.scrollBy({ top: -scrollStep, behavior: 'instant' });
+                } else {
+                    scroller.scrollTop -= scrollStep;
+                }
+
+                await window.geminiSleep(400);
+
+                const currentScrollTop = scroller === document.documentElement
+                    ? window.scrollY : scroller.scrollTop;
+
+                if (currentScrollTop <= 10) {
+                    await window.geminiSleep(1500);
+
+                    const currentFirstTurn = document.querySelector('message-content, .message-content');
+                    const currentContent = currentFirstTurn
+                        ? currentFirstTurn.textContent.substring(0, 50) : '';
+
+                    if (currentContent === prevFirstTurnContent &&
+                        scroller.scrollHeight <= highestScrollHeight + 50) {
+                        stallCount++;
+                        if (onProgress) onProgress('Loading History...',
+                            `Scroll step: ${steps}\nStall count: ${stallCount}/${stallThreshold}`);
+                        if (stallCount >= stallThreshold) {
+                            scroller.scrollTop = 0;
+                            await window.geminiSleep(1000);
+                            return { success: true, steps: steps, reason: 'stalled' };
+                        }
+                    } else {
+                        stallCount = 0;
+                        if (onProgress) onProgress('Loading History...',
+                            `Loaded older history.\nContinuing ascent... (Step: ${steps})`);
+                    }
+
+                    prevFirstTurnContent = currentContent;
+                    if (scroller.scrollHeight > highestScrollHeight) {
+                        highestScrollHeight = scroller.scrollHeight;
+                    }
+                } else {
+                    stallCount = 0;
+                }
+                steps++;
+            }
+
+            scroller.scrollTop = 0;
+            await window.geminiSleep(1000);
+            return { success: true, steps: steps, reason: 'max_attempts' };
+
+        } catch (error) {
+            return { success: false, steps: steps, reason: 'error', error: error };
+        }
+    };
+
+    // Backward-compatible CustomEvent listener.
+    // Guard prevents duplicate registration when multiple scripts @require this file.
+    if (!window.__geminiHistoryLoaderRegistered) {
+        window.__geminiHistoryLoaderRegistered = true;
+        document.addEventListener('gemini-history-loader:request', async function (e) {
+            var reqId = e.detail && e.detail.reqId ? e.detail.reqId : 'req_' + Date.now();
+            var result = await window.geminiLoadFullChatHistory();
+            document.dispatchEvent(new CustomEvent('gemini-history-loader:complete', {
+                detail: { reqId: reqId, status: result.success ? 'success' : 'error', reason: result.reason }
+            }));
+        });
+    }
+
 })();
