@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.71
-// @lastModified 2026-04-18
+// @version      0.2.72
+// @lastModified 2026-04-20
 // @description  Automatically select the next conversation on delete while caching ordered sidebar history
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -21,6 +21,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.2.72 Removed backward-compatible gemini-history-loader listener from gemini-common.js.
 // @history       0.2.71 Add JSON download button to the conversation history dialog.
 // @history       0.2.70 Simplify attachObserver callback: drop per-mutation loop to reduce scroll-time CPU usage.
 // @history       0.2.69 Ordered conversation cache, read-only history dialog, and current-conversation API.

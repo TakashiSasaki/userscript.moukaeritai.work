@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Saved Info Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.39
-// @lastModified 2026-04-16
+// @version      0.2.40
+// @lastModified 2026-04-20
 // @description  Adds serial numbers and copy buttons to custom instructions on Gemini.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -20,6 +20,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js
 // @noframes
+// @history       0.2.40 Removed backward-compatible gemini-history-loader listener from gemini-common.js.
 // @history       0.2.37 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
 // @history       0.2.36 共通テンプレートの更新（アイコンとバージョンの分離）を反映。
 // @history       0.2.35 ヘッダー右側のバージョン表示を廃止

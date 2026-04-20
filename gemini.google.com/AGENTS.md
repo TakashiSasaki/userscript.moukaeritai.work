@@ -117,7 +117,7 @@ Learnings from implementing features like Auto-Scroll and Conversation Managemen
      ```
      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/SCRIPT_NAME/SCRIPT_NAME.user.js
      ```
-   - **ローカル相対パスを使用してはいけません**（例: `gemini-history-loader/gemini-history-loader.user.js`）。`domain-landing.js` の `fetchVersion()` はこの `href` を使って GitHub から `@version` を取得するため、ローカルパスでは CORS エラーが発生しバージョン取得に失敗します。
+   - **ローカル相対パスを使用してはいけません**（例: `gemini-artifact-exporter/gemini-artifact-exporter.user.js`）。`domain-landing.js` の `fetchVersion()` はこの `href` を使って GitHub から `@version` を取得するため、ローカルパスでは CORS エラーが発生しバージョン取得に失敗します。
    - **ハードコードされたバージョン文字列をボタンテキストに含めてはいけません**（例: `Install (v0.4.57)`）。バージョン表示は `domain-landing.js` が GitHub から動的に取得して注入するため、ハードコードすると古いバージョンが表示され続けます。
    - **正しい構造例**:
      ```html

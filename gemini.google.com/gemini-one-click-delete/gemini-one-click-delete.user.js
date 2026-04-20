@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini 1-Click Delete Conversation
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.3.34
-// @lastModified 2026-04-18
+// @version      0.3.35
+// @lastModified 2026-04-20
 // @description  Adds a 1-click floating button with shortcut to delete the current Gemini conversation.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -18,6 +18,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.3.35 Removed backward-compatible gemini-history-loader listener from gemini-common.js.
 // @history       0.3.33 共通ライブラリの更新に伴い、クリック処理を geminiClickElement に統一。
 // @history       0.3.31 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
 // @history       0.3.30 共通テンプレートの更新（アイコンとバージョンの分離）を反映。

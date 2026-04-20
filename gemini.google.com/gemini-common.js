@@ -874,17 +874,5 @@
         }
     };
 
-    // Backward-compatible CustomEvent listener.
-    // Guard prevents duplicate registration when multiple scripts @require this file.
-    if (!window.__geminiHistoryLoaderRegistered) {
-        window.__geminiHistoryLoaderRegistered = true;
-        document.addEventListener('gemini-history-loader:request', async function (e) {
-            var reqId = e.detail && e.detail.reqId ? e.detail.reqId : 'req_' + Date.now();
-            var result = await window.geminiLoadFullChatHistory();
-            document.dispatchEvent(new CustomEvent('gemini-history-loader:complete', {
-                detail: { reqId: reqId, status: result.success ? 'success' : 'error', reason: result.reason }
-            }));
-        });
-    }
 
 })();
