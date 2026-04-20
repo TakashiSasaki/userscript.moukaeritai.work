@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.50
-// @lastModified 2026-04-18
+// @version      0.4.51
+// @lastModified 2026-04-20
 // @description  UI for exporting Gemini "Article" artifacts. Requires gemini-artifact-exporter-worker worker script for actual execution. Chat history loading is provided by gemini-common.js.
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -21,6 +21,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js
 // @noframes
+// @history       0.4.51 Removed backward-compatible gemini-history-loader listener from gemini-common.js.
 // @history       0.4.50 Replaced gemini-history-loader CustomEvent dependency with direct window.geminiLoadFullChatHistory() call from gemini-common.js.
 // @history       0.4.48 共通ライブラリの更新に伴い、クリック処理を geminiClickElement に統一。
 // @history       0.4.46 パネルの幅を固定 (320px) から可変 (fit-content) に変更し、ボタンがはみ出して見えなくなる問題を修正。

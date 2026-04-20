@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.69
-// @lastModified 2026-04-18
+// @version      0.2.70
+// @lastModified 2026-04-20
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -21,6 +21,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.2.70 Removed backward-compatible gemini-history-loader listener from gemini-common.js.
 // @history       0.2.68 共通ライブラリの更新に伴い、クリック処理を geminiClickElement に統一。
 // @history       0.2.65 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
 // @history       0.2.64 共通テンプレートの更新（アイコンとバージョンの分離）を反映。

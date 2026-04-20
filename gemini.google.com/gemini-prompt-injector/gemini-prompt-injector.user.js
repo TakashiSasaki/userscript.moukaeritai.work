@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini Prompt Injector
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.29
+// @version      0.2.30
 // @description  Injects a prompt into Gemini via an external custom event.
-// @lastModified 2026-04-18
+// @lastModified 2026-04-20
 // @author       Takashi Sasaki
 // @match        https://userscript.moukaeritai.work/*
 // @match        https://gemini.google.com/*
@@ -21,6 +21,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js
 // @noframes
+// @history       0.2.30 Removed backward-compatible gemini-history-loader listener from gemini-common.js.
 // @history       0.2.28 共通ライブラリの更新に伴い、クリック処理を geminiClickElement に統一。
 // @history       0.2.26 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。
 // @history       0.2.25 共通テンプレートの更新（アイコンとバージョンの分離）を反映。

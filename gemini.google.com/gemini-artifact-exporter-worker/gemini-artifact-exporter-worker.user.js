@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gemini Artifact Exporter Worker
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.41
+// @version      0.2.42
 // @description  A worker script that handles the actual export process of Gemini "Article" artifacts to Google Docs. It receives custom events from the main exporter UI and performs DOM manipulation and background tasks.
-// @lastModified 2026-04-18
+// @lastModified 2026-04-20
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
 // @match        https://gemini.google.com/*
@@ -22,6 +22,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js
 // @noframes
+// @history       0.2.42 Removed backward-compatible gemini-history-loader listener from gemini-common.js.
 // @history       0.2.40 共通ライブバリの更新に伴い、クリック処理を geminiClickElement に統一。
 // @history       0.2.39 Canvasエディタ内のエクスポートボタン特定ロジックを強化（data-mat-icon-nameセレクタを追加）。
 // @history       0.2.37 UI表示タイトルから冗長な "Gemini " プレフィックスを除去。

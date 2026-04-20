@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         Gemini 1-Click Export to Docs
 // @namespace    https://userscript.moukaeritai.work/
-// @version      0.5.3
+// @version      0.5.4
 // @description  Adds 1-click automation to export Gemini responses to Google Docs and notebooks.
-// @lastModified 2026-04-18
+// @lastModified 2026-04-20
+// @history       0.5.4 Removed backward-compatible gemini-history-loader listener from gemini-common.js.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
 // @match        https://userscript.moukaeritai.work/*
