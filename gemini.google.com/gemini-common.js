@@ -845,7 +845,11 @@
                         if (onProgress) onProgress('Loading History...',
                             `Scroll step: ${steps}\nStall count: ${stallCount}/${stallThreshold}`);
                         if (stallCount >= stallThreshold) {
-                            scroller.scrollTop = 0;
+                            if (scroller === document.documentElement) {
+                                window.scrollTo({ top: 0, behavior: 'instant' });
+                            } else {
+                                scroller.scrollTop = 0;
+                            }
                             await window.geminiSleep(1000);
                             return { success: true, steps: steps, reason: 'stalled' };
                         }
@@ -865,7 +869,11 @@
                 steps++;
             }
 
-            scroller.scrollTop = 0;
+            if (scroller === document.documentElement) {
+                window.scrollTo({ top: 0, behavior: 'instant' });
+            } else {
+                scroller.scrollTop = 0;
+            }
             await window.geminiSleep(1000);
             return { success: true, steps: steps, reason: 'max_attempts' };
 
@@ -874,5 +882,63 @@
         }
     };
 
+    /**
+     * Programmatically scrolls the chat downwards in discrete steps.
+     * Useful for performing deep scans or ensuring lazily loaded content is triggered.
+     *
+     * @param {Object} options
+     * @param {function(HTMLElement, number): void|Promise<void>} [options.onStep] - Optional callback triggered after each scroll step.
+     * @param {function(string, string): void} [options.onProgress] - Optional callback for UI progress reporting.
+     * @param {number} [options.maxAttempts=300] - Maximum number of scroll steps.
+     * @param {number} [options.stallThreshold=3] - Number of consecutive steps with no movement before assuming end of page.
+     * @param {number} [options.delayMs=350] - Delay between scroll steps.
+     * @returns {Promise<{success: boolean, steps: number, reason: string}>}
+     */
+    window.geminiProgressiveScrollDown = async function (options) {
+        const opts = options || {};
+        const onStep = typeof opts.onStep === 'function' ? opts.onStep : null;
+        const onProgress = typeof opts.onProgress === 'function' ? opts.onProgress : null;
+        const maxAttempts = opts.maxAttempts || 300;
+        const stallThreshold = opts.stallThreshold || 3;
+        const delayMs = opts.delayMs || 350;
+
+        const scroller = window.geminiGetChatScroller();
+        let steps = 0;
+        let stallCount = 0;
+        let lastTop = -1;
+
+        try {
+            while (steps < maxAttempts) {
+                const currentTop = scroller === document.documentElement ? window.scrollY : scroller.scrollTop;
+                const maxScrollTop = scroller.scrollHeight - (scroller.clientHeight || window.innerHeight);
+
+                if (onStep) await onStep(scroller, steps);
+
+                if (currentTop >= maxScrollTop - 20 || currentTop === lastTop) {
+                    stallCount++;
+                    if (onProgress) onProgress('Descending...', `Step: ${steps}\nStall: ${stallCount}/${stallThreshold}`);
+                    if (stallCount >= stallThreshold) break;
+                } else {
+                    stallCount = 0;
+                }
+
+                lastTop = currentTop;
+                const scrollStep = Math.max(800, (scroller.clientHeight || window.innerHeight) * 0.8);
+
+                if (scroller === document.documentElement) {
+                    window.scrollBy({ top: scrollStep, behavior: 'instant' });
+                } else {
+                    scroller.scrollTop += scrollStep;
+                }
+
+                await window.geminiSleep(delayMs);
+                steps++;
+            }
+            return { success: true, steps: steps, reason: steps < maxAttempts ? 'reached_bottom' : 'max_attempts' };
+        } catch (error) {
+            console.error('[GUS] Progressive scroll failed:', error);
+            return { success: false, steps: steps, reason: 'error', error: error };
+        }
+    };
 
 })();
