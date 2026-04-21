@@ -1,8 +1,9 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.69
+// @version      0.4.70
 // @lastModified 2026-04-20
+// @history       0.4.70 Persist counted stats per conversation ID using GM_getValue/GM_setValue.
 // @history       0.4.69 Implemented auto-copy for images on chat change or page exit; removed manual copy UI.
 // @history       0.4.68 Refactored runDeepScan to use window.geminiLoadFullChatHistory and window.geminiProgressiveScrollDown from gemini-common.js.
 // @history       0.4.67 Removed backward-compatible gemini-history-loader listener from gemini-common.js.
@@ -18,6 +19,8 @@
 // @resource     geminiTurnCounterHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
 // @grant        GM_setClipboard
+// @grant        GM_getValue
+// @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
 // @grant        GM_getResourceText
@@ -45,7 +48,8 @@
     const policy = window.geminiCreateTrustedHTMLPolicy('geminiTurnCounter');
     const PANEL_ID = 'gemini-turn-counter-ui';
     const CHAT_PAGE_PATTERN = /^\/(?:app|gem)(?:\/|$)/;
-    // Removed initial URL check as it will be handled dynamically
+    const CHAT_ID_PATTERN = /\/app\/([a-z0-9]+)/;
+    const STORAGE_PREFIX = 'gtc-stats-';
 
     // Settings
     const SELECTORS = {
@@ -83,6 +87,33 @@
     let lastCopiedImagesHash = "";
     let isPreparing = false;
     let lastChatId = "";
+
+    // --- Storage Helpers ---
+    const getCurrentChatId = () => {
+        const match = location.pathname.match(CHAT_ID_PATTERN);
+        return match ? match[1] : "";
+    };
+
+    const saveStatsToStorage = (statsData) => {
+        const chatId = getCurrentChatId();
+        if (!chatId) return;
+        const record = {
+            ...statsData,
+            savedAt: Date.now()
+        };
+        GM_setValue(STORAGE_PREFIX + chatId, JSON.stringify(record));
+    };
+
+    const loadStatsFromStorage = (chatId) => {
+        if (!chatId) return null;
+        const raw = GM_getValue(STORAGE_PREFIX + chatId, null);
+        if (!raw) return null;
+        try {
+            return JSON.parse(raw);
+        } catch {
+            return null;
+        }
+    };
 
     // Trusted Types Policy Creation
 
@@ -314,6 +345,17 @@
 
             // Update stats logic completed for this turn
             const imageCount = collectedImages.length;
+
+            // Persist stats per conversation ID
+            saveStatsToStorage({
+                userTurnsCount, modelTurnsCount,
+                userCharCount, modelCharCount,
+                totalArtifacts, totalLinkCards,
+                totalCodeBlocks, totalTables, totalThinkingBlocks,
+                imageCount,
+                userImagesCount: collectedImages.filter(i => i.type === 'user').length,
+                modelImagesCount: collectedImages.filter(i => i.type === 'model').length
+            });
 
             if (imageCount > 0) {
                 prepareAutoCopyData(collectedImages);
@@ -559,7 +601,7 @@
 
             // Global trigger for page exit
             window.addEventListener('beforeunload', triggerAutoCopy);
-            lastChatId = (location.pathname.match(CHAT_PAGE_PATTERN) || [])[0] || "";
+            lastChatId = getCurrentChatId();
         }
 
         // Initial run
@@ -628,8 +670,7 @@
             console.log('[Gemini Turn Counter] URL changed:', location.href);
 
             // Check if Chat ID changed
-            const newChatMatch = location.pathname.match(/\/app\/([a-z0-9]+)/);
-            const newChatId = newChatMatch ? newChatMatch[1] : "";
+            const newChatId = getCurrentChatId();
             
             if (newChatId !== lastChatId && lastChatId !== "") {
                 console.log('[Gemini Turn Counter] Chat ID changed. Triggering auto-copy.');
