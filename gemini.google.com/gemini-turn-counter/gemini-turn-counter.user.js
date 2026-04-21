@@ -1,8 +1,9 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.68
+// @version      0.4.69
 // @lastModified 2026-04-20
+// @history       0.4.69 Implemented auto-copy for images on chat change or page exit; removed manual copy UI.
 // @history       0.4.68 Refactored runDeepScan to use window.geminiLoadFullChatHistory and window.geminiProgressiveScrollDown from gemini-common.js.
 // @history       0.4.67 Removed backward-compatible gemini-history-loader listener from gemini-common.js.
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
@@ -16,6 +17,7 @@
 // @resource     geminiTurnCounterCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.css
 // @resource     geminiTurnCounterHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
+// @grant        GM_setClipboard
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
 // @grant        GM_getResourceText
@@ -74,6 +76,13 @@
     let uiContainer = null; // Store reference to the main UI container
     let updateStatsTimeout = null;
     let isDeepScanning = false; // Flag to pause auto-updating during manual deep scan
+
+    // --- Auto-Copy State ---
+    let preparedHtmlString = "";
+    let preparedImagesHash = "";
+    let lastCopiedImagesHash = "";
+    let isPreparing = false;
+    let lastChatId = "";
 
     // Trusted Types Policy Creation
 
@@ -147,79 +156,61 @@
             });
         });
     };
-
-    // Keep track of processed images to avoid refetching heavily
-    // In a real script we might need better caching or just fetch on demand.
-
-    // Global reference for external access
-    let latestCollectedImages = [];
+    const getImagesHash = (images) => {
+        return images.map(img => img.src).join('|');
+    };
 
     /**
-     * Reusable image-to-clipboard function
+     * Internal image-to-HTML helper for background preparation
      * @param {Array} targetImages - Array of {src, type} objects
      * @param {number|boolean} heightLimit - Max height limit, or false/0 for no limit
-     * @param {HTMLElement} [statusSpan] - Optional element to output progress
-     * @returns {Promise<Blob>}
+     * @returns {Promise<string>}
      */
-    const copyImagesToHtmlClipboard = async (targetImages, heightLimit = false, statusSpan = null) => {
-        if (!targetImages || targetImages.length === 0) throw new Error("No images to copy");
+    const prepareImagesHtml = async (targetImages, heightLimit = 200) => {
+        if (!targetImages || targetImages.length === 0) return "";
 
-        let processedCount = 0;
         const promises = targetImages.map(async (imgData) => {
             const dataUri = await fetchImageData(imgData.src);
-            processedCount++;
-            if (statusSpan) statusSpan.textContent = `${processedCount}/${targetImages.length}`;
-
-            let imgTag = '';
             if (dataUri) {
                 const styleAttr = heightLimit ? ` style="max-height: ${heightLimit}px;"` : '';
-                imgTag = `<img src="${dataUri}"${styleAttr} data-source-type="${imgData.type}" />`;
+                return `<img src="${dataUri}"${styleAttr} data-source-type="${imgData.type}" />`;
             }
-            return imgTag;
+            return '';
         });
 
         const results = await Promise.all(promises);
-        const htmlToCopy = results.join('');
-
-        if (statusSpan) statusSpan.textContent = `${htmlToCopy.length} chars`;
-
-        return new Blob([htmlToCopy], { type: "text/html" });
+        return results.join('');
     };
 
-    // --- Custom Event Listener for Data Request ---
-    document.addEventListener('gemini-turn-counter-copy-images', (e) => {
-        const { target = 'all', maxHeight = 200 } = e.detail || {};
+    const triggerAutoCopy = () => {
+        if (!preparedHtmlString || preparedImagesHash === "") return;
+        if (preparedImagesHash === lastCopiedImagesHash) return;
 
-        let targetImages = latestCollectedImages;
-        if (target === 'user') {
-            targetImages = latestCollectedImages.filter(i => i.type === 'user');
-        } else if (target === 'model') {
-            targetImages = latestCollectedImages.filter(i => i.type === 'model');
+        try {
+            GM_setClipboard(preparedHtmlString, 'html');
+            console.log('[Gemini Turn Counter] Auto-copied images to clipboard.');
+            lastCopiedImagesHash = preparedImagesHash;
+        } catch (err) {
+            console.error('[Gemini Turn Counter] Auto-copy failed:', err);
         }
+    };
 
-        if (targetImages.length === 0) {
-            document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images-result', {
-                detail: { success: false, message: 'No images found for target: ' + target }
-            }));
-            return;
+    const prepareAutoCopyData = async (images) => {
+        const hash = getImagesHash(images);
+        if (hash === preparedImagesHash || isPreparing) return;
+
+        isPreparing = true;
+        try {
+            const html = await prepareImagesHtml(images, 200);
+            preparedHtmlString = html;
+            preparedImagesHash = hash;
+            console.log('[Gemini Turn Counter] Background preparation complete.');
+        } catch (err) {
+            console.error('[Gemini Turn Counter] Preparation failed:', err);
+        } finally {
+            isPreparing = false;
         }
-
-        // To comply with User Gesture constraints for clipboard API, the CustomEvent
-        // MUST be dispatched synchronously during a user gesture (e.g. click).
-        const clipboardPromise = copyImagesToHtmlClipboard(targetImages, maxHeight);
-        const item = new ClipboardItem({ "text/html": clipboardPromise });
-
-        navigator.clipboard.write([item]).then(() => {
-            document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images-result', {
-                detail: { success: true, count: targetImages.length }
-            }));
-        }).catch(err => {
-            console.error('Gemini Turn Counter: External Clipboard write failed:', err);
-            document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images-result', {
-                detail: { success: false, error: err.toString() }
-            }));
-        });
-    });
+    };
 
     const updateStats = (forceUpdate = false, overrideData = null) => {
         if (isDeepScanning && !forceUpdate) return; // Ignore mutations during deep scan
@@ -321,66 +312,17 @@
                 });
             }
 
-            // Update global reference
-            latestCollectedImages = collectedImages;
-
+            // Update stats logic completed for this turn
             const imageCount = collectedImages.length;
+
+            if (imageCount > 0) {
+                prepareAutoCopyData(collectedImages);
+            }
 
             if (!contentDiv.hasAttribute('data-gtc-initialized')) {
                 const template = GM_getResourceText('geminiTurnCounterHTML');
                 window.geminiSetInnerHTML(contentDiv, template, policy);
                 contentDiv.setAttribute('data-gtc-initialized', 'true');
-
-                // --- Initial Event Binding (Only Once) ---
-                const copyBtnU = contentDiv.querySelector('#gtc-copy-user');
-                const copyBtnM = contentDiv.querySelector('#gtc-copy-model');
-                const copyBtnAll = contentDiv.querySelector('#gtc-copy-all');
-                const statusSpan = contentDiv.querySelector('#gtc-copy-status');
-                const heightEnable = contentDiv.querySelector('#gtc-height-enable');
-                const heightInput = contentDiv.querySelector('#gtc-height-input');
-
-                const bindCopyEvent = (btn, originalLabel, typeFilter) => {
-                    if (!btn) return;
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        // Dynamically evaluate targetImages when clicked
-                        let targetImages = latestCollectedImages;
-                        if (typeFilter) {
-                            targetImages = targetImages.filter(i => i.type === typeFilter);
-                        }
-
-                        if (targetImages.length === 0) return;
-
-                        btn.textContent = '...';
-                        if (statusSpan) statusSpan.textContent = '0/' + targetImages.length;
-
-                        const useHeightLimit = heightEnable ? heightEnable.checked : false;
-                        const heightLimit = useHeightLimit && heightInput ? heightInput.value : false;
-
-                        const clipboardPromise = copyImagesToHtmlClipboard(targetImages, heightLimit, statusSpan)
-                            .catch(err => {
-                                console.error('Image processing failed', err);
-                                if (statusSpan) statusSpan.textContent = 'Err';
-                                throw err;
-                            });
-
-                        const item = new ClipboardItem({ "text/html": clipboardPromise });
-                        navigator.clipboard.write([item]).then(() => {
-                            btn.textContent = 'Copied!';
-                            setTimeout(() => {
-                                btn.textContent = originalLabel;
-                                if (statusSpan && !statusSpan.textContent.includes('chars')) statusSpan.textContent = '';
-                            }, 3000);
-                        }).catch(err => {
-                            console.error('Clipboard write failed:', err);
-                            btn.textContent = 'Err';
-                        });
-                    });
-                };
-
-                bindCopyEvent(copyBtnU, '📋U', 'user');
-                bindCopyEvent(copyBtnM, '📋M', 'model');
-                bindCopyEvent(copyBtnAll, '📋All', null);
 
                 const deepScanBtn = document.getElementById('gtc-deep-scan-btn');
                 if (deepScanBtn) {
@@ -409,26 +351,6 @@
             const userImagesCount = collectedImages.filter(i => i.type === 'user').length;
             const modelImagesCount = collectedImages.filter(i => i.type === 'model').length;
             contentDiv.querySelector('#gtc-val-images-ratio').textContent = `${userImagesCount}:${modelImagesCount}`;
-
-            const copyBtnU = contentDiv.querySelector('#gtc-copy-user');
-            const copyBtnM = contentDiv.querySelector('#gtc-copy-model');
-            const copyBtnAll = contentDiv.querySelector('#gtc-copy-all');
-            const heightRow = contentDiv.querySelector('#gtc-row-height');
-
-            if (imageCount > 0) {
-                copyBtnU.style.display = 'inline-block';
-                copyBtnM.style.display = 'inline-block';
-                copyBtnAll.style.display = 'inline-block';
-                heightRow.style.display = 'block';
-
-                copyBtnU.disabled = userImagesCount === 0;
-                copyBtnM.disabled = modelImagesCount === 0;
-            } else {
-                copyBtnU.style.display = 'none';
-                copyBtnM.style.display = 'none';
-                copyBtnAll.style.display = 'none';
-                heightRow.style.display = 'none';
-            }
 
             const thumbnailsContainer = contentDiv.querySelector('#gtc-thumbnails-container');
             if (imageCount > 0) {
@@ -634,6 +556,10 @@
                 panelShell.style.left = savedX;
                 panelShell.style.top = savedY;
             }
+
+            // Global trigger for page exit
+            window.addEventListener('beforeunload', triggerAutoCopy);
+            lastChatId = (location.pathname.match(CHAT_PAGE_PATTERN) || [])[0] || "";
         }
 
         // Initial run
@@ -700,6 +626,17 @@
         if (location.href !== lastUrl) {
             lastUrl = location.href;
             console.log('[Gemini Turn Counter] URL changed:', location.href);
+
+            // Check if Chat ID changed
+            const newChatMatch = location.pathname.match(/\/app\/([a-z0-9]+)/);
+            const newChatId = newChatMatch ? newChatMatch[1] : "";
+            
+            if (newChatId !== lastChatId && lastChatId !== "") {
+                console.log('[Gemini Turn Counter] Chat ID changed. Triggering auto-copy.');
+                triggerAutoCopy();
+            }
+            lastChatId = newChatId;
+
             // Delay slightly to ensure the new DOM is partially rendered before initialization
             setTimeout(checkUrlAndManageScriptState, 500);
         }
