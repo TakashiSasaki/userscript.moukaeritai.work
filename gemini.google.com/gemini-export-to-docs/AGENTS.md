@@ -39,17 +39,29 @@ AI側が1ターンしか返答を行っていない「初期回答」の時の�
 Please refer to the root `AGENTS.md` for all operational procedures, including Git practices, documentation structure, and HTML sample preprocessing.
 
 
+
+### State Persistence (GM_setValue)
+The script uses `GM_setValue` to persist its state (such as UI position or toggles) across page reloads.
+
 ## `index.html` のメンテナンス要件
 
 各階層（ルートディレクトリ、ドメイン別ディレクトリ、個別のスクリプトディレクトリ）の `index.html` は、最新の状態に同期して保つ必要があります。
 
-1. **バージョン情報の同期とインストールボタンの要件**:
-   - バージョン番号はハードコードしないでください。
-   - 各インストールボタン（メイン・依存関係ともに）のリンク先(`href`)は、必ずGitHub上の該当 `.user.js` ファイルの **Raw URL** とし、別タブで開くよう `target="_blank"` を指定してください。
-   - バージョン比較で「インストール済み(`Installed`)」と判定された場合でも、ユーザーがRawコードを確認できるよう、JavaScript側で `pointer-events: none;` 等を用いたボタンの無効化（クリッカブルの解除）は決して行わないでください。
-   - インストールボタンの構造は、動的なバージョン比較機能のために、所定のDOM構造（`<div class="version-info">` 内に `.latest-version` と `.installed-version` を含む）を維持し、さらにボタン全体が横長（`display: inline-flex;`）に表示されるレイアウトを維持してください。
-   - インラインスクリプトによってボタン全体のDOM（アイコン等）が上書きされないように、テキスト書き換え対象の要素（例: `<span class="button-text">`）のみを操作するようにしてください。
-   - 新規タブでインストールした後にUIを自動更新するため、メインのインストールボタンおよび依存関係カードのインストールボタン（`.dep-install-btn`）のクリック時に `userscript-ping` を2秒間隔で計5回（10秒間）送信するポーリング処理が実装されています。これにより利用者はページをリロードすることなく「Installed」への変化を確認できます。
+1. **バージョン情報の同期**:
+   - バージョン表記はハードコードしないでください。
+   - インストールボタンの構造は、動的なバージョン比較機能（Github上の最新バージョンとローカルのインストール済みバージョンの比較）のために、所定のDOM構造（`<div class="version-info">` 内に `.latest-version` と `.installed-version` を含む構造）を維持してください。テキストの更新は `.button-text` などの専用要素を用いて行い、DOMを破壊しないように注意してください。
+   - 新規タブでインストールした後にUIを自動更新するため、ボタンクリック時に `userscript-ping` を一定間隔で送信（ポーリング）する仕組みが `domain-landing.js` に組み込まれています。これにより利用者はリロード不要で「Installed」への変化を確認できます。
 
-2. **ドキュメントの網羅性**:
+2. **依存関係とイベントの明記**:
+   - 複数のユーザースクリプト間で連携する機能（CustomEventを用いたメッセージの送受信など）がある場合、スクリプトの紹介カードや詳細ページには、その依存関係（「送信先」「受信元」など）を明確に記載してください。
+
+3. **ドキュメントの網羅性**:
    - 新しいスクリプト（システムローダーなどの裏側で動くスクリプトを含む）を追加した場合は、必ず該当するドメインの `index.html` およびルートの `index.html` の一覧にも漏れなく追加してください。
+
+4. **インストールボタンの `href` は必ず GitHub Raw URL を使用すること（重要）**:
+   - `index.html` 内の `.install-button` の `href` 属性には、**必ず**以下の形式の GitHub Raw URL を設定してください:
+     ```
+     https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/SCRIPT_NAME/SCRIPT_NAME.user.js
+     ```
+   - **ローカル相対パスを使用してはいけません**。`domain-landing.js` の `fetchVersion()` はこの `href` を使って GitHub から `@version` を取得するため、ローカルパスでは CORS エラーが発生しバージョン取得に失敗します。
+   - **ハードコードされたバージョン文字列をボタンテキストに含めてはいけません**。バージョン表示は `domain-landing.js` が GitHub から動的に取得して注入するため、ハードコードすると古いバージョンが表示され続けます。
