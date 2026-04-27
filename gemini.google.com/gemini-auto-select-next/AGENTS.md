@@ -67,7 +67,7 @@ This project follows the agent development guidelines outlined in the root [AGEN
 各階層（ルートディレクトリ、ドメイン別ディレクトリ、個別のスクリプトディレクトリ）の `index.html` は、最新の状態に同期して保つ必要があります。
 
 1. **バージョン情報の同期**:
-   - バージョン番号は HTML にハードコードしないでください。
+   - バージョン番号はハードコードしないでください。
    - インストールボタンは GitHub Raw URL を指し、`data-script-name="Gemini Auto-Select Next"` を維持してください。
    - バージョン比較用の `.version-info`, `.latest-version`, `.installed-version` 構造を崩さないでください。
 
