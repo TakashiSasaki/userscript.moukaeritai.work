@@ -6,7 +6,9 @@
 // @author       Takashi SASAKI
 // @website      https://twitter.com/TakashiSasaki
 // @match        https://www.jbrc-sys.com/brsp/a2A/*
+// @match        https://userscript.moukaeritai.work/*
 // @match      https://www.jbrc-sys.com/brsp/a2A
+// @match        https://userscript.moukaeritai.work/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=jbrc.com
 // @grant        GM_addStyle
 // @updateURL    https://gist.github.com/TakashiSasaki/4d507c70fdc60faff72c60fb183d0360/raw/jbrc-battery-recycle-station.user.js
@@ -206,3 +208,23 @@ function countShops(CD_TODOFUKEN, MEI_KYOTEN_SIKUGUN){
         }
     }
 }
+
+    // --- Version Check & Ping ---
+    const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+    window.addEventListener('message', (e) => {
+        if (e.data && e.data.type === 'userscript-ping') {
+            report();
+        }
+    });
+    // For standalone scripts that aren't modules, execute report immediately if on catalog
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        report();
+    }
