@@ -665,6 +665,28 @@
             });
         }
 
+        // 3. Setup Global Toggle Listener
+        const toggleListener = (e) => {
+            const detail = e.detail;
+            if (!detail) return;
+
+            // Target by storageKey, or 'all'
+            // We can also extract the name from the panel itself.
+            let panelName = '';
+            const nameEl = panel.querySelector('.gus-panel-name');
+            if (nameEl) {
+                panelName = nameEl.textContent.trim();
+            }
+
+            if (detail.target === 'all' || detail.target === storageKey || (panelName && detail.target === panelName)) {
+                if (detail.action === 'minimize') applyState(true);
+                else if (detail.action === 'expand') applyState(false);
+                else if (detail.action === 'toggle') applyState(!panel.classList.contains('gus-minimized'));
+            }
+        };
+        document.addEventListener('gus-toggle-panel', toggleListener);
+
+
         // Return a function to programmatically set the state if needed
         return {
             setMinimized: (state) => applyState(state),

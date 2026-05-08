@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Search Snippet Helper
 // @namespace    userscript.moukaeritai.work
-// @version      0.1.32
-// @lastModified 2026-04-20
+// @version      0.1.33
+// @lastModified 2026-05-08
 // @description  Add sequential numbers to Gemini search result conversation titles.
 // @author       Takashi Sasaki
 // @match        https://gemini.google.com/*
@@ -23,6 +23,7 @@
 // @history       0.1.25 UI改善: シングルクリックでの開閉に対応し、タイトルとバージョンの表示形式を [絵文字] [名称] v[バージョン] に統一
 // @history       0.1.24 UI共通化: パネルの外枠を gemini-common.html に統合し、ステータスインジケーターとして表示
 // @history       0.1.23 リソース化リファクタリング: UIテンプレート(HTML/CSS)を外部ファイルに分離
+// @history       0.1.33 Add global listener to gemini-common.js for remote UI toggling via gus-toggle-panel event.
 // ==/UserScript==
 
 (function () {

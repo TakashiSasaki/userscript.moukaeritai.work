@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.70
-// @lastModified 2026-04-20
+// @version      0.4.68
+// @lastModified 2026-05-08
 // @history       0.4.70 Persist counted stats per conversation ID using GM_getValue/GM_setValue.
 // @history       0.4.69 Implemented auto-copy for images on chat change or page exit; removed manual copy UI.
 // @history       0.4.68 Refactored runDeepScan to use window.geminiLoadFullChatHistory and window.geminiProgressiveScrollDown from gemini-common.js.
@@ -26,6 +26,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.4.68 Add global listener to gemini-common.js for remote UI toggling via gus-toggle-panel event.
 // ==/UserScript==
 
 (function () {

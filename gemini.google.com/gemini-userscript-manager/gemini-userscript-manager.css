@@ -1,0 +1,62 @@
+/* gumCSS */
+.gum-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 12px;
+}
+
+.gum-actions-bar {
+    display: flex;
+    gap: 5px;
+    justify-content: flex-end;
+}
+
+.gum-btn {
+    background-color: var(--gus-btn-bg, #333);
+    color: var(--gus-btn-text, #fff);
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+.gum-btn:hover {
+    background-color: var(--gus-btn-hover, #555);
+}
+
+.gum-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.gum-table th, .gum-table td {
+    padding: 4px 6px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gum-name {
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gum-status-ok { color: #6ee7b7; }
+.gum-status-missing { color: #9ca3af; }
+.gum-status-update { color: #fcd34d; font-weight: bold; }
+
+.gum-btn-sm {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: inherit;
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 1px 4px;
+    font-size: 10px;
+}
+.gum-btn-sm:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
