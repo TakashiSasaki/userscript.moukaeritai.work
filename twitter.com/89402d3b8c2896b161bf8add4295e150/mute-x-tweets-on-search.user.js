@@ -5,7 +5,9 @@
 // @description  Automatically hides tweets from a muted user in the search results on X (formerly Twitter) when 'u' is pressed.
 // @author       Takashi Sasaki
 // @match        https://twitter.com/search?*
+// @match        https://userscript.moukaeritai.work/*
 // @match        https://twitter.com/home
+// @match        https://userscript.moukaeritai.work/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=twitter.com
 // @grant        none
 // @updateURL    https://gist.githubusercontent.com/TakashiSasaki/89402d3b8c2896b161bf8add4295e150/raw/mute-x-tweets-on-search.user.js
@@ -44,4 +46,25 @@
             });
         });
     }, 2000);
+
+    // --- Version Check & Ping ---
+    const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+    window.addEventListener('message', (e) => {
+        if (e.data && e.data.type === 'userscript-ping') {
+            report();
+        }
+    });
+    // For standalone scripts that aren't modules, execute report immediately if on catalog
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        report();
+    }
+
 })();

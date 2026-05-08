@@ -5,6 +5,7 @@
 // @description  Mineoのギフトコードを自動的にクリップボードにコピーします。Mineoのギフトコードを入力することができるページで前記のギフトコードをペーストします。Mineoのギフト容量として自動的に9999を入力します。パケットチャージの入力欄を非表示にします。ゆずるねを自動的に宣言します。
 // @author       Takashi SASAKI (@TakashiSasaki on Twitter)
 // @match        https://my.mineo.jp/mvno_cp/*.action
+// @match        https://userscript.moukaeritai.work/*
 // @icon         https://www.google.com/s2/favicons?domain=mineo.jp
 // @grant        GM_setClipboard
 // @grant        GM_notification
@@ -81,4 +82,25 @@
     GM_addStyle("div.detailArea div.boxPasscket01 {display:none}");
     GM_addStyle("form div#pageStatus2 {display:none}");
     GM_addStyle("form h1.h1_basic {display:none}");
+
+    // --- Version Check & Ping ---
+    const report = () => {
+        document.dispatchEvent(new CustomEvent('userscript-check-installed', {
+            detail: {
+                name: GM_info.script.name,
+                version: GM_info.script.version
+            }
+        }));
+    };
+    document.addEventListener('userscript-ping', report);
+    window.addEventListener('message', (e) => {
+        if (e.data && e.data.type === 'userscript-ping') {
+            report();
+        }
+    });
+    // For standalone scripts that aren't modules, execute report immediately if on catalog
+    if (location.hostname === 'userscript.moukaeritai.work') {
+        report();
+    }
+
 })();
