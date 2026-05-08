@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Auto-Select Next
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.72
-// @lastModified 2026-04-20
+// @version      0.2.73
+// @lastModified 2026-05-08
 // @description  Automatically select the next conversation on delete while caching ordered sidebar history
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -37,6 +37,7 @@
 // @history       0.2.54 リソース化リファクタリング: UIテンプレート(HTML)を外部ファイルに分離
 // @history       0.2.52 リソースファイル (style.css) をスクリプト名と同じステムに改名
 // @history       0.2.50 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
+// @history       0.2.73 Add global listener to gemini-common.js for remote UI toggling via gus-toggle-panel event.
 // ==/UserScript==
 
 (function () {

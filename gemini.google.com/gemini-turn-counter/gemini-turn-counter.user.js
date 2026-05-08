@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Turn Counter
 // @namespace    userscript.moukaeritai.work
-// @version      0.4.67
-// @lastModified 2026-04-20
+// @version      0.4.68
+// @lastModified 2026-05-08
 // @history       0.4.67 Removed backward-compatible gemini-history-loader listener from gemini-common.js.
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
@@ -20,6 +20,7 @@
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @noframes
+// @history       0.4.68 Add global listener to gemini-common.js for remote UI toggling via gus-toggle-panel event.
 // ==/UserScript==
 
 (function () {

@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Gemini Auto-Scroll
 // @namespace    userscript.moukaeritai.work
-// @version      0.2.70
-// @lastModified 2026-04-20
+// @version      0.2.71
+// @lastModified 2026-05-08
 // @description  Automatically scroll endlessly to load all history in Gemini
 // @author       Takashi Sasaki
 // @homepageURL  https://x.com/TakashiSasaki
@@ -32,6 +32,7 @@
 // @history       0.2.59 UI共通化: パネルの外枠を gemini-common.html に統合、ストレージを GM_setValue に移行
 // @history       0.2.56 リソースファイル (style.css) をスクリプト名と同じステムに改名
 // @history       0.2.54 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
+// @history       0.2.71 Add global listener to gemini-common.js for remote UI toggling via gus-toggle-panel event.
 // ==/UserScript==
 
 (function () {

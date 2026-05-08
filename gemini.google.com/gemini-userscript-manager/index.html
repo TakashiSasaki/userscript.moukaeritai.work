@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Userscript Manager</title>
+    <link rel="stylesheet" href="../../index.css">
+</head>
+<body>
+    <div class="container">
+        <div class="project-header">
+            <h1 class="project-title">Gemini Userscript Manager</h1>
+            <div class="project-meta">
+                <span class="project-author">@TakashiSasaki</span>
+            </div>
+            <p class="project-description">
+                UI for managing all Gemini related userscripts (check status, compare versions, bulk toggle UI).
+            </p>
+        </div>
+
+        <div class="install-section">
+            <a class="install-button"
+               data-script-name="Gemini Userscript Manager"
+               href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-userscript-manager/gemini-userscript-manager.user.js"
+               target="_blank">
+                <span>Install</span>
+            </a>
+            <div class="version-info" style="display:flex; justify-content:center; gap:10px; margin-top:10px;">
+                <span class="latest-version">...</span>
+                <span class="installed-version" style="display:none;">-</span>
+            </div>
+        </div>
+
+        <div class="project-content">
+            <h2>機能</h2>
+            <ul>
+                <li><strong>既知のスクリプトの管理</strong>: Gemini向けのすべてのユーザースクリプトの状態（インストール済みか、更新があるか）を一覧表示します。</li>
+                <li><strong>バージョン比較</strong>: GitHub上の最新バージョンとローカルのインストール済みバージョンを比較します。</li>
+                <li><strong>UI表示切替</strong>: 他のユーザースクリプトのUIの表示・非表示を個別に、または一括で切り替えることができます。</li>
+            </ul>
+
+            <h2>更新履歴</h2>
+            <ul>
+                <li><strong>v0.1.0</strong>: Initial version.</li>
+            </ul>
+        </div>
+
+        <div class="navigation-footer">
+            <a href="../index.html" class="back-link">← Gemini用スクリプト一覧へ戻る</a>
+        </div>
+    </div>
+    <script src="../../domain-landing.js"></script>
+</body>
+</html>
