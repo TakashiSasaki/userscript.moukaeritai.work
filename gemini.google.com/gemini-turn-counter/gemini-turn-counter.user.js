@@ -3,6 +3,9 @@
 // @namespace    userscript.moukaeritai.work
 // @version      0.4.68
 // @lastModified 2026-05-08
+// @history       0.4.70 Persist counted stats per conversation ID using GM_getValue/GM_setValue.
+// @history       0.4.69 Implemented auto-copy for images on chat change or page exit; removed manual copy UI.
+// @history       0.4.68 Refactored runDeepScan to use window.geminiLoadFullChatHistory and window.geminiProgressiveScrollDown from gemini-common.js.
 // @history       0.4.67 Removed backward-compatible gemini-history-loader listener from gemini-common.js.
 // @description  Count user/model turns, images, and characters in Google Gemini. Features a Deep Scan mode for long conversations.
 // @author       Takashi Sasaki
@@ -15,6 +18,9 @@
 // @resource     geminiTurnCounterCSS https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.css
 // @resource     geminiTurnCounterHTML https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-turn-counter/gemini-turn-counter.html
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-common.js
+// @grant        GM_setClipboard
+// @grant        GM_getValue
+// @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
 // @grant        GM_getResourceText
@@ -43,7 +49,8 @@
     const policy = window.geminiCreateTrustedHTMLPolicy('geminiTurnCounter');
     const PANEL_ID = 'gemini-turn-counter-ui';
     const CHAT_PAGE_PATTERN = /^\/(?:app|gem)(?:\/|$)/;
-    // Removed initial URL check as it will be handled dynamically
+    const CHAT_ID_PATTERN = /\/app\/([a-z0-9]+)/;
+    const STORAGE_PREFIX = 'gtc-stats-';
 
     // Settings
     const SELECTORS = {
@@ -74,6 +81,40 @@
     let uiContainer = null; // Store reference to the main UI container
     let updateStatsTimeout = null;
     let isDeepScanning = false; // Flag to pause auto-updating during manual deep scan
+
+    // --- Auto-Copy State ---
+    let preparedHtmlString = "";
+    let preparedImagesHash = "";
+    let lastCopiedImagesHash = "";
+    let isPreparing = false;
+    let lastChatId = "";
+
+    // --- Storage Helpers ---
+    const getCurrentChatId = () => {
+        const match = location.pathname.match(CHAT_ID_PATTERN);
+        return match ? match[1] : "";
+    };
+
+    const saveStatsToStorage = (statsData) => {
+        const chatId = getCurrentChatId();
+        if (!chatId) return;
+        const record = {
+            ...statsData,
+            savedAt: Date.now()
+        };
+        GM_setValue(STORAGE_PREFIX + chatId, JSON.stringify(record));
+    };
+
+    const loadStatsFromStorage = (chatId) => {
+        if (!chatId) return null;
+        const raw = GM_getValue(STORAGE_PREFIX + chatId, null);
+        if (!raw) return null;
+        try {
+            return JSON.parse(raw);
+        } catch {
+            return null;
+        }
+    };
 
     // Trusted Types Policy Creation
 
@@ -147,79 +188,61 @@
             });
         });
     };
-
-    // Keep track of processed images to avoid refetching heavily
-    // In a real script we might need better caching or just fetch on demand.
-
-    // Global reference for external access
-    let latestCollectedImages = [];
+    const getImagesHash = (images) => {
+        return images.map(img => img.src).join('|');
+    };
 
     /**
-     * Reusable image-to-clipboard function
+     * Internal image-to-HTML helper for background preparation
      * @param {Array} targetImages - Array of {src, type} objects
      * @param {number|boolean} heightLimit - Max height limit, or false/0 for no limit
-     * @param {HTMLElement} [statusSpan] - Optional element to output progress
-     * @returns {Promise<Blob>}
+     * @returns {Promise<string>}
      */
-    const copyImagesToHtmlClipboard = async (targetImages, heightLimit = false, statusSpan = null) => {
-        if (!targetImages || targetImages.length === 0) throw new Error("No images to copy");
+    const prepareImagesHtml = async (targetImages, heightLimit = 200) => {
+        if (!targetImages || targetImages.length === 0) return "";
 
-        let processedCount = 0;
         const promises = targetImages.map(async (imgData) => {
             const dataUri = await fetchImageData(imgData.src);
-            processedCount++;
-            if (statusSpan) statusSpan.textContent = `${processedCount}/${targetImages.length}`;
-
-            let imgTag = '';
             if (dataUri) {
                 const styleAttr = heightLimit ? ` style="max-height: ${heightLimit}px;"` : '';
-                imgTag = `<img src="${dataUri}"${styleAttr} data-source-type="${imgData.type}" />`;
+                return `<img src="${dataUri}"${styleAttr} data-source-type="${imgData.type}" />`;
             }
-            return imgTag;
+            return '';
         });
 
         const results = await Promise.all(promises);
-        const htmlToCopy = results.join('');
-
-        if (statusSpan) statusSpan.textContent = `${htmlToCopy.length} chars`;
-
-        return new Blob([htmlToCopy], { type: "text/html" });
+        return results.join('');
     };
 
-    // --- Custom Event Listener for Data Request ---
-    document.addEventListener('gemini-turn-counter-copy-images', (e) => {
-        const { target = 'all', maxHeight = 200 } = e.detail || {};
+    const triggerAutoCopy = () => {
+        if (!preparedHtmlString || preparedImagesHash === "") return;
+        if (preparedImagesHash === lastCopiedImagesHash) return;
 
-        let targetImages = latestCollectedImages;
-        if (target === 'user') {
-            targetImages = latestCollectedImages.filter(i => i.type === 'user');
-        } else if (target === 'model') {
-            targetImages = latestCollectedImages.filter(i => i.type === 'model');
+        try {
+            GM_setClipboard(preparedHtmlString, 'html');
+            console.log('[Gemini Turn Counter] Auto-copied images to clipboard.');
+            lastCopiedImagesHash = preparedImagesHash;
+        } catch (err) {
+            console.error('[Gemini Turn Counter] Auto-copy failed:', err);
         }
+    };
 
-        if (targetImages.length === 0) {
-            document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images-result', {
-                detail: { success: false, message: 'No images found for target: ' + target }
-            }));
-            return;
+    const prepareAutoCopyData = async (images) => {
+        const hash = getImagesHash(images);
+        if (hash === preparedImagesHash || isPreparing) return;
+
+        isPreparing = true;
+        try {
+            const html = await prepareImagesHtml(images, 200);
+            preparedHtmlString = html;
+            preparedImagesHash = hash;
+            console.log('[Gemini Turn Counter] Background preparation complete.');
+        } catch (err) {
+            console.error('[Gemini Turn Counter] Preparation failed:', err);
+        } finally {
+            isPreparing = false;
         }
-
-        // To comply with User Gesture constraints for clipboard API, the CustomEvent
-        // MUST be dispatched synchronously during a user gesture (e.g. click).
-        const clipboardPromise = copyImagesToHtmlClipboard(targetImages, maxHeight);
-        const item = new ClipboardItem({ "text/html": clipboardPromise });
-
-        navigator.clipboard.write([item]).then(() => {
-            document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images-result', {
-                detail: { success: true, count: targetImages.length }
-            }));
-        }).catch(err => {
-            console.error('Gemini Turn Counter: External Clipboard write failed:', err);
-            document.dispatchEvent(new CustomEvent('gemini-turn-counter-copy-images-result', {
-                detail: { success: false, error: err.toString() }
-            }));
-        });
-    });
+    };
 
     const updateStats = (forceUpdate = false, overrideData = null) => {
         if (isDeepScanning && !forceUpdate) return; // Ignore mutations during deep scan
@@ -321,66 +344,28 @@
                 });
             }
 
-            // Update global reference
-            latestCollectedImages = collectedImages;
-
+            // Update stats logic completed for this turn
             const imageCount = collectedImages.length;
+
+            // Persist stats per conversation ID
+            saveStatsToStorage({
+                userTurnsCount, modelTurnsCount,
+                userCharCount, modelCharCount,
+                totalArtifacts, totalLinkCards,
+                totalCodeBlocks, totalTables, totalThinkingBlocks,
+                imageCount,
+                userImagesCount: collectedImages.filter(i => i.type === 'user').length,
+                modelImagesCount: collectedImages.filter(i => i.type === 'model').length
+            });
+
+            if (imageCount > 0) {
+                prepareAutoCopyData(collectedImages);
+            }
 
             if (!contentDiv.hasAttribute('data-gtc-initialized')) {
                 const template = GM_getResourceText('geminiTurnCounterHTML');
                 window.geminiSetInnerHTML(contentDiv, template, policy);
                 contentDiv.setAttribute('data-gtc-initialized', 'true');
-
-                // --- Initial Event Binding (Only Once) ---
-                const copyBtnU = contentDiv.querySelector('#gtc-copy-user');
-                const copyBtnM = contentDiv.querySelector('#gtc-copy-model');
-                const copyBtnAll = contentDiv.querySelector('#gtc-copy-all');
-                const statusSpan = contentDiv.querySelector('#gtc-copy-status');
-                const heightEnable = contentDiv.querySelector('#gtc-height-enable');
-                const heightInput = contentDiv.querySelector('#gtc-height-input');
-
-                const bindCopyEvent = (btn, originalLabel, typeFilter) => {
-                    if (!btn) return;
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        // Dynamically evaluate targetImages when clicked
-                        let targetImages = latestCollectedImages;
-                        if (typeFilter) {
-                            targetImages = targetImages.filter(i => i.type === typeFilter);
-                        }
-
-                        if (targetImages.length === 0) return;
-
-                        btn.textContent = '...';
-                        if (statusSpan) statusSpan.textContent = '0/' + targetImages.length;
-
-                        const useHeightLimit = heightEnable ? heightEnable.checked : false;
-                        const heightLimit = useHeightLimit && heightInput ? heightInput.value : false;
-
-                        const clipboardPromise = copyImagesToHtmlClipboard(targetImages, heightLimit, statusSpan)
-                            .catch(err => {
-                                console.error('Image processing failed', err);
-                                if (statusSpan) statusSpan.textContent = 'Err';
-                                throw err;
-                            });
-
-                        const item = new ClipboardItem({ "text/html": clipboardPromise });
-                        navigator.clipboard.write([item]).then(() => {
-                            btn.textContent = 'Copied!';
-                            setTimeout(() => {
-                                btn.textContent = originalLabel;
-                                if (statusSpan && !statusSpan.textContent.includes('chars')) statusSpan.textContent = '';
-                            }, 3000);
-                        }).catch(err => {
-                            console.error('Clipboard write failed:', err);
-                            btn.textContent = 'Err';
-                        });
-                    });
-                };
-
-                bindCopyEvent(copyBtnU, '📋U', 'user');
-                bindCopyEvent(copyBtnM, '📋M', 'model');
-                bindCopyEvent(copyBtnAll, '📋All', null);
 
                 const deepScanBtn = document.getElementById('gtc-deep-scan-btn');
                 if (deepScanBtn) {
@@ -410,26 +395,6 @@
             const modelImagesCount = collectedImages.filter(i => i.type === 'model').length;
             contentDiv.querySelector('#gtc-val-images-ratio').textContent = `${userImagesCount}:${modelImagesCount}`;
 
-            const copyBtnU = contentDiv.querySelector('#gtc-copy-user');
-            const copyBtnM = contentDiv.querySelector('#gtc-copy-model');
-            const copyBtnAll = contentDiv.querySelector('#gtc-copy-all');
-            const heightRow = contentDiv.querySelector('#gtc-row-height');
-
-            if (imageCount > 0) {
-                copyBtnU.style.display = 'inline-block';
-                copyBtnM.style.display = 'inline-block';
-                copyBtnAll.style.display = 'inline-block';
-                heightRow.style.display = 'block';
-
-                copyBtnU.disabled = userImagesCount === 0;
-                copyBtnM.disabled = modelImagesCount === 0;
-            } else {
-                copyBtnU.style.display = 'none';
-                copyBtnM.style.display = 'none';
-                copyBtnAll.style.display = 'none';
-                heightRow.style.display = 'none';
-            }
-
             const thumbnailsContainer = contentDiv.querySelector('#gtc-thumbnails-container');
             if (imageCount > 0) {
                 const thumbnailsHtml = `<div class="gtc-thumbnails">
@@ -457,170 +422,126 @@
         const statusEl = document.getElementById('gtc-scan-status');
         if (scanBtn) scanBtn.disabled = true;
 
-        const setStatus = (msg) => { if (statusEl) statusEl.textContent = msg; console.log('[GTC Deep Scan]', msg); };
-        setStatus("Finding scroll container...");
+        const setStatus = (msg) => {
+            if (statusEl) statusEl.textContent = msg;
+            console.log('[GTC Deep Scan]', msg);
+        };
 
-        let scroller = document.querySelector('infinite-scroller.chat-history') ||
-            document.querySelector('chat-window-content infinite-scroller');
-        if (!scroller) {
-            const scrollers = Array.from(document.querySelectorAll('infinite-scroller'));
-            scroller = scrollers.find(el => el.clientWidth > 300) || document.documentElement;
-        }
+        try {
+            setStatus("Preparing scan...");
 
-        if (!scroller.hasAttribute('tabindex') && scroller !== document.documentElement) {
-            scroller.setAttribute('tabindex', '-1');
-        }
-        if (scroller !== document.documentElement) scroller.focus({ preventScroll: true });
+            // --- Phase 1: Ascent ---
+            const loadResult = await window.geminiLoadFullChatHistory({
+                onProgress: (status, detail) => setStatus(`${status}\n${detail}`),
+                closeOtherPanels: true
+            });
 
-        setStatus("Ascending to top...");
-        let highestScrollHeight = scroller.scrollHeight;
-        let stallCount = 0;
-        let attempts = 0;
-
-        // Ascend to Top
-        while (attempts < 250) {
-            const scrollStep = Math.max(800, scroller.clientHeight * 0.8 || 800);
-            if (scroller === document.documentElement) window.scrollBy({ top: -scrollStep, behavior: 'instant' });
-            else scroller.scrollTop -= scrollStep;
-
-            await window.geminiSleep(300);
-            const currentTop = scroller === document.documentElement ? window.scrollY : scroller.scrollTop;
-
-            if (currentTop <= 10) {
-                await window.geminiSleep(1000); // give framework chance to load older turns
-                if (scroller.scrollHeight <= highestScrollHeight + 50) {
-                    stallCount++;
-                    if (stallCount >= 3) break; // Reached absolute top
-                } else {
-                    stallCount = 0;
-                    highestScrollHeight = scroller.scrollHeight;
-                }
-            } else {
-                stallCount = 0;
+            if (!loadResult.success) {
+                console.warn('[GTC Deep Scan] Ascent encountered issues:', loadResult.reason);
             }
-            attempts++;
-        }
 
-        if (scroller === document.documentElement) window.scrollTo({ top: 0, behavior: 'instant' });
-        else scroller.scrollTop = 0;
-        await window.geminiSleep(1000);
+            // --- Phase 2: Descent and Collection ---
+            setStatus("Descending and collecting...");
 
-        setStatus("Descending and collecting...");
+            // Deduplication structures
+            const seenUserTurns = new Set();
+            const seenModelTurns = new Set();
+            const seenArtifacts = new Set();
+            const seenLinkCards = new Set();
+            const seenCodeBlocks = new Set();
+            const seenTables = new Set();
+            const seenThinkingBlocks = new Set();
+            const seenImages = new Set();
 
-        // Deduplication structures
-        const seenUserTurns = new Set();
-        const seenModelTurns = new Set();
-        const seenArtifacts = new Set();
-        const seenLinkCards = new Set();
-        const seenCodeBlocks = new Set();
-        const seenTables = new Set();
-        const seenThinkingBlocks = new Set();
+            const overrideData = {
+                userTurnsCount: 0, modelTurnsCount: 0,
+                userCharCount: 0, modelCharCount: 0,
+                totalArtifacts: 0, totalLinkCards: 0,
+                totalCodeBlocks: 0, totalTables: 0, totalThinkingBlocks: 0,
+                collectedImages: []
+            };
 
-        let overrideData = {
-            userTurnsCount: 0, modelTurnsCount: 0,
-            userCharCount: 0, modelCharCount: 0,
-            totalArtifacts: 0, totalLinkCards: 0,
-            totalCodeBlocks: 0, totalTables: 0, totalThinkingBlocks: 0,
-            collectedImages: [] // using src as unique key logic within loop
-        };
-        const seenImages = new Set();
+            const getHash = (el) => {
+                if (el.id) return el.id;
+                const t = el.textContent.replace(/\s+/g, ' ').trim().substring(0, 50);
+                return t.length > 0 ? t : Math.random().toString();
+            };
 
-        const getHash = (el) => {
-            // Very simple hash: using ID if available, otherwise first 50 chars of text content
-            if (el.id) return el.id;
-            const t = el.textContent.replace(/\\s+/g, ' ').trim().substring(0, 50);
-            return t.length > 0 ? t : Math.random().toString();
-        };
-
-        attempts = 0;
-        stallCount = 0;
-
-        // Descend and collect
-        while (attempts < 300) {
-            document.querySelectorAll(SELECTORS.userTurn).forEach(turn => {
-                const hash = getHash(turn);
-                if (!seenUserTurns.has(hash)) {
-                    seenUserTurns.add(hash);
-                    overrideData.userTurnsCount++;
-                    turn.querySelectorAll(SELECTORS.userText).forEach(node => {
-                        overrideData.userCharCount += getTextContentLength(node);
+            await window.geminiProgressiveScrollDown({
+                onProgress: (status, detail) => setStatus(detail),
+                onStep: async () => {
+                    // Collect current view data
+                    document.querySelectorAll(SELECTORS.userTurn).forEach(turn => {
+                        const hash = getHash(turn);
+                        if (!seenUserTurns.has(hash)) {
+                            seenUserTurns.add(hash);
+                            overrideData.userTurnsCount++;
+                            turn.querySelectorAll(SELECTORS.userText).forEach(node => {
+                                overrideData.userCharCount += getTextContentLength(node);
+                            });
+                            turn.querySelectorAll(SELECTORS.userImage).forEach(img => {
+                                if (!seenImages.has(img.src)) {
+                                    seenImages.add(img.src);
+                                    overrideData.collectedImages.push({ src: img.src, type: 'user' });
+                                }
+                            });
+                        }
                     });
-                    turn.querySelectorAll(SELECTORS.userImage).forEach(img => {
-                        if (!seenImages.has(img.src)) {
-                            seenImages.add(img.src);
-                            overrideData.collectedImages.push({ src: img.src, type: 'user' });
+
+                    document.querySelectorAll(SELECTORS.modelTurn).forEach(turn => {
+                        const hash = getHash(turn);
+                        if (!seenModelTurns.has(hash)) {
+                            seenModelTurns.add(hash);
+                            overrideData.modelTurnsCount++;
+                            overrideData.modelCharCount += getTextContentLength(turn);
+
+                            turn.querySelectorAll(SELECTORS.codeBlock).forEach(cb => {
+                                const cbHash = getHash(cb);
+                                if (!seenCodeBlocks.has(cbHash)) { seenCodeBlocks.add(cbHash); overrideData.totalCodeBlocks++; }
+                            });
+                            turn.querySelectorAll(SELECTORS.tableBlock).forEach(tb => {
+                                const tbHash = getHash(tb);
+                                if (!seenTables.has(tbHash)) { seenTables.add(tbHash); overrideData.totalTables++; }
+                            });
+                            turn.querySelectorAll(SELECTORS.artifact).forEach(ar => {
+                                const arHash = getHash(ar);
+                                if (!seenArtifacts.has(arHash)) { seenArtifacts.add(arHash); overrideData.totalArtifacts++; }
+                            });
+                            turn.querySelectorAll(SELECTORS.linkCard).forEach(lc => {
+                                const lcHash = getHash(lc);
+                                if (!seenLinkCards.has(lcHash)) { seenLinkCards.add(lcHash); overrideData.totalLinkCards++; }
+                            });
+                            turn.querySelectorAll(SELECTORS.thinkingBlock).forEach(tk => {
+                                const tkHash = getHash(tk);
+                                if (!seenThinkingBlocks.has(tkHash)) { seenThinkingBlocks.add(tkHash); overrideData.totalThinkingBlocks++; }
+                            });
+                            turn.querySelectorAll(SELECTORS.modelImage).forEach(img => {
+                                if (!seenImages.has(img.src)) {
+                                    seenImages.add(img.src);
+                                    overrideData.collectedImages.push({ src: img.src, type: 'model' });
+                                }
+                            });
                         }
                     });
                 }
             });
 
-            document.querySelectorAll(SELECTORS.modelTurn).forEach(turn => {
-                const hash = getHash(turn);
-                if (!seenModelTurns.has(hash)) {
-                    seenModelTurns.add(hash);
-                    overrideData.modelTurnsCount++;
-                    overrideData.modelCharCount += getTextContentLength(turn);
+            setStatus("Scan complete!");
+            await window.geminiSleep(1000);
+            setStatus("");
 
-                    turn.querySelectorAll(SELECTORS.codeBlock).forEach(cb => {
-                        const cbHash = getHash(cb);
-                        if (!seenCodeBlocks.has(cbHash)) { seenCodeBlocks.add(cbHash); overrideData.totalCodeBlocks++; }
-                    });
-                    turn.querySelectorAll(SELECTORS.tableBlock).forEach(tb => {
-                        const tbHash = getHash(tb);
-                        if (!seenTables.has(tbHash)) { seenTables.add(tbHash); overrideData.totalTables++; }
-                    });
-                    turn.querySelectorAll(SELECTORS.artifact).forEach(ar => {
-                        const arHash = getHash(ar);
-                        if (!seenArtifacts.has(arHash)) { seenArtifacts.add(arHash); overrideData.totalArtifacts++; }
-                    });
-                    turn.querySelectorAll(SELECTORS.linkCard).forEach(lc => {
-                        const lcHash = getHash(lc);
-                        if (!seenLinkCards.has(lcHash)) { seenLinkCards.add(lcHash); overrideData.totalLinkCards++; }
-                    });
-                    turn.querySelectorAll(SELECTORS.thinkingBlock).forEach(tk => {
-                        const tkHash = getHash(tk);
-                        if (!seenThinkingBlocks.has(tkHash)) { seenThinkingBlocks.add(tkHash); overrideData.totalThinkingBlocks++; }
-                    });
-                    turn.querySelectorAll(SELECTORS.modelImage).forEach(img => {
-                        if (!seenImages.has(img.src)) {
-                            seenImages.add(img.src);
-                            overrideData.collectedImages.push({ src: img.src, type: 'model' });
-                        }
-                    });
-                }
-            });
+            // Push the collected deep scan data to updateStats
+            updateStats(true, overrideData);
 
-            const scrollStep = Math.max(800, scroller.clientHeight * 0.8 || 800);
-            const currentTop = scroller === document.documentElement ? window.scrollY : scroller.scrollTop;
-            const maxScrollTop = scroller.scrollHeight - (scroller.clientHeight || window.innerHeight);
-
-            // Using >= maxScrollTop - 50 to allow slight sub-pixel rounding
-            if (currentTop >= maxScrollTop - 50) {
-                stallCount++;
-                if (stallCount >= 3) break;
-            } else {
-                stallCount = 0;
-            }
-
-            if (scroller === document.documentElement) window.scrollBy({ top: scrollStep, behavior: 'instant' });
-            else scroller.scrollTop += scrollStep;
-
-            await window.geminiSleep(300);
-            attempts++;
+        } catch (error) {
+            console.error('[GTC Deep Scan] Fatal error during scan:', error);
+            setStatus("Scan failed.");
+        } finally {
+            if (scanBtn) scanBtn.disabled = false;
+            isDeepScanning = false;
+            // Re-attach observer
+            if (mainObserver) mainObserver.observe(document.body, { childList: true, subtree: true });
         }
-
-        setStatus("Scan complete!");
-        await window.geminiSleep(1000);
-        setStatus("");
-
-        if (scanBtn) scanBtn.disabled = false;
-
-        // Push the collected deep scan data to updateStats
-        updateStats(true, overrideData);
-
-        isDeepScanning = false;
-        // Re-attach observer
-        if (mainObserver) mainObserver.observe(document.body, { childList: true, subtree: true });
     }
 
     /**
@@ -678,6 +599,10 @@
                 panelShell.style.left = savedX;
                 panelShell.style.top = savedY;
             }
+
+            // Global trigger for page exit
+            window.addEventListener('beforeunload', triggerAutoCopy);
+            lastChatId = getCurrentChatId();
         }
 
         // Initial run
@@ -744,6 +669,16 @@
         if (location.href !== lastUrl) {
             lastUrl = location.href;
             console.log('[Gemini Turn Counter] URL changed:', location.href);
+
+            // Check if Chat ID changed
+            const newChatId = getCurrentChatId();
+            
+            if (newChatId !== lastChatId && lastChatId !== "") {
+                console.log('[Gemini Turn Counter] Chat ID changed. Triggering auto-copy.');
+                triggerAutoCopy();
+            }
+            lastChatId = newChatId;
+
             // Delay slightly to ensure the new DOM is partially rendered before initialization
             setTimeout(checkUrlAndManageScriptState, 500);
         }
