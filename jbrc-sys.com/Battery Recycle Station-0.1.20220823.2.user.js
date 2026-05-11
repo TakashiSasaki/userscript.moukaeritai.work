@@ -6,6 +6,7 @@
 // @author       Takashi SASAKI
 // @website      https://twitter.com/TakashiSasaki
 // @match        https://www.jbrc-sys.com/brsp/a2A/*
+// @match        https://userscript.moukaeritai.work/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=jbrc.com
 // @grant        GM_addStyle
 // @updateURL    https://gist.github.com/TakashiSasaki/4d507c70fdc60faff72c60fb183d0360/raw/jbrc-battery-recycle-station.user.js
