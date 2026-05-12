@@ -10,6 +10,7 @@
 // @grant        GM_info
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/claude.ai/Add%20Delete%20Button%20for%20Chat%20Conversations%20on%20Claude.ai-0.4.20240326.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/claude.ai/Add%20Delete%20Button%20for%20Chat%20Conversations%20on%20Claude.ai-0.4.20240326.user.js
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function() {

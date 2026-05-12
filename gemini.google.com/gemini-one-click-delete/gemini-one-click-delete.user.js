@@ -29,6 +29,7 @@
 // @history       0.3.25 リソース化リファクタリング: UIテンプレート(HTML)を外部ファイルに分離
 // @history       0.3.22 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // @history       0.3.36 Add global listener to gemini-common.js for remote UI toggling via gus-toggle-panel event.
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function () {

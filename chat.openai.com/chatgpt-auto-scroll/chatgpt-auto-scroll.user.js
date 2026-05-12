@@ -13,6 +13,7 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @license      MIT
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function() {

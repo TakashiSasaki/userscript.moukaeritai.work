@@ -24,6 +24,7 @@
 // @history       0.1.24 UI共通化: パネルの外枠を gemini-common.html に統合し、ステータスインジケーターとして表示
 // @history       0.1.23 リソース化リファクタリング: UIテンプレート(HTML/CSS)を外部ファイルに分離
 // @history       0.1.33 Add global listener to gemini-common.js for remote UI toggling via gus-toggle-panel event.
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function () {

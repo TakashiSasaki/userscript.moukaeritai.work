@@ -13,6 +13,7 @@
 // @run-at       document-start
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/onamae.com/onamae-block-evil/onamae-block-evil.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/onamae.com/onamae-block-evil/onamae-block-evil.user.js
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function () {

@@ -23,6 +23,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-userscript-manager/gemini-userscript-manager.user.js
 // @noframes
 // @history       0.1.0 Initial version.
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function () {

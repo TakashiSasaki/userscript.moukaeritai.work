@@ -27,6 +27,7 @@
 // @grant        GM_addStyle
 // @noframes
 // @history       0.4.68 Add global listener to gemini-common.js for remote UI toggling via gus-toggle-panel event.
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function () {

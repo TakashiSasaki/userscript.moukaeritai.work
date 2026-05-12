@@ -11,6 +11,7 @@
 // @grant        GM_setClipboard
 // @updateURL    https://gist.github.com/TakashiSasaki/45afd852232e4a2a9fa39b5f5f32a6ce/raw/copy-passmark-cpu-benchmark.user.js
 // @downloadURL  https://gist.github.com/TakashiSasaki/45afd852232e4a2a9fa39b5f5f32a6ce/raw/copy-passmark-cpu-benchmark.user.js
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function() {

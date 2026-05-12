@@ -11,6 +11,7 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=line.me
 // @grant        unsafeWindow
 // @grant        GM_info
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function() {

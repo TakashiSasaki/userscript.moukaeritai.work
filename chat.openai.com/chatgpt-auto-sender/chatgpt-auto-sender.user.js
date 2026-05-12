@@ -12,6 +12,7 @@
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-auto-sender/chatgpt-auto-sender.user.js
 // @grant        GM_info
 // @license      MIT
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function() {

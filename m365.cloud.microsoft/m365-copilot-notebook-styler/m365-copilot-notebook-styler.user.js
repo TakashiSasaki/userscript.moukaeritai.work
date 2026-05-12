@@ -12,6 +12,7 @@
 // @grant        GM_getResourceText
 // @require      https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/m365.cloud.microsoft/m365-common.js
 // @resource     m365CommonHtml https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/m365.cloud.microsoft/m365-common.html
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function () {

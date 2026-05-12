@@ -35,6 +35,7 @@
 // @history       0.2.30 リソースファイル (style.css, template.html) をスクリプト名と同じステムに改名
 // @history       0.2.29 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整 (ログ出力を追加)
 // @history       0.2.43 Add global listener to gemini-common.js for remote UI toggling via gus-toggle-panel event.
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function () {

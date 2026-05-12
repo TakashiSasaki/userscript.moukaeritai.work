@@ -13,6 +13,7 @@
 // @grant        GM_info
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/moodle41.lms.ehime-u.ac.jp/Moodle%20Edit%20Floating%20Tools%20%28DoubleClick%20to%20Fill%20ID%E3%83%8A%E3%83%B3%E3%83%90%29-1.5.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/moodle41.lms.ehime-u.ac.jp/Moodle%20Edit%20Floating%20Tools%20%28DoubleClick%20to%20Fill%20ID%E3%83%8A%E3%83%B3%E3%83%90%29-1.5.user.js
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function() {

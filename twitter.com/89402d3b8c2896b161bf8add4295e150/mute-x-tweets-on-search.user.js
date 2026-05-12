@@ -12,6 +12,7 @@
 // @grant        none
 // @updateURL    https://gist.githubusercontent.com/TakashiSasaki/89402d3b8c2896b161bf8add4295e150/raw/mute-x-tweets-on-search.user.js
 // @downloadURL    https://gist.githubusercontent.com/TakashiSasaki/89402d3b8c2896b161bf8add4295e150/raw/mute-x-tweets-on-search.user.js
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 

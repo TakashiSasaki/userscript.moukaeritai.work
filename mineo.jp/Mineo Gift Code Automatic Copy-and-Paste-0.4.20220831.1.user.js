@@ -17,6 +17,7 @@
 // @grant        GM_info
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/mineo.jp/Mineo%20Gift%20Code%20Automatic%20Copy-and-Paste-0.4.20220831.1.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/mineo.jp/Mineo%20Gift%20Code%20Automatic%20Copy-and-Paste-0.4.20220831.1.user.js
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function() {
