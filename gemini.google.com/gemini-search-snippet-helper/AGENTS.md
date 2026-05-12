@@ -35,7 +35,7 @@ The script utilizes the `window.navigation` API (where available) to detect clie
 4. **インストールボタンの `href` は必ず GitHub Raw URL を使用すること（重要）**:
    - `index.html` 内の `.install-button` の `href` 属性には、**必ず**以下の形式の GitHub Raw URL を設定してください:
      ```
-     https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/SCRIPT_NAME/SCRIPT_NAME.user.js
+     https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/SCRIPT_NAME/SCRIPT_NAME.user.js
      ```
    - **ローカル相対パスを使用してはいけません**（例: `gemini-artifact-exporter/gemini-artifact-exporter.user.js`）。`domain-landing.js` の `fetchVersion()` はこの `href` を使って GitHub から `@version` を取得するため、ローカルパスでは CORS エラーが発生しバージョン取得に失敗します。
    - **ハードコードされたバージョン文字列をボタンテキストに含めてはいけません**（例: `Install (v0.4.57)`）。バージョン表示は `domain-landing.js` が GitHub から動的に取得して注入するため、ハードコードすると古いバージョンが表示され続けます。
@@ -43,7 +43,7 @@ The script utilizes the `window.navigation` API (where available) to detect clie
      ```html
      <a class="install-button"
         data-script-name="Gemini Example Script"
-        href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/gemini.google.com/gemini-example/gemini-example.user.js"
+        href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-example/gemini-example.user.js"
         target="_blank">
        <span>Install</span>
      </a>
