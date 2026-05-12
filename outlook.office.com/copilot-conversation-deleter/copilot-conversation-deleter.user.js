@@ -8,6 +8,7 @@
 // @match        https://userscript.moukaeritai.work/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=office.com
 // @grant        GM_info
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function () {

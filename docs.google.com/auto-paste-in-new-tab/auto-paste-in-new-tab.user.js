@@ -11,6 +11,7 @@
 // @grant        GM_info
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/docs.google.com/auto-paste-in-new-tab/auto-paste-in-new-tab.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/docs.google.com/auto-paste-in-new-tab/auto-paste-in-new-tab.user.js
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function () {

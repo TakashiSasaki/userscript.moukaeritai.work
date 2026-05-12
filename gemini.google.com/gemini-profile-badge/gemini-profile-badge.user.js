@@ -29,6 +29,7 @@
 // @history       0.1.38 UI共通化: パネルの外枠を gemini-common.html に統合し、パネル内でバッジを編集できるように変更
 // @history       0.1.34 共通ライブラリの更新: ユーザースクリプトのUIが重ならないように自動配置を調整
 // @history       0.1.47 Add global listener to gemini-common.js for remote UI toggling via gus-toggle-panel event.
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function () {

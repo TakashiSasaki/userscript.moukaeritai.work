@@ -11,6 +11,7 @@
 // @grant        GM_info
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-chat-history-shortcut/grok-chat-history-shortcut.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-chat-history-shortcut/grok-chat-history-shortcut.user.js
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function() {

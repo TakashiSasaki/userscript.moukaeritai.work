@@ -18,6 +18,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/twitter.com/38e2a5332cb05cf7b6a8692244774015/TweetLater.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/twitter.com/38e2a5332cb05cf7b6a8692244774015/TweetLater.user.js
 // @lastModified 2026-04-07
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 (function() {
     'use strict';

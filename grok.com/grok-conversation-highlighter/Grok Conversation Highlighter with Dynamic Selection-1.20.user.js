@@ -10,6 +10,7 @@
 // @run-at       document-idle
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-conversation-highlighter/Grok%20Conversation%20Highlighter%20with%20Dynamic%20Selection-1.20.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/grok.com/grok-conversation-highlighter/Grok%20Conversation%20Highlighter%20with%20Dynamic%20Selection-1.20.user.js
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function() {

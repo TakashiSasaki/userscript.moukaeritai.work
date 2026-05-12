@@ -12,6 +12,7 @@
 // @grant        GM_info
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/onamae.com/onamae-rr-backup/onamae-rr-backup.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/onamae.com/onamae-rr-backup/onamae-rr-backup.user.js
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function () {

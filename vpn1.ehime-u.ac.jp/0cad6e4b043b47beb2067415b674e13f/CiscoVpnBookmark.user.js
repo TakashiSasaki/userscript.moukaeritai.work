@@ -12,6 +12,7 @@
 // @updateURL    https://gist.github.com/TakashiSasaki/0cad6e4b043b47beb2067415b674e13f/raw/CiscoVpnBookmark.user.js
 // @downloadURL  https://gist.github.com/TakashiSasaki/0cad6e4b043b47beb2067415b674e13f/raw/CiscoVpnBookmark.user.js
 
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function() {

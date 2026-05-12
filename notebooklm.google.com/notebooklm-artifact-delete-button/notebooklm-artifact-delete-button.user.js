@@ -11,6 +11,7 @@
 // @homepageURL  https://x.com/TakashiSasaki
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/notebooklm.google.com/notebooklm-artifact-delete-button/notebooklm-artifact-delete-button.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/notebooklm.google.com/notebooklm-artifact-delete-button/notebooklm-artifact-delete-button.user.js
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function() {

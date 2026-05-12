@@ -12,6 +12,7 @@
 // @grant        GM_info
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/cpubenchmark.net/Copy%20CPU%20benchmark%20table%20of%20Passmark-0.5.20220819.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/cpubenchmark.net/Copy%20CPU%20benchmark%20table%20of%20Passmark-0.5.20220819.user.js
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function() {

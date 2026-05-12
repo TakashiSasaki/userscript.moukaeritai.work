@@ -14,6 +14,7 @@
 // @grant        GM_info
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/twitter.com/Mute%20X%20Tweets%20on%20Search-2024-04-29.2.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/twitter.com/Mute%20X%20Tweets%20on%20Search-2024-04-29.2.user.js
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function() {

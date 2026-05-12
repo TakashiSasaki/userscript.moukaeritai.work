@@ -15,6 +15,7 @@
 // @grant        GM_addStyle
 // @updateURL    https://gist.github.com/TakashiSasaki/4fe4b7e2b94b1f4479d797c9107eb252/raw/MineoGift.user.js
 // @downloadURL  https://gist.github.com/TakashiSasaki/4fe4b7e2b94b1f4479d797c9107eb252/raw/MineoGift.user.js
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function() {

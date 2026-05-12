@@ -13,6 +13,7 @@
 // @grant        GM_addStyle
 // @updateURL    https://gist.github.com/TakashiSasaki/4d507c70fdc60faff72c60fb183d0360/raw/jbrc-battery-recycle-station.user.js
 // @downloadURL  https://gist.github.com/TakashiSasaki/4d507c70fdc60faff72c60fb183d0360/raw/jbrc-battery-recycle-station.user.js
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function() {

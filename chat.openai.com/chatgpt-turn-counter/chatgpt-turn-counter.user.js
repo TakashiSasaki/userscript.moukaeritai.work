@@ -10,6 +10,7 @@
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-turn-counter/chatgpt-turn-counter.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/chat.openai.com/chatgpt-turn-counter/chatgpt-turn-counter.user.js
 // @grant        GM_info
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function () {

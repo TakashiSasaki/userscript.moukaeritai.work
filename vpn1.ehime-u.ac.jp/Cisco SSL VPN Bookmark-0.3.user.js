@@ -13,6 +13,7 @@
 // @grant        GM_info
 // @updateURL    https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/vpn1.ehime-u.ac.jp/Cisco%20SSL%20VPN%20Bookmark-0.3.user.js
 // @downloadURL  https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/userscript.moukaeritai.work/vpn1.ehime-u.ac.jp/Cisco%20SSL%20VPN%20Bookmark-0.3.user.js
+// @match https://userscript.moukaeritai.work/*
 // ==/UserScript==
 
 (function() {
