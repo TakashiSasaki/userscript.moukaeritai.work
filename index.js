@@ -19,13 +19,22 @@ function getCachedElements(item) {
 
 // Total Scripts Count
 function updateTotalScriptsCount() {
-    const items = document.querySelectorAll('.project-item');
-    let count = 0;
-    items.forEach(item => {
-        if (item.style.display !== 'none') count++;
-    });
+    const isRootPage = document.querySelectorAll('.domain-card').length > 0;
     const badge = document.getElementById('total-scripts-count');
-    if (badge) badge.textContent = count;
+
+    if (isRootPage) {
+        // On root page, we track actually installed unique scripts
+        // This must be updated when events fire, handled directly in processScriptInstalledResult instead of here
+        // Initial value is 0 set in HTML.
+    } else {
+        // On subpages, we count visible project items (for search)
+        const items = document.querySelectorAll('.project-item');
+        let count = 0;
+        items.forEach(item => {
+            if (item.style.display !== 'none') count++;
+        });
+        if (badge) badge.textContent = count;
+    }
 }
 
 // Search and Filter Logic
@@ -225,6 +234,18 @@ function processScriptInstalledResult(name, version) {
                 const badge = card.querySelector('.installed-count-badge');
                 if (badge) {
                     badge.textContent = installed.length;
+                }
+
+                // Update total installed count badge on root page
+                const totalScriptsBadge = document.getElementById('total-scripts-count');
+                if (totalScriptsBadge) {
+                    let totalCount = 0;
+                    document.querySelectorAll('.domain-card').forEach(c => {
+                        if (c.dataset.installedScripts) {
+                            totalCount += JSON.parse(c.dataset.installedScripts).length;
+                        }
+                    });
+                    totalScriptsBadge.textContent = totalCount;
                 }
             }
         }
