@@ -2,7 +2,6 @@
 const itemCache = new WeakMap();
 const scriptNameToItem = new Map();
 let scriptToDomainMap = new Map();
-const domainInstalledCount = new Map();
 
 function getCachedElements(item) {
     let cached = itemCache.get(item);
@@ -176,46 +175,10 @@ document.addEventListener('userscript-check-installed', (event) => {
     const detail = event.detail;
     if (!detail || !detail.name) return;
 
-    // Some scripts might dispatch an array of results or single objects
-    const processResult = (name, version) => {
-        const item = scriptNameToItem.get(name);
-        if (item) {
-            const { installedBadge } = getCachedElements(item);
-            if (installedBadge) {
-                installedBadge.textContent = `v${version}`;
-                installedBadge.classList.remove('outdated');
-                installedBadge.classList.add('installed');
-            }
-            item.dataset.installedVersion = version;
-            updateButtonState(item);
-        }
-
-        // Update root page domain counters if map is ready
-        if (scriptToDomainMap.has(name)) {
-            const domain = scriptToDomainMap.get(name);
-            const card = document.querySelector(`.domain-card[title="${domain}"]`);
-            if (card) {
-                // Ensure we only count each script once
-                if (!card.dataset.installedScripts) {
-                    card.dataset.installedScripts = "[]";
-                }
-                let installed = JSON.parse(card.dataset.installedScripts);
-                if (!installed.includes(name)) {
-                    installed.push(name);
-                    card.dataset.installedScripts = JSON.stringify(installed);
-                    const badge = card.querySelector('.installed-count-badge');
-                    if (badge) {
-                        badge.textContent = installed.length;
-                    }
-                }
-            }
-        }
-    };
-
     if (Array.isArray(detail)) {
-        detail.forEach(script => processResult(script.name, script.version));
+        detail.forEach(script => processScriptInstalledResult(script.name, script.version));
     } else {
-        processResult(detail.name, detail.version);
+        processScriptInstalledResult(detail.name, detail.version);
     }
 });
 
@@ -225,47 +188,48 @@ window.addEventListener('message', (event) => {
         const detail = event.data.detail;
         if (!detail) return;
 
-        const processResult = (name, version) => {
-            const item = scriptNameToItem.get(name);
-            if (item) {
-                const { installedBadge } = getCachedElements(item);
-                if (installedBadge) {
-                    installedBadge.textContent = `v${version}`;
-                    installedBadge.classList.remove('outdated');
-                    installedBadge.classList.add('installed');
-                }
-                item.dataset.installedVersion = version;
-                updateButtonState(item);
-            }
-
-            // Update root page domain counters if map is ready
-            if (scriptToDomainMap.has(name)) {
-                const domain = scriptToDomainMap.get(name);
-                const card = document.querySelector(`.domain-card[title="${domain}"]`);
-                if (card) {
-                    if (!card.dataset.installedScripts) {
-                        card.dataset.installedScripts = "[]";
-                    }
-                    let installed = JSON.parse(card.dataset.installedScripts);
-                    if (!installed.includes(name)) {
-                        installed.push(name);
-                        card.dataset.installedScripts = JSON.stringify(installed);
-                        const badge = card.querySelector('.installed-count-badge');
-                        if (badge) {
-                            badge.textContent = installed.length;
-                        }
-                    }
-                }
-            }
-        };
-
         if (Array.isArray(detail)) {
-            detail.forEach(script => processResult(script.name, script.version));
+            detail.forEach(script => processScriptInstalledResult(script.name, script.version));
         } else {
-            processResult(detail.name, detail.version);
+            processScriptInstalledResult(detail.name, detail.version);
         }
     }
 });
+
+function processScriptInstalledResult(name, version) {
+    const item = scriptNameToItem.get(name);
+    if (item) {
+        const { installedBadge } = getCachedElements(item);
+        if (installedBadge) {
+            installedBadge.textContent = `v${version}`;
+            installedBadge.classList.remove('outdated');
+            installedBadge.classList.add('installed');
+        }
+        item.dataset.installedVersion = version;
+        updateButtonState(item);
+    }
+
+    // Update root page domain counters if map is ready
+    if (scriptToDomainMap.has(name)) {
+        const domain = scriptToDomainMap.get(name);
+        const card = document.querySelector(`.domain-card[title="${domain}"]`);
+        if (card) {
+            // Ensure we only count each script once
+            if (!card.dataset.installedScripts) {
+                card.dataset.installedScripts = "[]";
+            }
+            let installed = JSON.parse(card.dataset.installedScripts);
+            if (!installed.includes(name)) {
+                installed.push(name);
+                card.dataset.installedScripts = JSON.stringify(installed);
+                const badge = card.querySelector('.installed-count-badge');
+                if (badge) {
+                    badge.textContent = installed.length;
+                }
+            }
+        }
+    }
+}
 
 async function initialize() {
     updateTotalScriptsCount();
@@ -305,7 +269,7 @@ async function buildScriptToDomainMap() {
     const map = new Map();
     const domainCards = document.querySelectorAll('.domain-card');
 
-    for (const card of domainCards) {
+    const fetchPromises = Array.from(domainCards).map(async (card) => {
         const domain = card.getAttribute('title');
         const url = card.getAttribute('href');
 
@@ -322,7 +286,10 @@ async function buildScriptToDomainMap() {
         } catch (e) {
             console.error('Failed to fetch domain page for mapping', url, e);
         }
-    }
+    });
+
+    await Promise.all(fetchPromises);
+
     return map;
 }
 
