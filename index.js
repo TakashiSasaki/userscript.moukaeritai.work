@@ -1,6 +1,8 @@
 // --- Element Caching ---
 const itemCache = new WeakMap();
 const scriptNameToItem = new Map();
+let scriptToDomainMap = new Map();
+const domainInstalledCount = new Map();
 
 function getCachedElements(item) {
     let cached = itemCache.get(item);
@@ -187,6 +189,27 @@ document.addEventListener('userscript-check-installed', (event) => {
             item.dataset.installedVersion = version;
             updateButtonState(item);
         }
+
+        // Update root page domain counters if map is ready
+        if (scriptToDomainMap.has(name)) {
+            const domain = scriptToDomainMap.get(name);
+            const card = document.querySelector(`.domain-card[title="${domain}"]`);
+            if (card) {
+                // Ensure we only count each script once
+                if (!card.dataset.installedScripts) {
+                    card.dataset.installedScripts = "[]";
+                }
+                let installed = JSON.parse(card.dataset.installedScripts);
+                if (!installed.includes(name)) {
+                    installed.push(name);
+                    card.dataset.installedScripts = JSON.stringify(installed);
+                    const badge = card.querySelector('.installed-count-badge');
+                    if (badge) {
+                        badge.textContent = installed.length;
+                    }
+                }
+            }
+        }
     };
 
     if (Array.isArray(detail)) {
@@ -214,6 +237,26 @@ window.addEventListener('message', (event) => {
                 item.dataset.installedVersion = version;
                 updateButtonState(item);
             }
+
+            // Update root page domain counters if map is ready
+            if (scriptToDomainMap.has(name)) {
+                const domain = scriptToDomainMap.get(name);
+                const card = document.querySelector(`.domain-card[title="${domain}"]`);
+                if (card) {
+                    if (!card.dataset.installedScripts) {
+                        card.dataset.installedScripts = "[]";
+                    }
+                    let installed = JSON.parse(card.dataset.installedScripts);
+                    if (!installed.includes(name)) {
+                        installed.push(name);
+                        card.dataset.installedScripts = JSON.stringify(installed);
+                        const badge = card.querySelector('.installed-count-badge');
+                        if (badge) {
+                            badge.textContent = installed.length;
+                        }
+                    }
+                }
+            }
         };
 
         if (Array.isArray(detail)) {
@@ -226,6 +269,11 @@ window.addEventListener('message', (event) => {
 
 async function initialize() {
     updateTotalScriptsCount();
+
+    // 0. Build the script to domain map for the root page counters
+    if (document.querySelectorAll('.domain-card').length > 0) {
+        scriptToDomainMap = await buildScriptToDomainMap();
+    }
 
     const projectItems = document.querySelectorAll('.project-item');
 
@@ -250,6 +298,32 @@ async function initialize() {
         document.dispatchEvent(new CustomEvent('userscript-ping'));
         window.postMessage({ type: 'userscript-ping' }, '*');
     }, 1000);
+}
+
+// --- Map scripts to domains for root page counters ---
+async function buildScriptToDomainMap() {
+    const map = new Map();
+    const domainCards = document.querySelectorAll('.domain-card');
+
+    for (const card of domainCards) {
+        const domain = card.getAttribute('title');
+        const url = card.getAttribute('href');
+
+        try {
+            const resp = await fetch(url);
+            if (resp.ok) {
+                const text = await resp.text();
+                // Simple regex to parse data-script-name
+                const matches = [...text.matchAll(/data-script-name="([^"]+)"/g)];
+                for (const m of matches) {
+                    map.set(m[1], domain);
+                }
+            }
+        } catch (e) {
+            console.error('Failed to fetch domain page for mapping', url, e);
+        }
+    }
+    return map;
 }
 
 // --- Run Initialization ---
