@@ -1,56 +1,55 @@
-<!DOCTYPE html>
-<html lang="ja">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>
-   Gemini Userscripts - Moukaeritai
-  </title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&amp;display=swap" rel="stylesheet"/>
-  <link href="https://userscript.moukaeritai.work/gemini.google.com/index.html" rel="canonical"/>
-  <link rel="stylesheet" href="index.css">
- </head>
- <body>
-  <div class="container">
-   <nav class="top-nav">
-    <a class="top-nav-link" href="../index.html">
-     <svg fill="currentColor" height="20" viewbox="0 -960 960 960" width="20">
-      <path d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z">
-      </path>
-     </svg>
-     Home
-    </a>
-   </nav>
-   <header>
-    <h1>
-     Gemini App Tools
-    </h1>
-    <p class="header-desc" style="margin-bottom: 3rem;">
-     Google Gemini の体験をより快適に。会話管理、データ出力、UIカスタマイズのための高品質なユーザースクリプト集です。
-    </p>
-   </header>
-   <div id="bundle-section" style="margin-bottom: 5rem;">
-    <h2 style="margin-bottom: 2rem; color: var(--primary); border-bottom: 2px solid var(--glass-border); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 10px;">
-     📦 Recommended Bundle (連携スクリプト群)
-    </h2>
-    <p style="color: var(--text-dim); margin-bottom: 2rem; line-height: 1.6;">
-     以下のスクリプトは、カスタムイベントを通じて相互に連携し、より強力でシームレスな体験を提供します。最大限の機能を発揮するために、一括してインストールすることを推奨します。
-    </p>
-    <ul class="project-list">
-<li class="project-item">
-      <div class="project-title">
-       <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64"/>
-       <a href="gemini-artifact-exporter-worker/index.html">
-        Artifact Exporter Worker ⚙️
-       </a>
-      </div>
-      <p class="project-desc">
-       Artifact Exporter のバックグラウンド処理を担当するワーカーです。ドキュメントエクスポートの際のDOM操作や待機処理を分離して安定性を高めます。（単体では機能しません）</p>
-      <a class="install-button" data-script-name="Gemini Artifact Exporter Worker" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js" target="_blank">
-                        <svg height="18" viewbox="0 0 24 24" width="18">
-        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
-        </path>
-       </svg>
+<!DOCTYPE html><html lang="ja"><head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>
+        Gemini Userscripts - Moukaeritai
+    </title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&amp;display=swap" rel="stylesheet">
+    <link href="https://userscript.moukaeritai.work/gemini.google.com/index.html" rel="canonical">
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <div class="container">
+        <nav class="top-nav">
+            <a class="top-nav-link" href="../index.html">
+                <svg fill="currentColor" height="20" viewBox="0 -960 960 960" width="20">
+                    <path d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z">
+                    </path>
+                </svg>
+                Home
+            </a>
+        </nav>
+        <header>
+            <h1>
+                Gemini App Tools
+            </h1>
+            <p class="header-desc" style="margin-bottom: 3rem;">
+                Google Gemini の体験をより快適に。会話管理、データ出力、UIカスタマイズのための高品質なユーザースクリプト集です。
+            </p>
+        </header>
+        <div id="bundle-section" style="margin-bottom: 5rem;">
+            <h2 style="margin-bottom: 2rem; color: var(--primary); border-bottom: 2px solid var(--glass-border); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 10px;">
+                📦 Recommended Bundle (連携スクリプト群)
+            </h2>
+            <p style="color: var(--text-dim); margin-bottom: 2rem; line-height: 1.6;">
+                以下のスクリプトは、カスタムイベントを通じて相互に連携し、より強力でシームレスな体験を提供します。最大限の機能を発揮するために、一括してインストールすることを推奨します。
+            </p>
+            <ul class="project-list">
+                <li class="project-item">
+                    <div class="project-title">
+                        <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64">
+                        <a href="gemini-artifact-exporter-worker/index.html">
+                            Artifact Exporter Worker ⚙️
+                        </a>
+                    </div>
+                    <p class="project-desc">
+                        Artifact Exporter のバックグラウンド処理を担当するワーカーです。ドキュメントエクスポートの際のDOM操作や待機処理を分離して安定性を高めます。（単体では機能しません）</p>
+                    <a class="install-button" data-script-name="Gemini Artifact Exporter Worker" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-artifact-exporter-worker/gemini-artifact-exporter-worker.user.js" target="_blank">
+                        <svg height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
+                            </path>
+                        </svg>
                         <span class="install-button-text">Install</span>
 
                         <div class="version-info">
@@ -59,22 +58,22 @@
                         </div>
                     </a>
 
-     </li>
-<li class="project-item">
-      <div class="project-title">
-       <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64"/>
-       <a href="gemini-artifact-exporter/index.html">
-        Artifact Exporter 📦
-       </a>
-      </div>
-      <p class="project-desc">
-       サイドバーに表示される Article 形式のアーティファクトを Google ドキュメントにまとめてエクスポート。One Click Delete
-                    との併用で、エクスポート完了後に会話を自動削除する連携も可能です。</p>
-      <a class="install-button" data-script-name="Gemini Artifact Exporter" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js" target="_blank">
-                        <svg height="18" viewbox="0 0 24 24" width="18">
-        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
-        </path>
-       </svg>
+                </li>
+                <li class="project-item">
+                    <div class="project-title">
+                        <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64">
+                        <a href="gemini-artifact-exporter/index.html">
+                            Artifact Exporter 📦
+                        </a>
+                    </div>
+                    <p class="project-desc">
+                        サイドバーに表示される Article 形式のアーティファクトを Google ドキュメントにまとめてエクスポート。One Click Delete
+                        との併用で、エクスポート完了後に会話を自動削除する連携も可能です。</p>
+                    <a class="install-button" data-script-name="Gemini Artifact Exporter" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-artifact-exporter/gemini-artifact-exporter.user.js" target="_blank">
+                        <svg height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
+                            </path>
+                        </svg>
                         <span class="install-button-text">Install</span>
 
                         <div class="version-info">
@@ -83,42 +82,41 @@
                         </div>
                     </a>
 
-     </li>
+                </li>
 
-            <li class="project-item">
-                <div class="project-title">
-                    <img alt="gemini.google.com" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
-                    <a href="gemini-auto-scroll/gemini-auto-scroll.user.js">Gemini Auto-Scroll</a>
-                </div>
-                <p class="project-desc">
-                    Automatically scroll endlessly to load all history in Gemini
-                </p>
-                <a class="install-button" data-script-name="Gemini Auto-Scroll"
-                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js" target="_blank">
-                    <svg height="18" viewBox="0 0 24 24" width="18">
-                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                    </svg>
-                    <span class="install-button-text">Install</span>
-                    <div class="version-info">
-                        <span class="version-badge latest-version">...</span>
-                        <span class="version-badge installed-version" style="display: none;"></span>
+                <li class="project-item">
+                    <div class="project-title">
+                        <img alt="gemini.google.com" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64">
+                        <a href="gemini-auto-scroll/gemini-auto-scroll.user.js">Gemini Auto-Scroll</a>
                     </div>
-                </a>
-            </li>
-<li class="project-item">
-      <div class="project-title">
-       <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64"/>
-       <a href="gemini-auto-select-next/index.html">
-        Auto-Select Next ⏭️
-       </a>
-      </div>
-      <p class="project-desc">
-       現在閲覧中の会話を削除した際、自動的に次の会話へ移動します。さらにサイドバーで見えた会話を順序付きで保存し、読み取り専用ダイアログから後で一覧できるようにします。</p>
-      <a class="install-button" data-script-name="Gemini Auto-Select Next" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-auto-select-next/gemini-auto-select-next.user.js" target="_blank">
-                        <svg height="18" viewbox="0 0 24 24" width="18">
-        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
-        </path>
-       </svg>
+                    <p class="project-desc">
+                        Automatically scroll endlessly to load all history in Gemini
+                    </p>
+                    <a class="install-button" data-script-name="Gemini Auto-Scroll" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js" target="_blank">
+                        <svg height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                        </svg>
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span class="version-badge latest-version">...</span>
+                            <span class="version-badge installed-version" style="display: none;"></span>
+                        </div>
+                    </a>
+                </li>
+                <li class="project-item">
+                    <div class="project-title">
+                        <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64">
+                        <a href="gemini-auto-select-next/index.html">
+                            Auto-Select Next ⏭️
+                        </a>
+                    </div>
+                    <p class="project-desc">
+                        現在閲覧中の会話を削除した際、自動的に次の会話へ移動します。さらにサイドバーで見えた会話を順序付きで保存し、読み取り専用ダイアログから後で一覧できるようにします。</p>
+                    <a class="install-button" data-script-name="Gemini Auto-Select Next" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-auto-select-next/gemini-auto-select-next.user.js" target="_blank">
+                        <svg height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
+                            </path>
+                        </svg>
                         <span class="install-button-text">Install</span>
 
                         <div class="version-info">
@@ -127,22 +125,22 @@
                         </div>
                     </a>
 
-     </li>
-<li class="project-item">
-      <div class="project-title">
-       <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64"/>
-       <a href="gemini-export-to-docs/index.html">
-        Export to Docs 📄
-       </a>
-      </div>
-      <p class="project-desc">
-       回答内容を Google ドキュメントへ出力したり、指定タイトルの Notebook に追加したりできます。「1-Turn Auto Export」機能により、両方を順番に実行してから One Click Delete
-                    と連携する流れるような操作が可能です。</p>
-      <a class="install-button" data-script-name="Gemini 1-Click Export to Docs" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js" target="_blank">
-                        <svg height="18" viewbox="0 0 24 24" width="18">
-        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
-        </path>
-       </svg>
+                </li>
+                <li class="project-item">
+                    <div class="project-title">
+                        <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64">
+                        <a href="gemini-export-to-docs/index.html">
+                            Export to Docs 📄
+                        </a>
+                    </div>
+                    <p class="project-desc">
+                        回答内容を Google ドキュメントへ出力したり、指定タイトルの Notebook に追加したりできます。「1-Turn Auto Export」機能により、両方を順番に実行してから One Click Delete
+                        と連携する流れるような操作が可能です。</p>
+                    <a class="install-button" data-script-name="Gemini 1-Click Export to Docs" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-export-to-docs/gemini-export-to-docs.user.js" target="_blank">
+                        <svg height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
+                            </path>
+                        </svg>
                         <span class="install-button-text">Install</span>
 
                         <div class="version-info">
@@ -151,21 +149,21 @@
                         </div>
                     </a>
 
-     </li>
-<li class="project-item">
-      <div class="project-title">
-       <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64"/>
-       <a href="gemini-one-click-delete/index.html">
-        One Click Delete 🗑️
-       </a>
-      </div>
-      <p class="project-desc">
-       ヘッダーメニューの奥にある「削除」機能をフロントへ引き出します。サイドバーを操作することなく、現在の会話をワンクリックまたはキーボードショートカットで即座に削除できるようになります。</p>
-      <a class="install-button" data-script-name="Gemini 1-Click Delete Conversation" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js" target="_blank">
-                        <svg height="18" viewbox="0 0 24 24" width="18">
-        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
-        </path>
-       </svg>
+                </li>
+                <li class="project-item">
+                    <div class="project-title">
+                        <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64">
+                        <a href="gemini-one-click-delete/index.html">
+                            One Click Delete 🗑️
+                        </a>
+                    </div>
+                    <p class="project-desc">
+                        ヘッダーメニューの奥にある「削除」機能をフロントへ引き出します。サイドバーを操作することなく、現在の会話をワンクリックまたはキーボードショートカットで即座に削除できるようになります。</p>
+                    <a class="install-button" data-script-name="Gemini 1-Click Delete Conversation" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-one-click-delete/gemini-one-click-delete.user.js" target="_blank">
+                        <svg height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
+                            </path>
+                        </svg>
                         <span class="install-button-text">Install</span>
 
                         <div class="version-info">
@@ -174,105 +172,101 @@
                         </div>
                     </a>
 
-     </li>
+                </li>
 
-            <li class="project-item">
-                <div class="project-title">
-                    <img alt="gemini.google.com" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
-                    <a href="gemini-profile-badge/gemini-profile-badge.user.js">Gemini Profile Badge</a>
-                </div>
-                <p class="project-desc">
-                    Add a custom text/emoji badge to the user profile area on Gemini
-                </p>
-                <a class="install-button" data-script-name="Gemini Profile Badge"
-                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-profile-badge/gemini-profile-badge.user.js" target="_blank">
-                    <svg height="18" viewBox="0 0 24 24" width="18">
-                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                    </svg>
-                    <span class="install-button-text">Install</span>
-                    <div class="version-info">
-                        <span class="version-badge latest-version">...</span>
-                        <span class="version-badge installed-version" style="display: none;"></span>
+                <li class="project-item">
+                    <div class="project-title">
+                        <img alt="gemini.google.com" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64">
+                        <a href="gemini-profile-badge/gemini-profile-badge.user.js">Gemini Profile Badge</a>
                     </div>
-                </a>
-            </li>
+                    <p class="project-desc">
+                        Add a custom text/emoji badge to the user profile area on Gemini
+                    </p>
+                    <a class="install-button" data-script-name="Gemini Profile Badge" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-profile-badge/gemini-profile-badge.user.js" target="_blank">
+                        <svg height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                        </svg>
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span class="version-badge latest-version">...</span>
+                            <span class="version-badge installed-version" style="display: none;"></span>
+                        </div>
+                    </a>
+                </li>
 
-            <li class="project-item">
-                <div class="project-title">
-                    <img alt="gemini.google.com" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
-                    <a href="gemini-prompt-injector/gemini-prompt-injector.user.js">Gemini Prompt Injector</a>
-                </div>
-                <p class="project-desc">
-                    Injects a prompt into Gemini via an external custom event.
-                </p>
-                <a class="install-button" data-script-name="Gemini Prompt Injector"
-                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js" target="_blank">
-                    <svg height="18" viewBox="0 0 24 24" width="18">
-                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                    </svg>
-                    <span class="install-button-text">Install</span>
-                    <div class="version-info">
-                        <span class="version-badge latest-version">...</span>
-                        <span class="version-badge installed-version" style="display: none;"></span>
+                <li class="project-item">
+                    <div class="project-title">
+                        <img alt="gemini.google.com" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64">
+                        <a href="gemini-prompt-injector/gemini-prompt-injector.user.js">Gemini Prompt Injector</a>
                     </div>
-                </a>
-            </li>
+                    <p class="project-desc">
+                        Injects a prompt into Gemini via an external custom event.
+                    </p>
+                    <a class="install-button" data-script-name="Gemini Prompt Injector" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js" target="_blank">
+                        <svg height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                        </svg>
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span class="version-badge latest-version">...</span>
+                            <span class="version-badge installed-version" style="display: none;"></span>
+                        </div>
+                    </a>
+                </li>
 
-            <li class="project-item">
-                <div class="project-title">
-                    <img alt="gemini.google.com" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
-                    <a href="gemini-saved-info/gemini-saved-info.user.js">Gemini Saved Info Helper</a>
-                </div>
-                <p class="project-desc">
-                    Adds serial numbers and copy buttons to custom instructions on Gemini.
-                </p>
-                <a class="install-button" data-script-name="Gemini Saved Info Helper"
-                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js" target="_blank">
-                    <svg height="18" viewBox="0 0 24 24" width="18">
-                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                    </svg>
-                    <span class="install-button-text">Install</span>
-                    <div class="version-info">
-                        <span class="version-badge latest-version">...</span>
-                        <span class="version-badge installed-version" style="display: none;"></span>
+                <li class="project-item">
+                    <div class="project-title">
+                        <img alt="gemini.google.com" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64">
+                        <a href="gemini-saved-info/gemini-saved-info.user.js">Gemini Saved Info Helper</a>
                     </div>
-                </a>
-            </li>
+                    <p class="project-desc">
+                        Adds serial numbers and copy buttons to custom instructions on Gemini.
+                    </p>
+                    <a class="install-button" data-script-name="Gemini Saved Info Helper" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js" target="_blank">
+                        <svg height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                        </svg>
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span class="version-badge latest-version">...</span>
+                            <span class="version-badge installed-version" style="display: none;"></span>
+                        </div>
+                    </a>
+                </li>
 
-            <li class="project-item">
-                <div class="project-title">
-                    <img alt="gemini.google.com" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
-                    <a href="gemini-search-snippet-helper/gemini-search-snippet-helper.user.js">Gemini Search Snippet Helper</a>
-                </div>
-                <p class="project-desc">
-                    Add sequential numbers to Gemini search result conversation titles.
-                </p>
-                <a class="install-button" data-script-name="Gemini Search Snippet Helper"
-                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-search-snippet-helper/gemini-search-snippet-helper.user.js" target="_blank">
-                    <svg height="18" viewBox="0 0 24 24" width="18">
-                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                    </svg>
-                    <span class="install-button-text">Install</span>
-                    <div class="version-info">
-                        <span class="version-badge latest-version">...</span>
-                        <span class="version-badge installed-version" style="display: none;"></span>
+                <li class="project-item">
+                    <div class="project-title">
+                        <img alt="gemini.google.com" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64">
+                        <a href="gemini-search-snippet-helper/gemini-search-snippet-helper.user.js">Gemini Search Snippet Helper</a>
                     </div>
-                </a>
-            </li>
-<li class="project-item">
-      <div class="project-title">
-       <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64"/>
-       <a href="gemini-turn-counter/index.html">
-        Turn Counter 🔢
-       </a>
-      </div>
-      <p class="project-desc">
-       ターン数、文字、画像、コード、テーブル、各アーティファクト数をリアルタイムに計測。主に Gemini の各モデルのコンテキストウィンドウ消費量を見積もるために設計されています。</p>
-      <a class="install-button" data-script-name="Gemini Turn Counter" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js" target="_blank">
-                        <svg height="18" viewbox="0 0 24 24" width="18">
-        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
-        </path>
-       </svg>
+                    <p class="project-desc">
+                        Add sequential numbers to Gemini search result conversation titles.
+                    </p>
+                    <a class="install-button" data-script-name="Gemini Search Snippet Helper" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-search-snippet-helper/gemini-search-snippet-helper.user.js" target="_blank">
+                        <svg height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                        </svg>
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span class="version-badge latest-version">...</span>
+                            <span class="version-badge installed-version" style="display: none;"></span>
+                        </div>
+                    </a>
+                </li>
+                <li class="project-item">
+                    <div class="project-title">
+                        <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64">
+                        <a href="gemini-turn-counter/index.html">
+                            Turn Counter 🔢
+                        </a>
+                    </div>
+                    <p class="project-desc">
+                        ターン数、文字、画像、コード、テーブル、各アーティファクト数をリアルタイムに計測。主に Gemini の各モデルのコンテキストウィンドウ消費量を見積もるために設計されています。</p>
+                    <a class="install-button" data-script-name="Gemini Turn Counter" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-turn-counter/gemini-turn-counter.user.js" target="_blank">
+                        <svg height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
+                            </path>
+                        </svg>
                         <span class="install-button-text">Install</span>
 
                         <div class="version-info">
@@ -281,177 +275,179 @@
                         </div>
                     </a>
 
-     </li>
+                </li>
 
-            <li class="project-item">
-                <div class="project-title">
-                    <img alt="gemini.google.com" src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" />
-                    <a href="gemini-userscript-manager/gemini-userscript-manager.user.js">Gemini Userscript Manager</a>
-                </div>
-                <p class="project-desc">
-                    UI for managing all Gemini related userscripts (check status, compare versions, bulk toggle UI).
-                </p>
-                <a class="install-button" data-script-name="Gemini Userscript Manager"
-                    href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-userscript-manager/gemini-userscript-manager.user.js" target="_blank">
-                    <svg height="18" viewBox="0 0 24 24" width="18">
-                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                    </svg>
-                    <span class="install-button-text">Install</span>
-                    <div class="version-info">
-                        <span class="version-badge latest-version">...</span>
-                        <span class="version-badge installed-version" style="display: none;"></span>
+                <li class="project-item">
+                    <div class="project-title">
+                        <img alt="gemini.google.com" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64">
+                        <a href="gemini-userscript-manager/gemini-userscript-manager.user.js">Gemini Userscript Manager</a>
                     </div>
-                </a>
-            </li>
-        </ul>
-   </div>
-   <div id="standalone-section">
-    <h2 style="margin-bottom: 2rem; color: var(--primary); border-bottom: 2px solid var(--glass-border); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 10px;">
-     🧩 Standalone Scripts (単独動作スクリプト)
-    </h2>
-    <p style="color: var(--text-dim); margin-bottom: 2rem; line-height: 1.6;">
-     これらのスクリプトは単独で動作し、個別にインストールして使用できます。
-    </p>
-    <ul class="project-list">
-     <li class="project-item">
-      <div class="project-title">
-       <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64"/>
-       <a href="gemini-saved-info/index.html">
-        Saved Info Helper 📋
-       </a>
-      </div>
-      <p class="project-desc">
-       Gemini の「保存済みの情報（カスタム指示）」画面に連番とコピーボタンを追加します。複数の指示を使い分ける際の視認性を高め、ワンクリックで内容をクリップボードにコピーできます。
-      </p>
-      <a class="install-button" data-script-name="Gemini Saved Info Helper" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js" target="_blank">
-                        <svg height="18" viewbox="0 0 24 24" width="18">
-        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
-        </path>
-       </svg>
+                    <p class="project-desc">
+                        UI for managing all Gemini related userscripts (check status, compare versions, bulk toggle UI).
+                    </p>
+                    <a class="install-button" data-script-name="Gemini Userscript Manager" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-userscript-manager/gemini-userscript-manager.user.js" target="_blank">
+                        <svg height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                        </svg>
+                        <span class="install-button-text">Install</span>
+                        <div class="version-info">
+                            <span class="version-badge latest-version">...</span>
+                            <span class="version-badge installed-version" style="display: none;"></span>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div id="standalone-section">
+            <h2 style="margin-bottom: 2rem; color: var(--primary); border-bottom: 2px solid var(--glass-border); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 10px;">
+                🧩 Standalone Scripts (単独動作スクリプト)
+            </h2>
+            <p style="color: var(--text-dim); margin-bottom: 2rem; line-height: 1.6;">
+                これらのスクリプトは単独で動作し、個別にインストールして使用できます。
+            </p>
+            <ul class="project-list">
+                <li class="project-item">
+                    <div class="project-title">
+                        <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64">
+                        <a href="gemini-saved-info/index.html">
+                            Saved Info Helper 📋
+                        </a>
+                    </div>
+                    <p class="project-desc">
+                        Gemini の「保存済みの情報（カスタム指示）」画面に連番とコピーボタンを追加します。複数の指示を使い分ける際の視認性を高め、ワンクリックで内容をクリップボードにコピーできます。
+                    </p>
+                    <a class="install-button" data-script-name="Gemini Saved Info Helper" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-saved-info/gemini-saved-info.user.js" target="_blank">
+                        <svg height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
+                            </path>
+                        </svg>
                         <span>Install</span>
                     </a>
-     </li>
-     <li class="project-item">
-      <div class="project-title">
-       <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64"/>
-       <a href="gemini-profile-badge/index.html">
-        Profile Badge 📛
-       </a>
-      </div>
-      <p class="project-desc">
-       Google Gemini のプロファイル覧に、お好みの絵文字やテキストでカスタムバッジを表示します。複数のアカウントや用途を視覚的に区別するのに役立ち、自分好みにカスタマイズできます。
-      </p>
-      <a class="install-button" data-script-name="Gemini Profile Badge" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-profile-badge/gemini-profile-badge.user.js" target="_blank">
-                        <svg height="18" viewbox="0 0 24 24" width="18">
-        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
-        </path>
-       </svg>
+                </li>
+                <li class="project-item">
+                    <div class="project-title">
+                        <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64">
+                        <a href="gemini-profile-badge/index.html">
+                            Profile Badge 📛
+                        </a>
+                    </div>
+                    <p class="project-desc">
+                        Google Gemini のプロファイル覧に、お好みの絵文字やテキストでカスタムバッジを表示します。複数のアカウントや用途を視覚的に区別するのに役立ち、自分好みにカスタマイズできます。
+                    </p>
+                    <a class="install-button" data-script-name="Gemini Profile Badge" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-profile-badge/gemini-profile-badge.user.js" target="_blank">
+                        <svg height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
+                            </path>
+                        </svg>
                         <span>Install</span>
                     </a>
-     </li>
-     <li class="project-item">
-      <div class="project-title">
-       <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64"/>
-       <a href="gemini-auto-scroll/index.html">
-        Auto-Scroll 📜
-       </a>
-      </div>
-      <p class="project-desc">
-       サイドバーを自動で末尾までスクロールし続け、過去の膨大な会話履歴をすべて読み込みます。全履歴のバックアップや検索の準備作業として、手動スクロールの手間を大幅に削減します。
-      </p>
-      <a class="install-button" data-script-name="Gemini Auto-Scroll" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js" target="_blank">
-                        <svg height="18" viewbox="0 0 24 24" width="18">
-        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
-        </path>
-       </svg>
+                </li>
+                <li class="project-item">
+                    <div class="project-title">
+                        <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64">
+                        <a href="gemini-auto-scroll/index.html">
+                            Auto-Scroll 📜
+                        </a>
+                    </div>
+                    <p class="project-desc">
+                        サイドバーを自動で末尾までスクロールし続け、過去の膨大な会話履歴をすべて読み込みます。全履歴のバックアップや検索の準備作業として、手動スクロールの手間を大幅に削減します。
+                    </p>
+                    <a class="install-button" data-script-name="Gemini Auto-Scroll" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-auto-scroll/gemini-auto-scroll.user.js" target="_blank">
+                        <svg height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
+                            </path>
+                        </svg>
                         <span>Install</span>
                     </a>
-     </li>
-     <li class="project-item">
-      <div class="project-title">
-       <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64"/>
-       <a href="gemini-search-snippet-helper/index.html">
-        Search Snippet Helper 🔢
-       </a>
-      </div>
-      <p class="project-desc">
-       検索結果一覧の各会話カードにタイトルへ連番を表示し、視認性を向上させます。タイトルが似通った過去の会話が多く並ぶ場合でも、番号によって目的の会話を素早く特定・参照できるようになります。
-      </p>
-      <a class="install-button" data-script-name="Gemini Search Snippet Helper" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-search-snippet-helper/gemini-search-snippet-helper.user.js" target="_blank">
-                        <svg height="18" viewbox="0 0 24 24" width="18">
-        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
-        </path>
-       </svg>
+                </li>
+                <li class="project-item">
+                    <div class="project-title">
+                        <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64">
+                        <a href="gemini-search-snippet-helper/index.html">
+                            Search Snippet Helper 🔢
+                        </a>
+                    </div>
+                    <p class="project-desc">
+                        検索結果一覧の各会話カードにタイトルへ連番を表示し、視認性を向上させます。タイトルが似通った過去の会話が多く並ぶ場合でも、番号によって目的の会話を素早く特定・参照できるようになります。
+                    </p>
+                    <a class="install-button" data-script-name="Gemini Search Snippet Helper" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-search-snippet-helper/gemini-search-snippet-helper.user.js" target="_blank">
+                        <svg height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
+                            </path>
+                        </svg>
                         <span>Install</span>
                     </a>
-     </li>
-     <li class="project-item">
-      <div class="project-title">
-       <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64"/>
-       <a href="gemini-prompt-injector/index.html">
-        Prompt Injector 💉
-       </a>
-      </div>
-      <p class="project-desc">
-       カスタムイベント経由で Gemini のプロンプトエリアにテキストを注入し、自動送信するスクリプトです。外部システム連携時のプロンプト自動入力やモデル切り替え（高速、思考、Pro）、Canvas有効化に最適です。
-      </p>
+                </li>
+                <li class="project-item">
+                    <div class="project-title">
+                        <img alt="Gemini" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64">
+                        <a href="gemini-prompt-injector/index.html">
+                            Prompt Injector 💉
+                        </a>
+                    </div>
+                    <p class="project-desc">
+                        カスタムイベント経由で Gemini のプロンプトエリアにテキストを注入し、自動送信するスクリプトです。外部システム連携時のプロンプト自動入力やモデル切り替え（高速、思考、Pro）、Canvas有効化に最適です。
+                    </p>
 
-      <a class="install-button" data-script-name="Gemini Prompt Injector" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js" target="_blank">
-                        <svg height="18" viewbox="0 0 24 24" width="18">
-        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
-        </path>
-       </svg>
+                    <a class="install-button" data-script-name="Gemini Prompt Injector" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-prompt-injector/gemini-prompt-injector.user.js" target="_blank">
+                        <svg height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z">
+                            </path>
+                        </svg>
                         <span>Install</span>
                     </a>
-     </li>
-    </ul>
-   </div>
-   <footer>
-    <div class="social-links">
-     <a class="social-icon" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work" target="_blank">
-      <svg fill="currentColor" height="24" viewbox="0 0 16 16" width="24">
-       <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
-       </path>
-      </svg>
-     </a>
+                </li>
+            </ul>
+        </div>
+        <footer>
+            <div class="social-links">
+                <a class="social-icon" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work" target="_blank">
+                    <svg fill="currentColor" height="24" viewBox="0 0 16 16" width="24">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-.2-3.64-.89-3.64-3.95 0-.87.31.82-2.15-.08-.2-.36.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+                        </path>
+                    </svg>
+                </a>
 
-    <div class="project-item">
-     <h3>
-      <a href="gemini-userscript-manager/index.html">
-       Gemini Userscript Manager
-      </a>
-     </h3>
-     <p>
-      UI for managing all Gemini related userscripts (check status, compare versions, bulk toggle UI).
-     </p>
-     <div class="install-section" style="margin-top:auto; padding-top:10px;">
-        <a class="install-button" data-script-name="Gemini Userscript Manager" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-userscript-manager/gemini-userscript-manager.user.js" target="_blank">
-        <span>Install</span>
-        </a>
-     </div>
-    </div>
+                <div class="project-item">
+                    <h3>
+                        <a href="gemini-userscript-manager/index.html">
+                            Gemini Userscript Manager
+                        </a>
+                    </h3>
+                    <p>
+                        UI for managing all Gemini related userscripts (check status, compare versions, bulk toggle UI).
+                    </p>
+                    <div class="install-section" style="margin-top:auto; padding-top:10px;">
+                        <a class="install-button" data-script-name="Gemini Userscript Manager" href="https://github.com/TakashiSasaki/userscript.moukaeritai.work/raw/refs/heads/main/gemini.google.com/gemini-userscript-manager/gemini-userscript-manager.user.js" target="_blank">
+                            <span>Install</span>
+                        </a>
+                    </div>
+                </div>
 
-   </div>
-    <p>
-     <small>
-      Developed by
-      <a href="https://x.com/TakashiSasaki">
-       Takashi Sasaki
-      </a>
-      |
-      <a href="https://userscript.moukaeritai.work/">
-       userscript.moukaeritai.work
-      </a>
-      |
-      <a href="https://github.com/codespaces/fuzzy-halibut-qgr4qgggrh494p" target="codespaces">
-       Open in
+            </div>
+            <p>
+                <small>
+                    Developed by
+                    <a href="https://x.com/TakashiSasaki">
+                        Takashi Sasaki
+                    </a>
+                    |
+                    <a href="https://userscript.moukaeritai.work/">
+                        userscript.moukaeritai.work
+                    </a>
+                    |
+                    <a href="https://github.com/codespaces/fuzzy-halibut-qgr4qgggrh494p" target="codespaces">
+                        Open in
                         Codespaces
-      </a>
-     </small>
-    </p>
-   </footer>
-  </div>
-  <script src="../domain-landing.js">
-  </script>
- </body>
-</html>
+                    </a>
+                </small>
+            </p>
+        </footer>
+    </div>
+    <script src="../domain-landing.js">
+    </script>
+
+
+
+
+</body></html>
