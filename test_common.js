@@ -1,3 +1,4 @@
+/* global require, module, __dirname */
 const assert = require('assert');
 
 // Simulate the logic in gemini-history-loader.user.js
