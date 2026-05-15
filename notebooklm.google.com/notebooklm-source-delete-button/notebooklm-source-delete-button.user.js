@@ -15,6 +15,7 @@
 
 (function() {
     'use strict';
+    const SCRIPT_ID = 'notebooklm-source-delete-button';
 const report = () => {
         document.dispatchEvent(new CustomEvent('userscript-check-installed', {
             detail: {
