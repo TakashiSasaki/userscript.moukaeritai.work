@@ -9,7 +9,7 @@ REF="userscript"                        # git ref (branch/tag) on downstream rep
 
 # Optional: pass inputs to workflow_dispatch
 # (Define empty if you don't use workflow inputs)
-UPSTREAM_REF="${UPSTREAM_REF:-}"  # e.g. "main" or "refs/heads/main" or a SHA
+UPSTREAM_REF="${UPSTREAM_REF:-}"  # e.g. "userscript.moukaeritai.work" or "refs/heads/userscript.moukaeritai.work" or a SHA
 
 # === Preflight checks ===
 command -v gh >/dev/null 2>&1 || { echo "ERROR: gh not found in PATH" >&2; exit 127; }

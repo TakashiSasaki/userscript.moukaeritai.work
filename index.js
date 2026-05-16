@@ -96,8 +96,8 @@ async function fetchAndApplyLatestVersions() {
                 if (rawIndex !== -1 && pathParts.length > rawIndex + 2) {
 
                     // A simpler generic rewrite:
-                    // https://github.com/TakashiSasaki/repo/raw/refs/heads/main/path ->
-                    // https://raw.githubusercontent.com/TakashiSasaki/repo/refs/heads/main/path
+                    // https://github.com/TakashiSasaki/repo/raw/refs/heads/userscript.moukaeritai.work/path ->
+                    // https://raw.githubusercontent.com/TakashiSasaki/repo/refs/heads/userscript.moukaeritai.work/path
 
                     let newPath = urlObj.pathname.replace('/raw/', '/');
                     url = `https://raw.githubusercontent.com${newPath}`;
