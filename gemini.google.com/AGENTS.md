@@ -64,6 +64,7 @@ Learnings from implementing features like Auto-Scroll and Conversation Managemen
    - `registerGeminiUserscript(scriptName, version)`: 読み込み順の絵文字付きで userscript を登録します。
    - `geminiSleep(ms)`: 背景タブでも極端に止まりにくい sleep helper です。
    - `geminiWaitForElement(selector, context, timeout)`: 要素出現待ちの Promise helper です。
+   - `geminiClickElement(element)`: Focuses the element and dispatches mousedown, mouseup, and click events.
 
 2. **インストール検知と状態表示**
    - `geminiCheckTargetUserscript(targetName, timeout)`: `userscript-ping` / `userscript-check-installed` を使って他 userscript の存在を確認します。
@@ -85,6 +86,11 @@ Learnings from implementing features like Auto-Scroll and Conversation Managemen
 6. **設計上の注意**
    - 長寿命の observer や全体監視は、`gemini-common.js` に singleton guard 付き helper として置けるかをまず検討してください。
    - `gemini-common.js` にある機能を各 userscript 側で再実装しないでください。必要なら共通化してから使う方針を優先してください。
+
+7. **Chat History Loading**
+   - `geminiGetChatScroller()`: Locates the main scrollable element for the chat conversation area.
+   - `geminiLoadFullChatHistory(options)`: Programmatically scrolls the chat to the very top, forcing Gemini to load the entire conversation history into the DOM.
+   - `geminiProgressiveScrollDown(options)`: Programmatically scrolls the chat downwards in discrete steps. Useful for performing deep scans or ensuring lazily loaded content is triggered.
 
 ## 共通リソース更新時の対応 (Common Resource Updates)
 
